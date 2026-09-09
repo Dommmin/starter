@@ -1,0 +1,149 @@
+# Rejestr decyzji: paczki i narzędzia
+
+## Cel
+
+Dobierać zależności na podstawie problemu, zgodności i kosztu utrzymania. Data weryfikacji źródeł: **2026-09-09**. Nie ma lokalnego Composer/npm manifestu ani lockfile; nie wykonano instalacji, resolvera, audytu dependency tree ani testów paczek. Żadna pozycja nie jest „zatwierdzona do produkcji”.
+
+## Decyzje i uzasadnienie
+
+### ADR-017: mały zestaw P0, dodatki po konkretnym triggerze
+
+Status: proponowany. P0 opierać na Laravel i wybranym oficjalnym scaffoldzie, narzędziach jakości i kontrolach operacyjnych. Nie instalować kolekcji Spatie ani wszystkich narzędzi Laravel. Opcjonalna paczka może wejść wcześniej tylko wtedy, gdy zatwierdzony scope klienta wymaga jej funkcji i przejdzie ten sam proces kwalifikacji.
+
+Statusy: **P0-kandydat** = rekomendacja architektoniczna po weryfikacji dokumentacyjnej, wymaga gate technicznego; **opcjonalne** = wdrożyć po wskazanym triggerze; **odłożone** = obecnie nie wdrażać; **do decyzji** = brak przesłanki do wyboru produktu/dostawcy. Wymóg funkcjonalny, np. backup, pozostaje P0 niezależnie od statusu paczki.
+
+## Metoda i granice dowodów
+
+Źródła to oficjalna dokumentacja, README, manifesty i releases producentów. Dla części stron Spatie narzędzie nie obsłużyło odpowiedzi `text/markdown`; wykorzystano oficjalne README, surowe dokumenty i `composer.json` z repozytorium autora. Nie przedstawiam tych nieodczytanych stron jako przeczytanych.
+
+**Deklaracja zgodności gałęzi ≠ zgodność stabilnego tagu ≠ przetestowana instalacja.** Gałęzie `main`, `13.x`, `1.x` itp. mogą zawierać przyszłe zmiany. Poniższe constrainty to odczytane deklaracje, nie lockfile do skopiowania. W P0-A należy wybrać stabilny tag, ponownie sprawdzić jego manifest/licencję/advisories i przypiąć wynik. Świeża data crawl nie jest datą release. Ocena utrzymania uwzględnia dostępny changelog/releases i wsparcie nowego Laravel, nie popularność.
+
+W każdej paczce bezpieczeństwo wymaga także zależności przechodnich, scripts/plugins i rzeczywistej konfiguracji. Odczytano m.in. [Laravel advisories](https://github.com/laravel/framework/security/advisories), [Fortify](https://github.com/laravel/fortify/security/advisories), [Excel](https://github.com/SpartnerNL/Laravel-Excel/security/advisories), [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet/security/advisories), [Permission](https://github.com/spatie/laravel-permission/security/advisories) i [Media Library](https://github.com/spatie/laravel-medialibrary/security/advisories). Obecność lub brak wpisów nie pozwala ocenić nieistniejącego lockfile. Dla pozostałych narzędzi weryfikacja obejmuje model ryzyka i oficjalne źródła, **bez pełnego przeglądu wszystkich advisory konkretnej wersji**; pozostaje to jawna bramka przed instalacją.
+
+## Macierz decyzji funkcjonalnych
+
+| Narzędzie | Problem, który rozwiązuje | Status | Uzasadnienie | Alternatywy | Ryzyka / koszt utrzymania | Etap wdrożenia |
+| --- | --- | --- | --- | --- | --- | --- |
+| Laravel + oficjalny React/Inertia/shadcn starter | Powtarzalny fundament, SSR i panel | P0-kandydat | Gotowe wzorce auth/2FA i frontend; pełny manifest wymaga review | Czysty Laravel; Blade/Livewire | Roczne major upgrade, Node SSR i review wygenerowanego kodu/funkcji | P0-A |
+| Fortify / scaffold MFA | Login, reset, e-mail verification, TOTP | P0-kandydat | Unikanie własnego auth; wymusić MFA admina | Zewnętrzny IdP | Recovery, sesje, phishing; gotowy scaffold nie wymusza całej polityki organizacji | P0-B |
+| React + Inertia + TS | Interaktywne procesy bez osobnego API | P0-kandydat | Spójny backend i panel | Blade; Filament | Bundle, dwa kontrakty językowe, major upgrades | P0-A/B |
+| Tailwind + shadcn/ui | Tokeny i dostępne wzorce UI | P0-kandydat | Swoboda Figmy bez własnych widgetów od zera | Zwykły CSS/HTML | Kod skopiowanych komponentów utrzymuje projekt | P0-B |
+| Wayfinder | Typowane trasy/metody PHP→TS | P0-kandydat warunkowy | Zostawić, jeśli jest w przypiętym starterze; nie generuje payloadów | Jawne mapowanie URL dla małego panelu | Seria 0.x; drift generatora i route cache | P0-A |
+| Laravel Data | Wspólne DTO i projekcje | Opcjonalne | Przy powtarzalnych złożonych kontraktach | readonly DTO + Resources | Refleksja, magiczne mapowanie, dublowanie walidacji | P1 App Kit |
+| TypeScript Transformer | Generacja typów backendowych | Opcjonalne | Gdy ręczne DTO/enumy realnie się rozchodzą | Ręczne typy + contract tests; OpenAPI przy zewnętrznym API | Null/date/enum/optional wymagają testów; nie waliduje runtime | P1 z DTO |
+| Spatie Permission | Dynamiczny RBAC | Opcjonalne | Edytowalne role i capabilities wymagane przez klienta | Stałe role + policies | Cache, guardy, eskalacja uprawnień; nie zastępuje policy zasobu | P1 Admin Kit |
+| Spatie Media Library | Powiązania plików, warianty i kolekcje DAM | P0-kandydat | Adminowy DAM potrzebuje jawnych assetów i wariantów obrazów | Własny `MediaAsset` na Laravel Storage | Procesory obrazów, storage, kolejki; nie jest antywirusem | P0-B po kwalifikacji |
+| Intervention Image | WebP/AVIF dla obrazów DAM | P0-kandydat | Lokalne warianty obrazów na VM, wykonywane w jobach Horizon | Transformacje Cloudinary | Wymaga sprawdzonych bibliotek obrazu; nie przetwarza innych plików | P0-B |
+| Tiptap | Zamknięty rich text dla stron i artykułów | P0-kandydat | Strukturalna treść React, obrazy tylko z DAM | Markdown; Editor.js | Sanitizer backendowy, migracje schema, SSR i XSS wymagają testów | P0-B |
+| Cloudinary | Zewnętrzny DAM, CDN i transformacje | Opcjonalne | Kandydat po wzroście wolumenu lub potrzebie pełnego DAM | Lokalny storage P0; EU object storage | DPA/region, kredyty/koszt i vendor lock-in | P1 po akceptacji |
+| Spatie Activitylog | Historia zmian administracyjnych | Opcjonalne | Gdy własny mały, jawny audit nie wystarcza | Jawny zapis zdarzenia audytowego | PII, retencja; brak gwarancji WORM | P1; audit bazowy P0 |
+| Spatie Laravel Settings | Typowane edytowalne ustawienia | Opcjonalne | Dla ustawień zmienianych przez klienta | config/env; prosty jawny model | Migracje ustawień, cache; nie magazyn sekretów | P1 |
+| Spatie Laravel Health | Zbiorcze kontrole zależności | Opcjonalne | Gdy rośnie liczba kontroli i potrzebny dashboard | /up + readiness + heartbeat hostingu | Polling, false positives; nie wykryje sam własnego całkowitego down | P1; health podstawowy P0 |
+| Spatie Laravel Backup | Kopie z poziomu aplikacji | Opcjonalne | Gdy hosting nie zapewnia backupu i operator akceptuje utrzymanie | Backup DB/storage u dostawcy | Zależność od schedulera, binarek dump, dysku i kluczy | P0 tylko po wyborze tej metody; inaczej P1 |
+| Spatie Query Builder | Spójne filtry/sort/include | Opcjonalne | Kilka list z rzeczywistymi wspólnymi potrzebami | Jawny Eloquent Query | Nieograniczone includes/kosztowne filtry, wyciek pól | P1 |
+| Spatie ResponseCache | Cache całego HTML | Odłożone | Najpierw indeksy, projekcje, cache danych i pomiar | CDN/cache HTTP; Laravel Cache | Wyciek sesji, CSRF, draftów; invalidacja | P2 po pomiarze |
+| Laravel Excel | Import/eksport XLSX | Opcjonalne | Tylko wymagania arkuszy, nie zwykła lista | Stream CSV bez paczki | Formuły CSV/XLSX, zip bombs, pamięć, biblioteka parsera | P1 moduł biznesowy |
+| Laravel Pulse | Lokalny dashboard wydajności | Opcjonalne | Gdy operator potrzebuje agregatów na własnym hostingu | Metryki hostingu; Nightwatch | Dodatkowe dane, Livewire, kontrola dostępu; sprawdzić DB | P1 |
+| Laravel Nightwatch | Zintegrowane błędy i wydajność | Do decyzji | Kandydat na jeden system monitoringu | Centralne logi/alerty hostingu; osobny dostawca błędów | SaaS, wolumen/koszt, redakcja, DPA/region | P0-C po zatwierdzeniu |
+| Horizon | Zarządzanie kolejkami Redis | P0-kandydat | Wygodna obsługa workerów, metryk i kontrolowanego przeładowania po deployu | Zwykły queue worker | Redis, proces supervisor, dashboard, brak zgodności Redis Cluster | P0-A/B |
+| Telescope | Lokalna diagnostyka żądań i jobs | Opcjonalne dev-only | Przy trudnym debugowaniu | Logi, debugger | Gromadzi wrażliwe dane; nie włączać na produkcji | P1/dev |
+| PHPUnit | Testy unit/feature | P0-kandydat | Wystarczający runner, obecny w upstream | Pest jako zamienny styl | Wersja PHP i integracje runnera | P0-A |
+| Larastan/PHPStan | Błędy typów i Laravel API | P0-kandydat | Wykrywa błędy przed runtime | Manualne review, słabsze pokrycie | Baseline może ukryć problem | P0-A |
+| Pint | Format PHP | P0-kandydat | Jeden standard bez debat o stylu | Bezpośredni PHP-CS-Fixer | Aktualizacja może wygenerować duży diff | P0-A |
+| Frontend lint/format/typecheck | Błędy TS i spójny kod | P0-kandydat jako kontrola | Wybrać jeden zestaw po przypięciu scaffoldu | ESLint + Prettier lub narzędzia przypiętego startera | Upstream używa Vite Plus; nie dublować ani zakładać starych skryptów | P0-A |
+| Playwright + axe-core | E2E i automatyczna część a11y | P0-kandydat | Realne krytyczne ścieżki i testy DOM | Dusk; ręczne a11y jako uzupełnienie | Browser binaries, flaky tests; axe nie dowodzi zgodności | P0-B/C |
+| Composer/npm audit | Znane podatności zależności | P0-kandydat | Używają realnego dependency tree | Skan dostawcy CI | Brak wykrycia zero-day; wyniki zależą od bazy | P0-A |
+| Gitleaks CLI | Wykrywanie sekretów | P0-kandydat | Ochrona PR i historii przed publikacją | Mechanizm secret scanning hostingu | False positives; nie każdy sekret ma wzorzec | P0-A |
+| Trivy CLI | Obraz, podatności, SBOM | P0-kandydat | Kontrola faktycznego artefaktu | Skan registry/hostingu | Baza CVE, noise, koszt aktualizacji obrazów | P0-C |
+| Filament | Szybki panel CRUD | Opcjonalny wariant zamiast React admina | Dobry dla standardowego zaplecza, jeśli to priorytet | React/Inertia; panel komercyjny po osobnej ocenie | Livewire/Alpine, osobny UI i przegląd MFA; nie dokładać bez potrzeby do React | D1 decyzja, później P0/P1 |
+| Redis | Queue, Horizon, cache i locks | P0-kandydat | Wymagany przez Horizon; ogranicza złożoność późniejszej migracji kolejki | DB queue/session/cache | Operacje, persistence/eviction, licencja zależna od wersji | P0-A |
+| Deployer | Atomowe release’y, kontrolowany deploy i rollback na VM | P0-kandydat | Pięć release’ów, atomowy symlink, lock deployu, hooki health/Horizon i szybki rollback | Własny skrypt shell; kontenerowy blue/green | Jeden host nie daje HA; recepta wymaga review, a człowiek zatwierdza wydanie wraz z ograniczonym automatycznym rollbackiem według 10 | P0-C |
+| Error/uptime/performance monitoring | Wykrycie awarii klienta | P0 jako zdolność; dostawca do decyzji | Jeden system błędów i niezależna sonda uptime | Narzędzia dostawcy lub SaaS | Region, retencja, dyżur i billing | P0-C |
+
+### Uzupełnienie ADR-019: ESLint/Oxlint
+
+Wybór runnera nie może osłabić kontraktu UI. P0 referencyjnie lokalne reguły ESLint `ds/*` z testami; Oxlint jako wariant po przejściu tych samych fixtures. Gdy tooling upstream korzysta z Oxlint, ESLint pozostaje tylko dla brakujących kontroli. Koszt: utrzymanie małego pluginu i skanowania Blade/CSS; korzyść: wykrywanie obejść zamkniętego API zamiast wyłącznie review stylistycznego. Nie rekomendujemy niezweryfikowanej paczki „LLM-safe UI”.
+
+[Dokumentacja ESLint](https://eslint.org/docs/latest/extend/custom-rules) opisuje własne reguły i ich testowanie. [Dokumentacja Oxlint](https://oxc.rs/docs/guide/usage/linter/js-plugins.html), sprawdzona 2026-09-09, opisuje `jsPlugins` jako alpha, bez obsługi custom parsers i własnych reguł wymagających type-awareness. Oxlint jest kandydatem, nie zatwierdzoną zależnością: przed wyborem sprawdzić tag, licencję, runtime i pełną zgodność fixtures według checklisty tego dokumentu. Żaden runner JS sam nie pokrywa Blade/CSS.
+
+## Dowody kompatybilności i licencji — PHP
+
+Poniższe wymagania należy czytać łącznie z PHP 8.5 i Laravel 13 przyjętymi jako kierunek startera. „Deklaruje 13” nie oznacza przebiegu testów w tym katalogu. Licencje dotyczą paczek open source, nie płatnych usług, dodatków Pro i zależności przechodnich.
+
+| Paczka / odczytana gałąź | PHP; Laravel w manifeście | Licencja | Utrzymanie / dokumentacja i źródło |
+| --- | --- | --- | --- |
+| Laravel framework 13.x | ^8.3; linia 13 | MIT | Oficjalna polityka wsparcia; [manifest](https://raw.githubusercontent.com/laravel/framework/13.x/composer.json), [release policy](https://laravel.com/framework/docs/releases) |
+| Fortify 1.x | ^8.2; 11–13 | MIT | Oficjalny auth i publikowane aktualizacje; [manifest](https://raw.githubusercontent.com/laravel/fortify/1.x/composer.json), [releases](https://github.com/laravel/fortify/releases) |
+| Inertia Laravel 3.x | ^8.2; ^11.35 / 12 / 13 | MIT | Aktualny adapter w starterze; [manifest](https://raw.githubusercontent.com/inertiajs/inertia-laravel/3.x/composer.json) |
+| Wayfinder main | ^8.2; 11–13 | MIT | Odczytane releases pokazują 0.1.21; seria przed 1.0 wymaga ostrożności; [manifest](https://raw.githubusercontent.com/laravel/wayfinder/main/composer.json), [releases](https://github.com/laravel/wayfinder/releases) |
+| Pulse 1.x | ^8.1; ^10.48.4 / ^11.0.8 / 12 / 13 | MIT | Aktywny projekt first-party, dodatkowe Livewire; [manifest](https://raw.githubusercontent.com/laravel/pulse/1.x/composer.json), [docs](https://laravel.com/framework/docs/13.x/pulse) |
+| Nightwatch 1.x | ^8.2; 10–13, ext-zlib | MIT SDK; usługa komercyjna | First-party SDK i usługa; [manifest](https://raw.githubusercontent.com/laravel/nightwatch/1.x/composer.json), [start guide](https://nightwatch.laravel.com/docs/start-guide), [releases](https://github.com/laravel/nightwatch/releases) |
+| Horizon 5.x | ^8.0; ^9.21 / 10–13, pcntl/posix | MIT | Oficjalne docs i aktualizowane constrainty; [manifest](https://raw.githubusercontent.com/laravel/horizon/5.x/composer.json), [docs](https://laravel.com/framework/docs/13.x/horizon) |
+| Telescope 5.x | ^8.0; ^8.37 / 9–13 | MIT | First-party, diagnostyka; [manifest](https://raw.githubusercontent.com/laravel/telescope/5.x/composer.json), [docs](https://laravel.com/framework/docs/13.x/telescope) |
+| Laravel Data main | ^8.1; 10–13 | MIT | Utrzymywane DTO, oceniać stabilną linię v4; [manifest](https://raw.githubusercontent.com/spatie/laravel-data/main/composer.json), [README](https://github.com/spatie/laravel-data), [releases](https://github.com/spatie/laravel-data/releases) |
+| Laravel TypeScript Transformer main | ^8.2; 11–13; transformer ^3 | MIT | Utrzymywana integracja; kompatybilność z Data wymaga tagów obu paczek; [manifest](https://raw.githubusercontent.com/spatie/laravel-typescript-transformer/main/composer.json), [README](https://github.com/spatie/laravel-typescript-transformer) |
+| Permission main / docs v8 | ^8.3; 12–13 | MIT | Docs mapują Laravel 12/13 na v7–v8; [prerequisites](https://spatie.be/docs/laravel-permission/v8/prerequisites), [manifest](https://raw.githubusercontent.com/spatie/laravel-permission/main/composer.json) |
+| Media Library main | ^8.2; ^10.2 / 11–13; exif/fileinfo | MIT core | Utrzymywane wydania; wariant Pro wymaga osobnej licencji; [manifest](https://raw.githubusercontent.com/spatie/laravel-medialibrary/main/composer.json), [README](https://github.com/spatie/laravel-medialibrary), [releases](https://github.com/spatie/laravel-medialibrary/releases) |
+| Activitylog main / docs v5 | **^8.4**; 12–13 | MIT | Dokumentacja i manifest zgodne co do minimum; [requirements](https://raw.githubusercontent.com/spatie/laravel-activitylog/main/docs/requirements.md), [manifest](https://raw.githubusercontent.com/spatie/laravel-activitylog/main/composer.json), [releases](https://github.com/spatie/laravel-activitylog/releases) |
+| Settings main | ^8.2; 11–13 | MIT | Oficjalny README, changelog i bieżące constrainty; [README](https://github.com/spatie/laravel-settings), [manifest](https://raw.githubusercontent.com/spatie/laravel-settings/main/composer.json) |
+| Health main | ^8.2; 11–13 | MIT | Utrzymywany projekt, brak testu lokalnego; [README](https://github.com/spatie/laravel-health), [manifest](https://raw.githubusercontent.com/spatie/laravel-health/main/composer.json) |
+| Backup main | Manifest ^8.3; ^12.40 / 13; ZIP; **docs wskazują 8.4** | MIT | Rozbieżność docs/manifest: dla startera 8.4, przed wyborem sprawdzić tag, binarki dump i Linux; [requirements](https://raw.githubusercontent.com/spatie/laravel-backup/main/docs/requirements.md), [manifest](https://raw.githubusercontent.com/spatie/laravel-backup/main/composer.json), [README](https://github.com/spatie/laravel-backup) |
+| Query Builder main | ^8.3; 12–13 | MIT | Bieżąca dokumentacja repo odsyła do v7; nie kopiować starych przykładów v6; [docs](https://raw.githubusercontent.com/spatie/laravel-query-builder/main/docs/introduction.md), [manifest](https://raw.githubusercontent.com/spatie/laravel-query-builder/main/composer.json) |
+| ResponseCache main | **^8.4**; 12–13 | MIT | Utrzymywane źródła; wdrożenie nieuzasadnione bez pomiaru; [README](https://github.com/spatie/laravel-responsecache), [manifest](https://raw.githubusercontent.com/spatie/laravel-responsecache/main/composer.json) |
+| Laravel Excel 4.x | ^8.3; 12–13; PhpSpreadsheet ^5.8 w gałęzi | MIT | Dostępne wydania 4.x; docs wskazują ^5.3, rozstrzyga tag/lock; [docs](https://docs.laravel-excel.com/4.x/getting-started/installation.html), [manifest](https://raw.githubusercontent.com/SpartnerNL/Laravel-Excel/4.x/composer.json), [releases](https://github.com/SpartnerNL/Laravel-Excel/releases) |
+| Larastan 3.x | ^8.2; ^11.44.2 / ^12.4.1 / 13; PHPStan ^2.2.2 | MIT | Utrzymywana seria 3; [manifest](https://raw.githubusercontent.com/larastan/larastan/3.x/composer.json), [releases](https://github.com/larastan/larastan/releases) |
+| Pint main | ^8.3; niezależne narzędzie CLI | MIT | Bieżący first-party formatter; [manifest](https://raw.githubusercontent.com/laravel/pint/main/composer.json), [README](https://github.com/laravel/pint) |
+| PHPUnit 12.5 | >=8.3; niezależny od frameworka | BSD-3-Clause | Bugfix support linii 12 do 2027-02-05; [manifest](https://raw.githubusercontent.com/sebastianbergmann/phpunit/12.5/composer.json), [support](https://phpunit.de/supported-versions.html) |
+| Filament 5.x | Docs: PHP 8.2+, Laravel 11.28+, Tailwind 4.1+ | MIT core | Bieżąca dokumentacja v5; zgodność Laravel 13 wymaga także manifestów subpackages i testu resolvera; [docs](https://filamentphp.com/docs/5.x/introduction/installation), [root manifest](https://raw.githubusercontent.com/filamentphp/filament/5.x/composer.json) |
+
+### Wnioski z weryfikacji
+
+- Nie wybierać automatycznie Laravel Excel 3.1 z przyzwyczajenia: istnieje 4.x. Odczytany manifest 3.1 nadal bazuje na PhpSpreadsheet ^1.30.5; dla nowego projektu najpierw oceniać 4.x i aktualne advisories parsera. Nie jest to stwierdzenie podatności każdej instalacji 3.1.
+- Backup ma rozbieżność wymagań PHP między dokumentem i manifestem; oznaczyć jako wymagające rozstrzygnięcia przy stabilnym tagu, nie ignorować dokumentacji.
+- Oficjalny React starter `main` zawiera dodatkowe nowe narzędzia i funkcje, np. Chisel, Pao, passkeys oraz Vite Plus. Nie są automatycznie rekomendowane tym planem. Przed wybraniem snapshotu trzeba przejrzeć cały manifest i scripts; funkcje nieobjęte P0 wyłączyć/odrzucić po ocenie, nie wprowadzać bez świadomej decyzji. [Composer upstream](https://raw.githubusercontent.com/laravel/react-starter-kit/main/composer.json), [npm upstream](https://raw.githubusercontent.com/laravel/react-starter-kit/main/package.json).
+- Pulse i Horizon wymagają kontroli konfiguracji: aktualna dokumentacja Pulse wymienia MySQL, MariaDB i PostgreSQL jako wspierane magazyny; nie ma podstaw, by wymagać drugiego silnika DB przy proponowanym PostgreSQL. Potwierdzić to dla przypiętego tagu. Horizon wymaga Redis i nie wspiera Redis Cluster. [Pulse](https://laravel.com/framework/docs/13.x/pulse), [Horizon](https://laravel.com/framework/docs/13.x/horizon).
+
+## Frontend, QA i infrastruktura — kwalifikacja
+
+Dla CLI/JS „Laravel/PHP” nie jest bezpośrednim wymogiem; znaczenie mają Node, OS, browser binaries i zgodność adapterów. P0 przyjmuje Node 24 LTS, zgodny z engines wybranego build toola; nie wywnioskowywać runtime z `@types/node`. [Cykl Node](https://nodejs.org/en/about/previous-releases).
+
+| Narzędzie | Weryfikacja / licencja / utrzymanie | Gate bezpieczeństwa i kompatybilności |
+| --- | --- | --- |
+| React 19 | Oficjalny starter; [MIT](https://raw.githubusercontent.com/facebook/react/main/LICENSE) | Peer dependencies Inertia/shadcn, audyt JS, brak dodatkowego SSR bez potrzeby |
+| TypeScript | [Oficjalne repo](https://github.com/microsoft/TypeScript), Apache-2.0, aktywny projekt | Wybrany tag z kompatybilnymi pluginami, strict i typecheck |
+| Tailwind 4 | [Repo](https://github.com/tailwindlabs/tailwindcss), MIT, aktywna seria | Wspierane przeglądarki, plugin/build, test generacji CSS |
+| shadcn/ui | [Repo](https://github.com/shadcn-ui/ui), MIT | Licencja i zależności każdego pobranego komponentu; review kodu registry |
+| Lucide | [Repo](https://github.com/lucide-icons/lucide), ISC z informacją o dziedziczonych ikonach MIT | Zachować notices, pojedyncze importy, brak dodatkowych rodzin |
+| Vite | [Repo](https://github.com/vitejs/vite), MIT | engines/Node, plugin Laravel i natywne binarki; dev server nie publiczny |
+| ESLint / Prettier | [ESLint](https://github.com/eslint/eslint), [Prettier](https://github.com/prettier/prettier), MIT | Alternatywa wobec toolingu scaffoldu; nie deklarować gotowej konfiguracji przed wyborem |
+| Playwright | [Repo](https://github.com/microsoft/playwright), Apache-2.0, [instalacja](https://playwright.dev/docs/intro) | Browser version spójna z pakietem, obsługiwany Linux/Node, trace bez PII |
+| axe-core | [Repo](https://github.com/dequelabs/axe-core), MPL-2.0 | Uwzględnić obowiązki zmian plików MPL przy dystrybucji; narzędzie dev, ręczny audyt nadal potrzebny |
+| Gitleaks CLI | [Repo](https://github.com/gitleaks/gitleaks), MIT | Przypiąć binarkę/checksum; warunki płatnej GitHub Action nie są licencją CLI |
+| Trivy CLI | [Repo](https://github.com/aquasecurity/trivy), Apache-2.0 | Kandydat do skanu artefaktów; tryb i pokrycie archiwum natywnego zakwalifikować w P0-A. Skan obrazów poza P0 |
+| Composer/npm audit | [Composer docs](https://getcomposer.org/doc/03-cli.md#audit), [npm docs](https://docs.npmjs.com/cli/v11/commands/npm-audit/) | Wbudowane komendy, bez dodatkowej paczki; lockfile, dostęp do bazy, rozstrzygnięte findings |
+| PostgreSQL | [Polityka wersji](https://www.postgresql.org/support/versioning/), [PostgreSQL License](https://www.postgresql.org/about/licence/) | Jeden wspierany major u dostawcy, aktualne poprawki, restore, role DB |
+| Redis | [Oficjalne licencje](https://redis.io/legal/licenses/) | Warunki zależą od wersji; nie opisywać wszystkich wydań jako BSD. Zatwierdzić licencję, persistence i kompatybilność Horizon |
+| Docker Compose | [Oficjalna dokumentacja](https://docs.docker.com/compose/how-tos/production/) | Poza baseline P0 po decyzji o natywnym środowisku; zachowany jako rozważona alternatywa |
+| GitHub Actions/GHCR | [Secure use](https://docs.github.com/en/actions/reference/security/secure-use), [environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) | Usługi komercyjne; billing, private storage i funkcje approval sprawdzić na planie organizacji |
+
+Narzędzia frontendowe i QA mają aktywne oficjalne repozytoria, lecz brak zablokowanych wersji uniemożliwia stwierdzenie zgodności całego zestawu. Jedna paczka z poprawną licencją nie rozstrzyga licencji całego obrazu; przyszły raport/SBOM obejmuje też dependencies, fonty, binarki i obrazy bazowe.
+
+## Ryzyka, koszty i obsługa utrzymania
+
+Nie podajemy zmyślonych cen: Nightwatch, hosting, mail, registry, CI i uptime wymagają kalkulacji dla wolumenu klienta. Właściciel przed wyborem zapisuje miesięczny limit, retencję, region, dostęp i warunki wyjścia z usługi. Dodatkowi kandydaci typu Sentry/GlitchTip, płatny panel lub monitor uptime wymagają własnej kwalifikacji, jeśli zostaną wybrani; nie są tu zatwierdzonymi rekomendacjami.
+
+Opiekun startera przegląda zależności miesięcznie, alerty bezpieczeństwa na bieżąco. Propozycja SLA: triage critical w 1 dzień roboczy, podatność aktywnie wykorzystywalna blokuje release; termin poprawki produkcyjnej uzgodnić z operatorem i klientem. Każdy wyjątek ma expiry i człowieka odpowiedzialnego. Licencja MIT nie oznacza darmowego wsparcia ani braku ryzyka.
+
+## Checklista dopuszczenia konkretnej wersji
+
+- [ ] Problem biznesowy, etap i alternatywa bez paczki zapisane.
+- [ ] Stabilny tag i commit, data wydania, status utrzymania i changelog ponownie sprawdzone.
+- [ ] Manifest tagu, PHP/Laravel/Node/rozszerzenia i licencja wraz z zależnościami zgodne.
+- [ ] Resolver, lockfile, audit PHP/JS, scripts/plugins i skan obrazu sprawdzone w przyszłej implementacji.
+- [ ] Test integracyjny na wybranym DB/runtime i minimalnej funkcji zaliczony.
+- [ ] Ustawienia prywatności, retencja, koszt i właściciel utrzymania zaakceptowane.
+- [ ] Wynik zapisany jako: zatwierdzono/odrzucono, wersja, dowody, reviewer, data ponownej oceny.
+
+## Otwarte pytania
+
+Który snapshot oficjalnego startera ma być bazą i czy przechodzi kwalifikację całego toolchainu na PHP 8.5 i Node 24? Który dostawca monitoringu/backupów? Czy dynamiczne role i XLSX są realną potrzebą klienta? Decyzja o paczce nie może wyprzedzać odpowiedzi o funkcji.

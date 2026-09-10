@@ -1,0 +1,137 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment to deploy
+        required: true
+        type: choice
+        options: [staging, production]
+      allow_migrations:
+        description: Run approved expand migrations
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    name: build-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout approved revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci
+      - name: Prepare test application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force --no-interaction
+      - name: Verify revision
+        run: composer ci:check
+      - name: Build production assets
+        run: npm run build:ssr
+      - name: Strip development PHP dependencies from artifact
+        run: composer install --no-dev --classmap-authoritative --no-interaction --prefer-dist --no-progress
+      - name: Create release artifact
+        run: |
+          mkdir -p .release/app
+          git archive --format=tar "$GITHUB_SHA" | tar -x -C .release/app
+          cp -R vendor .release/app/vendor
+          cp -R public/build .release/app/public/build
+          tar -C .release/app -czf .release/starter.tar.gz .
+          sha256sum .release/starter.tar.gz | tee .release/starter.tar.gz.sha256
+          jq -n \
+            --arg revision "$GITHUB_SHA" \
+            --arg artifact_sha256 "$(cut -d ' ' -f 1 .release/starter.tar.gz.sha256)" \
+            --arg php "$(php -r 'echo PHP_VERSION;')" \
+            --arg node "$(node --version)" \
+            --arg composer_lock_sha256 "$(sha256sum composer.lock | cut -d ' ' -f 1)" \
+            --arg package_lock_sha256 "$(sha256sum package-lock.json | cut -d ' ' -f 1)" \
+            '{revision: $revision, artifact_sha256: $artifact_sha256, php: $php, node: $node, composer_lock_sha256: $composer_lock_sha256, package_lock_sha256: $package_lock_sha256}' \
+            > .release/manifest.json
+      - name: Upload release artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ github.sha }}
+          path: .release/
+          if-no-files-found: error
+          retention-days: 30
+
+  deploy:
+    name: deploy-${{ inputs.environment }}
+    needs: build-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}
+    env:
+      DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DEPLOY_ARTIFACT: .release/starter.tar.gz
+      DEPLOY_ALLOW_MIGRATIONS: ${{ inputs.allow_migrations }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+    steps:
+      - name: Checkout deployment recipe
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download verified artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-${{ github.sha }}
+          path: .release
+      - name: Verify artifact manifest
+        run: |
+          sha256sum -c .release/starter.tar.gz.sha256
+          test "$(jq -r .revision .release/manifest.json)" = "$GITHUB_SHA"
+          test "$(jq -r .artifact_sha256 .release/manifest.json)" = "$(cut -d ' ' -f 1 .release/starter.tar.gz.sha256)"
+      - name: Setup PHP and Deployer
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+      - name: Install Deployer
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Configure SSH
+        run: |
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_USER"
+          test -n "$DEPLOY_PATH"
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: Deploy artifact
+        run: |
+          export DEPLOY_ARTIFACT_SHA256="$(cut -d ' ' -f 1 .release/starter.tar.gz.sha256)"
+          vendor/bin/dep deploy "$DEPLOY_ENVIRONMENT" --file=deploy.php --revision="$GITHUB_SHA" --ansi

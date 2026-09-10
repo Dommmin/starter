@@ -100,7 +100,7 @@ Przyjmujemy [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/
 
 - Format: `type(scope): opis`, opcjonalny scope i `!` przed dwukropkiem dla breaking change.
 - Dozwolone typy, małymi literami: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`, `revert`. `style` oznacza formatowanie bez zmiany zachowania; zmiana wyglądu/interakcji UI to odpowiednio `feat` albo `fix`.
-- Tytuł do 72 znaków, bez końcowej kropki; opis po polsku, konkretny czasownik, np. `fix(auth): odrzuć ponowne użycie kodu odzyskiwania`. Identyfikatory i nazwy techniczne pozostają oryginalne. Język i sens ocenia reviewer, walidator sprawdza strukturę.
+- Tytuł do 72 znaków, bez końcowej kropki; opis po angielsku w trybie rozkazującym (imperative mood), np. `fix(auth): reject reuse of recovery codes`. Identyfikatory i nazwy techniczne pozostają oryginalne. Język i sens ocenia reviewer, walidator sprawdza strukturę.
 - Scope małymi literami, nazwany obszarem: np. `auth`, `pages`, `media`, `ui`, `deps`, `docker`, `agents`. To przykłady, nie zamknięty katalog; zmiana przekrojowa może nie mieć scope.
 - Jeden commit obejmuje jeden cel, wraz z jego testami. Nie mieszać feature z porządkowaniem niezwiązanych plików. Przy nietrywialnej zmianie body wyjaśnia powód; wynik testów i ograniczenia zapisuje się w PR. `Refs: #123` tylko dla istniejącego zadania.
 - Breaking change wymaga w projekcie zarówno `!`, jak i footera `BREAKING CHANGE: ...` z wpływem i ścieżką migracji. `revert` wskazuje pełny SHA cofanej zmiany w body; nie stanowi zgody na rollback produkcji.

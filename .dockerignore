@@ -1,0 +1,6 @@
+**
+!docker/
+!docker/local/
+!docker/local/Dockerfile
+!docker/local/entrypoint.sh
+!docker/local/php.ini

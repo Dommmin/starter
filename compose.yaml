@@ -1,0 +1,128 @@
+x-runtime: &runtime
+    image: ${COMPOSE_PROJECT_NAME:-starter-local}-runtime
+    build:
+        context: .
+        dockerfile: docker/local/Dockerfile
+    init: true
+    working_dir: /var/www/html
+    environment:
+        LOCAL_UID: ${LOCAL_UID:-1000}
+        LOCAL_GID: ${LOCAL_GID:-1000}
+        DOCKER_LOCAL: '1'
+        VITE_PORT: ${VITE_PORT:-5173}
+    volumes:
+        - .:/var/www/html
+        - ./.env.docker:/var/www/html/.env
+        - vendor:/var/www/html/vendor
+        - node_modules:/var/www/html/node_modules
+        - storage:/var/www/html/storage
+        - bootstrap_cache:/var/www/html/bootstrap/cache
+
+services:
+    app:
+        <<: *runtime
+        ports:
+            - '127.0.0.1:${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test: [CMD, php, -r, "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+            interval: 5s
+            timeout: 3s
+            retries: 20
+
+    web:
+        image: nginx:1.28-alpine
+        ports:
+            - '127.0.0.1:${APP_PORT:-8080}:80'
+        volumes:
+            - ./public:/var/www/html/public:ro
+            - storage:/var/www/html/storage:ro
+            - ./docker/local/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+        depends_on:
+            app:
+                condition: service_healthy
+        healthcheck:
+            test: [CMD, wget, -q, --spider, http://127.0.0.1/up]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+    vite:
+        <<: *runtime
+        # Inertia reads public/hot for SSR. Sharing app's network makes localhost
+        # resolve identically for PHP, Vite SSR and the developer's browser.
+        network_mode: service:app
+        command: [npm, run, dev]
+        depends_on:
+            app:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    CMD-SHELL,
+                    'curl --fail --silent http://127.0.0.1:$${VITE_PORT}/@vite/client > /dev/null',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 30
+
+    queue:
+        <<: *runtime
+        command: [php, artisan, queue:work, --sleep=1, --tries=3, --timeout=60]
+        stop_grace_period: 75s
+        depends_on:
+            web:
+                condition: service_healthy
+
+    scheduler:
+        <<: *runtime
+        command: [php, artisan, schedule:work]
+        depends_on:
+            web:
+                condition: service_healthy
+
+    postgres:
+        image: postgres:18-bookworm
+        environment:
+            POSTGRES_DB: ${DB_DATABASE:-starter}
+            POSTGRES_USER: ${DB_USERNAME:-starter}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-local-development-only}
+        volumes:
+            - postgres:/var/lib/postgresql
+        healthcheck:
+            test:
+                [
+                    CMD-SHELL,
+                    'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"',
+                ]
+            interval: 3s
+            timeout: 3s
+            retries: 20
+
+    redis:
+        image: redis:8.2-alpine
+        command: [redis-server, --appendonly, 'yes']
+        volumes:
+            - redis:/data
+        healthcheck:
+            test: [CMD, redis-cli, ping]
+            interval: 3s
+            timeout: 3s
+            retries: 20
+
+    mailpit:
+        image: axllent/mailpit:v1.27
+        ports:
+            - '127.0.0.1:${MAILPIT_PORT:-8025}:8025'
+
+volumes:
+    vendor:
+    node_modules:
+    storage:
+    bootstrap_cache:
+    postgres:
+    redis:

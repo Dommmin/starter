@@ -2,7 +2,13 @@
 
 import json
 import re
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        tomllib = None
 import unittest
 from pathlib import Path
 

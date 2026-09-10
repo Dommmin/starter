@@ -20,45 +20,51 @@ Status: proponowany. Uprawnienia poprzez Laravel policies, default deny, oddziel
 
 Zasoby: konta i sesje, treści przed publikacją, dane kontaktowe, przyszłe dokumenty klienta, backupy, obrazy, sekrety deployu i dostępność. Aktorzy: gość, bot, editor, admin, developer, agent AI, dostawca, atakujący z przejętym kontem lub zależnością. Granice zaufania: Internet → proxy → Laravel → DB/queue/storage; aplikacja → mail/monitoring; PR → CI → GHCR → hosting; dokumenty i wyniki narzędzi → agent. Osobne środowiska i osobne projekty klientów nie współdzielą credentiali.
 
-| Zagrożenie / ścieżka | Priorytet | Kontrola | Dowód i właściciel |
-| --- | --- | --- | --- |
-| Editor zmienia ID i publikuje cudzy/chroniony zasób | P0 | Policy, ograniczony query scope, jawne pola zapisu | Test 403/404 oraz brak zmiany DB; backend reviewer |
-| Bot przejmuje konto, resetuje hasło lub brute-force TOTP | P0 | Limity, ogólne odpowiedzi, MFA, alerty | Feature/E2E reset/MFA/429; security reviewer |
-| Treść strony/formularza uruchamia skrypt | P0 | Sanitizer rich textu, zamknięty schema Tiptap, CSP | Payload XSS nie wykonuje się; frontend reviewer |
-| Zgłoszenia zalewają skrzynkę/kolejkę | P0 | Limity per IP i globalne, deduplikacja, rozmiar payloadu | Test burst, metryka backlog; operator |
-| Agent/PR przejmuje sekret produkcji | P0 | Brak credentiali u agenta/PR, chronione workflows, approval | Próba deployu agenta odrzucona; właściciel GitHub |
-| Pakiet/skrypt instalacyjny lub obraz jest złośliwy | P0 | Pinning, review scripts/plugins, audyty, archiwum z manifestem i sumą SHA-256 | Raport supply-chain; reviewer CI |
-| Uszkodzona migracja lub awaria DB niszczy dane | P0 | Expand/contract, backup poza hostem, restore drill | Odtworzenie i pomiar RTO/RPO; operator |
-| Plik polyglot/SVG/PDF/ZIP wykonuje kod lub wyczerpuje zasoby | Przed uploadem | Kwarantanna, allowlista, izolowane konwersje i skan | Test pliku niebezpiecznego, timeoutu skanera; security |
-| Webhook odtworzony lub import URL prowadzi do SSRF | Przed integracją | Podpis, deduplikacja, ograniczenia egress | Zły podpis/replay/prywatny IP odrzucony; backend |
-| Log, backup lub zewnętrzny AI ujawnia PII | P0 | Redakcja, szyfrowanie, retencja, minimalny dostęp | Przegląd próbek i próbne usuwanie; administrator danych |
+| Zagrożenie / ścieżka                                         | Priorytet        | Kontrola                                                                      | Dowód i właściciel                                      |
+| ------------------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Editor zmienia ID i publikuje cudzy/chroniony zasób          | P0               | Policy, ograniczony query scope, jawne pola zapisu                            | Test 403/404 oraz brak zmiany DB; backend reviewer      |
+| Bot przejmuje konto, resetuje hasło lub brute-force TOTP     | P0               | Limity, ogólne odpowiedzi, MFA, alerty                                        | Feature/E2E reset/MFA/429; security reviewer            |
+| Treść strony/formularza uruchamia skrypt                     | P0               | Sanitizer rich textu, zamknięty schema Tiptap, CSP                            | Payload XSS nie wykonuje się; frontend reviewer         |
+| Zgłoszenia zalewają skrzynkę/kolejkę                         | P0               | Limity per IP i globalne, deduplikacja, rozmiar payloadu                      | Test burst, metryka backlog; operator                   |
+| Agent/PR przejmuje sekret produkcji                          | P0               | Brak credentiali u agenta/PR, chronione workflows, approval                   | Próba deployu agenta odrzucona; właściciel GitHub       |
+| Pakiet/skrypt instalacyjny lub obraz jest złośliwy           | P0               | Pinning, review scripts/plugins, audyty, archiwum z manifestem i sumą SHA-256 | Raport supply-chain; reviewer CI                        |
+| Uszkodzona migracja lub awaria DB niszczy dane               | P0               | Expand/contract, backup poza hostem, restore drill                            | Odtworzenie i pomiar RTO/RPO; operator                  |
+| Plik polyglot/SVG/PDF/ZIP wykonuje kod lub wyczerpuje zasoby | Przed uploadem   | Kwarantanna, allowlista, izolowane konwersje i skan                           | Test pliku niebezpiecznego, timeoutu skanera; security  |
+| Webhook odtworzony lub import URL prowadzi do SSRF           | Przed integracją | Podpis, deduplikacja, ograniczenia egress                                     | Zły podpis/replay/prywatny IP odrzucony; backend        |
+| Log, backup lub zewnętrzny AI ujawnia PII                    | P0               | Redakcja, szyfrowanie, retencja, minimalny dostęp                             | Przegląd próbek i próbne usuwanie; administrator danych |
 
 ## Mapowanie OWASP Top 10
 
 Stosujemy aktualną edycję [OWASP Top 10:2025](https://owasp.org/Top10/2025/). Poniższe kontrole są projektem dla tego startera, nie certyfikacją OWASP.
 
-| Kategoria | Kontrola w tym planie |
-| --- | --- |
-| A01 — kontrola dostępu | Policies, negatywna macierz ról, scope zapytań i plików; ochrona SSRF |
-| A02 — konfiguracja | Debug off, HTTPS, prywatne DB, brak otwartych dashboardów, bezpieczne cookies |
-| A03 — łańcuch dostaw | Lockfile, audyty, przegląd plugins/scripts, przypięte actions i obrazy |
-| A04 — kryptografia | TLS, bezpieczne haszowanie haseł, osobne klucze i kopie szyfrowane |
-| A05 — injection | Parametryzacja SQL, allowlista sortowania, escaping, brak dowolnych poleceń |
-| A06 — projekt | Threat model i analiza nadużyć dla każdego nowego procesu |
-| A07 — auth | MFA, sesje, reset, rate limits, anti-enumeration |
-| A08 — integralność | Podpis webhooka/artefaktu, deduplikacja, kontrola importów |
-| A09 — logi i alerty | Audit, redakcja, alarm i przypisany operator |
-| A10 — sytuacje wyjątkowe | Fail closed, timeouts, retry z limitem, transakcje i odzyskiwanie |
+| Kategoria                | Kontrola w tym planie                                                         |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| A01 — kontrola dostępu   | Policies, negatywna macierz ról, scope zapytań i plików; ochrona SSRF         |
+| A02 — konfiguracja       | Debug off, HTTPS, prywatne DB, brak otwartych dashboardów, bezpieczne cookies |
+| A03 — łańcuch dostaw     | Lockfile, audyty, przegląd plugins/scripts, przypięte actions i obrazy        |
+| A04 — kryptografia       | TLS, bezpieczne haszowanie haseł, osobne klucze i kopie szyfrowane            |
+| A05 — injection          | Parametryzacja SQL, allowlista sortowania, escaping, brak dowolnych poleceń   |
+| A06 — projekt            | Threat model i analiza nadużyć dla każdego nowego procesu                     |
+| A07 — auth               | MFA, sesje, reset, rate limits, anti-enumeration                              |
+| A08 — integralność       | Podpis webhooka/artefaktu, deduplikacja, kontrola importów                    |
+| A09 — logi i alerty      | Audit, redakcja, alarm i przypisany operator                                  |
+| A10 — sytuacje wyjątkowe | Fail closed, timeouts, retry z limitem, transakcje i odzyskiwanie             |
 
 ## Auth, sesje i urządzenia
 
-- Hasła: proponowane minimum 15 znaków, maksymalnie co najmniej 64, menedżery haseł i wklejanie dozwolone. Nie wymuszać sztucznych cyklicznych zmian; zmiana przy kompromitacji. Używać hashera Laravel, parametry sprawdzić pomiarem obciążenia. Nie implementować własnej kryptografii.
+- Hasła: minimum 15 i maksimum 128 znaków, z małą i wielką literą, cyfrą oraz symbolem; menedżery haseł i wklejanie są dozwolone. Produkcja odrzuca hasło obecne w wycieku przez `Password::uncompromised()`; zapytanie korzysta z modelu k-anonimowości. Nie wymuszać sztucznych cyklicznych zmian; zmiana przy kompromitacji. Używać hashera Laravel, parametry sprawdzić pomiarem obciążenia. Nie implementować własnej kryptografii.
 - Rate limiting startowo: login 5 prób/min dla kombinacji znormalizowany identyfikator + IP oraz limit IP; reset 3/15 min dla identyfikatora i limit globalny; TOTP 5/min dla wyzwania/sesji; kontakt 5/10 min/IP plus budżet globalny. To propozycje do testu NAT/DoS, nie domyślne wartości Laravel.
 - Unikać trwałej blokady po kilku próbach, bo umożliwia DoS na cudze konto. Stosować narastające opóźnienie i czasowe ograniczenia; ręczne zawieszenie konta osobną operacją z audytem.
 - Reset/rejestracja zwracają ogólny komunikat i zbliżone zachowanie czasowe dla istniejącego i nieistniejącego adresu. Dostarczenie asynchroniczne nie powinno ujawniać istnienia konta. Token resetu jednorazowy, wygasa; po resecie unieważnienie pozostałych sesji.
 - TOTP aktywne dopiero po weryfikacji kodu; recovery code jednorazowy i chroniony na dysku zgodnie z mechanizmem Fortify. Brak kodów w logach, monitoringu i analityce. Zmiana MFA, hasła, e-maila i recovery codes wymaga świeżego potwierdzenia tożsamości. Awaryjne odzyskanie admina przez nazwanych ludzi, z weryfikacją i audytem.
 - Regeneracja ID sesji przy loginie; unieważnienie sesji i odświeżenie CSRF po logout. Startowo idle admina 30 min, maksymalna sesja 12 h, brak remember-me dla admina. UI listy urządzeń P1; możliwość centralnego odebrania wszystkich sesji P0. Opis urządzenia i IP orientacyjny, z minimalną retencją.
-- Cookies sesyjne: Secure, HttpOnly, SameSite=Lax, możliwie host-only. Token cookie wymagający odczytu JS nie dostaje mechanicznie HttpOnly. Każda integracja cross-site wymaga osobnej analizy; CORS domyślnie bez dodatkowych originów.
+- Cookies sesyjne: Secure, HttpOnly, SameSite=Lax, możliwie host-only. Token cookie wymagający odczytu JS nie dostaje mechanicznie HttpOnly. Każda integracja cross-site wymaga osobnej analizy; CORS domyślnie bez dodatkowych originów. `SESSION_ENCRYPT=true` szyfruje dane sesji przed zapisem; jego pierwsze włączenie unieważnia istniejące sesje, więc jest elementem planowanego release'u.
+
+### Globalne domyślne zabezpieczenia Laravel
+
+`AppServiceProvider` ustanawia wspólne reguły runtime. Poza produkcją `Model::shouldBeStrict(true)` odrzuca lazy loading relacji, ciche odrzucanie atrybutów spoza fillable oraz odczyt atrybutu niepobranego z bazy. Dzięki temu N+1 i błędy projekcji są wykrywane przed releasem; zapytania nadal ładują relacje jawnie przez `with(...)`. `Model::automaticallyEagerLoadRelationships()` pozostaje nieaktywne globalnie: może ograniczyć N+1, lecz niejawnie zwiększa ilość danych i pamięci, dlatego wymaga osobnej decyzji dla konkretnego obszaru.
+
+`DB::prohibitDestructiveCommands(true)` działa wyłącznie na produkcji i blokuje przypadkowe polecenia Artisan niszczące dane. Laravel standardowo nie flashuje `current_password`, `password` ani `password_confirmation` po błędzie walidacji; nowe pola sekretne trzeba jawnie dopisać do `Exceptions::dontFlash()`. `#[SensitiveParameter]` stosujemy w własnych metodach przyjmujących hasła, tokeny lub klucze, ale nie zastępuje to redakcji logów.
 
 ## Web, pliki i sekrety
 

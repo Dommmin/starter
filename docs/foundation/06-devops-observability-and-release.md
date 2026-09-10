@@ -18,7 +18,7 @@ Status: proponowany. P0: logi JSON, error alert, zewnętrzny uptime, heartbeat q
 
 ## Lokalne środowisko i artefakt
 
-Domyślna propozycja: natywne PHP 8.5 CLI/FPM, Nginx, PostgreSQL, Redis/Horizon, scheduler, Node 24 LTS i lokalny SMTP; Linux referencyjny, macOS z adapterem albo Linux VM. Docker/Compose/Sail nie są wymagane. Wersje, izolację projektów, onboarding, TLS i przyszłe komendy doctor/setup/start/stop/verify opisuje [ADR-021](10-local-environment-deployment-and-logs.md).
+Lokalny development: Docker Compose i Makefile, PHP 8.5 CLI/FPM, Nginx, PostgreSQL 18, Redis, queue:work, scheduler, Node 24 oraz Mailpit. Zaimplementowany workflow opisuje [README](../../README.md), a decyzję [ADR-021](10-local-environment-deployment-and-logs.md). Horizon pozostaje planowaną paczką.
 
 Artefakt P0 to archiwum o zweryfikowanej sumie SHA-256 z kodem/vendor/bundle klienta i SSR, zbudowane przez CI na zgodnym Linux/CPU. Ten sam artefakt trafia na staging i produkcję; config cache powstaje na hoście w nowym katalogu release’u. Bez sekretów w archiwum, bez ponownego rozwiązywania zależności na produkcji. Natywne usługi mają ograniczone konta i prawa; zapis tylko do wymaganych katalogów. Aktualizacje runtime wymagają osobnej kwalifikacji.
 
@@ -61,15 +61,15 @@ Log JSON: UTC timestamp, level, service/environment, release ID/SHA, request ID,
 
 Liveness: proces żyje; readiness: minimalne zależności gotowe z krótkim timeoutem. Laravel `/up` traktować jako bazę, nie dowód działania maila/queue/DB. Szczegółowy health chroniony, publiczny endpoint bez nazw usług i sekretów. Nie restartować całej floty na chwilową awarię zewnętrznego mailera. Worker i scheduler mają osobne heartbeat; health weba nie wykrywa ich zatrzymania.
 
-| Sygnał | Próg roboczy / wykrycie | Reakcja operatora |
-| --- | --- | --- |
-| Uptime | 2 nieudane próby zewnętrzne co 1 min | Zweryfikuj hosting, readiness i ostatni release |
-| Błędy | Nowa regresja 500; >1% i ≥10 błędów/5 min | Korelacja z release, decyzja rollback/naprawa |
-| Performance | p95 >1 s przez 10 min przy dostatecznym ruchu | Slow queries, zasoby, rozmiar payloadu |
-| Queue | Najstarszy kontakt pending >5 min lub failed job | Worker, mail provider, bezpieczny replay |
-| Scheduler | Brak oczekiwanego heartbeat przez 5 min | Sprawdź jedną aktywną instancję i blokady |
-| Backup/dysk | Backup starszy niż 26 h; dysk >80% | Napraw backup/retencję i uniknij utraty zapisów |
-| TLS | Wygaśnięcie za <14 dni | Sprawdź automatyczne odnowienie |
+| Sygnał      | Próg roboczy / wykrycie                          | Reakcja operatora                               |
+| ----------- | ------------------------------------------------ | ----------------------------------------------- |
+| Uptime      | 2 nieudane próby zewnętrzne co 1 min             | Zweryfikuj hosting, readiness i ostatni release |
+| Błędy       | Nowa regresja 500; >1% i ≥10 błędów/5 min        | Korelacja z release, decyzja rollback/naprawa   |
+| Performance | p95 >1 s przez 10 min przy dostatecznym ruchu    | Slow queries, zasoby, rozmiar payloadu          |
+| Queue       | Najstarszy kontakt pending >5 min lub failed job | Worker, mail provider, bezpieczny replay        |
+| Scheduler   | Brak oczekiwanego heartbeat przez 5 min          | Sprawdź jedną aktywną instancję i blokady       |
+| Backup/dysk | Backup starszy niż 26 h; dysk >80%               | Napraw backup/retencję i uniknij utraty zapisów |
+| TLS         | Wygaśnięcie za <14 dni                           | Sprawdź automatyczne odnowienie                 |
 
 Wszystkie progi wymagają pomiaru i uzgodnienia godzin dyżuru. Alert musi mieć odbiorcę, link do runbooka, środowisko i release; brak alarmu bez właściciela. Test P0: kontrolowany błąd, zatrzymanie testowego workera i potwierdzenie dostarczenia alertu. APM dodatkowy dopiero gdy logi/metryki nie wyjaśniają problemu.
 

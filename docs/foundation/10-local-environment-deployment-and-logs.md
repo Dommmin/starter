@@ -1,36 +1,16 @@
 # Lokalne środowisko, bezprzerwowy deploy i logi
 
-Status: plan, bez implementacji. Wymaganie właściciela: produkcja na klasycznym Nginx/PHP-FPM bez Dockera, Deployer z zero-downtime i automatycznym rollbackiem. Natywny development i poniższe parametry operacyjne są propozycją domyślną. Dokument doprecyzowuje i zastępuje wcześniejsze zapisy o Compose oraz wyłącznie ręcznym rollbacku.
+Status: lokalny setup Docker Compose jest zaimplementowany. 2026-09-10 dodano `deploy.php` oraz ręczny workflow GitHub Actions: buduje on testowany artefakt z manifestem SHA-256 i przekazuje go Deployerowi. Produkcyjny host, systemd/SSR, Nginx, monitoring, sekrety i GitHub Environment nadal wymagają konfiguracji administratora; nie są deklarowane jako wdrożone przez samą receptę. Produkcja nadal używa natywnego Nginx/PHP-FPM; ta zmiana dotyczy developmentu.
 
-## ADR-021: natywne środowisko developerskie
+## ADR-021: środowisko developerskie Docker Compose
 
-Linux jest profilem referencyjnym; macOS wspiera codzienną pracę, Windows przez Linux w WSL2. Na macOS można użyć natywnych usług albo jednej Linux VM dla zgodności z produkcją. Docker/Sail nie są wymagane. Nie utrzymujemy kilku równorzędnych instrukcji provisioningu w P0: najpierw Linux, potem krótki adapter macOS.
+Decyzja właściciela z 2026-09-10 zastępuje wcześniejszy plan natywnego developmentu. Jedyny wspierany lokalny workflow to Docker Compose sterowany przez Makefile. Instrukcja instalacji, komendy, dane, ograniczenia i rozwiązywanie problemów: [README](../../README.md).
 
-| Element | Lokalny kontrakt |
-| --- | --- |
-| PHP i Composer | PHP 8.5 CLI i FPM w tym samym patchu, Composer 2 przypięty w instrukcji; zależności z lockfile |
-| Rozszerzenia | Lista wynikająca z resolvera oraz PDO PostgreSQL, Redis, intl, mbstring, XML, cURL, zip, pcntl dla Horizon; kwalifikacja konwersji WebP/AVIF na docelowym systemie |
-| Nginx | Osobny vhost projektu z root w public, FPM socket/port projektu; lokalna domena starter.test i lokalny TLS |
-| Node | Node 24 LTS, wersja package managera z manifestu; Vite/HMR lokalnie |
-| PostgreSQL | Ten sam major co CI i produkcja, osobny użytkownik i bazy dev/test; połączenia wyłącznie lokalne |
-| Redis | Osobna instancja projektu; jawne połączenia/namespace cache, sesji i kolejki; prefix sam nie izoluje pamięci ani awarii |
-| Zadania | Jeden Horizon oraz jeden scheduler, uruchamiane przez wspólny dev runner; bez drugiego cron wykonującego te same zadania |
-| Mail i pliki | Lokalny odbiornik SMTP z web UI, syntetyczne wiadomości; prywatny storage i kwarantanna, ten sam kontrakt skanera co produkcja |
-| SSR | Tryb codzienny z Vite według przypiętej wersji Inertia; osobny test build + Node SSR przed PR zmieniającym rendering/deploy |
+Manifest usług to `compose.yaml`, runtime jest w `docker/local`, a konfiguracja lokalna powstaje z `.env.docker.example`. PHP 8.5 FPM/CLI, Node 24, PostgreSQL 18, Redis 8.2, Nginx i Mailpit działają w kontenerach. Kolejkę obsługuje `queue:work`; Horizon pozostaje planowaną paczką. Jeden `schedule:work` obsługuje scheduler. Vite zapewnia development SSR Inertia v3.
 
-Wersje usług, porty, wymagane rozszerzenia i źródła instalacji zapisujemy w jednym manifeście środowiska. Przy wielu checkoutach porty, DB, Redis i storage muszą być rozdzielone. CLI doctor ma wykrywać także inny PHP w FPM niż w terminalu. Provisioning systemu wymagający sudo jest osobną jednorazową czynnością, nie częścią codziennego startu.
+Kontenery mają własne wolumeny danych i zależności; istniejący hostowy `.env` oraz SQLite nie są migrowane ani nadpisywane. `make setup` instaluje lockfile, generuje klucz tylko gdy go brakuje, uruchamia migracje w lokalnym PostgreSQL i startuje usługi. Nie seeduje kont automatycznie. `make down` zachowuje wszystkie wolumeny. Nie ma automatycznego resetu ani kasowania danych.
 
-Przyszłe skrypty projektu (to kontrakt do implementacji, nie istniejące komendy):
-
-- `dev:doctor`: weryfikuje wersje, rozszerzenia, połączenia, TLS, porty, mail i skaner; nie wypisuje sekretów.
-- `dev:setup`: instaluje zależności z lockfile, tworzy lokalny env tylko gdy nie istnieje, inicjuje lokalny klucz tylko raz, wykonuje migracje i syntetyczny seed. Odmawia pracy dla produkcyjnego hosta/DB.
-- `dev:start` / `dev:stop`: zarządza procesami projektu Vite, Horizon i scheduler; pokazuje awarię procesu i sprząta procesy potomne. Nie zatrzymuje współdzielonych usług innych projektów.
-- `dev:verify`: uruchamia kontrole właściwe dla zmiany; pełny zestaw pozostaje w CI. `dev:ssr-check` sprawdza zbudowane HTML/meta i hydrację bez Vite.
-- `dev:reset`: osobna jawnie destrukcyjna czynność wyłącznie dla lokalnych danych; nigdy automatycznie przy setup/start.
-
-Onboarding: instalacja runtime → checkout → lokalny env → doctor → setup → start → login syntetycznego administratora → publikacja strony i kontrola maila. Cel ≤30 min na maszynie z zainstalowanymi wymaganiami; czas provisioningu raportować osobno. Sekrety, certyfikaty lokalne, logi, dumpy i pliki testowe poza Git. Local SMTP nie może przełączać się na realnego dostawcę przy awarii.
-
-Alternatywy: Compose daje izolację, ale dodaje utrzymanie kontenerów; natywne macOS jest wygodne, lecz nie dowodzi zgodności bibliotek Linux. Dlatego odbiór release'u odbywa się na natywnym stagingu Linux odpowiadającym produkcji.
+Obrazy mają przypięte linie wersji, a nie digesty; `make build` pobiera aktualizacje tych linii. Lockfile przypinają zależności aplikacji. Zgodność produkcyjna, TLS, docelowe biblioteki konwersji mediów, skaner i testy zbudowanego SSR nadal wymagają kwalifikacji na stagingu.
 
 ## ADR-022: Deployer z kontrolowanym automatycznym rollbackiem
 
@@ -53,13 +33,13 @@ CI buduje archiwum kodu, vendor oraz bundle klienta/SSR z lockfile na zgodnym Li
 
 ### Granice automatycznego cofnięcia
 
-| Miejsce awarii | Reakcja recepty |
-| --- | --- |
-| Przed przełączeniem current | Przerwij kandydata; aktywna wersja zostaje. Nie uruchamiaj ślepo rollbacku, który cofnąłby zdrową wersję |
-| Po przełączeniu, w oknie kontroli | Jedna próba powrotu do zapisanego healthy release'u, jego SSR i workerów, następnie ponowny smoke i alert |
-| Poprzednia wersja niezdrowa lub brak kompatybilności | Zablokuj kolejne deploye, zachowaj dowody i alarmuj operatora; bez pętli przełączania wersji |
-| Awaria migracji lub zewnętrzny skutek uboczny | Bez cofania danych, maili, publikacji i operacji dostawców; naprawa według runbooka |
-| Awaria po oknie automatycznej obserwacji | Alarm i decyzja operatora; brak nieograniczonego automatycznego cofania na podstawie dowolnego 500 |
+| Miejsce awarii                                       | Reakcja recepty                                                                                           |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Przed przełączeniem current                          | Przerwij kandydata; aktywna wersja zostaje. Nie uruchamiaj ślepo rollbacku, który cofnąłby zdrową wersję  |
+| Po przełączeniu, w oknie kontroli                    | Jedna próba powrotu do zapisanego healthy release'u, jego SSR i workerów, następnie ponowny smoke i alert |
+| Poprzednia wersja niezdrowa lub brak kompatybilności | Zablokuj kolejne deploye, zachowaj dowody i alarmuj operatora; bez pętli przełączania wersji              |
+| Awaria migracji lub zewnętrzny skutek uboczny        | Bez cofania danych, maili, publikacji i operacji dostawców; naprawa według runbooka                       |
+| Awaria po oknie automatycznej obserwacji             | Alarm i decyzja operatora; brak nieograniczonego automatycznego cofania na podstawie dowolnego 500        |
 
 Stan deployu i niezależny watchdog na hoście muszą pozwalać dokończyć sprawdzenie/cofnięcie przy zerwanym SSH lub przerwanym runnerze CI. Watchdog nie zależy od Laravel/Redis i działa pod tym samym lockiem; sprawdza ID operacji i bieżący symlink przed mutacją. Niedostępność całej VM wymaga operatora/DR.
 
@@ -69,10 +49,10 @@ Pierwsze wydanie nie ma poprzednika: kandydat przechodzi kontrole przed udostęp
 
 P0: pliki JSON Laravel/Monolog, logi Nginx oraz systemd journal dla PHP-FPM, SSR, Horizon, deployu i skanera. Rotację plików obsługuje jeden mechanizm logrotate, journal ma osobny limit. Wyjście usług powinno zawierać czas UTC, service, environment, release ID i correlation ID tam, gdzie istnieje. Nginx tworzy zaufany request ID przekazywany do PHP; aplikacja wiąże go z jobami i SSR. Nie ufamy dowolnie długiemu ID od klienta.
 
-| Dane | Miejsce i odbiorca |
-| --- | --- |
-| Diagnostyka techniczna | Pliki/journal dostępne operatorowi przez ograniczony SSH; stack trace i komunikaty wyjątków po redakcji |
-| Audit działań | Osobny zapis w DB: kto/co/kiedy/zasób/wynik, zgodnie z polityką audytu; bez pełnych treści i sekretów |
+| Dane                         | Miejsce i odbiorca                                                                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Diagnostyka techniczna       | Pliki/journal dostępne operatorowi przez ograniczony SSH; stack trace i komunikaty wyjątków po redakcji                                                      |
+| Audit działań                | Osobny zapis w DB: kto/co/kiedy/zasób/wynik, zgodnie z polityką audytu; bez pełnych treści i sekretów                                                        |
 | Zdarzenia dla administratora | Mała jawna projekcja operacyjna w DB, np. failed delivery, błąd przetwarzania pliku, publikacja, release failed/rolled back; bez kopiowania wszystkich logów |
 
 Administrator aplikacji otrzymuje ekran „System → Zdarzenia”: czas, ważność, usługa, bezpieczny opis, status, licznik powtórzeń i ID do kontaktu z supportem. Filtry czasu/poziomu/usługi/statusu oraz paginacja po stronie serwera. Drugi widok pokazuje ostatnio zmierzony stan usług i czas pomiaru; przeterminowany heartbeat oznacza „brak aktualnych danych”, nie zielony status.
@@ -86,6 +66,8 @@ Projekcja zapisuje tylko typowane, znane zdarzenia, z limitem rozmiaru i dedupli
 Propozycja P0: logi techniczne 7 dni lokalnie, łączny budżet dysku 1 GB do dopasowania do VM; archiwum poza hostem 30 dni; projekcja zdarzeń 30 dni; audit 90 dni jako osobna decyzja właściciela danych. Próg pojemności może skrócić lokalną retencję — alarmujemy o utracie pokrycia. Redakcja przed zapisem i wysyłką obejmuje nagłówki auth/cookie, hasła, tokeny, request body, query string, payload jobów i argumenty stack trace; test obejmuje też Nginx oraz zewnętrzny SDK.
 
 Minimalna propozycja bez osobnego klastra logowego: systemowy timer co godzinę wysyła zamknięte, zredagowane segmenty logów i eksport journal do szyfrowanego storage backupowego w UE. Manifest z checksumą/cursorem zapobiega pomijaniu i umożliwia deduplikację; usunięcie lokalnego segmentu dopiero po potwierdzeniu lub kontrolowanym przekroczeniu limitu z alarmem. Transfer ma retry/backoff i ograniczony spool. Możliwa utrata ostatniej godziny przy utracie hosta jest jawnym ograniczeniem, nie mechanizmem alertowania.
+
+Laravel 13 nie dostarcza wbudowanego, szyfrującego kanału logów. `SESSION_ENCRYPT` chroni wyłącznie dane sesji, a `env:encrypt` pliki środowiskowe; żaden z tych mechanizmów nie zastępuje redakcji ani szyfrowania logów. Logi redagujemy przed zapisem, transportujemy przez TLS i przechowujemy w szyfrowanym storage. Ewentualny własny handler Monologa wymaga osobnej decyzji, przeglądu kluczy i testu odczytu po rotacji.
 
 Alarmy P0 działają oddzielnie: zewnętrzny uptime oraz systemowy monitor heartbeat/backup/dysku i krytycznych błędów wysyła deduplikowane powiadomienia do operatora przez wybrany kanał niezależny od aplikacyjnej kolejki. Sam monitor ma zewnętrzny dead-man heartbeat. Właściciel kanału, test dostarczenia i zasady quiet hours są bramką stagingu.
 

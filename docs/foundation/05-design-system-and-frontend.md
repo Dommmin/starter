@@ -18,15 +18,15 @@ Status: kierunek zatwierdzony. CSS custom properties są źródłem kolorów, ty
 
 ## Tokeny
 
-| Grupa | Plan | Zasada zmiany |
-| --- | --- | --- |
-| Kolory | `background`, `surface`, `foreground`, `muted`, `border`, `primary`, `danger`, `success`, `focus` | Parami tło/tekst; marka klienta na poziomie tokenów |
-| Typografia | Font body/display, rozmiary, line-height i weight | Font systemowy P0; zewnętrzny dopiero po sprawdzeniu licencji i hostowania |
-| Spacing | Skala oparta o 4 px: 4/8/12/16/24/32/48/64 | Wyjątki z Figmy jawne, nie przypadkowe arbitralne wartości |
-| Radius | sm/md/lg i kontrolowana wartość brand | Te same role dla formularzy, kart i dialogów |
-| Shadows | focus, overlay, raised | Nie zastępują kontrastu i obramowania |
-| Breakpoints | Startowo 640/768/1024/1280 px | Dopasować do zachowania treści, nie tylko makiety desktop |
-| Motion | Krótkie przejścia i reduced-motion | Brak animacji blokującej interakcję |
+| Grupa       | Plan                                                                                              | Zasada zmiany                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Kolory      | `background`, `surface`, `foreground`, `muted`, `border`, `primary`, `danger`, `success`, `focus` | Parami tło/tekst; marka klienta na poziomie tokenów                        |
+| Typografia  | Font body/display, rozmiary, line-height i weight                                                 | Font systemowy P0; zewnętrzny dopiero po sprawdzeniu licencji i hostowania |
+| Spacing     | Skala oparta o 4 px: 4/8/12/16/24/32/48/64                                                        | Wyjątki z Figmy jawne, nie przypadkowe arbitralne wartości                 |
+| Radius      | sm/md/lg i kontrolowana wartość brand                                                             | Te same role dla formularzy, kart i dialogów                               |
+| Shadows     | focus, overlay, raised                                                                            | Nie zastępują kontrastu i obramowania                                      |
+| Breakpoints | Startowo 640/768/1024/1280 px                                                                     | Dopasować do zachowania treści, nie tylko makiety desktop                  |
+| Motion      | Krótkie przejścia i reduced-motion                                                                | Brak animacji blokującej interakcję                                        |
 
 Light i dark mode są częścią kontraktu P0. Oba motywy definiują ten sam komplet semantycznych tokenów; przełączenie następuje na korzeniu dokumentu, bez ręcznych wariantów `dark:` i warunków motywu w komponentach. Kontrolka wyboru motywu jest osobnym elementem UX; jej brak nie zwalnia z obsługi obu motywów. Zmiana jednego tokena wymaga przeglądu kluczowych stanów i kontrastu. Brand nie zmienia znaczenia danger/success ani zasad focus.
 
@@ -40,12 +40,12 @@ Status: **wymaganie użytkownika** co do ograniczeń; poniższy podział plików
 
 Proponowana struktura, jeszcze nieistniejąca:
 
-| Warstwa | Dozwolone | Niedozwolone |
-| --- | --- | --- |
-| Definicje tokenów `resources/css/design-system/tokens.css` | Wartości bazowe i mapowanie semantyczne dla light/dark | Import surowej palety przez kod aplikacji |
-| Prymitywy `resources/js/design-system/primitives/**` | Wewnętrzne klasy, statyczne mapy wariantów, kontrolowane style dynamiczne | Eksport nieograniczonego API stylowania |
-| Komponenty złożone `design-system/components/**` | Kompozycja prymitywów i skończone warianty | Własne `className`, inline styles lub nowe utilities poza wyjątkiem |
-| Ekrany, sekcje i moduły aplikacji | Publiczne API design systemu, semantyczne props | Bezpośrednie stylowanie i importy implementacji/vendor UI |
+| Warstwa                                                    | Dozwolone                                                                 | Niedozwolone                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Definicje tokenów `resources/css/design-system/tokens.css` | Wartości bazowe i mapowanie semantyczne dla light/dark                    | Import surowej palety przez kod aplikacji                           |
+| Prymitywy `resources/js/design-system/primitives/**`       | Wewnętrzne klasy, statyczne mapy wariantów, kontrolowane style dynamiczne | Eksport nieograniczonego API stylowania                             |
+| Komponenty złożone `design-system/components/**`           | Kompozycja prymitywów i skończone warianty                                | Własne `className`, inline styles lub nowe utilities poza wyjątkiem |
+| Ekrany, sekcje i moduły aplikacji                          | Publiczne API design systemu, semantyczne props                           | Bezpośrednie stylowanie i importy implementacji/vendor UI           |
 
 `className`, `class`, `style`, arbitrary Tailwind values/properties/variants i helpery `cn`/`clsx`/`cva` są dozwolone wewnętrznie wyłącznie w warstwie prymitywów albo w dokładnie wskazanym wyjątku. Nazwa katalogu `components/ui` nie daje automatycznie takiego prawa. Kod shadcn/Radix wymagający niskopoziomowego DOM/stylowania adaptować do jawnie zarejestrowanych prymitywów; ekrany importują wyłącznie publiczny punkt wejścia. Nie przenosić całej strony do katalogu prymitywów, aby ominąć reguły.
 
@@ -57,15 +57,15 @@ Nie dopuszczać surowego CSS/CSS modules/CSS-in-JS, tagów `<style>`, `setAttrib
 
 Nie tworzyć uniwersalnego `Box` przyjmującego dowolny CSS. Minimalne publiczne API, do doprecyzowania przy pierwszych ekranach:
 
-| Prymityw | Skończone props | Znaczenie |
-| --- | --- | --- |
-| `Stack` | gap: `tight/default/relaxed`; align: `start/center/stretch` | Pionowy rytm elementów |
-| `Inline` | gap: jak Stack; align: `start/center`; wrap: boolean | Wiersz akcji lub metadanych |
-| `Container` | width: `reading/content/wide`; padding: `page/none` | Szerokość treści i margines strony |
-| `Grid` | layout: `single/split/cards` | Zatwierdzone układy, z responsywnością wewnątrz prymitywu |
-| `Surface` | tone: `default/subtle/raised`; padding: `compact/default/relaxed` | Powierzchnia wraz z właściwym tekstem i obramowaniem |
-| `Text` | variant: `body/label/caption`; tone: `default/muted/danger` | Typografia treści; domyślnie semantyczny element |
-| `Heading` | level: 1–6; variant: `page/section/subsection` | Hierarchia HTML oddzielona od zatwierdzonej skali wizualnej |
+| Prymityw    | Skończone props                                                   | Znaczenie                                                   |
+| ----------- | ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| `Stack`     | gap: `tight/default/relaxed`; align: `start/center/stretch`       | Pionowy rytm elementów                                      |
+| `Inline`    | gap: jak Stack; align: `start/center`; wrap: boolean              | Wiersz akcji lub metadanych                                 |
+| `Container` | width: `reading/content/wide`; padding: `page/none`               | Szerokość treści i margines strony                          |
+| `Grid`      | layout: `single/split/cards`                                      | Zatwierdzone układy, z responsywnością wewnątrz prymitywu   |
+| `Surface`   | tone: `default/subtle/raised`; padding: `compact/default/relaxed` | Powierzchnia wraz z właściwym tekstem i obramowaniem        |
+| `Text`      | variant: `body/label/caption`; tone: `default/muted/danger`       | Typografia treści; domyślnie semantyczny element            |
+| `Heading`   | level: 1–6; variant: `page/section/subsection`                    | Hierarchia HTML oddzielona od zatwierdzonej skali wizualnej |
 
 Przykład zamierzonego użycia: `Stack gap="relaxed"` + `Heading level={1} variant="page"` + `Text tone="muted"`. `gap={17}`, `tone="blue"`, `className="..."` i `style={{...}}` są błędami kontraktu. Nowy preset responsive też jest wariantem wymagającym uzasadnienia, a nie dowolnym obiektem media query z ekranu.
 
@@ -87,16 +87,16 @@ Proponowany rejestr maszynowy `design-system.exceptions.json` powstanie podczas 
 
 Nazwy `ds/*` poniżej są specyfikacją **lokalnych reguł do napisania**, nie nazwami istniejącej paczki. Jedno źródło manifestu tokenów, API prymitywów i wyjątków dla wszystkich kontroli.
 
-| Reguła | Wykrywa / wymusza |
-| --- | --- |
-| `ds/no-style-escape` | Poza prymitywami: JSX `className`/`style`, odpowiedniki helperów, modyfikację stylu/classList i style injection; nieanalizowalny spread odrzuca lub wymaga jawnego mapowania props |
-| `ds/semantic-tokens-only` | Surowe kolory/techniczne nazwy w kontekście stylowania; tokeny spoza manifestu, także w prymitywach |
-| `ds/no-arbitrary-utilities` | Arbitrary values/properties/variants poza prymitywami/wyjątkiem; dynamiczne składanie klas poza zamkniętą mapą |
-| `ds/public-api-only` | Deep imports prymitywów/vendorów, re-export obejścia, CSS imports poza dozwoloną warstwą; kontrola aliasów i ścieżek względnych |
-| `ds/closed-props` | Eksport nieograniczonych style props, index signature, niekontrolowany passthrough i rozszerzenie wszystkich HTML props w API DS; uzupełniona testami typów |
-| `ds/no-component-theme-branch` | `dark:` w mapach klas, odczyt motywu poza providerem i ręczne przełączanie kolorów w komponentach |
-| `ds/require-design-record` | Nowy token/wariant publiczny bez powiązanego rekordu decyzji; sens i wielokrotne użycie ocenia człowiek |
-| `ds/valid-exception` | Brak, mismatch, expiry lub osierocony wpis rejestru; nieautoryzowane wyłączenie reguły |
+| Reguła                         | Wykrywa / wymusza                                                                                                                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ds/no-style-escape`           | Poza prymitywami: JSX `className`/`style`, odpowiedniki helperów, modyfikację stylu/classList i style injection; nieanalizowalny spread odrzuca lub wymaga jawnego mapowania props |
+| `ds/semantic-tokens-only`      | Surowe kolory/techniczne nazwy w kontekście stylowania; tokeny spoza manifestu, także w prymitywach                                                                                |
+| `ds/no-arbitrary-utilities`    | Arbitrary values/properties/variants poza prymitywami/wyjątkiem; dynamiczne składanie klas poza zamkniętą mapą                                                                     |
+| `ds/public-api-only`           | Deep imports prymitywów/vendorów, re-export obejścia, CSS imports poza dozwoloną warstwą; kontrola aliasów i ścieżek względnych                                                    |
+| `ds/closed-props`              | Eksport nieograniczonych style props, index signature, niekontrolowany passthrough i rozszerzenie wszystkich HTML props w API DS; uzupełniona testami typów                        |
+| `ds/no-component-theme-branch` | `dark:` w mapach klas, odczyt motywu poza providerem i ręczne przełączanie kolorów w komponentach                                                                                  |
+| `ds/require-design-record`     | Nowy token/wariant publiczny bez powiązanego rekordu decyzji; sens i wielokrotne użycie ocenia człowiek                                                                            |
+| `ds/valid-exception`           | Brak, mismatch, expiry lub osierocony wpis rejestru; nieautoryzowane wyłączenie reguły                                                                                             |
 
 P0 rekomendacja: ESLint jako referencyjny runner lokalnego kontraktu, z testami RuleTester i własnymi regułami AST; `no-restricted-imports`/`no-restricted-syntax` mogą stanowić pierwszą warstwę, ale same nie wykrywają spreadów i aliasów. Brak automatycznego autofix wybierającego wariant designu. [ESLint custom rules](https://eslint.org/docs/latest/extend/custom-rules).
 

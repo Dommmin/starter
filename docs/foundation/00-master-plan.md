@@ -12,13 +12,13 @@ Docelowe mierniki: nowy developer uruchamia projekt w 30 minut z dokumentacji; k
 
 Sprawdzono `/Users/domin/projects/starter`: `pwd`, pełną listę wpisów `ls -la` oraz `git status --short`. Katalog był pusty; Git odpowiedział, że nie jest to repozytorium. Brak nawet plików ukrytych projektu. Próba wyszukania przez `rg` wykazała też brak tego programu w środowisku; lista katalogu potwierdziła brak materiału do dalszego przeszukiwania.
 
-| Obszar | Stan zastany | Konsekwencja |
-| --- | --- | --- |
-| Git, historia, remote, branches | Brak `.git` | Nie ma historii, PR-ów ani zabezpieczeń do lokalnego audytu |
-| Laravel/PHP, Composer | Brak kodu, manifestu i lockfile | Nie istnieje „używana wersja”; wersje poniżej są propozycją |
-| React/TS, npm, komponenty | Brak manifestu, lockfile i `components.json` | Nie można ocenić istniejących wzorców ani bundle |
-| Docker, CI/CD, GHCR | Brak konfiguracji | Nie potwierdzono infrastruktury ani ustawień GitHub Organization |
-| `.env.example`, testy, dokumentacja | Brak | Nie ma pokrycia, konfiguracji ani sekretów projektu do oceny |
+| Obszar                              | Stan zastany                                 | Konsekwencja                                                     |
+| ----------------------------------- | -------------------------------------------- | ---------------------------------------------------------------- |
+| Git, historia, remote, branches     | Brak `.git`                                  | Nie ma historii, PR-ów ani zabezpieczeń do lokalnego audytu      |
+| Laravel/PHP, Composer               | Brak kodu, manifestu i lockfile              | Nie istnieje „używana wersja”; wersje poniżej są propozycją      |
+| React/TS, npm, komponenty           | Brak manifestu, lockfile i `components.json` | Nie można ocenić istniejących wzorców ani bundle                 |
+| Docker, CI/CD, GHCR                 | Brak konfiguracji                            | Nie potwierdzono infrastruktury ani ustawień GitHub Organization |
+| `.env.example`, testy, dokumentacja | Brak                                         | Nie ma pokrycia, konfiguracji ani sekretów projektu do oceny     |
 
 Nie badano innych projektów na dysku, kont chmurowych ani zdalnych repozytoriów. Nie instalowano paczek, nie inicjalizowano Git, nie uruchamiano aplikacji. Jedynym wynikiem są wskazane dokumenty Markdown. Wymagania biznesowe pochodzą z załączonego polecenia; źródła techniczne i ograniczenia weryfikacji opisuje [rejestr narzędzi](07-package-decision-record.md).
 
@@ -56,18 +56,24 @@ Wybrać **jeden** wspierany major dostępny u dostawcy i używać go lokalnie, w
 
 **Status: wymaganie użytkownika dotyczące proporcjonalności.** FAST domyślnie: jeden agent i cel 5–10 min, bez pełnego workflow. STANDARD: krótki plan i opcjonalny specjalista. HIGH-RISK: jawne zgody i odpowiednie review. Role są dostępne na żądanie; review i deploy człowieka pozostają bramkami niezależnie od trybu. [Konfiguracja Claude/Codex, skille i limity](09-agents-skills-and-workflows.md).
 
+## Uzupełnienie planu — commity, Lefthook i guardy agentów
+
+2026-09-10: wdrożono Conventional Commits (polskie opisy, małe litery typów, tytuł do 72 znaków), Lefthook `pre-commit`/`commit-msg`, lokalny Gitleaks, walidację CI dla `develop`/`main`, ręczny workflow artefaktowego deployu oraz guardy agentów. Szczegóły i kryteria odbioru: [03 — jakość](03-testing-and-quality.md#commity-i-lefthook--kontrakt-p0-a), [04 — guardy](04-ai-sdlc.md#guardy-agentów-przy-commitach--p0-a), zadania 07a–07c w [roadmapie](08-implementation-roadmap.md).
+
+Lefthook używa istniejącego Docker/Makefile, a CI pozostaje niezależne od lokalnych hooków. Push i wyzwolenie deployu są ręczne. Ustawienie ochrony branchy, environment secrets i wymaganych reviewerów na GitHub wymaga konta administratora repo; bez tego workflow nie stanowi technicznej blokady merge/deploy.
+
 ## Granice zakresu i startery
 
 „Kit” to profil zastosowania i zestaw wzorców w jednym repozytorium, nie sześć paczek Composer ani osobnych produktów. W P0 nie tworzymy silnika instalowania modułów.
 
-| Kit | Must have na start — P0 | Opcjonalnie — P1 | Świadomie odłożone — P2 |
-| --- | --- | --- | --- |
-| Laravel Core | Auth ze starter kitu, MFA/2FA admina, policies, migracje, błędy, logi, Redis + Horizon i scheduler | Integracje, dynamiczny RBAC | Multi-tenancy, event sourcing, mikroserwisy |
-| Admin Kit | Shell panelu, CRUD stron i artykułów, stałe role admin/editor, prywatny DAM | Ustawienia, zarządzanie rolami | Uniwersalny generator CRUD i workflow engine |
-| Website Kit | Home, strony i artykuły SSR, kontakt, meta, sitemap, redirects | Sekcje, wielojęzyczność, integracja analityki | Własny page builder i rozbudowany CMS |
-| App Kit | Wyłącznie wzorzec użycia actions/policies z CRUD-u | Pierwszy rzeczywisty moduł klienta | CRM/ERP „na zapas”, płatności |
-| Design System | LLM-safe UI contract: tokeny light/dark, typowane prymitywy, formularz, dialog, tabela, stany i blokujący check CI | Sekcje marketingowe i katalog komponentów | Osobny produkt npm, wielomarkowy edytor |
-| AI SDLC | Reguły, specyfikacja, review człowieka, bramki CI/release | Role agentów i raporty automatyczne | Autonomiczne decyzje i produkcja |
+| Kit           | Must have na start — P0                                                                                            | Opcjonalnie — P1                              | Świadomie odłożone — P2                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | -------------------------------------------- |
+| Laravel Core  | Auth ze starter kitu, MFA/2FA admina, policies, migracje, błędy, logi, Redis + Horizon i scheduler                 | Integracje, dynamiczny RBAC                   | Multi-tenancy, event sourcing, mikroserwisy  |
+| Admin Kit     | Shell panelu, CRUD stron i artykułów, stałe role admin/editor, prywatny DAM                                        | Ustawienia, zarządzanie rolami                | Uniwersalny generator CRUD i workflow engine |
+| Website Kit   | Home, strony i artykuły SSR, kontakt, meta, sitemap, redirects                                                     | Sekcje, wielojęzyczność, integracja analityki | Własny page builder i rozbudowany CMS        |
+| App Kit       | Wyłącznie wzorzec użycia actions/policies z CRUD-u                                                                 | Pierwszy rzeczywisty moduł klienta            | CRM/ERP „na zapas”, płatności                |
+| Design System | LLM-safe UI contract: tokeny light/dark, typowane prymitywy, formularz, dialog, tabela, stany i blokujący check CI | Sekcje marketingowe i katalog komponentów     | Osobny produkt npm, wielomarkowy edytor      |
+| AI SDLC       | Reguły, specyfikacja, review człowieka, bramki CI/release                                                          | Role agentów i raporty automatyczne           | Autonomiczne decyzje i produkcja             |
 
 P0 strony i artykuły: title, slug, description/excerpt, Tiptap body, stan draft/published, published_at i metadata SEO. Zestaw rich textu jest zamknięty, a wynik renderowania sanitizowany; bez dowolnego HTML i drag-and-drop page buildera. Adminowy DAM przechowuje pliki do 50 MB lokalnie na VM, prywatnie do chwili świadomej publikacji; tylko obrazy otrzymują warianty. Początkowy formularz kontaktowy bez załączników. Uploady użytkowników i płatności są poza P0. Analityka domyślnie wyłączona.
 
@@ -110,18 +116,18 @@ Zależność krytyczna: dostawca/plan GitHub → realny approval → tożsamośc
 
 ## Otwarte pytania wymagające decyzji
 
-| ID | Pytanie | Rekomendacja robocza | Kto / kiedy |
-| --- | --- | --- | --- |
-| Q1 | Czy pusty katalog jest właściwym miejscem, czy istnieje repo do analizy? | Traktować jako greenfield dopiero po potwierdzeniu | Właściciel / D0 |
-| Q2 | Jaki jest pierwszy klient i jego najważniejszy proces? | Strona firmowa z prostą edycją stron | Product owner / D0 |
-| Q3 | Jaki zakres SSR i które trasy mogą być z niego wyłączone? | SSR dla wszystkich publicznych tras; wyjątki wymagają uzasadnienia SEO | Tech lead / P0-A |
-| Q4 | Jaki dostawca VM w UE i jakie parametry hosta? | PostgreSQL na jednej ekonomicznej VM P0 | Właściciel operacji / D1 |
-| Q5 | Budżet GitHub i infrastruktury; kto zatwierdza produkcję? | Zewnętrzna wobec agenta bramka z nazwanym człowiekiem | Właściciel / D1 |
-| Q6 | RTO/RPO i godziny wsparcia? | Dla pilotażu RPO 24 h, RTO 4 h; dopasować do danych | Biznes / przed stagingiem |
-| Q7 | Monitoring SaaS i wysyłka danych poza hosting? | Jeden dostawca po akceptacji retencji, DPA i kosztu | Administrator danych / P0-C |
-| Q8 | Rejestracja publiczna, dodatkowe role i uploady użytkowników? | Rejestracja wyłączona; admin/editor i DAM P0; uploady użytkowników później z osobną specyfikacją | Product owner / P0-B |
-| Q9 | Jakie patche PHP 8.5/Node 24 LTS i przeglądarki są wspierane? | Najnowsze stabilne patche po teście rozszerzeń i toolchainu | Tech lead / D1 |
-| Q10 | Kto utrzymuje kopie startera i płaci za aktualizacje? | Jeden opiekun i lista wersji klientów | Właściciel / przed pierwszym klientem |
+| ID  | Pytanie                                                                  | Rekomendacja robocza                                                                             | Kto / kiedy                           |
+| --- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Q1  | Czy pusty katalog jest właściwym miejscem, czy istnieje repo do analizy? | Traktować jako greenfield dopiero po potwierdzeniu                                               | Właściciel / D0                       |
+| Q2  | Jaki jest pierwszy klient i jego najważniejszy proces?                   | Strona firmowa z prostą edycją stron                                                             | Product owner / D0                    |
+| Q3  | Jaki zakres SSR i które trasy mogą być z niego wyłączone?                | SSR dla wszystkich publicznych tras; wyjątki wymagają uzasadnienia SEO                           | Tech lead / P0-A                      |
+| Q4  | Jaki dostawca VM w UE i jakie parametry hosta?                           | PostgreSQL na jednej ekonomicznej VM P0                                                          | Właściciel operacji / D1              |
+| Q5  | Budżet GitHub i infrastruktury; kto zatwierdza produkcję?                | Zewnętrzna wobec agenta bramka z nazwanym człowiekiem                                            | Właściciel / D1                       |
+| Q6  | RTO/RPO i godziny wsparcia?                                              | Dla pilotażu RPO 24 h, RTO 4 h; dopasować do danych                                              | Biznes / przed stagingiem             |
+| Q7  | Monitoring SaaS i wysyłka danych poza hosting?                           | Jeden dostawca po akceptacji retencji, DPA i kosztu                                              | Administrator danych / P0-C           |
+| Q8  | Rejestracja publiczna, dodatkowe role i uploady użytkowników?            | Rejestracja wyłączona; admin/editor i DAM P0; uploady użytkowników później z osobną specyfikacją | Product owner / P0-B                  |
+| Q9  | Jakie patche PHP 8.5/Node 24 LTS i przeglądarki są wspierane?            | Najnowsze stabilne patche po teście rozszerzeń i toolchainu                                      | Tech lead / D1                        |
+| Q10 | Kto utrzymuje kopie startera i płaci za aktualizacje?                    | Jeden opiekun i lista wersji klientów                                                            | Właściciel / przed pierwszym klientem |
 
 ## Mapa dokumentacji
 

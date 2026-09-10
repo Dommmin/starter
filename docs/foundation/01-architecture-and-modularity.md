@@ -10,16 +10,16 @@ Utrzymać krótką ścieżkę od wymagania do kodu, a jednocześnie ograniczyć 
 
 Status: proponowany. `Identity` odpowiada za tożsamość; `Content` za strony, artykuły i publikację; `Media` za adminowy DAM; `Contact` za zgłoszenia i dostarczenie wiadomości. `Settings` i konkretne moduły biznesowe powstają dopiero przy potrzebie. Na start standardowe `app/Models`, `app/Policies`, `app/Http` oraz grupowane `app/Actions/Content`, `app/Actions/Media`, `app/Queries/Content`; frontend `resources/js/pages/content` i `components`. Nie kopiować szkieletu DDD z pustymi warstwami.
 
-| Element | Odpowiedzialność | Zakaz |
-| --- | --- | --- |
-| Controller | Autoryzacja wejścia, wywołanie przypadku użycia, odpowiedź | Wieloetapowe procesy biznesowe w controllerze |
-| FormRequest | Walidacja danych wejściowych, uprawnienie do operacji | Uznawanie walidacji za pełną ochronę zasobów |
-| Policy | Dostęp do zasobu i operacji | Autoryzacja wyłącznie po stronie React |
-| Action | Przypadek użycia, transakcja, niezmienniki | Zależność od HTTP/React lub globalnego requestu |
-| Query | Jawny scope, projekcja, paginacja i eager loading | Nielimitowane eksporty/listy i N+1 |
-| Eloquent model | Relacje, casts, małe reguły lokalne | Procesy integracyjne w observerach |
-| Resource / readonly DTO | Jawny kontrakt danych | Serializacja całego modelu użytkownika |
-| Job | Asynchroniczne wywołanie procesu z retry | Założenie, że wykona się dokładnie raz |
+| Element                 | Odpowiedzialność                                           | Zakaz                                           |
+| ----------------------- | ---------------------------------------------------------- | ----------------------------------------------- |
+| Controller              | Autoryzacja wejścia, wywołanie przypadku użycia, odpowiedź | Wieloetapowe procesy biznesowe w controllerze   |
+| FormRequest             | Walidacja danych wejściowych, uprawnienie do operacji      | Uznawanie walidacji za pełną ochronę zasobów    |
+| Policy                  | Dostęp do zasobu i operacji                                | Autoryzacja wyłącznie po stronie React          |
+| Action                  | Przypadek użycia, transakcja, niezmienniki                 | Zależność od HTTP/React lub globalnego requestu |
+| Query                   | Jawny scope, projekcja, paginacja i eager loading          | Nielimitowane eksporty/listy i N+1              |
+| Eloquent model          | Relacje, casts, małe reguły lokalne                        | Procesy integracyjne w observerach              |
+| Resource / readonly DTO | Jawny kontrakt danych                                      | Serializacja całego modelu użytkownika          |
+| Job                     | Asynchroniczne wywołanie procesu z retry                   | Założenie, że wykona się dokładnie raz          |
 
 Przepływ: route → middleware → FormRequest/policy → Action/Query → jawna projekcja → Inertia SSR/React. Każdy zasób ma właściciela; inny moduł nie zapisuje jego tabel bezpośrednio. W P0 dopuszczalne relacje Eloquent do użytkownika i jawne odczyty, udokumentowane w review. Przy rzeczywistych zależnościach między modułami wyodrębnić metodę przypadku użycia lub kontrakt. `Shared` tylko dla stabilnych technicznych typów, nie dla przypadkowej logiki domenowej.
 
@@ -43,14 +43,14 @@ Zmiana sluga: transakcyjny zapis nowego sluga + unikalność + rejestr starego �
 
 ## Błędy i spójność danych
 
-| Przypadek | Odpowiedź | Obsługa |
-| --- | --- | --- |
-| Niepoprawne dane | API 422 + errors; Inertia redirect z error bag | Komunikat przy polu, zachowanie bezpiecznych danych |
-| Brak sesji/uprawnień | API 401/403; web login/403 | 404 zamiast ujawnienia istnienia zasobu tam, gdzie wymagane |
-| Konflikt stanu/wersji | 409 dla API, komunikat formularza dla web | Przeładuj aktualne dane, nie nadpisuj cudzej edycji |
-| Limit | 429 i Retry-After | UI komunikuje czas oczekiwania |
-| Awaria zależności | Kontrolowane 503 lub stan pending | Timeout, retry tylko dla operacji bezpiecznych |
-| Nieoczekiwany błąd | 500 i identyfikator błędu | Stack tylko w chronionym monitoringu |
+| Przypadek             | Odpowiedź                                      | Obsługa                                                     |
+| --------------------- | ---------------------------------------------- | ----------------------------------------------------------- |
+| Niepoprawne dane      | API 422 + errors; Inertia redirect z error bag | Komunikat przy polu, zachowanie bezpiecznych danych         |
+| Brak sesji/uprawnień  | API 401/403; web login/403                     | 404 zamiast ujawnienia istnienia zasobu tam, gdzie wymagane |
+| Konflikt stanu/wersji | 409 dla API, komunikat formularza dla web      | Przeładuj aktualne dane, nie nadpisuj cudzej edycji         |
+| Limit                 | 429 i Retry-After                              | UI komunikuje czas oczekiwania                              |
+| Awaria zależności     | Kontrolowane 503 lub stan pending              | Timeout, retry tylko dla operacji bezpiecznych              |
+| Nieoczekiwany błąd    | 500 i identyfikator błędu                      | Stack tylko w chronionym monitoringu                        |
 
 Błąd domenowy ma stabilny kod, np. `page_already_published`, i bezpieczny komunikat. API: `code`, `message`, `errors` gdy walidacja, `request_id`; nie wycieka SQL, nazwa bucketa, ścieżka pliku ani sekret. ID generowane po stronie serwera, propagowane do jobów i logów; wejściowy correlation ID sprawdzany co do długości i formatu. Komunikat dla supportu nie służy do publicznego odczytu logów.
 

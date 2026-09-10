@@ -8,6 +8,10 @@ metadata:
 
 # Tailwind CSS Development
 
+> [!IMPORTANT]
+> **Starter Project Constraint (ADR-019 / LLM-Safe UI Contract)**:
+> In this project, direct Tailwind utility classes (`className="..."`), inline styles, and arbitrary values are **FORBIDDEN** in application views/pages/screens (`resources/js/pages/**`). They are permitted exclusively within design system primitives (`resources/js/design-system/primitives/**` or approved exceptions). Application code must strictly use typed primitives and semantic design tokens (`resources/css/`).
+
 ## Documentation
 
 Use `search-docs` for detailed Tailwind CSS v4 patterns and documentation.

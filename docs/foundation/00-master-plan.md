@@ -66,6 +66,8 @@ Lefthook używa istniejącego Docker/Makefile, a CI pozostaje niezależne od lok
 
 „Kit” to profil zastosowania i zestaw wzorców w jednym repozytorium, nie sześć paczek Composer ani osobnych produktów. W P0 nie tworzymy silnika instalowania modułów.
 
+Uzupełnienie wymagań 2026-09-10: szybkie tworzenie CRUD-ów w Inertia + React, wspólne formularze z walidacją podczas edycji oraz tabele z filtrowaniem/sortowaniem. Proponowana realizacja: wspólne komponenty we wzorcowym CRUDzie P0-B, generator sprawdzonego szablonu przy drugim CRUDzie w P1, a uniwersalny silnik dopiero po pomiarach w P2. Szczegóły i kryteria: [05 — kontrakt](05-design-system-and-frontend.md#szybkie-crud-y-wspólne-formularze-i-tabele--2026-09-10), [08 — etapy](08-implementation-roadmap.md#usprawnienia-crud--wymaganie-2026-09-10). To wymaganie i propozycja etapowania, nie status wdrożenia.
+
 | Kit           | Must have na start — P0                                                                                            | Opcjonalnie — P1                              | Świadomie odłożone — P2                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | -------------------------------------------- |
 | Laravel Core  | Auth ze starter kitu, MFA/2FA admina, policies, migracje, błędy, logi, Redis + Horizon i scheduler                 | Integracje, dynamiczny RBAC                   | Multi-tenancy, event sourcing, mikroserwisy  |

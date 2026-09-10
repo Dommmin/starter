@@ -128,7 +128,7 @@ Hooki działają wyłącznie w trybie check, bez `--fix`, automatycznego `git ad
 
 Kontrole sekretów/konfliktów sprawdzają zawartość indeksu, nie tylko working tree. Lista [staged files](https://lefthook.dev/configuration/run/) wskazuje ścieżki, nie gwarantuje odczytu staged content. Dla lintowania pliku z jednoczesnymi zmianami staged i unstaged P0 przerywa commit z informacją o częściowym stagingu; nie dołącza automatycznie reszty pliku. Dozwolone jest przygotowanie mniejszego commita przez użytkownika. Późniejszy izolowany snapshot indeksu wymaga osobnych testów.
 
-Obsłużyć bezpiecznie nazwy ze spacjami/Unicode, rename, delete, pierwszy commit i puste listy plików; bez interpolowania ścieżek lub wiadomości jako kodu powłoki. Pusta lista dla konkretnego lintera może być „nie dotyczy”, lecz nie wyłącza kontroli globalnych. Zmiana konfiguracji lintera, hooków lub ich skryptów uruchamia pełną odpowiednią kontrolę. Nie czytać ani nie wypisywać zawartości lokalnych `.env` dla diagnostyki; raport skanera redaguje znalezione wartości. Śledzone szablony `.env.example`/`.env.docker.example` również podlegają skanowi.
+Obsłużyć bezpiecznie nazwy ze spacjami/Unicode, rename, delete, pierwszy commit i puste listy plików; bez interpolowania ścieżek lub wiadomości jako kodu powłoki. Pusta lista dla konkretnego lintera może być „nie dotyczy”, lecz nie wyłącza kontroli globalnych. Zmiana konfiguracji lintera, hooków lub ich skryptów uruchamia pełną odpowiednią kontrolę. Nie czytać ani nie wypisywać zawartości lokalnych `.env` dla diagnostyki; raport skanera redaguje znalezione wartości. Śledzone szablony `.env.example` oraz `.env.testing` również podlegają skanowi.
 
 ### Odbiór hooków i walidatora
 

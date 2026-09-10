@@ -120,6 +120,25 @@ P0 obejmuje Tiptap w panelu, z zamkniętym schema: nagłówki, akapity, listy, l
 
 ## Formularze i stany
 
+### Szybkie CRUD-y, wspólne formularze i tabele — 2026-09-10
+
+Wymaganie użytkownika: przyspieszyć tworzenie CRUD-ów i zapewnić powtarzalne formularze z walidacją podczas edycji oraz tabele z filtrowaniem i sortowaniem, z wygodą pracy inspirowaną Filamentem, w istniejącym stosie Inertia + React. Poniższy zakres jest propozycją realizacji; nie oznacza gotowej implementacji ani wyboru nowych zależności.
+
+Rekomendowany kierunek: wspólne komponenty i wzorcowy CRUD, następnie generator kodu oparty na sprawdzonym wzorcu. Same kopiowane szablony są prostsze na start, lecz rozchodzą się przy poprawkach. Pełny deklaratywny silnik zasobów daje więcej konfiguracji wspólnej, ale wymaga utrzymania osobnego frameworka; pozostaje poza pierwszym etapem.
+
+| Obszar | Proponowany kontrakt |
+| --- | --- |
+| Formularze | Wspólne pole z etykietą, opisem i błędem, sekcje formularza oraz akcje zapisu/anulowania. Współdzielenie pól create/edit, pending, obsługa błędów serwera, zachowanie bezpiecznych danych po błędzie i ostrzeżenie o niezapisanych zmianach tam, gdzie grozi ich utrata. |
+| Walidacja podczas edycji | Szybki feedback prostych ograniczeń w przeglądarce; reguły biznesowe pozostają po stronie Laravel. Do oceny mechanizm walidacji serwerowej przed zapisem, korzystający z tych samych reguł co zapis. Walidacja po opuszczeniu pola lub z debounce, bez mutacji danych; starsza odpowiedź nie może nadpisać wyniku dla nowszej wartości. Niedostępność walidacji nie oznacza poprawności danych; zapis zawsze waliduje ponownie. |
+| Tabela wielokrotnego użycia | Typowane definicje kolumn, formatowanie komórek, akcje wiersza, wyszukiwanie z debounce, proste filtry, sortowanie i paginacja serwerowa. Stan w URL, odtwarzany po odświeżeniu oraz Wstecz/Dalej; zmiana filtra resetuje stronę. Rozróżnienie pustej listy, braku wyników, ładowania i błędu. |
+| Kontrakt listy | Wspólny format danych, metadanych paginacji i aktywnych filtrów. Backend dopuszcza jawnie określone filtry, kolumny i kierunki sortowania, ogranicza rozmiar strony oraz stosuje stabilne sortowanie z rozstrzygnięciem remisów. Operacje dotyczą całego zbioru dostępnego użytkownikowi, nie tylko bieżącej strony w przeglądarce. |
+| Generator CRUD | Generuje pliki do review: listę/create/edit, kontroler, walidację, podłączenie policies, trasy/Wayfinder i testy zachowania; model, migracja i factory tylko w jawnym zakresie. Jawne pola zamiast automatycznego udostępniania wszystkich kolumn bazy. Dry-run, lista plików i odmowa nadpisania istniejącego kodu. Bez automatycznego uruchamiania migracji; reguły dostępu wymagają jawnego ustalenia. |
+| Dalsze automatyzacje | Spójne komunikaty sukcesu/błędu i potwierdzenia usuwania, fabryki danych testowych, generowanie tras i kontrola zgodności typów w obecnych kontrolach jakości. Widoczność kolumn, zaznaczanie rekordów, akcje zbiorcze i zapisane widoki dopiero po konkretnej potrzebie. |
+
+Komponenty korzystają z zamkniętego API design systemu, light/dark oraz wspólnych zasad dostępności. Konfiguracja kolumn i pól nie otwiera furtki dla dowolnego stylowania. Ukrycie akcji w UI nie zastępuje autoryzacji backendu. Biblioteki formularzy/tabel oraz mechanizm współdzielenia walidacji wybrać dopiero po sprawdzeniu zgodności z przypiętymi wersjami i zatwierdzeniu zależności.
+
+Kolejność i kryteria odbioru: [roadmapa — usprawnienia CRUD](08-implementation-roadmap.md#usprawnienia-crud--wymaganie-2026-09-10).
+
 Inertia form helpers dla własnego panelu. Backend ma ostatnie słowo o walidacji; UI może dawać szybszy feedback, ale nie posiada osobnej logiki uprawnień. Po submit pending i blokada powtórnego kliknięcia; backend nadal gwarantuje idempotencję. Po 422 focus na pierwszym błędzie/podsumowaniu, pole z aria-describedby, zachowane dane z wyjątkiem haseł i sekretów. Używać właściwego autocomplete i inputmode.
 
 Każdy ekran ma: initial loading (skeleton tylko jeśli pomaga), empty (wyjaśnienie i dozwolona akcja), error (co się stało i retry), success i partial failure dla procesów asynchronicznych. W utracie sesji informacja o ponownym logowaniu; nie obiecywać zapisu, gdy kolejka nadal pracuje. Unsaved changes guard tylko tam, gdzie realnie grozi utrata pracy.

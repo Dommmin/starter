@@ -41,6 +41,18 @@ Zakres do wdrożenia przed P0-B, jako rozwinięcie zadania 07. Kontrakt: [03 —
 
 Nie zamykać 07b–07c na podstawie samych plików konfiguracyjnych. Brak uprawnień administratora lub ownera blokuje wyłącznie odbiór zależnych zabezpieczeń; lokalne hooki są aktywne i przetestowane osobno. Dla zadań 08–09 „07” obejmuje teraz także odbiór 07a–07c. Zmiana zabezpieczeń wymaga review człowieka; pilotaż korzysta z syntetycznych repo/danych, bez obchodzenia ochrony właściwego repo.
 
+## Usprawnienia CRUD — wymaganie 2026-09-10
+
+Użytkownik wskazał szybkie tworzenie CRUD-ów, walidację frontową i tabele wielokrotnego użycia jako wymaganie startera. Proponowane etapowanie poniżej uzupełnia zadania 09–10 i 21; implementacja pozostaje otwarta. Kontrakt opisuje [05 — formularze i tabele](05-design-system-and-frontend.md#szybkie-crud-y-wspólne-formularze-i-tabele--2026-09-10).
+
+| Etap | Zakres | Dowód ukończenia |
+| --- | --- | --- |
+| P0-B, zadania 09–10 | Wspólny formularz i tabela użyte we wzorcowym CRUDzie; walidacja podczas edycji, wyszukiwanie, filtry, sortowanie, paginacja i akcje rekordu. | Create/edit współdzielą pola; testy obejmują błędny zapis i brak uprawnień, niedozwolone filtry/sortowanie, reset paginacji oraz odtworzenie URL po odświeżeniu i Wstecz. Test UI sprawdza feedback walidacji, starsze odpowiedzi oraz obsługę błędów i klawiatury. |
+| P1, przy drugim rzeczywistym CRUDzie | Generator sprawdzonego szablonu z dry-run i ochroną istniejących plików; wspólne testy i fabryki danych. | Drugi CRUD korzysta ze wspólnej tabeli/formularza bez kopiowania ich logiki; wygenerowany moduł przechodzi adekwatne testy, typecheck i kontrakt UI. Test generatora potwierdza odmowę nadpisania; porównanie czasu z pierwszym CRUDem wykazuje oszczędność. |
+| P2, po pomiarach | Ocena uniwersalnego silnika zasobów i ewentualnej ekstrakcji paczki. | Korzyść i koszt utrzymania potwierdzone użyciem w co najmniej dwóch projektach; osobna decyzja zakresowa. |
+
+To rozróżnia wcześniejsze odłożenie **uniwersalnego** generatora do P2 od prostego generatora sprawdzonego szablonu proponowanego w P1. Nie zakłada budowy wszystkich kontrolek i automatyzacji przed pierwszym klientem. Rozszerzenie P0-B wymaga aktualizacji szacunku; wcześniejsze 5–7 dni nie obejmuje automatycznie całego nowego kontraktu.
+
 ## Przykładowe kryteria pilotażu
 
 - Given ekran z `className`, arbitrary value lub style poza prymitywem, when uruchamia się CI, then PR jest blokowany, chyba że istnieje dokładny, zatwierdzony i niewygasły wyjątek.

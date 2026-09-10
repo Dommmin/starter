@@ -1,5 +1,6 @@
 """Guard the shared skill adapters and reviewer permission configuration."""
 
+import json
 import re
 import tomllib
 import unittest
@@ -29,6 +30,12 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertNotIn('--no-verify', pre_commit)
 
     def test_ci_covers_develop_main_and_manual_deploy(self):
+        package = json.loads((ROOT / "package.json").read_text())
+        self.assertEqual(
+            package["scripts"]["check"],
+            "vp check resources/js resources/css scripts vite.config.ts",
+        )
+
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn('branches: [develop, main]', ci)
         self.assertIn('name: commit-convention', ci)

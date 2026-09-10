@@ -7,8 +7,8 @@
         "build:ssr": "vp build && vp build --ssr",
         "dev": "vp dev",
         "dev:doctor": "node scripts/dev-doctor.mjs",
-        "check": "vp check",
-        "check:fix": "vp check --fix",
+        "check": "vp check resources/js resources/css scripts vite.config.ts",
+        "check:fix": "vp check --fix resources/js resources/css scripts vite.config.ts",
         "types:check": "tsc --noEmit"
     },
     "dependencies": {

@@ -11,9 +11,14 @@ test('enables Eloquent strict mode outside production', function () {
         ->and(Model::isAutomaticallyEagerLoadingRelationships())->toBeFalse();
 });
 
-test('requires robust default passwords', function () {
-    $shortPassword = Validator::make([
-        'password' => 'Secure-Pass1!',
+test('requires default passwords with an eight-character minimum', function () {
+    $tooShortPassword = Validator::make([
+        'password' => 'Aa1!abc',
+    ], [
+        'password' => ['required', Password::default()],
+    ]);
+    $minimumLengthPassword = Validator::make([
+        'password' => 'Aa1!abcd',
     ], [
         'password' => ['required', Password::default()],
     ]);
@@ -28,7 +33,8 @@ test('requires robust default passwords', function () {
         'password' => ['required', Password::default()],
     ]);
 
-    expect($shortPassword->fails())->toBeTrue()
+    expect($tooShortPassword->fails())->toBeTrue()
+        ->and($minimumLengthPassword->passes())->toBeTrue()
         ->and($longPassword->fails())->toBeTrue()
         ->and($strongPassword->passes())->toBeTrue();
 });

@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): Password => Password::min(15)
+        Password::defaults(fn (): Password => Password::min(8)
             ->max(128)
             ->mixedCase()
             ->letters()

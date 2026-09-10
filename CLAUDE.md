@@ -6,15 +6,38 @@ Wspieraj człowieka w budowie małego, wielokrotnie używalnego fundamentu Larav
 
 ## Decyzje
 
-Stan na 2026-09-09: katalog przed tym zadaniem był pusty, bez `.git`, kodu i manifestów. Utworzono wyłącznie plan. Zatwierdzony kierunek to Laravel 13/PHP 8.5, React/Inertia SSR, Node 24 LTS i PostgreSQL; konkretne tagi, lockfile oraz zgodność paczek i rozszerzeń nadal wymagają kwalifikacji przed scaffoldem. Nie opisuj planu jako wdrożonego rozwiązania. Sprawdź aktualny stan repo przed kolejnym zadaniem.
+Lokalny runtime to Docker Compose zarządzany przez `Makefile`, zgodnie z [README](README.md).
+Używaj `make setup`, `make up`, `make doctor`, `make test` i wrapperów `make artisan/composer/npm ARGS='...'`.
+Ten kontrakt zastępuje wskazówki o Herd i hostowym PHP/Node. Docker używa `.env.docker`; hostowy `.env` i SQLite pozostają oddzielne.
 
-Obecne zlecenie obejmuje tylko dokumentację. Nie scaffoldować, instalować paczek, inicjalizować infrastruktury ani modyfikować aplikacji bez nowego zlecenia implementacji. W przyszłych zadaniach pracuj w zaakceptowanym zakresie i małych zmianach. Najpierw fakty; warianty i pytania tylko gdy jest rzeczywista decyzja do rozstrzygnięcia. Jasnego, autoryzowanego taska nie zamieniaj w wieloetapowy wywiad.
+Repo zawiera już aplikację Laravel, manifesty, lockfile i konfigurację Boost. Plan fundamentu opisuje również elementy jeszcze niewdrożone; przed pracą sprawdzaj rzeczywisty stan. Wersje ustalaj z manifestów i zainstalowanych pakietów.
+
+Pracuj w zakresie bieżącego zlecenia implementacji, małymi zmianami. Najpierw fakty; warianty i pytania tylko gdy jest rzeczywista decyzja do rozstrzygnięcia. Jasnego, autoryzowanego taska nie zamieniaj w wieloetapowy wywiad.
 
 ## Routing i koszt zadania
 
 Domyślnie FAST: jeden agent, lokalny odczyt → poprawka → adekwatna weryfikacja → krótki raport; cel 5–10 minut. Bez subagentów, osobnej spec/ADR i pełnego researchu dla znanego wzorca. STANDARD: plan 3–5 punktów, najwyżej 1 subagent tylko z konkretnym niezależnym zadaniem. HIGH-RISK dla auth, policies/ról, migracji, sekretów, płatności, produkcji i istotnych zmian architektury; zachowaj wymagane zgody. Maks. 2 subagentów w tym trybie, bez dalszej delegacji. Nie uruchamiaj wszystkich ról ani obu produktów dla każdej zmiany.
 
 Po dwóch nieudanych próbach lub przekroczeniu celu FAST nazwij przeszkodę i zmień podejście; nie powtarzaj automatycznie pełnego workflow. Nie obcinaj required CI/review człowieka dla oszczędności czasu. Nowy wariant DS nadal najpierw proponuj. [Szczegóły i konfiguracja](docs/foundation/09-agents-skills-and-workflows.md).
+
+Na start główna sesja realizuje backend/frontend; skonfigurowany `foundation-reviewer` służy do jawnie zleconego review gotowego diffu. Przekaż cel, pliki, AC, patch, raport testów, budżet i warunek zakończenia. Reviewer ma tylko Read/Glob/Grep, nie uruchamia testów i nie deleguje dalej. Wspólny kontrakt znajduje się w sekcji „Kontrakt wykonawczy reviewera” dokumentu 09. Już udzielonej zgody na konkretny zakres nie uzyskuj ponownie.
+
+## Git, commity i hooki
+
+Przed stagingiem przeczytaj `git status --short`, `git diff` i `git diff --cached`.
+Do indeksu dodawaj wyłącznie pliki lub hunki bieżącego zadania; cudzy albo
+nieznany staged diff pozostaw bez zmian i zgłoś blokadę commita. Nie używaj
+`git add .`, `git add -A`, `git commit -a`, automatycznego stash/reset ani
+przepisywania historii. Nowe commity i tytuły PR spełniają Conventional
+Commits: `type(scope): opis`, typ małymi literami i tytuł maks. 72 znaki.
+
+Nie omijaj kontroli przez `--no-verify`, `LEFTHOOK=0`, zmienne skip/exclude,
+zmianę `core.hooksPath`, usunięcie hooków lub osłabienie CI/skanerów/progów.
+Po błędzie napraw przyczynę i uruchom kontrolę ponownie. Agent nie commituj,
+nie pushuje, nie scala ani nie zatwierdza pracy bez jawnego polecenia; nie
+wykonuje tych operacji na `main` ani `develop`. Push pozostaje ręczną operacją
+człowieka. Przed zgłoszeniem sukcesu sprawdź SHA, staged diff i status oraz
+podaj wykonane i niewykonane kontrole.
 
 ## Uzasadnienie i reguły pracy
 
@@ -252,3 +275,5 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
 
 </laravel-boost-guidelines>
+
+Projektowe skille ręczne: `foundation-fast` i `foundation-ui` w `.agents/skills` (Codex) oraz `.claude/skills` (Claude). Wspólne procedury: `.agents/skills/foundation-*/references/workflow.md`. FAST pozostaje domyślnym routingiem bez konieczności wywołania skillu.

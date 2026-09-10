@@ -7,6 +7,9 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 
+const vitePort = Number(process.env.VITE_PORT ?? 5173);
+const appOrigin = `http://localhost:${process.env.APP_PORT ?? 8080}`;
+
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
@@ -32,12 +35,15 @@ export default defineConfig({
         ...(process.env.DOCKER_LOCAL === '1'
             ? {
                   host: '0.0.0.0',
-                  port: Number(process.env.VITE_PORT ?? 5173),
+                  port: vitePort,
                   strictPort: true,
-                  origin: `http://localhost:${process.env.VITE_PORT ?? 5173}`,
+                  origin: `http://localhost:${vitePort}`,
+                  cors: {
+                      origin: appOrigin,
+                  },
                   hmr: {
                       host: 'localhost',
-                      clientPort: Number(process.env.VITE_PORT ?? 5173),
+                      clientPort: vitePort,
                   },
               }
             : {}),

@@ -11,6 +11,48 @@ function check(label, command, args) {
     }
 }
 
+function checkViteCors() {
+    const appOrigin = `http://localhost:${process.env.APP_PORT ?? 8080}`;
+    const vitePort = process.env.VITE_PORT ?? 5173;
+
+    try {
+        const headers = execFileSync(
+            'curl',
+            [
+                '--fail',
+                '--silent',
+                '--max-time',
+                '10',
+                '--header',
+                `Origin: ${appOrigin}`,
+                '--dump-header',
+                '-',
+                '--output',
+                '/dev/null',
+                `http://127.0.0.1:${vitePort}/@vite/client`,
+            ],
+            { encoding: 'utf8', timeout: 20000 },
+        );
+
+        if (
+            !headers
+                .toLowerCase()
+                .includes(
+                    `access-control-allow-origin: ${appOrigin}`.toLowerCase(),
+                )
+        ) {
+            throw new Error('Vite did not allow the Laravel origin.');
+        }
+
+        console.log('PASS Vite/HMR CORS');
+    } catch {
+        failed = true;
+        console.error(
+            'FAIL Vite/HMR CORS — sprawdź make logs oraz make setup.',
+        );
+    }
+}
+
 check('Node 24', 'node', [
     '-e',
     "process.exit(process.versions.node.startsWith('24.') ? 0 : 1)",
@@ -54,4 +96,5 @@ check('Vite/HMR', 'curl', [
     '10',
     `http://127.0.0.1:${process.env.VITE_PORT ?? 5173}/@vite/client`,
 ]);
+checkViteCors();
 process.exitCode = failed ? 1 : 0;

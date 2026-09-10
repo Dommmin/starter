@@ -93,6 +93,8 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --force --no-interaction
+      - name: Generate Wayfinder types
+        run: php artisan wayfinder:generate --with-form --no-interaction
       - name: Check AI and deployment configuration
         run: python3 -m unittest discover -s tests/ai -v
       - name: Run quality checks

@@ -42,6 +42,10 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('name: secrets', ci)
         self.assertIn('name: quality', ci)
         self.assertIn('gitleaks/gitleaks-action@', ci)
+        self.assertIn(
+            'php artisan wayfinder:generate --with-form --no-interaction',
+            ci,
+        )
 
         deploy = (ROOT / ".github/workflows/deploy.yml").read_text()
         self.assertIn('workflow_dispatch:', deploy)

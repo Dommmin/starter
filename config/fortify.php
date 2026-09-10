@@ -73,7 +73,7 @@ return [
     |
     */
 
-    'home' => '/dashboard',
+    'home' => '/admin',
 
     /*
     |--------------------------------------------------------------------------
@@ -148,6 +148,8 @@ return [
         'user_handle_secret' => env('PASSKEYS_USER_HANDLE_SECRET', config('app.key')),
         'timeout' => 60000,
     ],
+
+    'require_two_factor_for_admin' => env('ADMIN_REQUIRE_TWO_FACTOR', true),
 
     /*
     |--------------------------------------------------------------------------

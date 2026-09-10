@@ -15,6 +15,10 @@ płatności, produkcja i istotna architektura; zaakceptowany zakres i adekwatny
 reviewer, najwyżej dwóch delegatów łącznie. Delegaci nie delegują dalej.
 Już udzielonej zgody na konkretny zakres nie uzyskuj ponownie.
 
+## Reguły projektowe (`.ai/rules/`)
+
+Przed rozpoczęciem planowania lub edycji plików MUSISZ sprawdzić [.ai/rules/index.md](.ai/rules/index.md), przeczytać każdy plik reguł pasujący do modyfikowanych ścieżek i ściśle przestrzegać zawartych w nich wytycznych.
+
 ## Git, commity i hooki
 
 Przed stagingiem przeczytaj `git status --short`, `git diff` i `git diff --cached`.
@@ -22,7 +26,8 @@ Do indeksu dodawaj wyłącznie pliki lub hunki bieżącego zadania; cudzy albo
 nieznany staged diff pozostaw bez zmian i zgłoś blokadę commita. Nie używaj
 `git add .`, `git add -A`, `git commit -a`, automatycznego stash/reset ani
 przepisywania historii. Nowe commity i tytuły PR spełniają Conventional
-Commits: `type(scope): opis`, typ małymi literami i tytuł maks. 72 znaki.
+Commits: `type(scope): description` (po angielsku, w trybie rozkazującym),
+typ małymi literami i tytuł maks. 72 znaki.
 
 Nie omijaj kontroli przez `--no-verify`, `LEFTHOOK=0`, zmienne skip/exclude,
 zmianę `core.hooksPath`, usunięcie hooków lub osłabienie CI/skanerów/progów.

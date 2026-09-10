@@ -29,7 +29,8 @@ Do indeksu dodawaj wyłącznie pliki lub hunki bieżącego zadania; cudzy albo
 nieznany staged diff pozostaw bez zmian i zgłoś blokadę commita. Nie używaj
 `git add .`, `git add -A`, `git commit -a`, automatycznego stash/reset ani
 przepisywania historii. Nowe commity i tytuły PR spełniają Conventional
-Commits: `type(scope): opis`, typ małymi literami i tytuł maks. 72 znaki.
+Commits: `type(scope): description` (po angielsku, w trybie rozkazującym),
+typ małymi literami i tytuł maks. 72 znaki.
 
 Nie omijaj kontroli przez `--no-verify`, `LEFTHOOK=0`, zmienne skip/exclude,
 zmianę `core.hooksPath`, usunięcie hooków lub osłabienie CI/skanerów/progów.
@@ -50,6 +51,8 @@ podaj wykonane i niewykonane kontrole.
 - Raportuj wykonane testy, rzeczywiste wyniki i niewykonane kontrole. Nie wymyślaj komend, które nie istnieją w repo; odczytaj scripts i CI po powstaniu aplikacji.
 
 Reguły szczegółowe w `.claude/rules` obowiązują globalnie, bez filtrów ścieżek: [architecture](.claude/rules/architecture.md), [security](.claude/rules/security.md), [testing](.claude/rules/testing.md), [frontend](.claude/rules/frontend.md), [release](.claude/rules/release.md). Celowo nie użyto ograniczeń `paths`, aby zasady bezpieczeństwa nie znikały przy pracy w innych plikach. Markdown nie jest technicznym sandboxem; uprawnienia muszą egzekwować konta i platforma.
+
+Współdzielone, precyzyjne reguły domenowe per ścieżka znajdują się w [.ai/rules/index.md](.ai/rules/index.md) — przed rozpoczęciem pracy w danym obszarze przeczytaj i stosuj pasujące pliki reguł.
 
 ## Ryzyka
 

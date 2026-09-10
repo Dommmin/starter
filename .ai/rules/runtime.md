@@ -1,11 +1,11 @@
 # Runtime — Docker Compose, Makefile i deploy
 
-Glob: `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.docker`, `.env.testing`, `deploy.php`, `scripts/**`
+Glob: `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.testing`, `deploy.php`, `scripts/**`
 
 ## Lokalny runtime
 
 - Jedyny wspierany lokalny workflow to **Docker Compose sterowany przez Makefile**. Nie uruchamiaj PHP, Node, Composer ani Artisan bezpośrednio na hoście.
-- Prefiks komend: `docker compose exec app <command>` lub użyj celów Makefile.
+- Podstawowym i preferowanym interfejsem lokalnym jest `Makefile`: `make setup`, `make up`, `make doctor`, `make test`, `make artisan`, `make composer`, `make npm` (ewentualnie `docker compose exec app <command>` w razie potrzeby).
 
 | Czynność                | Komenda                                        |
 | ----------------------- | ---------------------------------------------- |
@@ -28,7 +28,7 @@ Glob: `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.docker`, `.
 
 - PHP 8.5 FPM/CLI, Nginx, PostgreSQL 18, Redis 8.2, queue:work, schedule:work, Vite (dev SSR), Mailpit.
 - Horizon pozostaje planowany — aktualnie `queue:work`.
-- `.env` jest wspólnym lokalnym źródłem konfiguracji; `.env.docker` rozszerza ją dla Compose. Nie nadpisuj hostowego `.env`.
+- `.env` jest jedynym lokalnym źródłem konfiguracji — Compose czyta je bezpośrednio. Nie nadpisuj hostowego `.env`.
 
 ## Deploy (Deployer)
 

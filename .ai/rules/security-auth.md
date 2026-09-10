@@ -1,6 +1,6 @@
 # Bezpieczeństwo i autoryzacja
 
-Glob: `app/Http/Middleware/**`, `app/Policies/**`, `app/Actions/Fortify/**`, `config/auth.php`, `config/fortify.php`, `routes/settings.php`
+Glob: `app/Http/Middleware/**`, `app/Policies/**`, `app/Actions/Fortify/**`, `app/Models/User.php`, `app/Providers/FortifyServiceProvider.php`, `config/auth.php`, `config/fortify.php`, `routes/web.php`, `routes/settings.php`
 
 ## Klasyfikacja ryzyka
 

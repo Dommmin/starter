@@ -3,22 +3,23 @@ SHELL := /bin/sh
 .NOTPARALLEL:
 export LOCAL_UID := $(shell id -u)
 export LOCAL_GID := $(shell id -g)
-COMPOSE := docker compose --env-file .env.docker
+COMPOSE := docker compose
 RUN := $(COMPOSE) run --rm --no-deps app
 ARGS ?=
 SERVICE ?=
+TEST_PROCESSES ?= 4
 
-.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-setup check assets artisan composer npm shell db config
+.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup check assets artisan composer npm shell db config
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-env: ## Utwórz osobny .env.docker bez nadpisywania istniejącej konfiguracji
-	@test -f .env.docker || (umask 077; cp .env.docker.example .env.docker)
+env: ## Utwórz lokalny .env bez nadpisywania istniejącej konfiguracji
+	@test -f .env || (umask 077; cp .env.example .env)
 
 setup: env ## Pierwsza instalacja: obraz, zależności, klucz, migracje, start
-	@grep -qx 'APP_ENV=local' .env.docker || { echo 'Setup wymaga APP_ENV=local w .env.docker'; exit 1; }
-	@grep -qx 'DB_HOST=postgres' .env.docker || { echo 'Setup wymaga lokalnego DB_HOST=postgres'; exit 1; }
+	@grep -qx 'APP_ENV=local' .env || { echo 'Setup wymaga APP_ENV=local w .env'; exit 1; }
+	@grep -qx 'DB_HOST=postgres' .env || { echo 'Setup wymaga lokalnego DB_HOST=postgres'; exit 1; }
 	$(COMPOSE) build app
 	$(MAKE) deps
 	$(COMPOSE) up -d --wait postgres redis mailpit
@@ -70,6 +71,9 @@ doctor: ## Sprawdź konfigurację, runtime, DB, Redis, HTTP i Vite
 test: ## Testy Pest; opcjonalnie ARGS='--filter=nazwa'
 	$(RUN) php artisan test --compact $(ARGS)
 
+test-parallel: ## Równoległe testy Pest; TEST_PROCESSES=4 domyślnie
+	$(RUN) php artisan test --compact --parallel --processes=$(TEST_PROCESSES) $(ARGS)
+
 test-setup: ## Testy bootstrappingu i ochrony konfiguracji
 	$(RUN) node --test scripts/dev-environment.test.mjs
 
@@ -90,8 +94,8 @@ composer: ## Composer, np. ARGS='show --direct'
 npm: ## npm, np. ARGS='run types:check'
 	$(RUN) npm $(ARGS)
 
-shell: ## Powłoka w kontenerze jako użytkownik aplikacji
-	$(RUN) sh
+shell: ## Bash w kontenerze jako użytkownik aplikacji
+	$(RUN) bash
 
 db: ## Konsola PostgreSQL (bez publikowania portu DB)
 	$(COMPOSE) exec postgres sh -c 'exec psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'

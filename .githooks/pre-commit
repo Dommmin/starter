@@ -7,4 +7,4 @@ if ! command -v gitleaks >/dev/null 2>&1; then
 fi
 
 gitleaks git --staged --redact --no-banner
-exec docker compose --env-file .env.docker run --rm --no-deps app npx lefthook run pre-commit
+exec docker compose run --rm --no-deps app npx lefthook run pre-commit

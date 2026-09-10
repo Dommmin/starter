@@ -4,7 +4,7 @@ Lokalny runtime to Docker Compose zarządzany przez `Makefile` (instrukcja:
 [README](README.md)). Używaj `make setup`, `make up`, `make doctor`, `make test`
 oraz `make artisan ARGS='...'`, `make composer ARGS='...'` i `make npm ARGS='...'`.
 Ten kontrakt zastępuje poniższe wskazówki o Herd i hostowym PHP/Node.
-Docker używa `.env.docker`; nie nadpisuj hostowego `.env` ani bazy SQLite.
+Docker używa lokalnego `.env`; nie nadpisuj go ani bazy SQLite.
 
 Pisz po polsku. Domyślnie FAST: jeden wykonawca, lokalny odczyt → minimalna
 zmiana → adekwatna weryfikacja → raport. Bez delegacji i osobnej spec/ADR

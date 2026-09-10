@@ -9,7 +9,7 @@ make setup
 make doctor
 ```
 
-`setup` tworzy `.env.docker` tylko przy jego braku, buduje obraz, instaluje `composer.lock` i `package-lock.json`, generuje brakujący APP_KEY, wykonuje migracje i uruchamia cały stack. Kolejne wykonanie zachowuje klucz i dane. Pierwsze pobranie obrazów wymaga internetu i może potrwać kilka minut. Setup nie tworzy użytkowników ani nie importuje starego SQLite.
+`setup` tworzy `.env` tylko przy jego braku, buduje obraz, instaluje `composer.lock` i `package-lock.json`, generuje brakujący APP_KEY, wykonuje migracje i uruchamia cały stack. Kolejne wykonanie zachowuje klucz i dane. Pierwsze pobranie obrazów wymaga internetu i może potrwać kilka minut. Setup nie tworzy użytkowników ani nie importuje starego SQLite.
 
 Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:5173`, skrzynka Mailpit `http://localhost:8025`. Używaj `localhost`, aby origin HMR i cookies były spójne. Lokalny HTTP na localhost obsługuje secure-context APIs przeglądarki; certyfikaty i domeny Herda nie są potrzebne.
 
@@ -26,7 +26,8 @@ Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:
 | `make doctor`                            | Wersje, rozszerzenia, zależności, DB, Redis, SMTP, HTTP, Vite   |
 | `make deps`                              | Zatrzymanie usług aplikacji i instalacja zależności z lockfile  |
 | `make build`                             | Przebudowa runtime z aktualizacją obrazów bazowych              |
-| `make test`                              | Pest, SQLite w pamięci zgodnie z phpunit.xml                    |
+| `make test`                              | Pest, SQLite w pamięci zgodnie z `.env.testing`                 |
+| `make test-parallel`                     | Pest w 4 procesach; zmień przez `TEST_PROCESSES=8`              |
 | `make test ARGS='--filter=registration'` | Wybrane testy                                                   |
 | `make check`                             | Istniejący zestaw format/lint, TypeScript, Pint, PHPStan i Pest |
 | `make test-setup`                        | Regresje bootstrappingu Makefile                                |
@@ -94,18 +95,18 @@ Vite współdzieli namespace sieciowy `app`: adres localhost zapisany w `public/
 
 ## Konfiguracja, dane i wiele checkoutów
 
-`.env.docker` jest ignorowany przez Git i montowany jako `.env` wyłącznie w kontenerach. Hostowy `.env`, SQLite i dane Herda pozostają bez zmian. Nie kopiuj do pliku Docker sekretów produkcyjnych. Hasło w przykładzie służy wyłącznie izolowanej bazie lokalnej. Zmiana hasła PostgreSQL w env nie zmienia hasła już zainicjowanego użytkownika — wymaga osobnej zmiany w bazie.
+`.env` jest jedyną lokalną konfiguracją aplikacji i Docker Compose; jest ignorowany przez Git. Lokalnie `ADMIN_REQUIRE_TWO_FACTOR=false` upraszcza dostęp do panelu, ale produkcja musi jawnie używać `ADMIN_REQUIRE_TWO_FACTOR=true`. `.env.testing` zawiera bezpieczne, wersjonowane ustawienia testów (SQLite w pamięci, array cache/session i synchroniczna kolejka). Nie kopiuj sekretów produkcyjnych do `.env`. Hasło w przykładzie służy wyłącznie izolowanej bazie lokalnej. Zmiana hasła PostgreSQL w env nie zmienia hasła już zainicjowanego użytkownika — wymaga osobnej zmiany w bazie.
 
 Wolumeny Compose przechowują PostgreSQL, Redis, storage, bootstrap/cache, vendor i node_modules. Zależności Linux nie mieszają się z macOS; IDE na hoście może nie widzieć nowych paczek z kontenerów. Kod, generowane trasy Wayfinder i public/build pozostają w checkoutcie. Hostowy public/storage jest symlinkiem do storage kontenera, poprawnie rozwiązywanym przez Nginx. Po zatrzymaniu Makefile usuwa public/hot, aby Laravel nie wskazywał na nieczynny Vite.
 
-Drugi checkout: przed setup uruchom `make env`, ustaw w `.env.docker` unikalne `COMPOSE_PROJECT_NAME`, `APP_PORT`, `VITE_PORT`, `MAILPIT_PORT` oraz zgodne `APP_URL`. Potem `make setup`. Nazwa projektu izoluje sieć i wolumeny; porty muszą być wolne. Nie zmieniaj nazwy istniejącego projektu bez wcześniejszego `make down`, bo stare kontenery pozostaną uruchomione.
+Drugi checkout: przed setup uruchom `make env`, ustaw w `.env` unikalne `COMPOSE_PROJECT_NAME`, `APP_PORT`, `VITE_PORT`, `MAILPIT_PORT` oraz zgodne `APP_URL`. Potem `make setup`. Nazwa projektu izoluje sieć i wolumeny; porty muszą być wolne. Nie zmieniaj nazwy istniejącego projektu bez wcześniejszego `make down`, bo stare kontenery pozostaną uruchomione.
 
 Nie ma komendy automatycznie kasującej wolumeny. `down` nie usuwa DB, uploadów ani zależności. Migracja danych SQLite i reset bazy są osobnymi świadomymi operacjami. Testy Pest używają SQLite w pamięci i nie potwierdzają wszystkich zachowań PostgreSQL; `doctor` i setup sprawdzają rzeczywiste połączenie i migracje PostgreSQL.
 
 ## Problemy
 
 - **Cannot connect / permission denied Docker**: uruchom Docker Desktop/Engine i sprawdź dostęp swojego użytkownika do demona.
-- **Port is already allocated**: zmień port i powiązany APP_URL w `.env.docker`, następnie `make restart`.
+- **Port is already allocated**: zmień port i powiązany APP_URL w `.env`, następnie `make restart`.
 - **Setup przerwany podczas pobierania**: ponów `make setup`; dane i klucz zostaną zachowane.
 - **500 lub unhealthy**: `make logs SERVICE=app`, `make logs SERVICE=web`, `make doctor`. Po brakujących zależnościach/migracjach ponów setup.
 - **Brak HMR/SSR**: `make logs SERVICE=vite`; używaj localhost; sprawdź zgodność VITE_PORT i restart obu usług. Przy pracy WSL trzymaj repo w linuksowym systemie plików.

@@ -8,7 +8,7 @@ Wspieraj człowieka w budowie małego, wielokrotnie używalnego fundamentu Larav
 
 Lokalny runtime to Docker Compose zarządzany przez `Makefile`, zgodnie z [README](README.md).
 Używaj `make setup`, `make up`, `make doctor`, `make test` i wrapperów `make artisan/composer/npm ARGS='...'`.
-Ten kontrakt zastępuje wskazówki o Herd i hostowym PHP/Node. Docker używa `.env.docker`; hostowy `.env` i SQLite pozostają oddzielne.
+Ten kontrakt zastępuje wskazówki o Herd i hostowym PHP/Node. Docker używa lokalnego `.env`; nie nadpisuj go ani bazy SQLite.
 
 Repo zawiera już aplikację Laravel, manifesty, lockfile i konfigurację Boost. Plan fundamentu opisuje również elementy jeszcze niewdrożone; przed pracą sprawdzaj rzeczywisty stan. Wersje ustalaj z manifestów i zainstalowanych pakietów.
 

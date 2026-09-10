@@ -6,9 +6,9 @@ Status: lokalny setup Docker Compose jest zaimplementowany. 2026-09-10 dodano `d
 
 Decyzja właściciela z 2026-09-10 zastępuje wcześniejszy plan natywnego developmentu. Jedyny wspierany lokalny workflow to Docker Compose sterowany przez Makefile. Instrukcja instalacji, komendy, dane, ograniczenia i rozwiązywanie problemów: [README](../../README.md).
 
-Manifest usług to `compose.yaml`, runtime jest w `docker/local`, a konfiguracja lokalna powstaje z `.env.docker.example`. PHP 8.5 FPM/CLI, Node 24, PostgreSQL 18, Redis 8.2, Nginx i Mailpit działają w kontenerach. Kolejkę obsługuje `queue:work`; Horizon pozostaje planowaną paczką. Jeden `schedule:work` obsługuje scheduler. Vite zapewnia development SSR Inertia v3.
+Manifest usług to `compose.yaml`, runtime jest w `docker/local`, a konfiguracja lokalna powstaje z `.env.example`. PHP 8.5 FPM/CLI, Node 24, PostgreSQL 18, Redis 8.2, Nginx i Mailpit działają w kontenerach. Kolejkę obsługuje `queue:work`; Horizon pozostaje planowaną paczką. Jeden `schedule:work` obsługuje scheduler. Vite zapewnia development SSR Inertia v3.
 
-Kontenery mają własne wolumeny danych i zależności; istniejący hostowy `.env` oraz SQLite nie są migrowane ani nadpisywane. `make setup` instaluje lockfile, generuje klucz tylko gdy go brakuje, uruchamia migracje w lokalnym PostgreSQL i startuje usługi. Nie seeduje kont automatycznie. `make down` zachowuje wszystkie wolumeny. Nie ma automatycznego resetu ani kasowania danych.
+Kontenery mają własne wolumeny danych i zależności; `.env` jest wspólnym, lokalnym źródłem konfiguracji dla aplikacji i Compose, tworzonym z `.env.example` tylko gdy go brakuje. `make setup` instaluje lockfile, generuje klucz tylko gdy go brakuje, uruchamia migracje w lokalnym PostgreSQL i startuje usługi. Nie seeduje kont automatycznie. `make down` zachowuje wszystkie wolumeny. Nie ma automatycznego resetu ani kasowania danych.
 
 Obrazy mają przypięte linie wersji, a nie digesty; `make build` pobiera aktualizacje tych linii. Lockfile przypinają zależności aplikacji. Zgodność produkcyjna, TLS, docelowe biblioteki konwersji mediów, skaner i testy zbudowanego SSR nadal wymagają kwalifikacji na stagingu.
 

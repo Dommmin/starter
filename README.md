@@ -49,6 +49,30 @@ Push pozostaje ręczny. GitHub Actions uruchamia CI dla pushy i PR do `develop` 
 
 Przed pierwszym deployem administrator GitHub tworzy środowiska `staging` i `production`. Dla obu dodaje zmienne `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH` oraz sekrety `DEPLOY_SSH_KEY` i `DEPLOY_KNOWN_HOSTS`; produkcja wymaga reviewera, blokady self-review, braku bypassu administratora i polityki brancha `main`. Staging dopuszcza tylko `develop`, produkcja tylko `main`. Włączenie migracji w ręcznym workflow wymaga osobno zatwierdzonej, kompatybilnej zmiany expand. Recepta [deploy.php](deploy.php) nie wykonuje `migrate:rollback`.
 
+### GitHub Environment i PhpStorm
+
+W GitHub utwórz Environments `staging` i `production`. W każdym z nich ustaw następujące wartości:
+
+| Typ | Nazwa | Znaczenie |
+| --- | --- | --- |
+| Variable | `DEPLOY_HOST` | Zweryfikowany hostname albo adres IP serwera. |
+| Variable | `DEPLOY_USER` | Dedykowane konto SSH używane wyłącznie przez Deployer. |
+| Variable | `DEPLOY_PATH` | Katalog aplikacji na serwerze, np. `/var/www/starter`. |
+| Secret | `DEPLOY_SSH_KEY` | Prywatny klucz SSH dla `DEPLOY_USER`; nie używaj klucza osobistego. |
+| Secret | `DEPLOY_KNOWN_HOSTS` | Zweryfikowany wpis `known_hosts` dla `DEPLOY_HOST`. |
+
+Workflow sam ustawia `DEPLOY_ENVIRONMENT`, `DEPLOY_ARTIFACT`, `DEPLOY_ARTIFACT_SHA256` i `DEPLOY_ALLOW_MIGRATIONS` — nie dodawaj ich w GitHub. Przed pierwszym wydaniem administrator przygotowuje też plik `DEPLOY_PATH/shared/.env` na serwerze; nie trafia on ani do repozytorium, ani do artefaktu.
+
+Zależności PHP i JavaScript żyją w nazwanych wolumenach Docker Compose, dlatego nie uruchamiaj hostowego `composer install` ani `npm install` tylko po to, aby zadowolić PhpStorm. Po zmianie lockfile uruchom `make deps`.
+
+W PhpStorm skonfiguruj zdalne runtime'y zamiast lokalnych:
+
+1. W **Settings → PHP → CLI Interpreter** dodaj interpreter **Docker Compose** dla [compose.yaml](compose.yaml), usługi `app`, z PHP pod ścieżką `php`; po `make up` wybierz połączenie z istniejącym kontenerem.
+2. W **Settings → PHP → Composer** wybierz ten interpreter i Composer z kontenera (`/usr/local/bin/composer`), następnie zsynchronizuj zależności. Dzięki temu IDE widzi Deployer i funkcje użyte w `deploy.php`.
+3. W **Settings → JavaScript Runtime** ustaw zdalny runtime Docker Compose dla usługi `vite` oraz npm z kontenera. Nie klikaj proponowanego hostowego `npm install`.
+
+Jeżeli po konfiguracji IDE nadal wyświetla jedynie powiadomienie o brakującym `vendor` lub `node_modules`, wybierz w nim **Don't show again for this project**. To poprawne dla tego repozytorium: katalogi istnieją w kontenerze, a nie na hoście. W razie zmiany konfiguracji możesz przywrócić takie powiadomienia w **Settings → Appearance & Behavior → Notifications**.
+
 ## Układ i odpowiedzialności
 
 | Usługa      | Rola                                                               |

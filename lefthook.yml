@@ -1,0 +1,29 @@
+pre-commit:
+    parallel: true
+    commands:
+        staged-diff:
+            run: git diff --cached --check
+        php-format:
+            glob: '*.php'
+            run: vendor/bin/pint --test -- {staged_files}
+        frontend-check:
+            glob: '*.{ts,tsx,js,jsx,css}'
+            run: npm run check -- {staged_files}
+        ai-configuration:
+            glob:
+                - '.agents/**/*'
+                - '.claude/**/*'
+                - '.codex/**/*'
+                - 'AGENTS.md'
+                - 'CLAUDE.md'
+                - 'tests/ai/**/*'
+                - 'lefthook.yml'
+                - 'commitlint.config.mjs'
+                - '.github/workflows/**/*'
+                - 'deploy.php'
+            run: python3 -m unittest discover -s tests/ai -v
+
+commit-msg:
+    commands:
+        conventional-commit:
+            run: npx commitlint --edit {1}

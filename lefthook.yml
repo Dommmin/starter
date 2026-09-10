@@ -9,6 +9,9 @@ pre-commit:
         frontend-check:
             glob: '*.{ts,tsx,js,jsx,css}'
             run: npm run check -- {staged_files}
+        ui-contract:
+            glob: 'resources/js/pages/**/*.{ts,tsx,js,jsx}'
+            run: node scripts/check-ui-contract.mjs
         ai-configuration:
             glob:
                 - '.agents/**/*'

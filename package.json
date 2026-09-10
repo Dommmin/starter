@@ -9,6 +9,7 @@
         "dev:doctor": "node scripts/dev-doctor.mjs",
         "check": "vp check resources/js resources/css scripts vite.config.ts",
         "check:fix": "vp check --fix resources/js resources/css scripts vite.config.ts",
+        "check:ui-contract": "node scripts/check-ui-contract.mjs",
         "types:check": "tsc --noEmit"
     },
     "dependencies": {

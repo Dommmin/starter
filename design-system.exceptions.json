@@ -1,0 +1,134 @@
+[
+    {
+        "id": "DS-EXC-UPSTREAM-WELCOME",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/welcome.tsx",
+        "reason": "Upstream starter scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Container, Heading, Text, Stack primitives",
+        "scope": "className and arbitrary Tailwind styles",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/confirm-password.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH-FORGOT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/forgot-password.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH-LOGIN",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/login.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH-REGISTER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/register.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH-RESET",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/reset-password.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH-2FA",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/two-factor-challenge.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-AUTH-VERIFY",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/auth/verify-email.tsx",
+        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in form layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-SETTINGS-APP",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/settings/appearance.tsx",
+        "reason": "Upstream settings scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in settings layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-SETTINGS-PROF",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/settings/profile.tsx",
+        "reason": "Upstream settings scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in settings layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-SETTINGS-SEC",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/settings/security.tsx",
+        "reason": "Upstream settings scaffold page pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
+        "scope": "className in settings layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-ADMIN-INDEX",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/pages/admin/index.tsx",
+        "reason": "Admin index page prototype pending Task 09 design system primitives refactoring",
+        "alternatives": "Refactor using Surface, Heading, Text, Stack primitives",
+        "scope": "className in prototype layout",
+        "owner": "starter-foundation",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09"
+    }
+]

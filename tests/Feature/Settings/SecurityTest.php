@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -30,7 +31,7 @@ test('security page is displayed', function () {
         );
 });
 
-test('security page requires password confirmation when enabled', function () {
+test('security page requires password confirmation without redirecting an Inertia visit', function () {
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
 
     $user = User::factory()->create();
@@ -41,9 +42,17 @@ test('security page requires password confirmation when enabled', function () {
     ]);
 
     $response = $this->actingAs($user)
+        ->withHeader('X-Inertia', 'true')
+        ->withHeader(
+            'X-Inertia-Version',
+            app(HandleInertiaRequests::class)->version(request()),
+        )
         ->get(route('security.edit'));
 
-    $response->assertRedirect(route('password.confirm'));
+    $response
+        ->assertStatus(423)
+        ->assertHeader('X-Password-Confirmation-Required', 'true')
+        ->assertJsonPath('message', 'Password confirmation required.');
 });
 
 test('security page renders without two factor when feature is disabled', function () {

@@ -3,6 +3,7 @@
 namespace App\Repositories\Content;
 
 use App\Models\Page;
+use App\Models\PageSlugRedirect;
 use App\Models\PageTranslation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -44,6 +45,22 @@ class PageRepository
             ->where('locale', $locale)
             ->where('slug', $slug)
             ->with(['page.translations' => fn ($query) => $query->published()])
+            ->first();
+    }
+
+    /**
+     * Find the published translation a former slug redirects to in the given
+     * locale. A redirect to a draft resolves to null (the old URL is a 404).
+     */
+    public function findPublishedRedirectTarget(string $locale, string $oldSlug): ?PageTranslation
+    {
+        return PageTranslation::query()
+            ->published()
+            ->where('locale', $locale)
+            ->whereIn('id', PageSlugRedirect::query()
+                ->select('page_translation_id')
+                ->where('locale', $locale)
+                ->where('old_slug', $oldSlug))
             ->first();
     }
 

@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     CircleHelp,
     FileText,
+    History,
     LayoutGrid,
     Settings,
     Users,
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
+import { index as auditIndex } from '@/routes/admin/audit';
 import { index as faqsIndex } from '@/routes/admin/faqs';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as usersIndex } from '@/routes/admin/users';
@@ -52,6 +54,15 @@ export function AppSidebar() {
                       title: t('admin.users.title'),
                       href: usersIndex(),
                       icon: Users,
+                  },
+              ]
+            : []),
+        ...(auth.can.viewAudit
+            ? [
+                  {
+                      title: t('admin.audit.navLabel'),
+                      href: auditIndex(),
+                      icon: History,
                   },
               ]
             : []),

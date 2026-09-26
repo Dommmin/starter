@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
+use App\Models\AuditLog;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\User;
@@ -18,6 +20,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/users', [UserIndexController::class, 'index'])
             ->name('users.index')
             ->can('viewAny', User::class);
+        Route::get('/audit', [AuditLogController::class, 'index'])
+            ->name('audit.index')
+            ->can('viewAny', AuditLog::class);
 
         Route::get('/pages', [PageController::class, 'index'])
             ->name('pages.index')

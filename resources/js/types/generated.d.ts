@@ -1,6 +1,29 @@
 declare namespace App {
     namespace Data {
         namespace Admin {
+            namespace Audit {
+                export type AuditLogIndexData = {
+                    items: App.Data.Admin.Audit.AuditLogListItemData[];
+                    pagination: App.Data.Listing.ListPaginationData;
+                    filters: App.Data.Admin.Audit.AuditLogListFiltersData;
+                    actions: App.Enums.AuditAction[];
+                };
+                export type AuditLogListFiltersData = {
+                    search: string;
+                    sort: 'created_at';
+                    direction: 'asc' | 'desc';
+                    action: 'all' | App.Enums.AuditAction;
+                };
+                export type AuditLogListItemData = {
+                    id: number;
+                    createdAt: string | null;
+                    actorName: string | null;
+                    action: App.Enums.AuditAction;
+                    subjectType: string;
+                    subjectId: number | null;
+                    changedFields: string[];
+                };
+            }
             namespace Faqs {
                 export type FaqAbilitiesData = {
                     create: boolean;
@@ -139,6 +162,13 @@ declare namespace App {
         }
     }
     namespace Enums {
+        export type AuditAction =
+            | 'page.created'
+            | 'page.updated'
+            | 'page.published'
+            | 'page.unpublished'
+            | 'page.deleted'
+            | 'user.role_changed';
         export type PublicationStatus = 'draft' | 'published';
         export type UserRole = 'admin' | 'editor';
     }

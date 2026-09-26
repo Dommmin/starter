@@ -2,11 +2,14 @@
 
 namespace App\Actions\Content;
 
+use App\Actions\Audit\RecordAuditEvent;
 use App\Data\Content\PageTranslationInputData;
+use App\Enums\AuditAction;
 use App\Enums\PublicationStatus;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\User;
+use App\Services\Content\PageSlugRedirects;
 use App\Services\Content\RichTextRenderer;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +21,25 @@ use Illuminate\Validation\ValidationException;
  * Active locales present in the input are created or updated; active locales
  * missing from the input lose their translation. `published_at` records the
  * first publication and is kept when a translation returns to draft.
+ *
+ * A slug change of a translation that has ever been published keeps the old
+ * slug as a permanent redirect (see PageSlugRedirects). Content changes are
+ * audited as `page.updated`, status changes as `page.published` /
+ * `page.unpublished`, all in the same transaction.
  */
 class UpdatePage
 {
-    public function __construct(private readonly RichTextRenderer $richText) {}
+    /**
+     * Translation fields whose old and new values are safe to store in the
+     * audit log. The body is audited only as "changed".
+     */
+    private const array AUDITED_FIELDS = ['title', 'slug', 'meta_description'];
+
+    public function __construct(
+        private readonly RichTextRenderer $richText,
+        private readonly PageSlugRedirects $redirects,
+        private readonly RecordAuditEvent $audit,
+    ) {}
 
     /**
      * @param  array<string, PageTranslationInputData>  $translations  Keyed by locale.
@@ -43,18 +61,34 @@ class UpdatePage
 
             $existing = $locked->translations()->get()->keyBy('locale');
 
+            $changes = [];
+            $published = [];
+            $unpublished = [];
+
             foreach ($activeLocales as $locale) {
                 $input = $translations[$locale] ?? null;
                 /** @var PageTranslation|null $translation */
                 $translation = $existing->get($locale);
+                $wasPublished = $translation?->isPublished() ?? false;
 
                 if ($input === null) {
-                    $translation?->delete();
+                    if ($translation !== null) {
+                        $changes["{$locale}.title"] = RecordAuditEvent::change($translation->title, null);
+                        $changes["{$locale}.slug"] = RecordAuditEvent::change($translation->slug, null);
+
+                        if ($wasPublished) {
+                            $unpublished["{$locale}.status"] = RecordAuditEvent::change(PublicationStatus::Published->value, null);
+                        }
+
+                        $translation->delete();
+                    }
 
                     continue;
                 }
 
                 $translation ??= $locked->translations()->make(['locale' => $locale]);
+                $formerSlug = $translation->exists ? $translation->getOriginal('slug') : null;
+                $everPublished = $translation->published_at !== null;
 
                 $translation->fill([
                     'title' => $input->title,
@@ -68,7 +102,56 @@ class UpdatePage
                     $translation->published_at = now();
                 }
 
+                foreach (self::AUDITED_FIELDS as $field) {
+                    if (! $translation->exists || $translation->isDirty($field)) {
+                        $changes["{$locale}.{$field}"] = RecordAuditEvent::change(
+                            $translation->exists ? $translation->getOriginal($field) : null,
+                            $translation->getAttribute($field),
+                        );
+                    }
+                }
+
+                if ($translation->isDirty('body') && ($translation->exists || $translation->body !== null)) {
+                    $changes["{$locale}.body"] = RecordAuditEvent::redacted();
+                }
+
+                $isPublished = $input->status === PublicationStatus::Published;
+                if ($isPublished !== $wasPublished) {
+                    $statusChange = RecordAuditEvent::change(
+                        $translation->exists ? $translation->getOriginal('status')?->value : null,
+                        $input->status->value,
+                    );
+
+                    if ($isPublished) {
+                        $published["{$locale}.status"] = $statusChange;
+                    } else {
+                        $unpublished["{$locale}.status"] = $statusChange;
+                    }
+                }
+
+                $slugChanged = ! $translation->exists || $translation->isDirty('slug');
+
+                if ($slugChanged) {
+                    $this->redirects->claim($locale, $input->slug);
+                }
+
                 $translation->save();
+
+                if ($slugChanged && is_string($formerSlug) && $everPublished) {
+                    $this->redirects->rememberFormerSlug($translation, $formerSlug);
+                }
+            }
+
+            if ($changes !== []) {
+                $this->audit->handle(AuditAction::PageUpdated, $locked, $actor, $changes);
+            }
+
+            if ($published !== []) {
+                $this->audit->handle(AuditAction::PagePublished, $locked, $actor, $published);
+            }
+
+            if ($unpublished !== []) {
+                $this->audit->handle(AuditAction::PageUnpublished, $locked, $actor, $unpublished);
             }
 
             $locked->forceFill([

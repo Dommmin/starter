@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Pages;
 
 use App\Actions\Content\CreatePage;
+use App\Actions\Content\DeletePage;
 use App\Actions\Content\UpdatePage;
 use App\Data\Admin\Pages\PageAbilitiesData;
 use App\Data\Admin\Pages\PageEditorData;
@@ -127,9 +128,12 @@ class PageController extends Controller
     /**
      * Permanently delete the page with all translations (administrators only).
      */
-    public function destroy(Page $page): RedirectResponse
+    public function destroy(Request $request, Page $page, DeletePage $deletePage): RedirectResponse
     {
-        $page->delete();
+        /** @var User $user */
+        $user = $request->user();
+
+        $deletePage->handle($page, $user);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.deleted')]);
 

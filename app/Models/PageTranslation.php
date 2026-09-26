@@ -7,9 +7,11 @@ use Carbon\CarbonImmutable;
 use Database\Factories\PageTranslationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One language version of a page with its own slug and publication state.
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Page $page
+ * @property-read Collection<int, PageSlugRedirect> $slugRedirects
  */
 #[Fillable(['locale', 'title', 'slug', 'meta_description', 'body', 'status', 'published_at'])]
 class PageTranslation extends Model
@@ -60,6 +63,16 @@ class PageTranslation extends Model
     public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class);
+    }
+
+    /**
+     * Former slugs that permanently redirect to this translation.
+     *
+     * @return HasMany<PageSlugRedirect, $this>
+     */
+    public function slugRedirects(): HasMany
+    {
+        return $this->hasMany(PageSlugRedirect::class);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
@@ -65,6 +66,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'can' => [
                     'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,
+                    'viewAudit' => $request->user()?->can('viewAny', AuditLog::class) ?? false,
                 ],
             ],
             'locale' => app()->getLocale(),

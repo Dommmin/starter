@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Users\AssignUserRole;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Console\Attributes\Description;
@@ -20,7 +21,7 @@ class UserRoleCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(AssignUserRole $assignUserRole): int
     {
         $email = (string) $this->argument('email');
         $roleInput = strtolower((string) ($this->argument('role') ?? self::NO_ROLE));
@@ -43,7 +44,7 @@ class UserRoleCommand extends Command
 
         $role = $roleInput === self::NO_ROLE ? null : UserRole::from($roleInput);
 
-        $user->assignRole($role);
+        $assignUserRole->handle($user, $role, actor: null);
 
         $this->info($role === null
             ? sprintf('Role revoked from %s.', $user->email)

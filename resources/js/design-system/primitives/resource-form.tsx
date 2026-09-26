@@ -5,18 +5,30 @@ import { CheckboxField } from './checkbox-field';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { FormActions } from './form-actions';
 import { FormSection } from './form-section';
+import {
+    RichTextField,
+    type RichTextDocument,
+    type RichTextFieldLabels,
+} from './rich-text-field';
 import { SelectField, type SelectFieldOption } from './select-field';
 import { Stack } from './stack';
 import { SwitchField } from './switch-field';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
 
-/** Form values handled by `ResourceForm`: flat string/boolean fields. */
-export type ResourceFormValues = Record<string, string | boolean>;
+/** Form values handled by `ResourceForm`: flat string/boolean fields and rich text documents. */
+export type ResourceFormValues = Record<
+    string,
+    string | boolean | RichTextDocument
+>;
 
 type KeysOfType<Values, Type> = {
     [Key in keyof Values & string]: Values[Key] extends Type ? Key : never;
 }[keyof Values & string];
+
+function stringValue(value: unknown): string {
+    return typeof value === 'string' ? value : '';
+}
 
 type ResourceFormFieldBase = {
     /** Translated label. */
@@ -52,6 +64,12 @@ export type ResourceFormField<Values extends ResourceFormValues> =
             | {
                   type: 'switch' | 'checkbox';
                   name: KeysOfType<Values, boolean>;
+              }
+            | {
+                  type: 'richText';
+                  name: KeysOfType<Values, RichTextDocument>;
+                  /** Translated toolbar/link-dialog labels. */
+                  labels: RichTextFieldLabels;
               }
         );
 
@@ -158,7 +176,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         autoComplete={field.autoComplete}
                         placeholder={field.placeholder}
                         required={field.required}
-                        value={String(values[field.name] ?? '')}
+                        value={stringValue(values[field.name])}
                         onChange={(value) =>
                             onChange(
                                 field.name,
@@ -175,7 +193,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         rows={field.rows}
                         placeholder={field.placeholder}
                         required={field.required}
-                        value={String(values[field.name] ?? '')}
+                        value={stringValue(values[field.name])}
                         onChange={(value) =>
                             onChange(
                                 field.name,
@@ -192,7 +210,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         options={field.options}
                         placeholder={field.placeholder}
                         required={field.required}
-                        value={String(values[field.name] ?? '')}
+                        value={stringValue(values[field.name])}
                         onChange={(value) =>
                             onChange(
                                 field.name,
@@ -226,6 +244,27 @@ export function ResourceForm<Values extends ResourceFormValues>({
                             onChange(
                                 field.name,
                                 checked as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            case 'richText':
+                return (
+                    <RichTextField
+                        key={field.name}
+                        id={common.id}
+                        name={common.name}
+                        label={common.label}
+                        hint={common.description}
+                        error={common.error}
+                        disabled={common.disabled}
+                        required={field.required}
+                        labels={field.labels}
+                        value={values[field.name] as RichTextDocument}
+                        onChange={(value) =>
+                            onChange(
+                                field.name,
+                                value as Values[typeof field.name],
                             )
                         }
                     />

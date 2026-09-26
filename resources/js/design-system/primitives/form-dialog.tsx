@@ -73,6 +73,10 @@ export function FormDialog({
                     <form
                         onSubmit={(event) => {
                             event.preventDefault();
+                            // The dialog is portalled, but React still bubbles
+                            // `submit` through the component tree; keep it
+                            // from reaching an enclosing form (e.g. ResourceForm).
+                            event.stopPropagation();
                             if (isPending) {
                                 return;
                             }

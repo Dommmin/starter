@@ -48,6 +48,8 @@ export * from './record-details';
 export * from './resource-form';
 export * from './resource-table';
 export * from './retry-panel';
+export * from './rich-text-content';
+export * from './rich-text-field';
 export * from './search-input';
 export * from './section';
 export * from './select-field';

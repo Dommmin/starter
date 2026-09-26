@@ -31,7 +31,6 @@
         'no' => 'Nein',
         'untitled' => '{{ singularLabel }} #:id',
         'detailsTitle' => 'Details',
-        'dateHint' => 'Format: JJJJ-MM-TT',
         'save' => 'Speichern',
         'saving' => 'Wird gespeichert…',
         'cancel' => 'Abbrechen',

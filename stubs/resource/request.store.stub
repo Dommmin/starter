@@ -17,6 +17,7 @@ class Store{{ Model }}Request extends FormRequest
         return $this->user()?->can('create', {{ Model }}::class) ?? false;
     }
 
+{{ prepareInput }}
     /**
      * @return array<string, list<mixed>>
      */
@@ -36,4 +37,5 @@ class Store{{ Model }}Request extends FormRequest
 {{ rules }}
         ];
     }
+{{ blankInputsMethod }}
 }

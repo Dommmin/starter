@@ -13,7 +13,13 @@ vi.mock('@inertiajs/react', () => ({
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-type Values = { name: string; bio: string; active: boolean };
+type Values = {
+    name: string;
+    bio: string;
+    active: boolean;
+    price: string;
+    launchedOn: string;
+};
 
 const sections: ResourceFormSection<Values>[] = [
     {
@@ -23,6 +29,14 @@ const sections: ResourceFormSection<Values>[] = [
             { type: 'text', name: 'name', label: 'Name', required: true },
             { type: 'textarea', name: 'bio', label: 'Bio', hint: 'Short' },
             { type: 'switch', name: 'active', label: 'Active' },
+            {
+                type: 'number',
+                name: 'price',
+                label: 'Price',
+                step: 0.01,
+                min: 0,
+            },
+            { type: 'date', name: 'launchedOn', label: 'Launched on' },
         ],
     },
 ];
@@ -35,7 +49,13 @@ function props(
 ): ResourceFormProps<Values> {
     return {
         sections,
-        values: { name: 'Ada', bio: '', active: true },
+        values: {
+            name: 'Ada',
+            bio: '',
+            active: true,
+            price: '9.99',
+            launchedOn: '',
+        },
         onChange: () => {},
         onSubmit: () => {},
         labels: { submit: 'Save', errorSummaryTitle: 'Fix these fields' },
@@ -169,5 +189,47 @@ describe('ResourceForm', () => {
             form.requestSubmit();
         });
         expect(onSubmit).toHaveBeenCalledTimes(2);
+    });
+
+    it('renders number and date fields as native inputs with string values', async () => {
+        const onChange = vi.fn();
+        const container = await render(
+            <ResourceForm<Values>
+                {...props({
+                    onChange,
+                    errors: { launchedOn: 'Enter a valid date.' },
+                })}
+            />,
+        );
+
+        const price = container.querySelector<HTMLInputElement>(
+            'input[name="price"]',
+        )!;
+        expect(price.type).toBe('number');
+        expect(price.value).toBe('9.99');
+        expect(price.step).toBe('0.01');
+        expect(price.min).toBe('0');
+        expect(price.inputMode).toBe('decimal');
+
+        const launchedOn = container.querySelector<HTMLInputElement>(
+            'input[name="launchedOn"]',
+        )!;
+        expect(launchedOn.type).toBe('date');
+        expect(launchedOn.value).toBe('');
+        expect(launchedOn.getAttribute('aria-invalid')).toBe('true');
+        expect(
+            container.querySelector(`label[for="${launchedOn.id}"]`)
+                ?.textContent,
+        ).toBe('Launched on');
+
+        await act(async () => {
+            Object.getOwnPropertyDescriptor(
+                HTMLInputElement.prototype,
+                'value',
+            )!.set!.call(price, '12.50');
+            price.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        expect(onChange).toHaveBeenCalledWith('price', '12.50');
     });
 });

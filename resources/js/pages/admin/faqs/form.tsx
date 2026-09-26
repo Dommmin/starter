@@ -190,9 +190,10 @@ export function FaqForm({ editor }: FaqFormProps) {
                                 required: true,
                             },
                             {
-                                type: 'text',
+                                type: 'number',
                                 name: 'position',
                                 label: t('admin.faqs.fields.position'),
+                                step: 1,
                             },
                             {
                                 type: 'switch',

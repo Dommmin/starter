@@ -31,7 +31,6 @@
         'no' => 'No',
         'untitled' => '{{ singularLabel }} #:id',
         'detailsTitle' => 'Details',
-        'dateHint' => 'Format: YYYY-MM-DD',
         'save' => 'Save',
         'saving' => 'Saving…',
         'cancel' => 'Cancel',

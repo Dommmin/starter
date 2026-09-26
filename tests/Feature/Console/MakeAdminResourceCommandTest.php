@@ -79,6 +79,7 @@ test('generation writes plain files and extends routes and catalogs', function (
     $this->artisan('app:make-resource', $this->productArguments)
         ->expectsOutputToContain('Product resource generated.')
         ->expectsOutputToContain('Next steps:')
+        ->expectsOutputToContain('call ProductSeeder from database/seeders/DatabaseSeeder.php (it is not registered automatically)')
         ->assertSuccessful();
 
     foreach ([
@@ -95,6 +96,7 @@ test('generation writes plain files and extends routes and catalogs', function (
         'app/Data/Admin/Products/ProductIndexData.php',
         'app/Data/Admin/Products/ProductEditorData.php',
         'database/factories/ProductFactory.php',
+        'database/seeders/ProductSeeder.php',
         'resources/js/pages/admin/products/index.tsx',
         'resources/js/pages/admin/products/form.tsx',
         'resources/js/pages/admin/products/create.tsx',
@@ -115,6 +117,9 @@ test('generation writes plain files and extends routes and catalogs', function (
             expect(fn () => token_get_all($contents, TOKEN_PARSE))->not->toThrow(ParseError::class);
         }
     }
+
+    expect($this->files->exists("{$this->sandbox}/database/seeders/DatabaseSeeder.php"))->toBeFalse()
+        ->and($this->files->get("{$this->sandbox}/database/seeders/ProductSeeder.php"))->toContain('Product::factory()->count(10)->create();');
 
     $routes = $this->files->get("{$this->sandbox}/routes/admin.php");
     expect($routes)->toContain('use App\Http\Controllers\Admin\Products\ProductController;')
@@ -220,3 +225,58 @@ test('invalid names and field definitions are rejected before planning', functio
     'sort on long text' => [['--sortable' => 'description'], 'Sortable column [description] must be a non-text field'],
     'filter on a string' => [['--filters' => 'name'], 'Filter [name] must be a boolean or enum field.'],
 ]);
+
+test('number and date fields render native inputs, validate strictly and treat blank optional values as null', function () {
+    $this->artisan('app:make-resource', $this->productArguments)->assertSuccessful();
+
+    $form = $this->files->get("{$this->sandbox}/resources/js/pages/admin/products/form.tsx");
+    $compact = preg_replace('/\s+/', ' ', $form);
+
+    expect($form)->toContain('    stock: string;')
+        ->toContain('    price: string;')
+        ->toContain('    launched_on: string;')
+        ->toContain("stock: record.stock === null ? '' : String(record.stock),")
+        ->toContain("launched_on: record.launchedOn ?? '',")
+        ->not->toContain('dateHint')
+        ->and($compact)->toContain("type: 'number', name: 'stock', label: t('admin.products.fields.stock'), step: 1, }")
+        ->toContain("type: 'number', name: 'price', label: t('admin.products.fields.price'), step: 0.01, }")
+        ->toContain("type: 'date', name: 'launched_on', label: t('admin.products.fields.launched_on'), }")
+        ->toContain("type: 'text', name: 'name',");
+
+    $store = $this->files->get("{$this->sandbox}/app/Http/Requests/Admin/Products/StoreProductRequest.php");
+    expect($store)->toContain("'stock' => ['nullable', 'integer', 'min:-2147483648', 'max:2147483647'],")
+        ->toContain("'price' => ['nullable', 'numeric', 'decimal:0,2', 'min:-9999999999.99', 'max:9999999999.99'],")
+        ->toContain("'launched_on' => ['nullable', 'date_format:Y-m-d'],")
+        ->toContain('$this->merge(self::blankOptionalInputsAsNull($this->all()));')
+        ->toContain("foreach (['price', 'stock', 'launched_on'] as \$name)");
+
+    $update = $this->files->get("{$this->sandbox}/app/Http/Requests/Admin/Products/UpdateProductRequest.php");
+    expect($update)->toContain('$this->merge(StoreProductRequest::blankOptionalInputsAsNull($this->all()));');
+
+    $model = $this->files->get("{$this->sandbox}/app/Models/Product.php");
+    expect($model)->toContain("'stock' => 'integer',")
+        ->toContain("'price' => 'decimal:2',")
+        ->toContain("'launched_on' => 'date',");
+
+    $test = $this->files->get("{$this->sandbox}/tests/Feature/Admin/ProductCrudTest.php");
+    expect($test)->toContain("'stock' => '7',")
+        ->toContain("test('blank optional number and date inputs are stored as null'")
+        ->toContain('$this->withoutMiddleware(ConvertEmptyStringsToNull::class);');
+});
+
+test('resources without optional number or date fields get no input normalisation', function () {
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,stock:integer:required',
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $store = $this->files->get("{$this->sandbox}/app/Http/Requests/Admin/Products/StoreProductRequest.php");
+    $test = $this->files->get("{$this->sandbox}/tests/Feature/Admin/ProductCrudTest.php");
+
+    expect($store)->not->toContain('prepareForValidation')
+        ->not->toContain('blankOptionalInputsAsNull')
+        ->and($this->files->get("{$this->sandbox}/app/Http/Requests/Admin/Products/UpdateProductRequest.php"))->not->toContain('prepareForValidation')
+        ->and($test)->not->toContain('blank optional number and date inputs')
+        ->and($this->files->get("{$this->sandbox}/resources/js/pages/admin/products/form.tsx"))->toContain("type: 'number',");
+});

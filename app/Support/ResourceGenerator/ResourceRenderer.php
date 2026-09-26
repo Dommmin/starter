@@ -46,6 +46,7 @@ final class ResourceRenderer
                 'imports' => $this->enumImports($resource),
                 'definition' => $this->factoryDefinition($resource),
             ]),
+            "database/seeders/{$model}Seeder.php" => $this->php('seeder', $resource),
             "app/Policies/{$model}Policy.php" => $this->php('policy', $resource),
             "app/Actions/{$plural}/Update{$model}.php" => $this->php('action.update', $resource),
             "app/Http/Controllers/Admin/{$plural}/{$model}Controller.php" => $this->php('controller', $resource),
@@ -55,9 +56,13 @@ final class ResourceRenderer
             ]),
             "app/Http/Requests/Admin/{$plural}/Store{$model}Request.php" => $this->php('request.store', $resource, [
                 'imports' => $this->storeRequestImports($resource),
+                'prepareInput' => $this->prepareInput($resource, 'self'),
                 'rules' => $this->validationRules($resource),
+                'blankInputsMethod' => $this->blankInputsMethod($resource),
             ]),
-            "app/Http/Requests/Admin/{$plural}/Update{$model}Request.php" => $this->php('request.update', $resource),
+            "app/Http/Requests/Admin/{$plural}/Update{$model}Request.php" => $this->php('request.update', $resource, [
+                'prepareInput' => $this->prepareInput($resource, "Store{$model}Request"),
+            ]),
             "app/Data/Admin/{$plural}/{$model}ListItemData.php" => $this->php('data.list-item', $resource, [
                 'imports' => $this->enumImports($resource),
                 'properties' => $this->dataProperties($resource, listOnly: true),
@@ -99,10 +104,11 @@ final class ResourceRenderer
                 'filterTest' => $this->uiFilterTest($resource),
             ]),
             "tests/Feature/Admin/{$model}CrudTest.php" => $this->php('test.feature', $resource, [
-                'imports' => $this->enumImports($resource),
+                'imports' => $this->featureTestImports($resource),
                 'payload' => $this->testPayload($resource),
                 'defaultFilters' => $this->testDefaultFilters($resource),
                 'searchTest' => $this->searchTest($resource),
+                'blankInputsTest' => $this->blankInputsTest($resource),
                 'sortColumn' => $resource->sortable[0],
                 'filterTest' => $this->filterTest($resource),
                 'createdExpectations' => $this->payloadExpectations($resource, '$'.$resource->variable()),
@@ -231,11 +237,88 @@ final class ResourceRenderer
         return $imports === [] ? null : implode(PHP_EOL, $imports);
     }
 
+    private function featureTestImports(ResourceBlueprint $resource): ?string
+    {
+        $imports = array_filter([
+            $this->enumImports($resource),
+            $this->blankableFields($resource) === [] ? null : 'use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;',
+        ]);
+
+        return $imports === [] ? null : implode(PHP_EOL, $imports);
+    }
+
     private function storeRequestImports(ResourceBlueprint $resource): ?string
     {
         $enums = $this->enumImports($resource);
 
         return $enums === null ? null : $enums.PHP_EOL.'use Illuminate\Validation\Rule;';
+    }
+
+    /**
+     * Optional number and date fields: the form sends them as strings and a
+     * blank one means "no value".
+     *
+     * @return list<ResourceField>
+     */
+    private function blankableFields(ResourceBlueprint $resource): array
+    {
+        return array_values(array_filter(
+            $resource->fields,
+            fn (ResourceField $field): bool => ! $field->isRequired() && in_array($field->type, ['integer', 'decimal', 'date'], true),
+        ));
+    }
+
+    /**
+     * `prepareForValidation()` turning blank optional number/date inputs into null.
+     *
+     * @param  string  $owner  Class holding `blankOptionalInputsAsNull()` (`self` or the store request).
+     */
+    private function prepareInput(ResourceBlueprint $resource, string $owner): ?string
+    {
+        if ($this->blankableFields($resource) === []) {
+            return null;
+        }
+
+        return <<<PHP
+            /**
+             * Blank optional number and date inputs mean "no value".
+             */
+            protected function prepareForValidation(): void
+            {
+                \$this->merge({$owner}::blankOptionalInputsAsNull(\$this->all()));
+            }
+
+        PHP;
+    }
+
+    private function blankInputsMethod(ResourceBlueprint $resource): ?string
+    {
+        $fields = $this->blankableFields($resource);
+        if ($fields === []) {
+            return null;
+        }
+
+        $names = $this->quotedList(array_map(fn (ResourceField $field): string => $field->name, $fields));
+
+        return PHP_EOL.<<<PHP
+            /**
+             * Null for each optional number/date input sent as a blank string.
+             *
+             * @param  array<string, mixed>  \$input
+             * @return array<string, null>
+             */
+            public static function blankOptionalInputsAsNull(array \$input): array
+            {
+                \$blank = [];
+                foreach ([{$names}] as \$name) {
+                    if (is_string(\$input[\$name] ?? null) && trim(\$input[\$name]) === '') {
+                        \$blank[\$name] = null;
+                    }
+                }
+
+                return \$blank;
+            }
+        PHP;
     }
 
     private function migrationColumns(ResourceBlueprint $resource): string
@@ -603,6 +686,8 @@ final class ResourceRenderer
             $lines = ['                            {'];
             $lines[] = $indent.'type: '.match ($field->type) {
                 'text' => "'textarea'",
+                'integer', 'decimal' => "'number'",
+                'date' => "'date'",
                 'boolean' => "'switch'",
                 'enum' => "'select'",
                 default => "'text'",
@@ -614,8 +699,12 @@ final class ResourceRenderer
                 $lines[] = $indent.'rows: 5,';
             }
 
-            if ($field->type === 'date') {
-                $lines[] = $indent."hint: t('{$keys}.dateHint'),";
+            if ($field->type === 'integer') {
+                $lines[] = $indent.'step: 1,';
+            }
+
+            if ($field->type === 'decimal') {
+                $lines[] = $indent.'step: 0.01,';
             }
 
             if ($field->type === 'enum') {
@@ -747,7 +836,7 @@ final class ResourceRenderer
     {
         return match ($field->type) {
             'string', 'text' => "'Example ".Str::lower($field->label())."'",
-            'integer' => '7',
+            'integer' => $raw ? "'7'" : '7',
             'decimal' => "'12.50'",
             'boolean' => 'true',
             'date' => "'2026-01-15'",
@@ -818,6 +907,39 @@ final class ResourceRenderer
                     ->where('items.0.id', \$match->id)
                     ->where('filters.search', 'needle')
                 );
+        });
+
+        PHP;
+    }
+
+    private function blankInputsTest(ResourceBlueprint $resource): string
+    {
+        $fields = $this->blankableFields($resource);
+        if ($fields === []) {
+            return '';
+        }
+
+        $model = $resource->model;
+        $variable = '$'.$resource->variable();
+        $blank = implode(', ', array_map(fn (ResourceField $field): string => "'{$field->name}' => ''", $fields));
+        $expectations = [];
+        foreach ($fields as $index => $field) {
+            $expectations[] = ($index === 0 ? "    expect({$variable}->{$field->name})" : "        ->and({$variable}->{$field->name})").'->toBeNull()';
+        }
+        $expectations = implode(PHP_EOL, $expectations).';';
+
+        return <<<PHP
+
+        test('blank optional number and date inputs are stored as null', function () {
+            // The request normalises blank inputs itself, independent of the global middleware.
+            \$this->withoutMiddleware(ConvertEmptyStringsToNull::class);
+            \$editor = User::factory()->editor()->create();
+
+            \$this->actingAs(\$editor)->post(route('admin.{$resource->kebabPlural()}.store'), {$resource->variable()}Payload([{$blank}]))
+                ->assertSessionHasNoErrors();
+
+            {$variable} = {$model}::query()->sole();
+        {$expectations}
         });
 
         PHP;

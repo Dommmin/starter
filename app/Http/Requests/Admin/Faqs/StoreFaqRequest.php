@@ -17,6 +17,14 @@ class StoreFaqRequest extends FormRequest
     }
 
     /**
+     * Blank optional number and date inputs mean "no value".
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(self::blankOptionalInputsAsNull($this->all()));
+    }
+
+    /**
      * @return array<string, list<mixed>>
      */
     public function rules(): array
@@ -37,5 +45,23 @@ class StoreFaqRequest extends FormRequest
             'position' => ['nullable', 'integer', 'min:-2147483648', 'max:2147483647'],
             'published' => ['required', 'boolean'],
         ];
+    }
+
+    /**
+     * Null for each optional number/date input sent as a blank string.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, null>
+     */
+    public static function blankOptionalInputsAsNull(array $input): array
+    {
+        $blank = [];
+        foreach (['position'] as $name) {
+            if (is_string($input[$name] ?? null) && trim($input[$name]) === '') {
+                $blank[$name] = null;
+            }
+        }
+
+        return $blank;
     }
 }

@@ -18,6 +18,7 @@ class Update{{ Model }}Request extends FormRequest
         return ${{ variable }} instanceof {{ Model }} && ($this->user()?->can('update', ${{ variable }}) ?? false);
     }
 
+{{ prepareInput }}
     /**
      * `updated_at` is the version the form was loaded with (optimistic locking).
      *

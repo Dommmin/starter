@@ -1,0 +1,17 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\{{ Model }};
+use Illuminate\Database\Seeder;
+
+/**
+ * Local sample {{ pluralLower }} built from {{ Model }}Factory.
+ */
+class {{ Model }}Seeder extends Seeder
+{
+    public function run(): void
+    {
+        {{ Model }}::factory()->count(10)->create();
+    }
+}

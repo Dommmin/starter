@@ -2,9 +2,11 @@ import { useEffect, useId, useRef } from 'react';
 import { Alert } from './alert';
 import { Button, type ButtonProps } from './button';
 import { CheckboxField } from './checkbox-field';
+import { DateField } from './date-field';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { FormActions } from './form-actions';
 import { FormSection } from './form-section';
+import { NumberField } from './number-field';
 import {
     RichTextField,
     type RichTextDocument,
@@ -16,7 +18,10 @@ import { SwitchField } from './switch-field';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
 
-/** Form values handled by `ResourceForm`: flat string/boolean fields and rich text documents. */
+/**
+ * Form values handled by `ResourceForm`: flat string/boolean fields (number
+ * and date inputs keep their raw string) and rich text documents.
+ */
 export type ResourceFormValues = Record<
     string,
     string | boolean | RichTextDocument
@@ -54,6 +59,23 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   name: KeysOfType<Values, string>;
                   rows?: number;
                   placeholder?: string;
+              }
+            | {
+                  /** Native number input; the value stays a string (`''` = empty). */
+                  type: 'number';
+                  name: KeysOfType<Values, string>;
+                  min?: number;
+                  max?: number;
+                  /** e.g. `1` for integers, `0.01` for two decimals, `'any'`. */
+                  step?: number | 'any';
+                  placeholder?: string;
+              }
+            | {
+                  /** Native date input; the value is `YYYY-MM-DD` or `''`. */
+                  type: 'date';
+                  name: KeysOfType<Values, string>;
+                  min?: string;
+                  max?: string;
               }
             | {
                   type: 'select';
@@ -192,6 +214,42 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         {...common}
                         rows={field.rows}
                         placeholder={field.placeholder}
+                        required={field.required}
+                        value={stringValue(values[field.name])}
+                        onChange={(value) =>
+                            onChange(
+                                field.name,
+                                value as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            case 'number':
+                return (
+                    <NumberField
+                        key={field.name}
+                        {...common}
+                        min={field.min}
+                        max={field.max}
+                        step={field.step}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        value={stringValue(values[field.name])}
+                        onChange={(value) =>
+                            onChange(
+                                field.name,
+                                value as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            case 'date':
+                return (
+                    <DateField
+                        key={field.name}
+                        {...common}
+                        min={field.min}
+                        max={field.max}
                         required={field.required}
                         value={stringValue(values[field.name])}
                         onChange={(value) =>

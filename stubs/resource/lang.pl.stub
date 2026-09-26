@@ -31,7 +31,6 @@
         'no' => 'Nie',
         'untitled' => '{{ singularLabel }} #:id',
         'detailsTitle' => 'Szczegóły',
-        'dateHint' => 'Format: RRRR-MM-DD',
         'save' => 'Zapisz',
         'saving' => 'Zapisywanie…',
         'cancel' => 'Anuluj',

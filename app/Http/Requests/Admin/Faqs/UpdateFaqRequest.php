@@ -19,6 +19,14 @@ class UpdateFaqRequest extends FormRequest
     }
 
     /**
+     * Blank optional number and date inputs mean "no value".
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(StoreFaqRequest::blankOptionalInputsAsNull($this->all()));
+    }
+
+    /**
      * `updated_at` is the version the form was loaded with (optimistic locking).
      *
      * @return array<string, list<mixed>>

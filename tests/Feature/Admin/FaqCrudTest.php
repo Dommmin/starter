@@ -2,6 +2,7 @@
 
 use App\Models\Faq;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -19,7 +20,7 @@ function faqPayload(array $overrides = []): array
     return [
         'question' => 'Example question',
         'answer' => 'Example answer',
-        'position' => 7,
+        'position' => '7',
         'published' => true,
         ...$overrides,
     ];
@@ -129,6 +130,18 @@ test('an editor creates a faq', function () {
         ->and($faq?->answer)->toBe('Example answer')
         ->and($faq?->position)->toBe(7)
         ->and($faq?->published)->toBeTrue();
+});
+
+test('blank optional number and date inputs are stored as null', function () {
+    // The request normalises blank inputs itself, independent of the global middleware.
+    $this->withoutMiddleware(ConvertEmptyStringsToNull::class);
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->post(route('admin.faqs.store'), faqPayload(['position' => '']))
+        ->assertSessionHasNoErrors();
+
+    $faq = Faq::query()->sole();
+    expect($faq->position)->toBeNull();
 });
 
 test('store validates required fields and creates nothing', function () {

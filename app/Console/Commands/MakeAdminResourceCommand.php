@@ -20,7 +20,7 @@ use RuntimeException;
     {--filters= : Comma separated boolean/enum fields offered as list filters}
     {--dry-run : List the files that would be created or changed without writing anything}
     {--no-format : Skip Pint and the frontend formatter on the generated files}', aliases: ['make:admin-resource'])]
-#[Description('Generate a plain admin CRUD resource (migration, model, policy, controller, requests, Data, React pages, i18n, routes and tests)')]
+#[Description('Generate a plain admin CRUD resource (migration, model, factory, seeder, policy, controller, requests, Data, React pages, i18n, routes and tests)')]
 class MakeAdminResourceCommand extends Command
 {
     /**
@@ -86,7 +86,8 @@ class MakeAdminResourceCommand extends Command
         $this->line("  3. make composer ARGS='types:generate'");
         $this->line("  4. make artisan ARGS='wayfinder:generate --with-form --no-interaction'");
         $this->line("  5. Add a navigation link to resources/js/components/app-sidebar.tsx (admin.{$resource->camelPlural()}.navLabel, route admin.{$resource->kebabPlural()}.index).");
-        $this->line("  6. make test ARGS='--compact tests/Feature/Admin/{$resource->model}CrudTest.php' and make npm ARGS='run check'");
+        $this->line("  6. Optional local sample data: call {$resource->model}Seeder from database/seeders/DatabaseSeeder.php (it is not registered automatically).");
+        $this->line("  7. make test ARGS='--compact tests/Feature/Admin/{$resource->model}CrudTest.php' and make npm ARGS='run check'");
 
         return self::SUCCESS;
     }

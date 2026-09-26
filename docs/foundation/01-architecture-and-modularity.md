@@ -141,7 +141,21 @@ Wzorzec CRUD obejmuje listę z paginacją, allowlistę sortowania, create/edit, 
 
 `make artisan ARGS='app:make-resource Product --fields="name:string:required,price:decimal,active:boolean,status:enum(draft|published)" --searchable=name --sortable=name,created_at --filters=status,active'` (alias `make:admin-resource`; `make:resource` jest zajęte przez Laravel). Typy pól: `string`, `text`, `integer`, `decimal`, `boolean`, `date`, `enum(a|b)`; `:required` oznacza pole wymagane (boolean i enum są zawsze wymagane, domyślnie `false`/pierwsza wartość). `--searchable` przyjmuje pola string/text, `--sortable` pola nie-tekstowe oraz `id`/`created_at`/`updated_at` (domyślnie `created_at`), `--filters` pola boolean/enum. `--dry-run` wypisuje planowane pliki bez zapisu.
 
-Generuje zwykłe pliki z edytowalnych stubów `stubs/resource/*.stub`: migrację, model z castami i `#[Fillable]`, enum per pole enum, factory, policy (admin/editor przez `canAccessAdminPanel()`, usuwanie tylko `isAdmin()`), controller, `List/Store/Update` FormRequesty (`ListQuery`), akcję `Update{Name}` z optimistic lockingiem po `updated_at`, klasy Data z `#[TypeScript]`, strony React na `ResourceTable`/`ResourceForm`, test Pest (lista, allowlisty, walidacja, konflikt, odmowy bez mutacji) i test vitest listy. Dopisuje trasy do `routes/admin.php` i klucze `admin.{camelPlural}.*` do `lang/{en,pl,de}/admin.php` (pl/de to generyczne teksty do przeglądu). Po zapisie formatuje nowe pliki Pintem i `vp fmt` (`--no-format` wyłącza).
+Generuje zwykłe pliki z edytowalnych stubów `stubs/resource/*.stub`: migrację, model z castami i `#[Fillable]`, enum per pole enum, factory, seeder `database/seeders/{Name}Seeder.php` (10 rekordów z factory; nie jest podpinany do `DatabaseSeeder` — krok w „Next steps”), policy (admin/editor przez `canAccessAdminPanel()`, usuwanie tylko `isAdmin()`), controller, `List/Store/Update` FormRequesty (`ListQuery`), akcję `Update{Name}` z optimistic lockingiem po `updated_at`, klasy Data z `#[TypeScript]`, strony React na `ResourceTable`/`ResourceForm`, test Pest (lista, allowlisty, walidacja, konflikt, odmowy bez mutacji) i test vitest listy. Dopisuje trasy do `routes/admin.php` i klucze `admin.{camelPlural}.*` do `lang/{en,pl,de}/admin.php` (pl/de to generyczne teksty do przeglądu). Po zapisie formatuje nowe pliki Pintem i `vp fmt` (`--no-format` wyłącza).
+
+Mapowanie typów pól (backend → Data → formularz):
+
+| Typ | Migracja / cast | Walidacja (`Store{Name}Request::fieldRules()`) | Data (PHP → TS) | Pole `ResourceForm` |
+| --- | --- | --- | --- | --- |
+| `string` | `string` / — | `string`, `max:255` | `?string` | `text` |
+| `text` | `text` / — | `string`, `max:20000` | `?string` (poza listą) | `textarea` |
+| `integer` | `integer` / `integer` | `integer`, zakres int32 | `?int` → `number \| null` | `number`, `step: 1` (klawiatura `numeric`) |
+| `decimal` | `decimal(12,2)` / `decimal:2` | `numeric`, `decimal:0,2`, zakres | `?string` (bez utraty precyzji) | `number`, `step: 0.01` (klawiatura `decimal`) |
+| `boolean` | `boolean` default false / `boolean` | `boolean` | `bool` | `switch` |
+| `date` | `date` / `date` | `date_format:Y-m-d` | `?string` `YYYY-MM-DD` | `date` (natywny `<input type="date">`) |
+| `enum(a\|b)` | `string(32)` / enum | `Rule::enum` | enum → unia TS | `select` |
+
+Wartości formularza liczbowych pól i dat są na froncie stringami (`''` = brak); typ nadaje walidacja i cast modelu. Dla opcjonalnych pól `integer`/`decimal`/`date` requesty generują `prepareForValidation()` z `Store{Name}Request::blankOptionalInputsAsNull()` (pusty string → `null`, niezależnie od globalnego `ConvertEmptyStringsToNull`), a test Pest sprawdza to z wyłączonym middleware.
 
 Czego nie robi: nie nadpisuje niczego i nie ma `--force` — istniejący plik, trasa, klucz katalogu lub migracja tabeli blokują całość (zapis atomowy z rollbackiem); nie tworzy tłumaczeń per locale, relacji, uploadów, soft-delete ani bulk actions; nie modyfikuje nawigacji, nie uruchamia migracji ani generowania typów — wypisuje te kroki jako „Next steps”. Przykład: zasób `Faq`.
 

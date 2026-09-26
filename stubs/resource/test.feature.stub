@@ -87,7 +87,7 @@ test('an editor creates a {{ singularLower }}', function () {
 
 {{ createdExpectations }}
 });
-
+{{ blankInputsTest }}
 test('store validates required fields and creates nothing', function () {
     $editor = User::factory()->editor()->create();
 

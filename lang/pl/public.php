@@ -38,4 +38,7 @@ return [
         'ctaBottomDescription' => 'Przekonaj się, jak płynnie współpracuje część publiczna z modułem administracyjnym. Zarejestruj konto lub zaloguj się do panelu.',
         'footerCopy' => 'Punkt Startowy. Baza aplikacji internetowych.',
     ],
+    'page' => [
+        'publishedOn' => 'Opublikowano :date',
+    ],
 ];

@@ -12,5 +12,15 @@ return [
         'heading' => '500 — Serverfehler',
         'description' => 'Ein unerwarteter Fehler ist aufgetreten.',
     ],
+    'forbidden' => [
+        'title' => 'Zugriff verweigert',
+        'heading' => '403 — Zugriff verweigert',
+        'description' => 'Sie haben keine Berechtigung, diese Seite anzuzeigen.',
+    ],
+    'serviceUnavailable' => [
+        'title' => 'Dienst nicht verfügbar',
+        'heading' => '503 — Dienst nicht verfügbar',
+        'description' => 'Wir führen Wartungsarbeiten durch. Bitte versuchen Sie es später erneut.',
+    ],
     'networkError' => 'Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.',
 ];

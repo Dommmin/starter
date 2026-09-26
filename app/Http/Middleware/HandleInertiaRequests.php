@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Seo\SeoDefaultsData;
+use App\Data\Seo\SeoOrganizationData;
 use App\Models\User;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
@@ -19,6 +21,13 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    /**
+     * Public routes whose parameters differ per locale (translated slugs).
+     *
+     * @var list<string>
+     */
+    private const TRANSLATED_PARAMETER_ROUTES = ['pages.show'];
 
     public function __construct(
         protected LocalizationManager $localization,
@@ -46,25 +55,7 @@ class HandleInertiaRequests extends Middleware
     {
         $i18n = $this->localization->getPayload($request);
         if ($i18n['area'] === 'public') {
-            $currentRoute = $request->route();
-            $currentRouteName = $currentRoute ? $currentRoute->getName() : null;
-
-            $baseRouteName = 'home';
-            $parameters = [];
-
-            if ($currentRouteName) {
-                $candidateName = str_starts_with($currentRouteName, 'localized.')
-                    ? substr($currentRouteName, 10)
-                    : $currentRouteName;
-
-                if (Route::has($candidateName)) {
-                    $baseRouteName = $candidateName;
-                    $parameters = $currentRoute->parameters();
-                    unset($parameters['locale']);
-                }
-            }
-
-            $i18n['alternateUrls'] = $this->urlGenerator->getAlternateUrls($baseRouteName, $parameters);
+            $i18n['alternateUrls'] = $this->alternateUrls($request);
         }
 
         return [
@@ -78,7 +69,68 @@ class HandleInertiaRequests extends Middleware
             ],
             'locale' => app()->getLocale(),
             'i18n' => $i18n,
+            'seo' => $this->seoDefaults($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Language alternates of the current public route for the locale
+     * switcher. Routes whose parameters are translated per locale (e.g. page
+     * slugs) are skipped: substituting the same value in every locale would
+     * produce wrong URLs, so their controllers share the correct alternates
+     * themselves (`Inertia::share('i18n.alternateUrls', ...)`).
+     *
+     * @return array<string, string>
+     */
+    protected function alternateUrls(Request $request): array
+    {
+        $currentRoute = $request->route();
+        $currentRouteName = $currentRoute ? $currentRoute->getName() : null;
+
+        if (! $currentRoute || ! $currentRouteName) {
+            return $this->urlGenerator->getAlternateUrls('home');
+        }
+
+        $baseRouteName = str_starts_with($currentRouteName, 'localized.')
+            ? substr($currentRouteName, 10)
+            : $currentRouteName;
+
+        if (! Route::has($baseRouteName)) {
+            return $this->urlGenerator->getAlternateUrls('home');
+        }
+
+        if (in_array($baseRouteName, self::TRANSLATED_PARAMETER_ROUTES, true)) {
+            return [];
+        }
+
+        $parameters = $currentRoute->parameters();
+        unset($parameters['locale']);
+
+        return $this->urlGenerator->getAlternateUrls($baseRouteName, $parameters);
+    }
+
+    /**
+     * Site-wide SEO defaults. The canonical URL is the current URL without
+     * the query string; public URLs already carry their locale prefix and
+     * the default locale alias (`/{default}/...`) redirects to it.
+     */
+    protected function seoDefaults(Request $request): SeoDefaultsData
+    {
+        $appUrl = url('/');
+        $organizationUrl = config('seo.organization.url');
+        $organizationLogo = config('seo.organization.logo');
+        $defaultImage = config('seo.default_image');
+
+        return new SeoDefaultsData(
+            siteName: (string) config('seo.site_name'),
+            canonical: $request->url(),
+            defaultImage: is_string($defaultImage) && $defaultImage !== '' ? url($defaultImage) : null,
+            organization: new SeoOrganizationData(
+                name: (string) config('seo.organization.name'),
+                url: is_string($organizationUrl) && $organizationUrl !== '' ? url($organizationUrl) : $appUrl,
+                logo: is_string($organizationLogo) && $organizationLogo !== '' ? url($organizationLogo) : null,
+            ),
+        );
     }
 }

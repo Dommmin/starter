@@ -38,4 +38,7 @@ return [
         'ctaBottomDescription' => 'Experience how seamlessly the public website and administration module work together. Register an account or log in to the panel.',
         'footerCopy' => 'Punkt Startowy. Web application foundation.',
     ],
+    'page' => [
+        'publishedOn' => 'Published :date',
+    ],
 ];

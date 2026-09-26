@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { Accessibility, ArrowRight, Lock, Palette, Zap } from 'lucide-react';
 import {
     Button,
@@ -9,6 +9,7 @@ import {
     Hero,
     PublicHeader,
     Section,
+    Seo,
     Stack,
     Surface,
     Text,
@@ -20,7 +21,7 @@ import { index as adminIndex } from '@/routes/admin';
 export default function Welcome() {
     const { t, locale } = useTranslation();
     const page = usePage();
-    const { auth } = page.props;
+    const { auth, seo } = page.props;
     const alternateUrls =
         (page.props as { i18n?: { alternateUrls?: Record<string, string> } })
             .i18n?.alternateUrls ?? {};
@@ -45,24 +46,31 @@ export default function Welcome() {
 
     return (
         <>
-            <Head>
-                <title>{t('landing.metaTitle')}</title>
-                <meta
-                    name="description"
-                    content={t('landing.metaDescription')}
-                />
-                {canonicalUrl ? (
-                    <link rel="canonical" href={canonicalUrl} />
-                ) : null}
-                {Object.entries(alternateUrls).map(([langCode, langUrl]) => (
-                    <link
-                        key={langCode}
-                        rel="alternate"
-                        hrefLang={langCode}
-                        href={langUrl}
-                    />
-                ))}
-            </Head>
+            <Seo
+                title={t('landing.metaTitle')}
+                description={t('landing.metaDescription')}
+                canonical={canonicalUrl}
+                alternates={alternateUrls}
+                jsonLd={[
+                    {
+                        '@context': 'https://schema.org',
+                        '@type': 'Organization',
+                        name: seo.organization.name,
+                        url: seo.organization.url,
+                        ...(seo.organization.logo
+                            ? { logo: seo.organization.logo }
+                            : {}),
+                    },
+                    {
+                        '@context': 'https://schema.org',
+                        '@type': 'WebSite',
+                        name: seo.siteName,
+                        url: canonicalUrl ?? seo.canonical,
+                        inLanguage: locale,
+                        description: t('landing.metaDescription'),
+                    },
+                ]}
+            />
 
             <PublicHeader
                 navItems={[

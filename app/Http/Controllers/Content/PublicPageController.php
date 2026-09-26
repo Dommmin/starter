@@ -50,6 +50,8 @@ class PublicPageController extends Controller
             $alternates['x-default'] = $alternates[$default];
         }
 
+        Inertia::share('i18n.alternateUrls', $alternates);
+
         return Inertia::render('pages/show', new PublicPageData(
             title: $translation->title,
             metaDescription: $translation->meta_description,

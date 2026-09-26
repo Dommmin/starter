@@ -53,6 +53,7 @@ export * from './rich-text-field';
 export * from './search-input';
 export * from './section';
 export * from './select-field';
+export * from './seo';
 export * from './session-expired';
 export * from './separator';
 export * from './skeleton';

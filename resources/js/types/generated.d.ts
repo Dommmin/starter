@@ -73,12 +73,30 @@ declare namespace App {
                 alternates: Record<string, string>;
             };
         }
+        namespace Errors {
+            export type ErrorPageData = {
+                status: 403 | 404 | 500 | 503;
+            };
+        }
         namespace Listing {
             export type ListPaginationData = {
                 page: number;
                 totalPages: number;
                 total: number;
                 perPage: number;
+            };
+        }
+        namespace Seo {
+            export type SeoDefaultsData = {
+                siteName: string;
+                canonical: string;
+                defaultImage: string | null;
+                organization: App.Data.Seo.SeoOrganizationData;
+            };
+            export type SeoOrganizationData = {
+                name: string;
+                url: string;
+                logo: string | null;
             };
         }
     }

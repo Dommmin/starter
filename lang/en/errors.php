@@ -12,5 +12,15 @@ return [
         'heading' => '500 — Server Error',
         'description' => 'An unexpected error occurred. Please try again later.',
     ],
+    'forbidden' => [
+        'title' => 'Access Denied',
+        'heading' => '403 — Access Denied',
+        'description' => 'You do not have permission to view this page.',
+    ],
+    'serviceUnavailable' => [
+        'title' => 'Service Unavailable',
+        'heading' => '503 — Service Unavailable',
+        'description' => 'We are performing maintenance. Please check back soon.',
+    ],
     'networkError' => 'Network error. Please check your connection.',
 ];

@@ -12,11 +12,19 @@ async function runSsrVerification() {
         'renderPage musi być funkcją',
     );
 
+    const seo = {
+        siteName: 'Starter',
+        canonical: 'http://localhost/',
+        defaultImage: null,
+        organization: { name: 'Starter', url: 'http://localhost', logo: null },
+    };
+
     const makePage = (locale, heroTitle) => ({
         component: 'welcome',
         props: {
             name: 'Starter',
             auth: { user: null },
+            seo,
             i18n: {
                 area: 'public',
                 locale,
@@ -188,6 +196,55 @@ async function runSsrVerification() {
     assert.ok(
         concurrentDe.body.includes('Concurrent DE') &&
             !concurrentDe.body.includes('Concurrent EN'),
+    );
+
+    // 6. Pierwszy HTML publicznej strony treści zawiera meta SEO w <head>.
+    const basePage = makePage('pl', 'Hero PL');
+    const contentPage = await render({
+        ...basePage,
+        component: 'pages/show',
+        props: {
+            ...basePage.props,
+            title: 'O nas & zespół',
+            metaDescription: 'Opis strony o nas',
+            bodyHtml: '<p>Treść strony</p>',
+            locale: 'pl',
+            publishedAt: '2026-09-01T10:00:00+00:00',
+            alternates: {
+                en: 'http://localhost/about-us',
+                pl: 'http://localhost/pl/o-nas',
+                'x-default': 'http://localhost/about-us',
+            },
+        },
+        url: '/pl/o-nas',
+    });
+    const head = contentPage.head.join('\n');
+
+    assert.ok(
+        /<title[^>]*>O nas &amp; zespół/.test(head),
+        'SSR strony treści musi zawierać <title> z escapowanym tytułem',
+    );
+    assert.ok(
+        head.includes('name="description" content="Opis strony o nas"'),
+        'SSR strony treści musi zawierać meta description',
+    );
+    assert.ok(
+        head.includes('rel="canonical" href="http://localhost/pl/o-nas"'),
+        'SSR strony treści musi zawierać canonical',
+    );
+    assert.ok(
+        /rel="alternate" hreflang="en" href="http:\/\/localhost\/about-us"/i.test(
+            head,
+        ) && /hreflang="x-default"/i.test(head),
+        'SSR strony treści musi zawierać hreflang z x-default',
+    );
+    assert.ok(
+        head.includes('application/ld+json'),
+        'SSR strony treści musi zawierać JSON-LD',
+    );
+    assert.ok(
+        contentPage.body.includes('Treść strony'),
+        'SSR strony treści musi zawierać treść',
     );
 
     console.log(

@@ -5,6 +5,7 @@ namespace App\Repositories\Content;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Named read queries of the Content module for pages.
@@ -44,5 +45,23 @@ class PageRepository
             ->where('slug', $slug)
             ->with(['page.translations' => fn ($query) => $query->published()])
             ->first();
+    }
+
+    /**
+     * Pages with at least one published translation, each with only its
+     * published translations loaded. Drafts never reach the sitemap.
+     *
+     * @return Collection<int, Page>
+     */
+    public function publishedForSitemap(): Collection
+    {
+        return Page::query()
+            ->whereHas('translations', function (Builder $query): void {
+                /** @var Builder<PageTranslation> $query */
+                $query->published();
+            })
+            ->with(['translations' => fn ($query) => $query->published()->orderBy('locale')])
+            ->orderBy('id')
+            ->get();
     }
 }

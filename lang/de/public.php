@@ -38,4 +38,7 @@ return [
         'ctaBottomDescription' => 'Erleben Sie die nahtlose Zusammenarbeit zwischen öffentlicher Website und Administrationsmodul.',
         'footerCopy' => 'Punkt Startowy. Webanwendungsfundament.',
     ],
+    'page' => [
+        'publishedOn' => 'Veröffentlicht am :date',
+    ],
 ];

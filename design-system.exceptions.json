@@ -1,107 +1,284 @@
 [
     {
-        "id": "DS-EXC-UPSTREAM-WELCOME",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/pages/welcome.tsx",
-        "contentHash": "sha256:e12f26c6d55baca48ee6f090f0652397d5cb6af2611639185dca42d05fab4b02",
-        "reason": "Upstream starter scaffold page pending Task 09 design system primitives refactoring",
-        "alternatives": "Refactor using Container, Heading, Text, Stack primitives",
-        "scope": "className and arbitrary Tailwind styles",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 initial audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09"
-    },
-    {
         "id": "DS-EXC-UPSTREAM-AUTH",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/confirm-password.tsx",
-        "contentHash": "sha256:e5790b3dfd69b8fe8a37e58d93d73a780bc4718129cd9f15541f22593399a791",
+        "contentHash": "sha256:99b378b417c4b1efd2c7d267dcc04f2ecc49f3cfe4f1e7ffd16e7fa58f360b82",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                42,
+                43
+            ],
+            [
+                60,
+                60
+            ],
+            [
+                62,
+                62
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-AUTH-FORGOT",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/forgot-password.tsx",
-        "contentHash": "sha256:f17d22c2bc9ea061046ea70f6d2a74e0609210b5307279ed96bbae9b20836b24",
+        "contentHash": "sha256:40a06d94b7d722b3ea955a4683a751970af968244dbaaf1a0f7b5df8cb656a0b",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                28,
+                28
+            ],
+            [
+                33,
+                33
+            ],
+            [
+                39,
+                39
+            ],
+            [
+                57,
+                57
+            ],
+            [
+                59,
+                59
+            ],
+            [
+                64,
+                64
+            ],
+            [
+                73,
+                73
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-AUTH-LOGIN",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/login.tsx",
-        "contentHash": "sha256:d0dbfb9ae722372c0e83a9754bee68370ffc99c0149b2a69f64cbbd952641848",
+        "contentHash": "sha256:7aced5f9058968becef5f30f6dac976cd17fd3775881e33dd34ab4c859fa338f",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                40,
+                40
+            ],
+            [
+                44,
+                45
+            ],
+            [
+                64,
+                65
+            ],
+            [
+                75,
+                75
+            ],
+            [
+                95,
+                95
+            ],
+            [
+                108,
+                108
+            ],
+            [
+                118,
+                118
+            ],
+            [
+                135,
+                135
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-AUTH-REGISTER",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/register.tsx",
-        "contentHash": "sha256:e4750552f97e4d99e6c54b6d31429077423a645803766f8004b1a13b9ebb7ab5",
+        "contentHash": "sha256:5ac89a6fd4468ebc53727b1b275b705efa18b61cd6bd333bb6d0aca6c10227ce",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                34,
+                34
+            ],
+            [
+                38,
+                39
+            ],
+            [
+                57,
+                57
+            ],
+            [
+                61,
+                61
+            ],
+            [
+                79,
+                79
+            ],
+            [
+                97,
+                97
+            ],
+            [
+                119,
+                119
+            ],
+            [
+                128,
+                128
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-AUTH-RESET",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/reset-password.tsx",
-        "contentHash": "sha256:30d78c3a675265c2afa4491f7d1aa7ebdeb39459fe86e157dd387d73e0e3762c",
+        "contentHash": "sha256:2eaaa8adada6ac8f42395cbabaa6ad3d8853082cc566e21e4852f524167a0811",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                35,
+                36
+            ],
+            [
+                46,
+                46
+            ],
+            [
+                51,
+                51
+            ],
+            [
+                55,
+                55
+            ],
+            [
+                63,
+                63
+            ],
+            [
+                73,
+                73
+            ],
+            [
+                81,
+                81
+            ],
+            [
+                89,
+                89
+            ],
+            [
+                95,
+                95
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-AUTH-2FA",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/two-factor-challenge.tsx",
-        "contentHash": "sha256:a4dd8b4e3eb3d5f94b4fc4e35d46a6e06af5971702a031db488b62307dad8047",
+        "contentHash": "sha256:f7b16f01055431841d849b4212709faab87f2688194b0035b725a0f317401a0e",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                56,
+                56
+            ],
+            [
+                59,
+                59
+            ],
+            [
+                81,
+                82
+            ],
+            [
+                111,
+                111
+            ],
+            [
+                117,
+                117
+            ],
+            [
+                121,
+                121
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-AUTH-VERIFY",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/verify-email.tsx",
-        "contentHash": "sha256:38d763f949717537a7547f2e875e760b9805a8af697427f433fc0056fe8091e2",
+        "contentHash": "sha256:11feeae66f7e50a5f7a77a53042aca34a76541d98a85abe77a70798abc12614b",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                25,
+                25
+            ],
+            [
+                32,
+                32
+            ],
+            [
+                46,
+                46
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-SETTINGS-APP",
@@ -114,7 +291,13 @@
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                11,
+                13
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-SETTINGS-PROF",
@@ -127,7 +310,57 @@
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                31,
+                33
+            ],
+            [
+                45,
+                45
+            ],
+            [
+                49,
+                49
+            ],
+            [
+                54,
+                54
+            ],
+            [
+                63,
+                63
+            ],
+            [
+                68,
+                68
+            ],
+            [
+                74,
+                74
+            ],
+            [
+                83,
+                83
+            ],
+            [
+                91,
+                91
+            ],
+            [
+                96,
+                96
+            ],
+            [
+                105,
+                105
+            ],
+            [
+                113,
+                113
+            ]
+        ]
     },
     {
         "id": "DS-EXC-UPSTREAM-SETTINGS-SEC",
@@ -140,19 +373,1895 @@
         "owner": "starter-foundation",
         "reviewRef": "ADR-019 initial audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                29,
+                31
+            ],
+            [
+                58,
+                58
+            ],
+            [
+                62,
+                62
+            ],
+            [
+                71,
+                71
+            ],
+            [
+                79,
+                79
+            ],
+            [
+                86,
+                86
+            ],
+            [
+                95,
+                95
+            ],
+            [
+                103,
+                103
+            ],
+            [
+                114,
+                114
+            ]
+        ]
     },
     {
-        "id": "DS-EXC-UPSTREAM-ADMIN-INDEX",
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-ALERT-ERROR",
         "rule": "ds/no-style-escape",
-        "file": "resources/js/pages/admin/index.tsx",
-        "contentHash": "sha256:28b4959e680793d7b84b7cbac77590fc58f14224552eecc80d135b1a886787b5",
-        "reason": "Admin index page prototype pending Task 09 design system primitives refactoring",
-        "alternatives": "Refactor using Surface, Heading, Text, Stack primitives",
-        "scope": "className in prototype layout",
+        "file": "resources/js/components/alert-error.tsx",
+        "contentHash": "sha256:bb2845205fd65353a13cc2d4bd91eb6615521ca81f7bfe811536a2563953b34f",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
         "owner": "starter-foundation",
-        "reviewRef": "ADR-019 initial audit",
+        "reviewRef": "ADR-019 full audit",
         "expires": "2026-10-31",
-        "task": "P0-B Task 09"
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                16,
+                16
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-APP-CONTENT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/app-content.tsx",
+        "contentHash": "sha256:209d43c0d81975302b0696207a0a6eca6e9cedeaf37a6dec747dbc9a06f69b3e",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                16,
+                16
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-APP-HEADER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/app-header.tsx",
+        "contentHash": "sha256:c61a90b7283176a26d530c4923cbb0db830fc0bc261dc2186175b64ea776c896",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                31,
+                32
+            ],
+            [
+                37,
+                37
+            ],
+            [
+                45,
+                45
+            ],
+            [
+                48,
+                48
+            ],
+            [
+                53,
+                53
+            ],
+            [
+                59,
+                59
+            ],
+            [
+                65,
+                65
+            ],
+            [
+                77,
+                77
+            ],
+            [
+                81,
+                81
+            ],
+            [
+                90,
+                90
+            ],
+            [
+                94,
+                94
+            ],
+            [
+                107,
+                108
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-APP-LOGO",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/app-logo.tsx",
+        "contentHash": "sha256:eed72cc4da3cea15a8e5d75b84b12d05575da829bf898a2b04ac1d2aedc765a0",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                10,
+                14
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-APP-SHELL",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/app-shell.tsx",
+        "contentHash": "sha256:40ef7358a73382f3f723db8e6e07c8ab831166bddb7d29eb8f5dd1d817a37cf8",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                16,
+                16
+            ],
+            [
+                19,
+                23
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-APP-SIDEBAR-HEADER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/app-sidebar-header.tsx",
+        "contentHash": "sha256:e294126a1f1caa8eab811c5f109182d38b546a6737e485a8b7f52043a246b19e",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                12,
+                14
+            ],
+            [
+                17,
+                17
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-DELETE-USER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/delete-user.tsx",
+        "contentHash": "sha256:32e58456a6268f423b2ab1d4405497833584a52d72e210c29435b1d1aef50a43",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                23,
+                23
+            ],
+            [
+                29,
+                32
+            ],
+            [
+                64,
+                64
+            ],
+            [
+                68,
+                68
+            ],
+            [
+                71,
+                71
+            ],
+            [
+                87,
+                87
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-HEADING",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/heading.tsx",
+        "contentHash": "sha256:22b088092301a7afd15bebfd515a9128b5a507d0e502f65fc2069d1b81b7d178",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                11,
+                13
+            ],
+            [
+                22,
+                22
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-INPUT-ERROR",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/input-error.tsx",
+        "contentHash": "sha256:6a7e5e44d6a77d8ee0c7b0896b53b94784341a5c7cfd7825d4499e8593a313b4",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                6,
+                6
+            ],
+            [
+                12,
+                12
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-MANAGE-PASSKEYS",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/manage-passkeys.tsx",
+        "contentHash": "sha256:4239e39f82186e5351badf8abd8774b94d036aef65c0e1956a404319fc6bddb2",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                19,
+                21
+            ],
+            [
+                23,
+                24
+            ],
+            [
+                51,
+                51
+            ],
+            [
+                58,
+                58
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-MANAGE-TWO-FACTOR",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/manage-two-factor.tsx",
+        "contentHash": "sha256:71f9f55c1c82f0a9dd8a20c818542d048994a04bb8d503660f3727fe0bde7738",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                48,
+                48
+            ],
+            [
+                55,
+                56
+            ],
+            [
+                62,
+                62
+            ],
+            [
+                83,
+                84
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-NAV-FOOTER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/nav-footer.tsx",
+        "contentHash": "sha256:357eeed7fde8937dcb629272896526ab223343f540bd30c2a087504d8433550a",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                22,
+                22
+            ],
+            [
+                30,
+                30
+            ],
+            [
+                38,
+                38
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-NAV-MAIN",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/nav-main.tsx",
+        "contentHash": "sha256:c2676058b117944f5b2b8a48c7d3dd9728dfad638bc66b5cd43e830060915864",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                18,
+                18
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-NAV-USER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/nav-user.tsx",
+        "contentHash": "sha256:7a003397c732b1d25df125c43ee58b1a906ba3353f5d721aeacf99fbed165cc6",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                34,
+                34
+            ],
+            [
+                38,
+                38
+            ],
+            [
+                42,
+                42
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-PASSKEY-ITEM",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/passkey-item.tsx",
+        "contentHash": "sha256:a7fb4440eb1c5b920e9121334b89fab297be788872ce5a7bdbc188c6255648ab",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                31,
+                34
+            ],
+            [
+                36,
+                38
+            ],
+            [
+                42,
+                42
+            ],
+            [
+                47,
+                47
+            ],
+            [
+                53,
+                53
+            ],
+            [
+                70,
+                70
+            ],
+            [
+                72,
+                73
+            ],
+            [
+                85,
+                85
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-PASSKEY-REGISTER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/passkey-register.tsx",
+        "contentHash": "sha256:f80374678473cbdeb27b15c48ca745c7467ad04977ce66793d5463be3e8d8528",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                63,
+                63
+            ],
+            [
+                80,
+                80
+            ],
+            [
+                82,
+                82
+            ],
+            [
+                92,
+                92
+            ],
+            [
+                95,
+                95
+            ],
+            [
+                102,
+                102
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-PASSKEY-VERIFY",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/passkey-verify.tsx",
+        "contentHash": "sha256:b82f50f0e0786e5df84c9152fac94cb1bfbc3c8cbe2ded7c85a6c93f267671d7",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                55,
+                55
+            ],
+            [
+                59,
+                59
+            ],
+            [
+                63,
+                63
+            ],
+            [
+                69,
+                69
+            ],
+            [
+                73,
+                75
+            ],
+            [
+                77,
+                78
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-PASSWORD-INPUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/password-input.tsx",
+        "contentHash": "sha256:25a9961de6d319f6c34ff090965a35ee67b9d2a30ba1483a3d4674b3bb4c83f5",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                15,
+                15
+            ],
+            [
+                18,
+                18
+            ],
+            [
+                25,
+                25
+            ],
+            [
+                30,
+                32
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-TEXT-LINK",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/text-link.tsx",
+        "contentHash": "sha256:d0b1698349e777ed052f0292f44536280d9bb7559b9d5e4c5284d1d1b6565309",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                8,
+                8
+            ],
+            [
+                14,
+                15
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-TWO-FACTOR-RECOVERY-CODES",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/two-factor-recovery-codes.tsx",
+        "contentHash": "sha256:39e846e7669b76e362c6f61f1ed43fdb2b5a2922dbef9680e047a6bbae44dbfc",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                58,
+                59
+            ],
+            [
+                68,
+                68
+            ],
+            [
+                71,
+                71
+            ],
+            [
+                76,
+                76
+            ],
+            [
+                103,
+                103
+            ],
+            [
+                106,
+                106
+            ],
+            [
+                113,
+                113
+            ],
+            [
+                122,
+                122
+            ],
+            [
+                129,
+                129
+            ],
+            [
+                137,
+                137
+            ],
+            [
+                146,
+                146
+            ],
+            [
+                151,
+                151
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-TWO-FACTOR-SETUP-MODAL",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/two-factor-setup-modal.tsx",
+        "contentHash": "sha256:82cfb1e8bf4e002177b2ce2ba3b086912015cd8b905f4b59cfa7c22029eafe8b",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                28,
+                30
+            ],
+            [
+                34,
+                34
+            ],
+            [
+                38,
+                38
+            ],
+            [
+                42,
+                42
+            ],
+            [
+                46,
+                46
+            ],
+            [
+                75,
+                77
+            ],
+            [
+                80,
+                80
+            ],
+            [
+                84,
+                84
+            ],
+            [
+                98,
+                99
+            ],
+            [
+                104,
+                106
+            ],
+            [
+                111,
+                114
+            ],
+            [
+                123,
+                123
+            ],
+            [
+                127,
+                129
+            ],
+            [
+                174,
+                176
+            ],
+            [
+                205,
+                205
+            ],
+            [
+                209,
+                209
+            ],
+            [
+                217,
+                217
+            ],
+            [
+                327,
+                328
+            ],
+            [
+                331,
+                331
+            ],
+            [
+                336,
+                336
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-ALERT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/alert.tsx",
+        "contentHash": "sha256:ce9841beb06b4b3a2c88dbfb46f9635d198827870becdfd3e2619181e28fdf61",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                31,
+                31
+            ],
+            [
+                41,
+                41
+            ],
+            [
+                57,
+                57
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-AVATAR",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/avatar.tsx",
+        "contentHash": "sha256:1e8837e409f4ede09137c6a01d290047ac2c0c306991d4872cf499c77b9aff2a",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                13,
+                13
+            ],
+            [
+                29,
+                29
+            ],
+            [
+                42,
+                42
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-BADGE",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/badge.tsx",
+        "contentHash": "sha256:da6d8f237f7fd88fd9dd0e83863d9cf65a473f3affaccb5547b1b6503bc815ac",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                8,
+                8
+            ],
+            [
+                17,
+                17
+            ],
+            [
+                40,
+                40
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-BREADCRUMB",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/breadcrumb.tsx",
+        "contentHash": "sha256:fe3dd16bdc11190bd19d0b320496d7303749a4e360da98f345f93507058483fd",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                15,
+                15
+            ],
+            [
+                28,
+                28
+            ],
+            [
+                46,
+                46
+            ],
+            [
+                59,
+                59
+            ],
+            [
+                75,
+                75
+            ],
+            [
+                92,
+                92
+            ],
+            [
+                95,
+                96
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-BUTTON",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/button.tsx",
+        "contentHash": "sha256:5167bf8625b0f3bdffc86fb37e2118d06de51db3b222ce82cf484a29aa7ef9f2",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                8,
+                8
+            ],
+            [
+                15,
+                15
+            ],
+            [
+                52,
+                52
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-CARD",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/card.tsx",
+        "contentHash": "sha256:18889fc98cb42833b3d9e3534f891e5d05477533db42511b71ed667b59d316a0",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                9,
+                9
+            ],
+            [
+                22,
+                22
+            ],
+            [
+                32,
+                32
+            ],
+            [
+                42,
+                42
+            ],
+            [
+                52,
+                52
+            ],
+            [
+                62,
+                62
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-CHECKBOX",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/checkbox.tsx",
+        "contentHash": "sha256:8300e569667bfa905c5b1e1f0c63d0efeff87066203ed1750aebb2b3cf2eb08b",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                14,
+                15
+            ],
+            [
+                22,
+                24
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-DIALOG",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/dialog.tsx",
+        "contentHash": "sha256:ca9fc2582c30924a90f294d1a11b3cc39a2acb0c0224f2704eb9a2167a557c54",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                38,
+                38
+            ],
+            [
+                57,
+                57
+            ],
+            [
+                64,
+                66
+            ],
+            [
+                77,
+                77
+            ],
+            [
+                87,
+                87
+            ],
+            [
+                103,
+                103
+            ],
+            [
+                116,
+                116
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-DROPDOWN-MENU",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/dropdown-menu.tsx",
+        "contentHash": "sha256:f5f8b2a584f42085b647fe59a009d6238ddfc61d1aa1325561cb543f95d1189a",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                42,
+                42
+            ],
+            [
+                74,
+                75
+            ],
+            [
+                92,
+                92
+            ],
+            [
+                99,
+                101
+            ],
+            [
+                128,
+                128
+            ],
+            [
+                134,
+                136
+            ],
+            [
+                155,
+                155
+            ],
+            [
+                171,
+                171
+            ],
+            [
+                184,
+                184
+            ],
+            [
+                211,
+                211
+            ],
+            [
+                218,
+                218
+            ],
+            [
+                230,
+                230
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-ICON",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/icon.tsx",
+        "contentHash": "sha256:8b04f9bdcefe76ac7d9f31ab6f325e6d2725a83be29f1e4ccb47b16ab8d48f88",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                13,
+                13
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-INPUT-OTP",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/input-otp.tsx",
+        "contentHash": "sha256:59dc19f93bd031e8320c7df571cd9509e8c1ceb6337506ef380d11b2e10e2550",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                17,
+                17
+            ],
+            [
+                27,
+                27
+            ],
+            [
+                41,
+                41
+            ],
+            [
+                50,
+                51
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-INPUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/input.tsx",
+        "contentHash": "sha256:17da6ceadd3932f8c4269c34e29fcdad73e490bff5bcf76b6c57d47656631695",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                10,
+                10
+            ],
+            [
+                13,
+                13
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-LABEL",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/label.tsx",
+        "contentHash": "sha256:883e35baf22dee1847066678ada2a6aabca32a91c1de4fdc074c6c48140498fe",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                13,
+                13
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-NAVIGATION-MENU",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/navigation-menu.tsx",
+        "contentHash": "sha256:6c08ab109f9a0285de6806714161b0e7fdca443aff9beb23d8ee06112af6f46c",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                20,
+                20
+            ],
+            [
+                39,
+                39
+            ],
+            [
+                55,
+                55
+            ],
+            [
+                62,
+                62
+            ],
+            [
+                73,
+                73
+            ],
+            [
+                78,
+                78
+            ],
+            [
+                92,
+                92
+            ],
+            [
+                108,
+                108
+            ],
+            [
+                114,
+                114
+            ],
+            [
+                131,
+                132
+            ],
+            [
+                147,
+                147
+            ],
+            [
+                153,
+                153
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-PLACEHOLDER-PATTERN",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/placeholder-pattern.tsx",
+        "contentHash": "sha256:91d8ef7a075067aab8d270c70391d37b75095433633b6738254e6a944afcfae3",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                11,
+                11
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SELECT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/select.tsx",
+        "contentHash": "sha256:b4e61d449d531da0caf056862ecc214450672ca20c5abdd19f367962c3a0c3f5",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                37,
+                38
+            ],
+            [
+                45,
+                45
+            ],
+            [
+                64,
+                64
+            ],
+            [
+                79,
+                79
+            ],
+            [
+                100,
+                100
+            ],
+            [
+                114,
+                114
+            ],
+            [
+                122,
+                122
+            ],
+            [
+                125,
+                125
+            ],
+            [
+                140,
+                140
+            ],
+            [
+                153,
+                153
+            ],
+            [
+                159,
+                159
+            ],
+            [
+                171,
+                171
+            ],
+            [
+                177,
+                177
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SEPARATOR",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/separator.tsx",
+        "contentHash": "sha256:54d4fb628c7a5c9edddd464b7c988f5690f7b831ea1375e5ba03a58b2891ee9a",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                17,
+                17
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SHEET",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/sheet.tsx",
+        "contentHash": "sha256:4c9c0e6e8727a3229046c5f9571401801ec35bdc8f2b91d0bcbf00ac725302fc",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                36,
+                36
+            ],
+            [
+                58,
+                58
+            ],
+            [
+                73,
+                75
+            ],
+            [
+                86,
+                86
+            ],
+            [
+                96,
+                96
+            ],
+            [
+                109,
+                109
+            ],
+            [
+                122,
+                122
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SIDEBAR",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/sidebar.tsx",
+        "contentHash": "sha256:b0673507c6b3c89a4a8c1f2b49040f0f309d8061fca632a8aaaa92c75531a642",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                138,
+                138
+            ],
+            [
+                168,
+                168
+            ],
+            [
+                182,
+                182
+            ],
+            [
+                190,
+                190
+            ],
+            [
+                198,
+                198
+            ],
+            [
+                206,
+                206
+            ],
+            [
+                215,
+                215
+            ],
+            [
+                225,
+                225
+            ],
+            [
+                240,
+                240
+            ],
+            [
+                262,
+                262
+            ],
+            [
+                270,
+                270
+            ],
+            [
+                286,
+                286
+            ],
+            [
+                304,
+                304
+            ],
+            [
+                322,
+                322
+            ],
+            [
+                333,
+                333
+            ],
+            [
+                344,
+                344
+            ],
+            [
+                358,
+                358
+            ],
+            [
+                369,
+                369
+            ],
+            [
+                383,
+                383
+            ],
+            [
+                400,
+                400
+            ],
+            [
+                421,
+                421
+            ],
+            [
+                441,
+                441
+            ],
+            [
+                452,
+                452
+            ],
+            [
+                463,
+                463
+            ],
+            [
+                513,
+                513
+            ],
+            [
+                556,
+                556
+            ],
+            [
+                581,
+                581
+            ],
+            [
+                615,
+                615
+            ],
+            [
+                620,
+                620
+            ],
+            [
+                625,
+                625
+            ],
+            [
+                638,
+                638
+            ],
+            [
+                656,
+                656
+            ],
+            [
+                681,
+                681
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SKELETON",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/skeleton.tsx",
+        "contentHash": "sha256:48687fbbfb522a48bdd3e0c93ae0fc4a1621641b4d048903dcfd3b80ce65d6c0",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                7,
+                7
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SONNER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/sonner.tsx",
+        "contentHash": "sha256:7187b271a6d6b0765e693f1d5b7b3399777ee0a65f2728febac49edff4bcaa5a",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                13,
+                13
+            ],
+            [
+                17,
+                25
+            ],
+            [
+                30,
+                32
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SPINNER",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/spinner.tsx",
+        "contentHash": "sha256:3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                10,
+                10
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-TOGGLE-GROUP",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/toggle-group.tsx",
+        "contentHash": "sha256:af297bdf6c9e996af24b27943d6d6cf07afd73d6189a03b71452dc8d8e952cb0",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                28,
+                28
+            ],
+            [
+                56,
+                56
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-TOGGLE",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/toggle.tsx",
+        "contentHash": "sha256:9dab8dcb383661cb660482b41f22e819240d45519a6126232f0eaa35493da1ae",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                8,
+                8
+            ],
+            [
+                39,
+                39
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-TOOLTIP",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/ui/tooltip.tsx",
+        "contentHash": "sha256:616e0392245fc59e083fda696ce3512c5fe395351550bfa54bd4b28fd33fd09a",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                42,
+                42
+            ],
+            [
+                49,
+                49
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-USER-INFO",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/user-info.tsx",
+        "contentHash": "sha256:d94732380d4339fcfeed37799c406a2bf63f36d43046fc0302b209eec40d829e",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                16,
+                18
+            ],
+            [
+                22,
+                25
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-COMPONENTS-USER-MENU-CONTENT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/components/user-menu-content.tsx",
+        "contentHash": "sha256:9e2104f5c7a98f48a39eb53924086d5c122e7a77868b2941ba138b3e17fc4289",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                32,
+                33
+            ],
+            [
+                41,
+                41
+            ],
+            [
+                46,
+                46
+            ],
+            [
+                52,
+                52
+            ],
+            [
+                57,
+                57
+            ],
+            [
+                65,
+                65
+            ],
+            [
+                71,
+                71
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-LAYOUTS-APP-APP-SIDEBAR-LAYOUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/layouts/app/app-sidebar-layout.tsx",
+        "contentHash": "sha256:8640b1ec7400a88009d7dfd6347b1af9b617c9659ccf186bcad8f1d622239122",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                14,
+                14
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-LAYOUTS-AUTH-AUTH-CARD-LAYOUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/layouts/auth/auth-card-layout.tsx",
+        "contentHash": "sha256:2bbeed8068ab5aa3298448b06b642554df4aac5c58654b91126429ab5d8407ca",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                23,
+                24
+            ],
+            [
+                27,
+                30
+            ],
+            [
+                34,
+                37
+            ],
+            [
+                40,
+                40
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-LAYOUTS-AUTH-AUTH-SIMPLE-LAYOUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/layouts/auth/auth-simple-layout.tsx",
+        "contentHash": "sha256:0026ab32efd1edd0f08191e10c0317eb0d0b209ec7d3d27e03ef0b34072d6ec3",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                15,
+                18
+            ],
+            [
+                21,
+                21
+            ],
+            [
+                23,
+                24
+            ],
+            [
+                26,
+                26
+            ],
+            [
+                29,
+                31
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-LAYOUTS-AUTH-AUTH-SPLIT-LAYOUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/layouts/auth/auth-split-layout.tsx",
+        "contentHash": "sha256:8fa78eb6e22f8218269cdba7fe94abdd1a527c04c955b19c0963428200c7a62f",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                14,
+                16
+            ],
+            [
+                19,
+                21
+            ],
+            [
+                25,
+                26
+            ],
+            [
+                29,
+                35
+            ]
+        ]
+    },
+    {
+        "id": "DS-EXC-UPSTREAM-LAYOUTS-SETTINGS-LAYOUT",
+        "rule": "ds/no-style-escape",
+        "file": "resources/js/layouts/settings/layout.tsx",
+        "contentHash": "sha256:dade6d4428b0289cc2c350fa3631bb5ee3f53b95436141d7580119d34a89612b",
+        "reason": "Upstream scaffold pending design system primitives refactoring",
+        "alternatives": "Refactor using design system primitives",
+        "scope": "className in component/layout markup",
+        "owner": "starter-foundation",
+        "reviewRef": "ADR-019 full audit",
+        "expires": "2026-10-31",
+        "task": "P0-B Task 09",
+        "lineRanges": [
+            [
+                37,
+                37
+            ],
+            [
+                43,
+                44
+            ],
+            [
+                46,
+                46
+            ],
+            [
+                57,
+                57
+            ],
+            [
+                66,
+                66
+            ],
+            [
+                76,
+                76
+            ],
+            [
+                78,
+                79
+            ]
+        ]
     }
 ]

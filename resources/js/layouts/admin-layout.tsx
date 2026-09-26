@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import type { BreadcrumbItem } from '@/types';
 
 export default function AdminLayout({
@@ -8,5 +8,9 @@ export default function AdminLayout({
     breadcrumbs?: BreadcrumbItem[];
     children: React.ReactNode;
 }) {
-    return <AppLayout breadcrumbs={breadcrumbs}>{children}</AppLayout>;
+    return (
+        <AppLayoutTemplate breadcrumbs={breadcrumbs}>
+            {children}
+        </AppLayoutTemplate>
+    );
 }

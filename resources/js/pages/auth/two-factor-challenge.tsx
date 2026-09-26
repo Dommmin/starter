@@ -10,9 +10,11 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
-import { store } from '@/routes/two-factor/login';
+import { getLocalizedTwoFactorLoginForm } from '@/lib/localized-routes';
+import { useTranslation } from '@/i18n';
 
 export default function TwoFactorChallenge() {
+    const { t, locale, defaultLocale } = useTranslation();
     const [showRecoveryInput, setShowRecoveryInput] = useState<boolean>(false);
     const [code, setCode] = useState<string>('');
 
@@ -23,20 +25,18 @@ export default function TwoFactorChallenge() {
     }>(() => {
         if (showRecoveryInput) {
             return {
-                title: 'Recovery code',
-                description:
-                    'Please confirm access to your account by entering one of your emergency recovery codes.',
-                toggleText: 'login using an authentication code',
+                title: t('auth.twoFactor.recoveryTitle'),
+                description: t('auth.twoFactor.recoveryDescription'),
+                toggleText: t('auth.twoFactor.useAuthCode'),
             };
         }
 
         return {
-            title: 'Authentication code',
-            description:
-                'Enter the authentication code provided by your authenticator application.',
-            toggleText: 'login using a recovery code',
+            title: t('auth.twoFactor.heading'),
+            description: t('auth.twoFactor.subheading'),
+            toggleText: t('auth.twoFactor.useRecoveryCode'),
         };
-    }, [showRecoveryInput]);
+    }, [showRecoveryInput, t]);
 
     setLayoutProps({
         title: authConfigContent.title,
@@ -51,11 +51,11 @@ export default function TwoFactorChallenge() {
 
     return (
         <>
-            <Head title="Two-factor authentication" />
+            <Head title={t('auth.twoFactor.title')} />
 
             <div className="space-y-6">
                 <Form
-                    {...store.form()}
+                    {...getLocalizedTwoFactorLoginForm(locale, defaultLocale)}
                     className="space-y-4"
                     resetOnError
                     resetOnSuccess={!showRecoveryInput}
@@ -67,7 +67,9 @@ export default function TwoFactorChallenge() {
                                     <Input
                                         name="recovery_code"
                                         type="text"
-                                        placeholder="Enter recovery code"
+                                        placeholder={t(
+                                            'auth.twoFactor.recoveryPlaceholder',
+                                        )}
                                         autoFocus={showRecoveryInput}
                                         required
                                     />
@@ -109,11 +111,11 @@ export default function TwoFactorChallenge() {
                                 className="w-full"
                                 disabled={processing}
                             >
-                                Continue
+                                {t('auth.twoFactor.submit')}
                             </Button>
 
                             <div className="text-muted-foreground text-center text-sm">
-                                <span>or you can </span>
+                                <span>{t('auth.twoFactor.or')}</span>
                                 <button
                                     type="button"
                                     className="text-foreground cursor-pointer underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"

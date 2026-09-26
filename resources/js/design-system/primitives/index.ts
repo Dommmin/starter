@@ -45,6 +45,8 @@ export * from './progress';
 export * from './public-header';
 export * from './radio-group-field';
 export * from './record-details';
+export * from './resource-form';
+export * from './resource-table';
 export * from './retry-panel';
 export * from './search-input';
 export * from './section';

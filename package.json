@@ -10,7 +10,7 @@
         "check": "vp check resources/js resources/css scripts vite.config.ts && npm run test:ui",
         "check:fix": "vp check --fix resources/js resources/css scripts vite.config.ts",
         "check:ui-contract": "node scripts/check-ui-contract.mjs",
-        "test:ui": "vp test --dom resources/js/design-system/primitives",
+        "test:ui": "vp test --dom resources/js/design-system/primitives resources/js/pages",
         "test:ssr": "node scripts/verify-ssr-i18n.mjs",
         "types:check": "tsc --noEmit"
     },

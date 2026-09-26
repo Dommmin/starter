@@ -10,7 +10,7 @@ const getMock = vi.fn();
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
         props: {
-            users: [
+            items: [
                 {
                     id: 1,
                     name: 'Ada Lovelace',

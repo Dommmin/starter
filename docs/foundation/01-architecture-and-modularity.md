@@ -2,13 +2,13 @@
 
 ## Cel
 
-Utrzymać krótką ścieżkę od wymagania do kodu, a jednocześnie ograniczyć sprzężenie modułów. Stan zastany: brak aplikacji. Poniższe nazwy katalogów i kontraktów są planem, nie istniejącą strukturą.
+Utrzymać krótką ścieżkę od wymagania do kodu, a jednocześnie ograniczyć sprzężenie modułów. Aplikacja już istnieje. Kontrakt warstw i typowania poniżej zaakceptowano 2026-09-10; opisuje standard docelowy, nie potwierdzenie migracji istniejącego kodu ani instalacji paczek. Katalogi powstają wraz z rzeczywistą funkcjonalnością.
 
 ## Decyzje i uzasadnienie
 
 ### ADR-006: granice przez przypadki użycia, standardowy Laravel
 
-Status: proponowany. `Identity` odpowiada za tożsamość; `Content` za strony, artykuły i publikację; `Media` za adminowy DAM; `Contact` za zgłoszenia i dostarczenie wiadomości. `Settings` i konkretne moduły biznesowe powstają dopiero przy potrzebie. Na start standardowe `app/Models`, `app/Policies`, `app/Http` oraz grupowane `app/Actions/Content`, `app/Actions/Media`, `app/Queries/Content`; frontend `resources/js/pages/content` i `components`. Nie kopiować szkieletu DDD z pustymi warstwami.
+Status: kontrakt warstw zaakceptowany 2026-09-10; wymienione moduły pozostają docelowym podziałem. `Identity` odpowiada za tożsamość; `Content` za strony, artykuły i publikację; `Media` za adminowy DAM; `Contact` za zgłoszenia i dostarczenie wiadomości. `Settings` i konkretne moduły biznesowe powstają dopiero przy potrzebie. Na start standardowe `app/Models`, `app/Policies`, `app/Http` oraz grupowane `app/Actions/Content`, `app/Actions/Media`, `app/Repositories/Content`, `app/Data/Content`, `app/Enums`; frontend `resources/js/pages/content` i `components`. Nie kopiować szkieletu DDD z pustymi warstwami.
 
 | Element                 | Odpowiedzialność                                           | Zakaz                                           |
 | ----------------------- | ---------------------------------------------------------- | ----------------------------------------------- |
@@ -16,12 +16,13 @@ Status: proponowany. `Identity` odpowiada za tożsamość; `Content` za strony, 
 | FormRequest             | Walidacja danych wejściowych, uprawnienie do operacji      | Uznawanie walidacji za pełną ochronę zasobów    |
 | Policy                  | Dostęp do zasobu i operacji                                | Autoryzacja wyłącznie po stronie React          |
 | Action                  | Przypadek użycia, transakcja, niezmienniki                 | Zależność od HTTP/React lub globalnego requestu |
-| Query                   | Jawny scope, projekcja, paginacja i eager loading          | Nielimitowane eksporty/listy i N+1              |
+| Repository / opcjonalny Query | Zapytania aplikacyjne, projekcja, paginacja i eager loading | Globalny request, nielimitowane listy i N+1 |
+| Service | Spójna współdzielona funkcjonalność lub integracja | Przekazywanie wszystkich wywołań 1:1 do Repository |
 | Eloquent model          | Relacje, casts, małe reguły lokalne                        | Procesy integracyjne w observerach              |
-| Resource / readonly DTO | Jawny kontrakt danych                                      | Serializacja całego modelu użytkownika          |
+| Laravel Data / API Resource | Jawny kontrakt danych; Data dla Inertia | Serializacja całych modeli i dublowanie walidacji |
 | Job                     | Asynchroniczne wywołanie procesu z retry                   | Założenie, że wykona się dokładnie raz          |
 
-Przepływ: route → middleware → FormRequest/policy → Action/Query → jawna projekcja → Inertia SSR/React. Każdy zasób ma właściciela; inny moduł nie zapisuje jego tabel bezpośrednio. W P0 dopuszczalne relacje Eloquent do użytkownika i jawne odczyty, udokumentowane w review. Przy rzeczywistych zależnościach między modułami wyodrębnić metodę przypadku użycia lub kontrakt. `Shared` tylko dla stabilnych technicznych typów, nie dla przypadkowej logiki domenowej.
+Zapis: route → middleware → FormRequest/policy → Controller → Action → Repository; odpowiedź przez Data → Inertia/React. Odczyt: Controller → Repository (opcjonalnie wyspecjalizowany Query) → Data. Service dołączamy tylko, gdy wnosi współdzieloną funkcjonalność. Każdy zasób ma właściciela; inny moduł nie zapisuje jego tabel bezpośrednio. W P0 dopuszczalne relacje Eloquent do użytkownika i jawne odczyty, udokumentowane w review. Przy rzeczywistych zależnościach między modułami wyodrębnić metodę przypadku użycia lub kontrakt. `Shared` tylko dla stabilnych technicznych typów, nie dla przypadkowej logiki domenowej.
 
 Alternatywa: pełne `app/Modules/<Name>/{Domain,Application,Infrastructure}`. Odłożona, bo początkowo zwiększa liczbę plików bez izolacji biznesowej. Przejście dopiero, gdy kilka procesów ma własnych właścicieli i granice dają wymierną korzyść. Nie używać generic repository nad Eloquent ani bazowego CRUD service.
 
@@ -29,9 +30,22 @@ Alternatywa: pełne `app/Modules/<Name>/{Domain,Application,Infrastructure}`. Od
 
 Status: proponowany. Inertia używa routingu i sesji Laravel; nie dodawać REST API ani tokenów tylko po to, by zasilić React. Dla zewnętrznego konsumenta: `/api/v1`, jawne Resources, paginacja, limits, kontrakt OpenAPI i osobno wybrany model uwierzytelnienia. API token nie zastępuje policy. Versioning potrzebny dla niezależnego konsumenta, nie dla każdego wewnętrznego DTO.
 
-P0: ręczne, niewielkie typy props z testami kluczy i serializacji. Wayfinder, jeśli zatwierdzony z wybranym starterem, generuje **trasy i metody**, nie schematy odpowiedzi. P1: Laravel Data + TypeScript Transformer przy powtarzających się DTO; alternatywa to readonly PHP DTO bez paczki i generacja klienta z OpenAPI przy publicznym API. Pieniądze: integer w najmniejszej jednostce + waluta; daty ISO 8601 UTC; duże identyfikatory jako string; enum i nullable jednakowe po obu stronach. Nie nazywać rzutowania TS walidacją runtime.
+P0 — wymaganie zaakceptowane 2026-09-10: Laravel Data + TypeScript Transformer są obowiązkowym standardem kontraktów Inertia, zamiast wcześniejszej opcji P1. Obejmuje propsy całych stron, współdzielone payloady, struktury zagnieżdżone i enumy kontraktu. Nie przekazujemy całych modeli Eloquent. Typy lokalnego stanu UI pozostają ręczne. Wayfinder generuje trasy i metody, nie schematy odpowiedzi. Dla publicznego API Resources/OpenAPI mogą mieć własny kontrakt; nie dublować mechanicznie Data i Resource dla tego samego payloadu.
 
-Generowane pliki mają jedno źródło, deterministyczną komendę i kontrolę driftu w CI. Nie poprawiać ich ręcznie. FormRequest pozostaje źródłem walidacji wejścia; DTO nie może wprowadzać drugiego, rozbieżnego zestawu reguł. Wspólne typy nie mogą ujawniać pól prywatnych ani tworzyć zależności frontendu od całego modelu DB.
+Generowane pliki mają jedno źródło, deterministyczną komendę i kontrolę driftu w CI oraz typecheck po generacji. Nie poprawiać ich ręcznie. FormRequest pozostaje źródłem walidacji wejścia; DTO nie wprowadza drugiego zestawu reguł. Złożone wejście do Action przekazujemy przez Data ze zwalidowanych pól; prosty model i pojedynczy argument nie wymagają osobnego DTO. Jawne mapowanie stosujemy przy transformacji lub zależności od kontekstu. Serializacja nie uruchamia ukrytych zapytań. Generacja typów nie zastępuje walidacji runtime ani testów serializacji (null/optional, daty, enumy, paginacja i pola prywatne).
+
+### Szczegółowy kontrakt implementacji — zaakceptowany 2026-09-10
+
+- **FormRequests i autoryzacja:** własny Request dla wejścia wymagającego walidacji, także filtrów, sortowania i paginacji. Bez pustych Requestów dla stron bez wejścia. `authorize()` świadomie deleguje do Policy/Gate albo dopuszcza operację publiczną; bez mechanicznego `true`. Policy chroni zasób, walidacja sprawdza dane. Wywołania poza HTTP również muszą przechodzić autoryzację w jawnie ustalonym punkcie wejścia.
+- **Actions:** jeden przypadek użycia, niezmienniki i granica transakcji. Bez zależności od HTTP, Inertia i globalnego requestu. Efekty uboczne wymagające trwałego zapisu uruchamiamy po commit; operacje ponawiane są idempotentne. Integralność chronią też constrainty DB; sama walidacja nie zabezpiecza współbieżności.
+- **Repositories:** konkretne zapytania aplikacyjne i nazwane operacje dostępu do danych; parametry filtrów, strony, użytkownika i języka przekazujemy jawnie. Bez generic CRUD wrappera i bez globalnego `request()`. Model zachowuje relacje, casts, małe lokalne scopes i reguły. Query wydzielamy dla złożonego odczytu, bez równoległego dublowania metod Repository. Cache tylko z uzasadnieniem i jawną invalidacją.
+- **Services i zależności:** spójna współdzielona funkcjonalność lub integracja. Bez automatycznego Service dla każdego modelu i pustej delegacji 1:1. Zależności wstrzykujemy; interfejsy na granicach lub dla rzeczywistej wymienności, nie do każdej klasy.
+- **SOLID, DRY, KISS, YAGNI:** odpowiedzialności i zależności mają być czytelne. Wspólna reguła biznesowa ma jedno źródło, ale podobne linie z różnych procesów nie wymagają wspólnej abstrakcji. Przed nową warstwą rozważ korzyść, koszt i prostszą alternatywę; drobna decyzja nie wymaga osobnego ADR.
+- **Kompozycja i wzorce:** preferuj współpracujące małe klasy zamiast własnych hierarchii BaseEverything; dziedziczenie frameworkowe jest naturalnym wyjątkiem. Strategy, Adapter i inne wzorce dobieraj do konkretnego problemu. Value Objects stosuj dla wartości z niezmiennikami, nie dla każdego stringa.
+- **Enumy:** preferuj PHP enum dla zamkniętych zestawów wartości domenowych (status, typ, tryb) zamiast rozproszonych magicznych stringów/liczb. Persistowane wartości mają stabilne backed values; zmiana wartości wymaga uwzględnienia danych i kontraktów. Frontend korzysta z wygenerowanego kontraktu, a etykiety są tłumaczone osobno. Nie zamieniaj dowolnego tekstu, identyfikatorów, flag boolean ani edytowalnych słowników z DB na enum. Stałe techniczne i config pozostają właściwe dla innych wartości.
+- **Casty i typy:** jawnie definiuj semantyczne casts Eloquent: pole boolean zapisane jako int `0/1` → boolean, status → enum, liczby → właściwy typ, daty → preferowane immutable date/datetime, JSON → array/obiekt według kontraktu. Zachowuj nullable; nie zamieniaj braku wartości na false lub zero. DTO nie naprawia brakującego castu modelu. Cast nie zastępuje walidacji ani constraintów; nieprawidłowe historyczne wartości wymagają jawnej obsługi. Pieniądze: integer w najmniejszej jednostce + waluta; bez float dla kwot wymagających dokładności. Decimal zachowuje precyzję i jawny format kontraktu. Daty serializuj ISO 8601 UTC, duże identyfikatory jako string. Testuj ważne konwersje i rzeczywisty JSON, zwłaszcza `0/1`, enum i null.
+
+Zakres obecnej decyzji to dokumentacja i reguły AI. Instalacja zgodnych wersji Data/Transformera, generacja, kontrola CI oraz migracja istniejących endpointów pozostają zadaniem wdrożeniowym; nie oznaczamy ich jako wykonanych.
 
 ## Publiczny SSR i SEO
 
@@ -40,6 +54,53 @@ P0: React/Inertia SSR dla wszystkich publicznych tras. Semantyczny HTML, treść
 Zasady: unikalny title/description; canonical z kontrolowanego origin, nie dowolnego Host; OG; poprawny język dokumentu; sitemap wyłącznie opublikowanych, kanonicznych URL z rzeczywistym lastmod; robots jako wskazówka dla robotów, nigdy autoryzacja. Draft i preview chronione policy, cache-control private/no-store i noindex. Staging za auth oraz noindex. Hreflang tylko przy realnych wersjach językowych. Structured data wyłącznie zgodne z widoczną treścią i typem działalności. [Oficjalne zasady Google](https://developers.google.com/search/docs/fundamentals/seo-starter-guide).
 
 Zmiana sluga: transakcyjny zapis nowego sluga + unikalność + rejestr starego → nowy, 301 bez łańcuchów i pętli. Cel przekierowania lokalny i walidowany; bez open redirects. 404 dla braku zasobu, 410 dla trwale usuniętego, jeśli uzasadnione SEO. Publikacja/unpublish aktualizuje sitemap i cache po commit. Strona bez publikacji nie może wyciec przez wyszukiwarkę panelu dostępną gościowi.
+
+## Wielojęzyczność i adresy URL — P0
+
+Wymaganie użytkownika z 2026-09-10: i18n jest fundamentem od pierwszego ekranu, również gdy klient zaczyna od jednego języka. Wspólny rejestr opisuje locale, ich nazwy własne i kierunek tekstu, ale konfiguracja rozdziela aktywne języki i domyślne locale części publicznej oraz panelu. Język domyślny publiczny wybiera klient; panel ma zawsze domyślny i awaryjny angielski (`en`). Polski nie jest wymagany w żadnej części aplikacji. Listy języków publicznych i administracyjnych są niezależne; język dostępny w panelu nie tworzy publicznej wersji strony. Backend, frontend, routing i SEO korzystają ze zgodnej konfiguracji. Nowy język nie wymaga osobnych warunków w komponentach, ręcznego kopiowania tras ani kolumn typu `title_pl`, `title_en`.
+
+### Wybór adresów przed publikacją
+
+| Strategia | Przykład dla EN jako domyślnego, bez PL | Konsekwencje |
+| --- | --- | --- |
+| Domyślny bez prefiksu — rekomendacja dla startera | `/`, `/contact`; `/de/`, `/de/kontakt` | Krótkie adresy; dodanie DE zachowuje istniejące angielskie URL-e. Język pod `/` pozostaje stały. |
+| Prefiks każdego języka — wariant do wyboru przed startem | `/en/`, `/de/` | Symetryczne adresy; `/` wymaga jawnego przeznaczenia, np. neutralnej strony wyboru języka. |
+
+Google zaleca odrębne URL-e wersji językowych; nie wymaga prefiksu języka domyślnego. Rekomendacja bez prefiksu jest decyzją projektową, nie obietnicą przewagi rankingowej. Nie używać `?lang=` jako docelowej strategii publicznych adresów ani różnych języków pod jednym URL zależnie od cookies. [Google: serwisy wielojęzyczne](https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites).
+
+Klient przed pierwszą publikacją poznaje obie strategie i otrzymuje mapę przykładowych adresów dla strony głównej i podstron. Konfiguracja jest decyzją wdrożeniową, nie przełącznikiem zmieniającym opublikowane adresy bez migracji. Zmiana strategii, domyślnego języka lub opublikowanego sluga wymaga mapowania starych URL do właściwych językowo następców, trwałych przekierowań i aktualizacji linków, canonical, hreflang i sitemap.
+
+### Kontrakt routingu i SEO
+
+- Publiczny URL jednoznacznie ustala język, także dla walidacji formularza. Preferencja konta/cookie nie nadpisuje języka publicznego URL. Bez automatycznych przekierowań na podstawie IP lub `Accept-Language`; można zaproponować zmianę przez zwykły link.
+- Przy domyślnym EN alias `/en/contact`, jeżeli jest obsługiwany, przekierowuje 301 bezpośrednio do `/contact`; nie publikuje drugiej kopii. Nieznany lub nieaktywny prefiks daje 404. Zarezerwować przestrzeń prefiksów locale, aby nowe języki nie kolidowały ze slugami i trasami systemowymi.
+- Jeden mechanizm generuje adresy na podstawie locale i tożsamości treści. Linki frontendowe korzystają z Wayfinder; nie doklejać prefiksów ręcznie. Przełącznik języka prowadzi do opublikowanego tłumaczenia bieżącej strony, także przy innym slugu, i używa prawdziwych linków dostępnych dla robotów.
+- Każda opublikowana wersja ma canonical do własnego kanonicznego URL, przetłumaczone title/description, treść, OG i właściwe `html lang` oraz `dir`. Treść i metadane są dostępne w pierwszym HTML SSR; hydracja zachowuje ten sam język. Nie kierować canonical tłumaczeń do wersji domyślnej.
+- Zestaw `hreflang` wiąże równoważne, opublikowane strony, zawiera bieżącą wersję i wzajemne odwołania. Używa pełnych kanonicznych URL zwracających 200 oraz poprawnych kodów (`pl`, `en`, `de`; region tylko przy rzeczywistym targetowaniu, np. `en-GB`). Przyjąć HTML head jako źródło adnotacji; ewentualna kopia w sitemap musi być zgodna.
+- `x-default` wskazuje odpowiednik w języku domyślnym, gdy jest opublikowany, albo rzeczywistą stronę wyboru języka. Nie wskazywać mechanicznie `/` dla każdej podstrony. Sitemap zawiera wyłącznie opublikowane, indeksowalne, kanoniczne wersje. [Google: lokalizowane wersje i hreflang](https://developers.google.com/search/docs/specialty/international/localized-versions).
+- Brak tłumaczenia treści lub draft: 404 pod jej nieopublikowanym URL, brak w sitemap i hreflang; przełącznik pokazuje niedostępność. Nie serwować polskiej treści pod `/de/` jako indeksowalnego fallbacku. Tłumaczenie samej nawigacji nie tworzy gotowej wersji językowej strony.
+
+### Organizacja plików routingu — decyzja 2026-09-11
+
+`routes/web.php` rejestruje grupy i dołącza pliki; `front.php` definiuje publiczne strony jeden raz dla wszystkich aktywnych języków; `admin.php` zawiera wspólną grupę `/admin` i `admin.*` z dotychczasowymi zabezpieczeniami. `auth.php` oraz `settings.php` pozostają odrębne; ustawienia konta zachowują dotychczasowe URL poza prefiksem admin. Wzorzec pochodzi z projektu blog, ale default wynika z konfiguracji, a istniejące nazwy bazowe/`localized.*` zachowujemy. Nowa strona trafia tylko do `front.php`, nowy CRUD panelu do grupy w `admin.php`. Nie kopiować definicji per język ani budować własnego routera. Szczegóły i odbiór: [plan, sekcja 6](12-i18n-implementation-plan.md#6-routing-i-utrzymywalne-i18n--ustalenia-2026-09-11).
+
+**Rozbieżność do rozstrzygnięcia:** kontrakt auth opisany poniżej jest wcześniejszym celem; kod roboczy ma także lokalizowane publiczne auth. Sam refaktor plików zachowuje działające URL i middleware. Zmiana zachowania wymaga konkretnej propozycji i akceptacji zgodnie z sekcją 6.4 planu.
+
+### Panel administratora — niezależna preferencja
+
+Panel używa stałych tras bez locale, np. `/admin` i `/admin/pages`; nie tworzyć `/de/admin` ani osobnych tras dla każdego języka. Angielski jest zawsze dostępny, domyślny i stanowi fallback, niezależnie od języka publicznej strony. Wszystkie teksty panelu nadal podlegają pełnemu tłumaczeniu.
+
+Dla zalogowanego administratora źródłem preferencji jest profil użytkownika; przełącznik zapisuje wybór w profilu i synchronizuje sesję. Przed logowaniem wybór jest przechowywany w sesji. Kolejność rozstrzygania: aktywna preferencja profilu → aktywna preferencja sesji → `en`. Nieaktywną lub nieobsługiwaną wartość pominąć. Po zalogowaniu preferencja profilu ma pierwszeństwo; zmiana nie modyfikuje URL. Nie wybierać automatycznie języka panelu na podstawie języka strony publicznej lub przeglądarki.
+
+Ta sama preferencja steruje ekranami logowania do panelu, walidacją, błędami, toastami, modalami i powiadomieniami administracyjnymi. Wiadomości asynchroniczne otrzymują jawne locale odbiorcy. Panel nie jest publikowany jako zestaw wersji SEO: bez administracyjnych URL w sitemap i bez hreflang; pozostaje chroniony i nieindeksowalny. Zmiana preferencji panelu nie zmienia publicznych adresów, języka witryny ani języka edytowanej treści.
+
+### Treści i kontekst języka
+
+Strona/artykuł ma wspólną tożsamość i rozszerzalny zbiór tłumaczeń powiązanych przez locale. Title, slug, excerpt, body, metadata SEO, opisy obrazów i stan publikacji należą do wersji językowej; publikacja PL nie publikuje automatycznie EN. Unikalność sluga obowiązuje w obrębie języka i przestrzeni routingu, a przekierowania przechowują kontekst języka. Model danych musi to uwzględniać od pierwszej implementacji Content.
+
+Język panelu i język edytowanej treści to oddzielne wartości: angielski panel może edytować niemiecki artykuł. Tłumaczenia interfejsu mają stabilne klucze i katalogi, oddzielone od treści klienta. Decyzja 2026-09-11: UI korzysta docelowo z `i18next` + `react-i18next`, z kwalifikacją zgodnych wersji przed instalacją. Laravel pozostaje źródłem locale i tłumaczeń backendowych; wspólne komunikaty mają jedno źródło autorskie oraz adapter/generację zasobów React. Szczegóły migracji: [plan, sekcja 6](12-i18n-implementation-plan.md#6-routing-i-utrzymywalne-i18n--ustalenia-2026-09-11).
+
+Locale jest jawnie przekazywane do SSR, walidacji i wiadomości/jobów; długowieczny worker i proces SSR nie mogą przenosić języka pomiędzy żądaniami lub zadaniami. Cache uwzględnia locale, a publikacja, wycofanie tłumaczenia i zmiana sluga odświeżają też powiązane zestawy hreflang i sitemap. Daty, liczby i liczby mnogie są formatowane według locale; język nie ustala automatycznie waluty ani strefy czasowej.
 
 ## Błędy i spójność danych
 

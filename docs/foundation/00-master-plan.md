@@ -54,13 +54,21 @@ Wybrać **jeden** wspierany major dostępny u dostawcy i używać go lokalnie, w
 
 ### ADR-020: proporcjonalny proces agentów
 
-**Status: wymaganie użytkownika dotyczące proporcjonalności.** FAST domyślnie: jeden agent i cel 5–10 min, bez pełnego workflow. STANDARD: krótki plan i opcjonalny specjalista. HIGH-RISK: jawne zgody i odpowiednie review. Role są dostępne na żądanie; review i deploy człowieka pozostają bramkami niezależnie od trybu. [Konfiguracja Claude/Codex, skille i limity](09-agents-skills-and-workflows.md).
+**Status: wymaganie użytkownika dotyczące proporcjonalności.** FAST domyślnie: jeden agent i maks. 2 minuty analizy bez minimalnego kroku; STANDARD: 5 minut; długie zadanie: 10 minut. Bez pełnego workflow. HIGH-RISK zachowuje jawne zgody i odpowiednie review. Role są dostępne na żądanie; review i deploy człowieka pozostają bramkami niezależnie od trybu. [Konfiguracja Claude/Codex, skille i limity](09-agents-skills-and-workflows.md).
 
 ## Uzupełnienie planu — commity, Lefthook i guardy agentów
 
 2026-09-10: wdrożono Conventional Commits (polskie opisy, małe litery typów, tytuł do 72 znaków), Lefthook `pre-commit`/`commit-msg`, lokalny Gitleaks, walidację CI dla `develop`/`main`, ręczny workflow artefaktowego deployu oraz guardy agentów. Szczegóły i kryteria odbioru: [03 — jakość](03-testing-and-quality.md#commity-i-lefthook--kontrakt-p0-a), [04 — guardy](04-ai-sdlc.md#guardy-agentów-przy-commitach--p0-a), zadania 07a–07c w [roadmapie](08-implementation-roadmap.md).
 
 Lefthook używa istniejącego Docker/Makefile, a CI pozostaje niezależne od lokalnych hooków. Push i wyzwolenie deployu są ręczne. Ustawienie ochrony branchy, environment secrets i wymaganych reviewerów na GitHub wymaga konta administratora repo; bez tego workflow nie stanowi technicznej blokady merge/deploy.
+
+## Wielojęzyczność od początku — wymaganie 2026-09-10
+
+**Status: wymaganie użytkownika, obowiązkowe P0.** Mechanizm tłumaczeń całej aplikacji, rozszerzalny rejestr języków i strategia URL powstają w P0-A przed kolejnymi ekranami. Dotyczy również projektu uruchamianego początkowo w jednym języku. Aktywacja dodatkowego języka ma wymagać konfiguracji, tłumaczeń i odbioru treści, bez przebudowy routingu, komponentów ani schematu danych dla każdego języka. Istniejące ekrany startera należy objąć tłumaczeniami przed odbiorem P0.
+
+Rekomendowany wariant publiczny: dowolny język domyślny wybrany przez klienta bez prefiksu; np. EN pod `/` i `/contact`, dodatkowy DE pod `/de/`. Polski nie jest wymagany, a aplikacja może mieć wyłącznie EN. Panel ma niezależne języki, zawsze domyślny angielski i stałe adresy bez prefiksów językowych, np. `/admin`; wybór języka jest zapisywany w profilu użytkownika, a przed logowaniem w sesji. Przed pierwszą publikacją klient otrzymuje przykłady adresów, wybiera język domyślny, języki startowe i strategię prefiksów; późniejsza zmiana języka pod `/` jest migracją SEO. Cały interfejs publiczny i panel, walidacje, błędy, powiadomienia i wiadomości wymagają tłumaczeń dla aktywnych języków. Szczegóły: [01 — architektura i SEO](01-architecture-and-modularity.md#wielojęzyczność-i-adresy-url--p0), [05 — interfejs](05-design-system-and-frontend.md#tłumaczenia-całego-interfejsu--p0), [08 — kolejność wdrożenia](08-implementation-roadmap.md#wielojęzyczność--wymaganie-2026-09-10).
+
+To aktualizacja wymagań i planu, nie potwierdzenie wdrożenia i18n w kodzie.
 
 ## Granice zakresu i startery
 
@@ -72,7 +80,7 @@ Uzupełnienie wymagań 2026-09-10: szybkie tworzenie CRUD-ów w Inertia + React,
 | ------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | -------------------------------------------- |
 | Laravel Core  | Auth ze starter kitu, MFA/2FA admina, policies, migracje, błędy, logi, Redis + Horizon i scheduler                 | Integracje, dynamiczny RBAC                   | Multi-tenancy, event sourcing, mikroserwisy  |
 | Admin Kit     | Shell panelu, CRUD stron i artykułów, stałe role admin/editor, prywatny DAM                                        | Ustawienia, zarządzanie rolami                | Uniwersalny generator CRUD i workflow engine |
-| Website Kit   | Home, strony i artykuły SSR, kontakt, meta, sitemap, redirects                                                     | Sekcje, wielojęzyczność, integracja analityki | Własny page builder i rozbudowany CMS        |
+| Website Kit   | Home, strony i artykuły SSR, kontakt, meta, sitemap, redirects, wielojęzyczność                                                     | Sekcje, integracja analityki | Własny page builder i rozbudowany CMS        |
 | App Kit       | Wyłącznie wzorzec użycia actions/policies z CRUD-u                                                                 | Pierwszy rzeczywisty moduł klienta            | CRM/ERP „na zapas”, płatności                |
 | Design System | LLM-safe UI contract: tokeny light/dark, typowane prymitywy, formularz, dialog, tabela, stany i blokujący check CI | Sekcje marketingowe i katalog komponentów     | Osobny produkt npm, wielomarkowy edytor      |
 | AI SDLC       | Reguły, specyfikacja, review człowieka, bramki CI/release                                                          | Role agentów i raporty automatyczne           | Autonomiczne decyzje i produkcja             |
@@ -83,9 +91,11 @@ P0 infrastruktury: jedna ekonomiczna VM w regionie UE, Nginx + PHP-FPM, PostgreS
 
 ## Kolejność i zależności
 
+Rozszerzenie wymagań 2026-09-10: [11 — katalog komponentów panelu, aplikacji i stron](11-component-catalog.md) definiuje szeroki backlog odpowiedników Filament, wartościowych dodatków marketplace i gotowych kompozycji frontendowych, w tym płatnych. Cel: składanie kolejnych aplikacji z udokumentowanych elementów i szablonów. Pełna mapa jest dostępna od początku; implementacja etapowa, z podstawowym demo P0 i rozbudową katalogu P1. Nie oznacza to instalacji Filament, zakupu bibliotek ani przeniesienia całego backlogu do P0. Kryteria realizacji: [08 — katalog](08-implementation-roadmap.md#katalog-komponentów--wymaganie-2026-09-10).
+
 1. D0: potwierdzić katalog, profil pierwszego klienta, budżet i właścicieli decyzji.
 2. D1: zatwierdzić ADR-y stacku, hostingu, danych i kontroli produkcji.
-3. P0-A: szkielet + lokalne środowisko + podstawowe CI; dopiero potem funkcje.
+3. P0-A: szkielet + lokalne środowisko + podstawowe CI + i18n i strategia URL; dopiero potem funkcje.
 4. P0-B: auth/MFA/policies + wzorcowy CRUD + minimalny design system i Website Kit.
 5. P0-C: testy, staging, monitoring, backup/restore, próba odtworzenia i wydania.
 6. Bramka pierwszego klienta: review i odbiór operacyjny przez człowieka.
@@ -113,6 +123,7 @@ Zależność krytyczna: dostawca/plan GitHub → realny approval → tożsamośc
 - [ ] CI spełnia progi z dokumentu 03, w tym `ui-contract`, oba motywy i rejestr wyjątków; niezależny człowiek przeczytał diff.
 - [ ] Monitor wykrywa awarię; backup odtworzono w izolacji w uzgodnionym RTO/RPO.
 - [ ] Ręczny approval technicznie blokuje produkcję; przetestowano odmowę dla konta agenta.
+- [ ] Wszystkie teksty mają tłumaczenia; test dodania języka i SEO wersji językowych przechodzi, klient zna docelowe URL-e.
 - [ ] Smoke, SEO i manualne a11y zakończone; ustalono retencję i odbiór treści przez klienta.
 - [ ] Człowiek wykonał pierwsze wydanie i próbę rollbacku, istnieje kontakt alarmowy.
 

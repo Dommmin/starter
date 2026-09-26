@@ -112,6 +112,8 @@ To kontrakt inżynierski, nie zabezpieczenie przed dowolnym złośliwym JS. Zaka
 
 ## Komponenty P0 i warianty
 
+Rozszerzenie wymagań 2026-09-10: [11 — katalog komponentów](11-component-catalog.md) obejmuje docelowe odpowiedniki rodzin funkcji Filament, dodatki marketplace, typowe elementy aplikacji i gotowe kompozycje frontendowe, również płatne. Poniższy zestaw P0 pozostaje pierwszym podzbiorem do implementacji; pełna lista jest backlogiem etapów P0/P1/P2. Źródła zewnętrzne wymagają kwalifikacji i adaptacji do tego kontraktu.
+
 Button: primary/secondary/destructive/link, rozmiar, pending/disabled; Input/Textarea/Label/FieldError; checkbox; alert; badge statusu; confirm dialog; toast jako pomocniczy feedback; tabela i paginator; page header; admin shell i public layout. Warianty muszą odpowiadać intencji użytkownika, nie konkretnej stronie.
 
 Jedna rodzina ikon Lucide; import pojedynczych ikon, aria-hidden dla dekoracji, accessible name na przycisku ikonowym. Licencja i upstream są w [Lucide](https://github.com/lucide-icons/lucide). Toast nie może być jedynym miejscem błędu formularza. Dialog ma nazwę, focus trap, zamknięcie Escape, powrót focus i potwierdzenie akcji destrukcyjnej. Tabela semantyczna; filtr i sort w URL; paginacja serwerowa i czytelny stan bez wyników. W P0 prosta tabela wystarcza, biblioteka zaawansowanych tabel tylko przy konkretnej potrzebie.
@@ -143,7 +145,21 @@ Inertia form helpers dla własnego panelu. Backend ma ostatnie słowo o walidacj
 
 Każdy ekran ma: initial loading (skeleton tylko jeśli pomaga), empty (wyjaśnienie i dozwolona akcja), error (co się stało i retry), success i partial failure dla procesów asynchronicznych. W utracie sesji informacja o ponownym logowaniu; nie obiecywać zapisu, gdy kolejka nadal pracuje. Unsaved changes guard tylko tam, gdzie realnie grozi utrata pracy.
 
+## Tłumaczenia całego interfejsu — P0
+
+Wymaganie od pierwszego ekranu, także przy jednym aktywnym języku. Wszystkie komunikaty użytkowe korzystają z katalogów tłumaczeń: teksty stron i panelu, menu, przyciski, formularze, etykiety i nazwy pól w walidacji, placeholdery, podpowiedzi, tooltipy, toasty, modale i potwierdzenia, tabele i paginacja, empty/loading/success/error, błędy sieci i strony błędów, auth oraz wiadomości e-mail i powiadomienia. Obejmuje teksty dostępności (`aria-label`, komunikaty czytnika), alternatywne opisy obrazów oraz domyślne teksty kontrolek bibliotek. Treści redakcyjne mają osobne wersje językowe według [01](01-architecture-and-modularity.md#wielojęzyczność-i-adresy-url--p0).
+
+Stabilne klucze grupowane funkcjonalnie, kontrola zgodności kluczy backend/frontend i aktywnych języków. Parametry i liczby mnogie zamiast sklejania fragmentów zdań; tłumaczenia nie wykonują dowolnego HTML. Kody błędów pozostają stabilne i niezależne od języka, komunikaty są lokalizowane. Walidacja podczas edycji i po zapisie korzysta z tego samego locale i nazw pól. Generator CRUD musi od początku emitować klucze tłumaczeń zamiast tekstów wpisanych w komponentach.
+
+Brak klucza interfejsu: kontrolowany fallback do domyślnego katalogu danej części aplikacji (w panelu zawsze EN, publicznie według konfiguracji klienta) i diagnostyka; nigdy surowy klucz dla użytkownika. Fallback służy odporności na błąd, nie zastępuje kompletności tłumaczeń wymaganej do wydania. Nowy aktywny język wymaga pełnych katalogów i odbioru komunikatów, w tym stanów błędów. Nazwy własne i treści użytkowników nie są automatycznie tłumaczone.
+
+Przełącznik używa nazw własnych języków, np. Polski, English, Deutsch, bez flag jako jedynej identyfikacji. Publicznie zmienia adres właściwej wersji strony; lista pokazuje tylko dostępne wersje, bez obowiązkowego PL. W panelu adres pozostaje stały, np. `/admin`, językiem domyślnym jest zawsze EN, a wybór zapisuje się w profilu użytkownika lub przed logowaniem w sesji zgodnie z kontraktem 01. Języki panelu są niezależne od publicznych; preferencja UI nie zmienia języka edytowanego rekordu. Układ toleruje dłuższe tłumaczenia bez ucinania akcji i nakładania etykiet; przed aktywacją języka RTL sprawdzić kierunek, układ i kontrolki. SSR i przeglądarka inicjalizują identyczne locale i katalog, bez błysku innego języka.
+
+Docelowa integracja i18n — decyzja 2026-09-11: `i18next` + `react-i18next` zastępują własny silnik translatora. Locale i zasoby przychodzą z Laravel przez Inertia; provider ma instancję izolowaną dla renderowania SSR. Usuwamy globalne `t`/`activeTranslator`, zachowujemy jawne przekazywanie translatora poza React, typowanie kluczy oraz jedno źródło autorskie wspólnych komunikatów. Migracja obejmuje format parametrów i liczby mnogiej; nie dodajemy niezależnego wykrywania języka w przeglądarce. [Szczegóły i kryteria odbioru](12-i18n-implementation-plan.md#6-routing-i-utrzymywalne-i18n--ustalenia-2026-09-11).
+
 ## Responsywność i dostępność
+
+Każdy tworzony lub modyfikowany layout — publiczny, panelu i ekranów uwierzytelniania — musi od początku być dostosowany do RWD (mobile-first), także bez makiety mobilnej. Korzystać z zatwierdzonych responsywnych wariantów design systemu. Przed odbiorem sprawdzić mobile od 360 px, tablet, desktop i szerokości pośrednie: czytelność treści, dostępność nawigacji i akcji oraz brak nakładania elementów, ucinania treści i poziomego przewijania całej strony. Szerokie tabele mogą mieć kontrolowany scroll we własnym kontenerze. RWD jest obowiązkowym kryterium odbioru każdego layoutu, nie późniejszym ulepszeniem.
 
 Cel jakości: WCAG 2.2 AA. To cel weryfikacji, nie deklaracja zgodności prawnej. P0: semantyczne nagłówki i landmarki, skip link, label, focus widoczny, klawiatura, kontrast tekstu, obsługa zoom/reflow, komunikaty błędów i statusów. Sprawdzić mobile 360 px, tablet, desktop i zoom 200%/400%; dla tabel dopuścić kontrolowany scroll z czytelnym kontekstem. Preferować cele dotykowe 44×44 px, oceniając też kryteria minimum WCAG. [WCAG 2.2](https://www.w3.org/TR/WCAG22/).
 
@@ -184,4 +200,4 @@ Zbyt szeroki design system opóźnia klienta; szablony bez review stają się ge
 
 ## Otwarte pytania
 
-Czy jest referencyjna Figma i kto zatwierdza design? Jaka marka, paleta i typografia mają nadać frontendowi editorialny charakter? Jakie przeglądarki i urządzenia wspierać? Kto zatwierdza rozszerzenia i wyjątki design systemu? Czy potrzebna jest kontrolka wyboru motywu i wielojęzyczność? Obsługa light/dark w tokenach jest już wymaganiem. Jaka analityka jest potrzebna i kto zatwierdza jej przetwarzanie danych?
+Czy jest referencyjna Figma i kto zatwierdza design? Jaka marka, paleta i typografia mają nadać frontendowi editorialny charakter? Jakie przeglądarki i urządzenia wspierać? Kto zatwierdza rozszerzenia i wyjątki design systemu? Czy potrzebna jest kontrolka wyboru motywu? Obsługa light/dark i pełne i18n są już wymaganiami P0. Jakie języki klient uruchamia, który jest domyślny i kto odbiera tłumaczenia? Jaka analityka jest potrzebna i kto zatwierdza jej przetwarzanie danych?

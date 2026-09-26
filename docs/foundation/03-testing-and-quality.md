@@ -72,6 +72,20 @@ Fixtures celowo niepoprawne mają dokładnie wydzielony katalog i są uruchamian
 - Integracje P1: sandbox dostawcy, złe podpisy i replay webhooka, timeouty, zmiana schematu; testy PR bez zewnętrznego Internetu.
 - SEO: raw HTML zawiera title/canonical/treść, draft nie ma w sitemap, stary slug 301 bez pętli, prawidłowe 404.
 
+## Odbiór wielojęzyczności — obowiązkowe P0
+
+Poniższe kontrole są wymaganiami do implementacji, nie wynikami już uruchomionych testów.
+
+- Kompletność katalogów każdego aktywnego języka, zgodność parametrów i form liczby mnogiej; brak klucza lub tekst użytkowy wpisany w kodzie poza katalogiem blokuje kontrolę i18n. Sprawdzić także kontrolowany fallback i diagnostykę braków.
+- Scenariusz PL/EN: formularz z walidacją podczas edycji i po zapisie, toast sukcesu, modal odmowy/usunięcia, błąd sieci, strona błędu, etykiety a11y i e-mail. Komunikaty mają właściwy język; kody błędów nie zmieniają się z locale.
+- Publiczny SSR bez JS: lokalna treść i metadane, `lang`, canonical do siebie, wzajemny hreflang i poprawny x-default. Cookie i nagłówek języka nie zmieniają języka publicznego URL; hydracja zachowuje wynik SSR.
+- Konfiguracja bez PL: publiczne EN pod `/` i `/contact`, opcjonalne DE pod `/de/`; wariant wyłącznie EN nie pokazuje PL ani nie wymaga polskich katalogów. Osobny przypadek z DE jako domyślnym i EN jako dodatkowym wykrywa zakodowane na stałe locale.
+- Panel: bez preferencji zawsze EN, również przy publicznym DE; wybór DE zachowuje `/admin`, utrzymuje się po odświeżeniu i ponownym logowaniu przez profil. Sprawdzić sesję przed logowaniem, pierwszeństwo profilu, fallback nieaktywnego locale, izolację użytkowników oraz tłumaczenia walidacji/toastów/modali. Brak tras `/de/admin`, administracyjnego hreflang i wpisów w sitemap.
+- Routing: domyślny język bez prefiksu, alternatywne prefiksy, alias domyślnego z pojedynczym 301, nieznany/nieaktywny język 404, kolizje slugów i przełączanie odpowiedników o różnych slugach. Sprawdzić również wariant wszystkich prefiksów, jeżeli jest wspierany.
+- Draft/brak tłumaczenia nie trafia do hreflang/sitemap ani pod indeksowalny URL z fallbackiem treści. Publikacja/wycofanie i zmiana sluga aktualizują cały zestaw odpowiedników oraz cache.
+- Kolejne i równoległe renderowania SSR oraz kolejne joby w różnych językach nie przenoszą locale; angielski panel może edytować niemiecką treść bez pomieszania komunikatów.
+- Próba rozszerzenia: dodać DE w danych testowych przez konfigurację, katalog i treść, bez zmian komponentów, kopiowania tras lub migracji dodającej kolumny językowe; zweryfikować przełącznik, URL i SEO. Sprawdzić długie etykiety na mobile oraz pluralizację PL/EN/DE.
+
 ## Odbiór środowiska, deployu i logów
 
 Obowiązkowe scenariusze operacyjne określa [dokument 10](10-local-environment-deployment-and-logs.md): onboarding/doctor, ciągły ruch podczas przełączenia i automatycznego rollbacku, zgodność SSR i starych assetów, zerwane SSH, wersja workerów, odmowy dostępu do diagnostyki, redakcja sekretów, rotacja i dostarczenie zewnętrznego alarmu. Testy uprawnień/redakcji uruchamiać przy zmianach tych kontraktów; pełną próbę deployu na stagingu przed pierwszą produkcją i po zmianach recepty/runtime/infrastruktury. Nie uruchamiać całego testu awarii infrastruktury dla zwykłej zmiany tekstu.

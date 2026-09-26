@@ -14,7 +14,7 @@ Alternatywa: autonomiczne merge i deploy po testach — odrzucona, ponieważ tes
 
 ## Routing według ryzyka — ADR-020
 
-Domyślnie FAST: jedna sesja, odczyt miejsca, poprawka i adekwatne kontrole, cel 5–10 minut. Bez osobnego discovery, dokumentu spec, planu i review agenta. STANDARD ma plan 3–5 punktów i najwyżej jednego delegata, gdy istnieje konkretny powód. HIGH-RISK zachowuje jawne zgody na zmiany wrażliwe i odpowiednie review. Szczegóły, limity, skille oraz przykłady konfiguracji obu produktów: [09 — agenci i przepływy](09-agents-skills-and-workflows.md).
+Domyślnie FAST: jedna sesja, odczyt miejsca, poprawka i adekwatne kontrole; analiza bez minimalnego kroku trwa maksymalnie 2 minuty. STANDARD ma limit 5 minut, a długie zadanie 10 minut, plan 3–5 punktów i najwyżej jednego delegata, gdy istnieje konkretny powód. Bez osobnego discovery, dokumentu spec i review agenta dla FAST. HIGH-RISK zachowuje jawne zgody na zmiany wrażliwe i odpowiednie review. Szczegóły, limity, skille oraz przykłady konfiguracji obu produktów: [09 — agenci i przepływy](09-agents-skills-and-workflows.md).
 
 Poniższa tabela opisuje pełny cykl feature/release, nie osiem obowiązkowych kroków do każdej drobnej poprawki. Dla jasnego taska cel i AC wynikają z polecenia użytkownika; nie trzeba ich ponownie zatwierdzać. Staging i release dotyczą wydania, które może zawierać kilka ukończonych tasków. Wrażliwe zmiany, nowe decyzje UI oraz produkcja zachowują własne wymagane zgody także w krótkich zadaniach.
 

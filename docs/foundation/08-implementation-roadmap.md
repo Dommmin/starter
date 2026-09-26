@@ -53,6 +53,32 @@ Użytkownik wskazał szybkie tworzenie CRUD-ów, walidację frontową i tabele w
 
 To rozróżnia wcześniejsze odłożenie **uniwersalnego** generatora do P2 od prostego generatora sprawdzonego szablonu proponowanego w P1. Nie zakłada budowy wszystkich kontrolek i automatyzacji przed pierwszym klientem. Rozszerzenie P0-B wymaga aktualizacji szacunku; wcześniejsze 5–7 dni nie obejmuje automatycznie całego nowego kontraktu.
 
+## Wielojęzyczność — wymaganie 2026-09-10
+
+Obowiązkowe P0, również dla klienta startującego z jednym językiem. Kontrakt: [01 — i18n i SEO](01-architecture-and-modularity.md#wielojęzyczność-i-adresy-url--p0), [05 — tłumaczenia UI](05-design-system-and-frontend.md#tłumaczenia-całego-interfejsu--p0), [03 — odbiór](03-testing-and-quality.md#odbiór-wielojęzyczności--obowiązkowe-p0). Poniższe prace pozostają do wdrożenia; uzupełnienie planu nie potwierdza ich wykonania.
+
+| Etap | Zakres | Dowód ukończenia |
+| --- | --- | --- |
+| D0/D1 | Ustalić dowolny publiczny język domyślny (bez obowiązku PL), osobne aktywne języki strony i panelu, właściciela tłumaczeń i publiczne adresy bez prefiksu domyślnego lub z prefiksem każdego języka. | Klient zna konkretne przykłady URL i skutki późniejszej zmiany; strategia zapisana przed publikacją. |
+| P0-A, przed kolejnymi ekranami zadań 08–09 | Rejestr locale z osobną konfiguracją strony i panelu, panel domyślnie EN bez prefiksów z preferencją profilu/sesji, katalogi i adaptery backend/React, wspólny kontekst SSR/klienta, generowanie publicznych URL i kontrola kompletności tłumaczeń; objąć też ekrany dostarczone ze starterem. | Konfiguracja EN/DE bez PL działa; panel zachowuje URL i preferencję, bez wyboru używa EN. Formularz i ekran błędu są tłumaczone, test izolacji locale przechodzi, brak klucza wykrywany przez CI. |
+| P0-B, zadania 08–12 | Cały UI/auth/walidacja/powiadomienia lokalizowane; Content przechowuje tłumaczenia i publikację per locale od pierwszego modelu; publiczne URL, przełącznik, canonical, hreflang i sitemap. | Test dodania DE bez przebudowy kodu oraz testy SSR, braków tłumaczeń i zmiany slugów przechodzą. |
+| P0-C, przed odbiorem zadania 13 | Odbiór wszystkich aktywnych katalogów, treści publicznych, SEO i dłuższych tekstów na mobile. | Kryteria 03 spełnione i tłumaczenia odebrane przez wskazaną osobę; niekompletne wersje publiczne nie są publikowane. |
+
+To zależność początkowa zadań 08–12, a nie poprawka po ukończeniu Website Kit. Wcześniejsze szacunki wymagają aktualizacji o i18n, model treści i odbiór języków; nie przesuwać tego zakresu do P1 w celu zachowania starego budżetu.
+
+## Katalog komponentów — wymaganie 2026-09-10
+
+Zakres docelowy i źródła: [11 — katalog](11-component-catalog.md). Status: wymaganie dokumentacyjne zapisane; implementacja i zakup produktów pozostają osobnymi zadaniami. Etapy rozszerzają zadania 09, 10, 19, 21 i 23, bez obietnicy pełnego pokrycia przed pilotażem.
+
+| Etap | Zadanie | Kryterium ukończenia |
+| --- | --- | --- |
+| P0-A | Zmapować istniejące komponenty do ID katalogu, rozdzielić planned/candidate/implemented/verified; wskazać publiczne API i braki pilotażu. | Każdy element użyty w pilocie ma rekord, właściciela i status oparty na dowodach. |
+| P0-B | Formularz, tabela, szczegóły, akcje, shell i sekcje strony pilotażowej ze wspólnych komponentów; demo local/staging. | Lista/create/edit/view i publiczna strona używają udokumentowanych importów; przykłady i stany spełniają odbiór 11. |
+| P1 | Rozbudować katalog panel/aplikacja/strona, relacje i szablony; kwalifikować konkretne darmowe/płatne kompozycje. | Wyszukiwanie po funkcji, demo i przykład użycia; drugi CRUD korzysta z tego samego API. Każdy zakupiony element ma zapisane prawa dla docelowego użycia. |
+| P2 | Specjalistyczne pola, kalendarz/Kanban/mapy, konfigurowalne dashboardy i pozostałe rodziny według potrzeby klienta. | Osobny zakres, koszt i testy; mapowanie do katalogu i brak duplikowania wspólnego zachowania. |
+
+Przed deklaracją pełnego pokrycia Filament porównać indeks wybranej wersji z ADM-01–18 i zapisać wszystkie luki lub świadome wyłączenia. Marketplace pozostaje źródłem okresowej oceny wartościowych dodatków, a nie obowiązkiem skopiowania każdego pluginu. Szacunki pilotażu nie obejmują automatycznie budowy całego katalogu.
+
 ## Przykładowe kryteria pilotażu
 
 - Given ekran z `className`, arbitrary value lub style poza prymitywem, when uruchamia się CI, then PR jest blokowany, chyba że istnieje dokładny, zatwierdzony i niewygasły wyjątek.
@@ -106,8 +132,12 @@ Do rozstrzygnięcia: właściwe repo (Q1), klient i zakres (Q2/Q8), UI (Q3), DB/
 | 18        | P0        | Człowiek wykonuje pierwsze wydanie, smoke i obserwację; zapis wersji startera i instrukcji wsparcia                                                             | 17                        | OPS/PO                 | Release done według 03/06, spełniona checklista pierwszego klienta                      |
 | 19        | P1        | Według potrzeb klienta: uploady użytkowników, ustawienia i sekcje; uploady mają własny storage, policies i skan/kwarantannę                                     | 18 + nowe AC              | DEV/SEC                | Funkcje oraz negatywne testy bezpieczeństwa                                             |
 | 20        | P1        | Dynamiczne role i Activitylog, jeżeli statyczny dostęp/audit już nie wystarcza                                                                                  | 18 + approval ról         | DEV/SEC                | Macierz dostępu, invalidacja i retencja sprawdzone                                      |
-| 21        | P1        | Pierwszy moduł App Kit, DTO/generacja typów, API/webhook/XLSX tylko jeśli zamówione                                                                             | 18 + spec                 | DEV/TL                 | Kontrakty, retry i przypadki nadużyć przetestowane                                      |
+| 21        | P1        | Pierwszy moduł App Kit; API/webhook/XLSX tylko jeśli zamówione                                                                             | 18 + spec                 | DEV/TL                 | Kontrakty, retry i przypadki nadużyć przetestowane                                      |
 | 22        | P1        | Health lub Pulse/APM po pomiarach; regularny restore drill                                                                                                      | 15–18 + metryki           | OPS                    | Udokumentowana poprawa i budżet; brak zdublowanych monitorów                            |
 | 23        | P1        | Uporządkować katalog komponentów, selektywne visual tests, aktualizacje kopii startera; po pomiarach dodawać kolejne role/skille z 09                           | 18–21                     | TL/DEV                 | Powtarzalny proces update i akceptacji designu                                          |
 | 24        | P2        | Po dwóch wdrożeniach ocenić generowanie CRUD i ekstrakcję wspólnych pakietów                                                                                    | 23 + pomiary              | TL/PO                  | ADR pokazujący realną oszczędność i koszt utrzymania                                    |
 | 25        | P2        | Analizować SSR, response cache, multi-tenancy, SSO/passkeys lub skalowanie tylko przy nowej potrzebie                                                           | 24 + osobny business case | TL/SEC/PO              | Osobny scope, threat model, testy i zgoda; brak automatycznej realizacji                |
+
+## Kontrakty danych — wymaganie P0 z 2026-09-10
+
+Laravel Data + TypeScript Transformer przeniesiono z opcjonalnego P1 do obowiązkowego P0. Do wykonania: kwalifikacja i instalacja zgodnych wersji, Data dla istniejących kontraktów Inertia, generowane typy całych stron i enumów, kontrola driftu i typecheck w CI, testy serializacji oraz audyt castów modeli (boolean 0/1, enum, null, daty, JSON i liczby). Stosować podział warstw i kryteria z [01](01-architecture-and-modularity.md). Ta aktualizacja dokumentacji nie oznacza wykonania wdrożenia.

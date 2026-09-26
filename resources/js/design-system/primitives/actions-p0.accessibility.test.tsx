@@ -51,6 +51,34 @@ describe('ActionMenu', () => {
         );
         expect(trigger?.disabled).toBe(true);
     });
+
+    it('opens the menu from its icon trigger and exposes the items', async () => {
+        const onSelect = vi.fn();
+        const container = await render(
+            <ActionMenu
+                triggerLabel="Row actions"
+                items={[{ id: 'edit', label: 'Edit', onSelect }]}
+            />,
+        );
+
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="Row actions"]',
+        );
+        expect(trigger?.getAttribute('aria-haspopup')).toBe('menu');
+
+        await act(async () => {
+            trigger?.focus();
+            trigger?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+
+        expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+        const item = Array.from(
+            document.querySelectorAll('[role="menuitem"]'),
+        ).find((node) => node.textContent === 'Edit');
+        expect(item).toBeDefined();
+    });
 });
 
 describe('FormDialog', () => {

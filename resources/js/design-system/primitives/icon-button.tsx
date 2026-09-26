@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Loader2, type LucideIcon } from 'lucide-react';
+import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { cn } from '@/lib/utils';
 
 import type { RouteDefinition } from '@/wayfinder';
@@ -47,7 +48,17 @@ const sizeMap: Record<IconButtonSize, string> = {
     lg: 'size-12 [&_svg]:size-5',
 };
 
-export function IconButton({
+/**
+ * Props injected by composing primitives (e.g. Radix `asChild` triggers in
+ * ActionMenu/Tooltip): event handlers, ARIA state and ref. They are forwarded
+ * to the rendered element but are not part of the public, closed API.
+ */
+type ComposedTriggerProps = Omit<
+    ComponentPropsWithRef<'button'>,
+    keyof IconButtonProps | 'children' | 'className' | 'style'
+>;
+
+function IconButtonImpl({
     icon: IconComponent,
     ariaLabel,
     variant = 'ghost',
@@ -58,7 +69,8 @@ export function IconButton({
     type = 'button',
     prefetch = false,
     onClick,
-}: IconButtonProps) {
+    ...composedProps
+}: IconButtonProps & ComposedTriggerProps) {
     const baseClasses = cn(
         'inline-flex items-center justify-center rounded-full transition-all duration-150',
         'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
@@ -80,6 +92,7 @@ export function IconButton({
                 : href;
         return (
             <Link
+                {...(composedProps as object)}
                 href={targetHref}
                 prefetch={prefetch}
                 aria-label={ariaLabel}
@@ -93,6 +106,7 @@ export function IconButton({
 
     return (
         <button
+            {...composedProps}
             type={type}
             disabled={disabled || isPending}
             aria-label={ariaLabel}
@@ -104,3 +118,7 @@ export function IconButton({
         </button>
     );
 }
+
+export const IconButton = IconButtonImpl as (
+    props: IconButtonProps,
+) => ReactElement;

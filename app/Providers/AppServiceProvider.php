@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +39,11 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(LocalizationManager::class),
             );
         });
+
+        // Dev-only type generation (spatie/laravel-typescript-transformer is require-dev).
+        if (class_exists(TypeScriptTransformerApplicationServiceProvider::class)) {
+            $this->app->register(TypeScriptTransformerServiceProvider::class);
+        }
     }
 
     /**

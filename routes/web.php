@@ -33,3 +33,17 @@ if (! empty($extraLocales)) {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';
+
+// Content catch-all routes must stay last: default locale without prefix,
+// extra public locales under /{locale}.
+require __DIR__.'/content.php';
+
+if (! empty($extraLocales)) {
+    Route::prefix('{locale}')
+        ->whereIn('locale', $extraLocales)
+        ->as('localized.')
+        ->middleware(['web'])
+        ->group(function () {
+            require __DIR__.'/content.php';
+        });
+}

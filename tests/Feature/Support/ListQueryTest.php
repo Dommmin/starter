@@ -106,3 +106,19 @@ test('search ignores letter case on every database driver', function () {
 
     expect($names)->toBe(['Zofia Nowak']);
 });
+
+test('a mapped sort key orders by the mapped column', function () {
+    $listQuery = ListQuery::make()
+        ->sortable(['label', 'id'], default: 'label', columnMap: ['label' => 'users.name']);
+
+    $sql = $listQuery->apply(User::query(), ['sort' => 'label'])->toSql();
+
+    expect($sql)->toContain('order by "users"."name" asc');
+});
+
+test('sort column mappings must be plain identifiers of declared sort keys', function (array $columnMap) {
+    ListQuery::make()->sortable(['label'], default: 'label', columnMap: $columnMap);
+})->with([
+    [['label' => 'name; drop table users']],
+    [['other' => 'users.name']],
+])->throws(InvalidArgumentException::class);

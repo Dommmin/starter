@@ -76,6 +76,9 @@
         "types:check": [
             "phpstan analyse"
         ],
+        "types:generate": [
+            "@php artisan typescript:transform --no-interaction"
+        ],
         "test": [
             "@php artisan config:clear --ansi",
             "@lint:check",

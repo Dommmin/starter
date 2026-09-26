@@ -29,6 +29,9 @@ final class ListQuery
     /** @var list<string> */
     private array $sortColumns = [];
 
+    /** @var array<string, literal-string> */
+    private array $sortColumnMap = [];
+
     private ?string $defaultSort = null;
 
     /** @var 'asc'|'desc' */
@@ -56,9 +59,7 @@ final class ListQuery
     public function searchable(string ...$columns): self
     {
         foreach ($columns as $column) {
-            if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $column) !== 1) {
-                throw new InvalidArgumentException("Searchable column [{$column}] is not a plain identifier.");
-            }
+            $this->assertIdentifier($column);
         }
 
         $this->searchColumns = array_values($columns);
@@ -69,13 +70,25 @@ final class ListQuery
     /**
      * @param  list<string>  $columns  Column names allowed in `sort`.
      * @param  'asc'|'desc'  $defaultDirection
+     * @param  array<string, literal-string>  $columnMap  Optional SQL column for a sort key, e.g.
+     *                                                    `['title' => 'page_translations.title']` when the
+     *                                                    sorted column comes from a joined table.
      */
-    public function sortable(array $columns, string $default, string $defaultDirection = 'asc'): self
+    public function sortable(array $columns, string $default, string $defaultDirection = 'asc', array $columnMap = []): self
     {
         if (! in_array($default, $columns, true)) {
             throw new InvalidArgumentException("Default sort [{$default}] must be one of the sortable columns.");
         }
 
+        foreach ($columnMap as $key => $column) {
+            if (! in_array($key, $columns, true)) {
+                throw new InvalidArgumentException("Mapped sort key [{$key}] must be one of the sortable columns.");
+            }
+
+            $this->assertIdentifier($column);
+        }
+
+        $this->sortColumnMap = $columnMap;
         $this->sortColumns = $columns;
         $this->defaultSort = $default;
         $this->defaultDirection = $defaultDirection;
@@ -200,7 +213,10 @@ final class ListQuery
         }
 
         if ($this->defaultSort !== null) {
-            $query->orderBy($query->qualifyColumn($state['sort']), $state['direction']);
+            $query->orderBy(
+                $this->sortColumnMap[$state['sort']] ?? $query->qualifyColumn($state['sort']),
+                $state['direction'],
+            );
 
             $keyName = $query->getModel()->getKeyName();
             if ($state['sort'] !== $keyName) {
@@ -236,8 +252,6 @@ final class ListQuery
      */
     public function payload(LengthAwarePaginator $paginator, Closure $mapItem, array $validated): array
     {
-        $state = $this->state($validated);
-
         $items = [];
         foreach ($paginator->items() as $item) {
             $items[] = $mapItem($item);
@@ -245,19 +259,50 @@ final class ListQuery
 
         return [
             'items' => $items,
-            'pagination' => [
-                'page' => $paginator->currentPage(),
-                'totalPages' => max($paginator->lastPage(), 1),
-                'total' => $paginator->total(),
-                'perPage' => $paginator->perPage(),
-            ],
-            'filters' => [
-                'search' => $state['search'],
-                'sort' => $state['sort'],
-                'direction' => $state['direction'],
-                ...$state['filters'],
-            ],
+            'pagination' => $this->paginationPayload($paginator),
+            'filters' => $this->filtersPayload($validated),
         ];
+    }
+
+    /**
+     * The `pagination` part of the list payload, for typed page props.
+     *
+     * @param  LengthAwarePaginator<int, mixed>  $paginator
+     * @return array{page: int, totalPages: int, total: int, perPage: int}
+     */
+    public function paginationPayload(LengthAwarePaginator $paginator): array
+    {
+        return [
+            'page' => $paginator->currentPage(),
+            'totalPages' => max($paginator->lastPage(), 1),
+            'total' => $paginator->total(),
+            'perPage' => $paginator->perPage(),
+        ];
+    }
+
+    /**
+     * The `filters` part of the list payload: the effective query state.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string>
+     */
+    public function filtersPayload(array $validated): array
+    {
+        $state = $this->state($validated);
+
+        return [
+            'search' => $state['search'],
+            'sort' => $state['sort'],
+            'direction' => $state['direction'],
+            ...$state['filters'],
+        ];
+    }
+
+    private function assertIdentifier(string $column): void
+    {
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $column) !== 1) {
+            throw new InvalidArgumentException("Column [{$column}] is not a plain identifier.");
+        }
     }
 
     private function escapeLike(string $value): string

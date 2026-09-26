@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Repositories\Content;
+
+use App\Models\Page;
+use App\Models\PageTranslation;
+use Illuminate\Database\Eloquent\Builder;
+
+/**
+ * Named read queries of the Content module for pages.
+ */
+class PageRepository
+{
+    /**
+     * Base query of the admin page list. The list definition in
+     * ListPagesRequest joins the translation of the selected content locale.
+     *
+     * @return Builder<Page>
+     */
+    public function adminListQuery(): Builder
+    {
+        return Page::query()
+            ->select('pages.*')
+            ->with('translations');
+    }
+
+    /**
+     * Load a page with every translation for the editor.
+     */
+    public function forEditor(Page $page): Page
+    {
+        return $page->load('translations');
+    }
+
+    /**
+     * Find the translation visitors may see at the given locale and slug,
+     * with its sibling translations for language alternates.
+     */
+    public function findPublishedTranslation(string $locale, string $slug): ?PageTranslation
+    {
+        return PageTranslation::query()
+            ->published()
+            ->where('locale', $locale)
+            ->where('slug', $slug)
+            ->with(['page.translations' => fn ($query) => $query->published()])
+            ->first();
+    }
+}

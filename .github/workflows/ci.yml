@@ -73,6 +73,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Setup PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
@@ -97,5 +98,20 @@ jobs:
         run: php artisan wayfinder:generate --with-form --no-interaction
       - name: Check AI and deployment configuration
         run: python3 -m unittest discover -s tests/ai -v
+      - name: Enforce localization catalog contract
+        run: composer check:i18n
+      - name: Enforce UI contract on changed source
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            node scripts/check-ui-contract.mjs --base "$PR_BASE_SHA"
+          elif [ "$EVENT_NAME" = push ] && [ "$PUSH_BEFORE_SHA" != 0000000000000000000000000000000000000000 ]; then
+            node scripts/check-ui-contract.mjs --base "$PUSH_BEFORE_SHA"
+          else
+            echo "Brak referencji bazowej dla bramki UI; pomijam kontrolę różnic."
+          fi
       - name: Run quality checks
         run: composer ci:check

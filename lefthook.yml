@@ -10,8 +10,19 @@ pre-commit:
             glob: '*.{ts,tsx,js,jsx,css}'
             run: npm run check -- {staged_files}
         ui-contract:
-            glob: 'resources/js/pages/**/*.{ts,tsx,js,jsx}'
-            run: node scripts/check-ui-contract.mjs
+            glob:
+                - 'resources/js/**/*.{ts,tsx,js,jsx}'
+                - 'resources/css/**/*.css'
+            run: node scripts/check-ui-contract.mjs --staged
+        i18n-contract:
+            glob:
+                - 'lang/**/*.php'
+                - 'config/localization.php'
+                - 'app/Services/Localization/**/*.php'
+                - 'app/**/*.php'
+                - 'routes/**/*.php'
+                - 'resources/js/**/*.{ts,tsx,js,jsx}'
+            run: composer check:i18n
         ai-configuration:
             glob:
                 - '.agents/**/*'
@@ -19,6 +30,7 @@ pre-commit:
                 - '.codex/**/*'
                 - 'AGENTS.md'
                 - 'CLAUDE.md'
+                - 'GEMINI.md'
                 - 'tests/ai/**/*'
                 - 'lefthook.yml'
                 - 'commitlint.config.mjs'

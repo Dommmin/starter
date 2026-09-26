@@ -43,7 +43,12 @@ class AiConfigurationTest(unittest.TestCase):
         package = json.loads((ROOT / "package.json").read_text())
         self.assertEqual(
             package["scripts"]["check"],
-            "vp check resources/js resources/css scripts vite.config.ts",
+            "vp check resources/js resources/css scripts vite.config.ts && npm run test:ui",
+        )
+        composer = json.loads((ROOT / "composer.json").read_text())
+        self.assertEqual(
+            composer["scripts"]["check:i18n"],
+            "@php artisan test --compact tests/Feature/LocalizationCatalogGateTest.php",
         )
 
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
@@ -56,6 +61,14 @@ class AiConfigurationTest(unittest.TestCase):
             'php artisan wayfinder:generate --with-form --no-interaction',
             ci,
         )
+        self.assertIn('Enforce localization catalog contract', ci)
+        self.assertIn('composer check:i18n', ci)
+        self.assertIn('Enforce UI contract on changed source', ci)
+        self.assertIn('node scripts/check-ui-contract.mjs --base', ci)
+
+        lefthook = (ROOT / "lefthook.yml").read_text()
+        self.assertIn('i18n-contract:', lefthook)
+        self.assertIn('composer check:i18n', lefthook)
 
         deploy = (ROOT / ".github/workflows/deploy.yml").read_text()
         self.assertIn('workflow_dispatch:', deploy)
@@ -96,6 +109,24 @@ class AiConfigurationTest(unittest.TestCase):
                 self.assertIn("disable-model-invocation: true", (claude / "SKILL.md").read_text())
                 self.assertRegex((codex / "agents/openai.yaml").read_text().strip(),
                                  r"\Apolicy:\n +allow_implicit_invocation: false\Z")
+
+    def test_gemini_adapter_and_fast_workflow_limit_unnecessary_analysis(self):
+        gemini = (ROOT / "GEMINI.md").read_text()
+        fast = (ROOT / ".agents/skills/foundation-fast/references/workflow.md").read_text()
+        ui = (ROOT / ".agents/skills/foundation-ui/references/workflow.md").read_text()
+
+        for text in (gemini, fast, ui):
+            self.assertIn("2 minut", text)
+            self.assertRegex(text, r"dwóch\s+nieudanych prób")
+
+        agents_rule = (ROOT / ".ai/rules/agents.md").read_text()
+        self.assertIn("maks. 2 min", agents_rule)
+        self.assertIn("maks. 5 min", agents_rule)
+        self.assertIn("maks. 10 min", agents_rule)
+        self.assertIn("AGENTS.md", gemini)
+        self.assertIn("Nie rozszerzaj zadania", gemini)
+        self.assertIn("Nie uruchamiaj pełnego discovery", gemini)
+        self.assertIn("zatrzymaj implementację", ui)
 
     def test_reviewer_retains_restricted_permissions(self):
         agent = tomllib.loads((ROOT / ".codex/agents/foundation-reviewer.toml").read_text())
@@ -161,14 +192,75 @@ class AiConfigurationTest(unittest.TestCase):
         script_path = ROOT / "scripts/check-ui-contract.mjs"
         self.assertTrue(script_path.is_file())
 
-        baseline = subprocess.run(
-            ["node", str(script_path)],
-            cwd=str(ROOT),
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(baseline.returncode, 0, f"Validator failed on current repo: {baseline.stderr}")
-        self.assertIn("PASS ui-contract", baseline.stdout)
+        with tempfile.TemporaryDirectory() as temp_root:
+            isolated_root = Path(temp_root)
+            env = {**os.environ, "UI_CONTRACT_ROOT": str(isolated_root)}
+            baseline = subprocess.run(
+                ["node", str(script_path)],
+                cwd=str(ROOT),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(baseline.returncode, 0, baseline.stderr)
+            self.assertIn("PASS ui-contract", baseline.stdout)
+
+            offender = isolated_root / "resources/js/components/offender.tsx"
+            offender.parent.mkdir(parents=True)
+            offender.write_text('<div className="p-4" />')
+            violation = subprocess.run(
+                ["node", str(script_path)],
+                cwd=str(ROOT),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(violation.returncode, 0)
+            self.assertIn("components/offender.tsx", violation.stderr)
+
+            js_offender = isolated_root / "resources/js/layouts/offender.js"
+            js_offender.parent.mkdir(parents=True)
+            js_offender.write_text('const node = <div className="p-4" />;')
+            js_violation = subprocess.run(
+                ["node", str(script_path)],
+                cwd=str(ROOT),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(js_violation.returncode, 0)
+            self.assertIn("layouts/offender.js", js_violation.stderr)
+
+            clean_primitive = isolated_root / "resources/js/design-system/primitives/clean.tsx"
+            clean_primitive.parent.mkdir(parents=True, exist_ok=True)
+            clean_primitive.write_text("export const clean = true;")
+            targeted = subprocess.run(
+                [
+                    "node",
+                    str(script_path),
+                    "--files",
+                    "resources/js/design-system/primitives/clean.tsx",
+                ],
+                cwd=str(ROOT),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(targeted.returncode, 0, targeted.stderr)
+            self.assertIn("1 plików UI sprawdzonych", targeted.stdout)
+
+        script_text = script_path.read_text()
+        for expected in (
+            "resources/js/pages",
+            "resources/js/components",
+            "resources/js/layouts",
+            "resources/css",
+            "UI_CONTRACT_ROOT",
+            "--staged",
+            "--base",
+            "--files",
+        ):
+            self.assertIn(expected, script_text)
 
         valid_entries = json.loads((ROOT / "design-system.exceptions.json").read_text())
 
@@ -277,6 +369,69 @@ class AiConfigurationTest(unittest.TestCase):
             )
             self.assertNotEqual(res.returncode, 0)
             self.assertIn("nieistniejący plik", res.stderr)
+
+        # 6: Missing lineRanges / whole-file exception attempt
+        with tempfile.NamedTemporaryFile("w", suffix=".json") as tmp:
+            no_ranges = [dict(e) for e in valid_entries]
+            if "lineRanges" in no_ranges[0]:
+                del no_ranges[0]["lineRanges"]
+            if "lines" in no_ranges[0]:
+                del no_ranges[0]["lines"]
+            tmp.write(json.dumps(no_ranges))
+            tmp.flush()
+
+            env = {**os.environ, "UI_CONTRACT_EXCEPTIONS_FILE": tmp.name}
+            res = subprocess.run(
+                ["node", str(script_path)],
+                cwd=str(ROOT),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(res.returncode, 0)
+            self.assertIn("nie precyzuje zakresu linii", res.stderr)
+
+        # 7: Violation outside declared lineRanges
+        with tempfile.TemporaryDirectory() as temp_root:
+            isolated_root = Path(temp_root)
+            target_file = isolated_root / "resources/js/components/dummy.tsx"
+            target_file.parent.mkdir(parents=True)
+            target_file.write_text(
+                "// Line 1\n// Line 2\nconst valid = <div className=\"p-2\" />;\n// Line 4\nconst invalid = <div className=\"m-4\" />;\n"
+            )
+            content_hash = "sha256:" + hashlib.sha256(target_file.read_bytes()).hexdigest()
+            isolated_exceptions = [{
+                "id": "DS-EXC-TEST-RANGES",
+                "rule": "ds/no-style-escape",
+                "file": "resources/js/components/dummy.tsx",
+                "contentHash": content_hash,
+                "reason": "Test",
+                "alternatives": "None",
+                "scope": "className",
+                "owner": "test",
+                "reviewRef": "test-review",
+                "expires": "2030-12-31",
+                "task": "Test Task",
+                "lineRanges": [[3, 3]],
+            }]
+            with tempfile.NamedTemporaryFile("w", suffix=".json") as tmp:
+                tmp.write(json.dumps(isolated_exceptions))
+                tmp.flush()
+
+                env = {
+                    **os.environ,
+                    "UI_CONTRACT_ROOT": str(isolated_root),
+                    "UI_CONTRACT_EXCEPTIONS_FILE": tmp.name,
+                }
+                res = subprocess.run(
+                    ["node", str(script_path)],
+                    cwd=str(ROOT),
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertNotEqual(res.returncode, 0)
+                self.assertIn("poza zatwierdzonym zakresem wyjątku", res.stderr)
 
     def test_security_auth_rules_cover_critical_auth_and_user_files(self):
         index_text = (ROOT / ".ai/rules/index.md").read_text()

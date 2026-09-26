@@ -150,3 +150,13 @@ test('users without a panel role cannot open any page screen', function (string 
 test('guests are redirected to login from the page list', function () {
     $this->get(route('admin.pages.index'))->assertRedirect(route('login'));
 });
+
+test('the page list lets only administrators delete from the list', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get(route('admin.pages.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('can', ['create' => true, 'publish' => true, 'delete' => true])
+        );
+});

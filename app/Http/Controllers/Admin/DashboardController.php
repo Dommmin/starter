@@ -37,7 +37,7 @@ class DashboardController extends Controller
                 ],
                 [
                     'key' => 'content',
-                    'status' => 'ready',
+                    'status' => 'active',
                 ],
                 [
                     'key' => 'media',

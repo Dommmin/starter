@@ -14,6 +14,7 @@ import {
     Grid,
     Heading,
     Icon,
+    Link,
     PageHeader,
     Stack,
     Surface,
@@ -21,6 +22,7 @@ import {
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
+import { index as pagesIndex } from '@/routes/admin/pages';
 
 type SystemProps = {
     appName: string;
@@ -381,6 +383,14 @@ export default function AdminIndex() {
                                                 `admin.modules.status.${item.status}`,
                                             )}
                                         </Badge>
+                                        {item.key === 'content' && (
+                                            <Link
+                                                href={pagesIndex()}
+                                                tone="primary"
+                                            >
+                                                {t('admin.pages.navLabel')}
+                                            </Link>
+                                        )}
                                     </Stack>
                                 </Surface>
                             );

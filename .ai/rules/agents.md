@@ -6,9 +6,9 @@ Glob: `.agents/**`, `.claude/**`, `.codex/**`, `AGENTS.md`, `CLAUDE.md`, `tests/
 
 | Tryb      | Kiedy                                                              | Agenci | Budżet                |
 | --------- | ------------------------------------------------------------------ | ------ | ---------------------- |
-| FAST      | Jasna poprawka, znany wzorzec, brak zmian wrażliwych               | 1      | Cel 5–10 min           |
-| STANDARD  | Feature w jednym module, trudniejszy bug                           | 1 + max 1 delegat | Plan 3–5 punktów |
-| HIGH-RISK | Auth, policies/role, migracje, sekrety, płatności, produkcja, architektura | 1 + max 2 delegatów | Jawna zgoda na zakres |
+| FAST      | Jasna poprawka, znany wzorzec, brak zmian wrażliwych               | 1      | Analiza bez kroku: maks. 2 min |
+| STANDARD  | Feature w jednym module, trudniejszy bug                           | 1 + max 1 delegat | Analiza bez kroku: maks. 5 min |
+| HIGH-RISK | Auth, policies/role, migracje, sekrety, płatności, produkcja, architektura | 1 + max 2 delegatów | Analiza bez kroku: maks. 10 min; jawna zgoda |
 
 - FAST jest domyślny. Bez subagentów, osobnej spec/ADR i pełnego researchu dla znanego wzorca.
 - Delegaci nie delegują dalej (głębokość 1).

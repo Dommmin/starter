@@ -19,3 +19,5 @@ Nie pisz kodu, dopóki nie przeczytałeś i nie stosujesz wszystkich pasujących
 | `lefthook.yml`, `commitlint.config.mjs`, `.githooks/**`, `.github/workflows/**`, `pint.json`, `phpstan.neon`, `vite.config.ts`, `tsconfig.json` | [quality-git.md](quality-git.md) |
 | `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.testing`, `deploy.php`, `scripts/**` | [runtime.md](runtime.md)          |
 | `.agents/**`, `.claude/**`, `.codex/**`, `AGENTS.md`, `CLAUDE.md`, `tests/ai/**`, `.ai/rules/**` | [agents.md](agents.md)              |
+| `resources/js/**` | [js.md](js.md) — obowiązkowe RWD każdego layoutu i kontrakty Inertia |
+| `app/**` | [app.md](app.md) — zaakceptowany kontrakt architektury i typowania |

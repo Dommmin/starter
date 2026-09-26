@@ -8,7 +8,7 @@ Docker używa lokalnego `.env`; nie nadpisuj go ani bazy SQLite.
 
 Pisz po polsku. Domyślnie FAST: jeden wykonawca, lokalny odczyt → minimalna
 zmiana → adekwatna weryfikacja → raport. Bez delegacji i osobnej spec/ADR
-dla jasnej poprawki według istniejącego wzorca; cel 5–10 minut.
+dla jasnej poprawki według istniejącego wzorca; analiza bez minimalnego kroku maks. 2 minuty.
 STANDARD: plan 3–5 punktów w rozmowie, najwyżej jeden delegat do konkretnego,
 niezależnego zadania. HIGH-RISK: auth, role/policies, migracje, sekrety,
 płatności, produkcja i istotna architektura; zaakceptowany zakres i adekwatny

@@ -16,7 +16,7 @@ Pracuj w zakresie bieżącego zlecenia implementacji, małymi zmianami. Najpierw
 
 ## Routing i koszt zadania
 
-Domyślnie FAST: jeden agent, lokalny odczyt → poprawka → adekwatna weryfikacja → krótki raport; cel 5–10 minut. Bez subagentów, osobnej spec/ADR i pełnego researchu dla znanego wzorca. STANDARD: plan 3–5 punktów, najwyżej 1 subagent tylko z konkretnym niezależnym zadaniem. HIGH-RISK dla auth, policies/ról, migracji, sekretów, płatności, produkcji i istotnych zmian architektury; zachowaj wymagane zgody. Maks. 2 subagentów w tym trybie, bez dalszej delegacji. Nie uruchamiaj wszystkich ról ani obu produktów dla każdej zmiany.
+Domyślnie FAST: jeden agent, lokalny odczyt → poprawka → adekwatna weryfikacja → krótki raport; analiza bez minimalnego kroku maks. 2 minuty. STANDARD ma limit analizy 5 minut, a długie zadanie 10 minut. Bez subagentów, osobnej spec/ADR i pełnego researchu dla znanego wzorca. STANDARD: plan 3–5 punktów, najwyżej 1 subagent tylko z konkretnym niezależnym zadaniem. HIGH-RISK dla auth, policies/ról, migracji, sekretów, płatności, produkcji i istotnych zmian architektury; zachowaj wymagane zgody. Maks. 2 subagentów w tym trybie, bez dalszej delegacji. Nie uruchamiaj wszystkich ról ani obu produktów dla każdej zmiany.
 
 Po dwóch nieudanych próbach lub przekroczeniu celu FAST nazwij przeszkodę i zmień podejście; nie powtarzaj automatycznie pełnego workflow. Nie obcinaj required CI/review człowieka dla oszczędności czasu. Nowy wariant DS nadal najpierw proponuj. [Szczegóły i konfiguracja](docs/foundation/09-agents-skills-and-workflows.md).
 

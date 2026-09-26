@@ -13,8 +13,10 @@ Dla PHP uruchom wymagany Pint. Copy/config sprawdź adekwatnie do diffu.
 Nie uruchamiaj composer setup jako weryfikacji istniejącej instalacji:
 generuje klucz aplikacji i wykonuje migracje. Brak komendy nie oznacza PASS.
 
-Po dwóch nieudanych próbach tej samej przyczyny lub przekroczeniu celu 10 minut
-nazwij nowy fakt i dostosuj podejście w udzielonym upoważnieniu.
+Po dwóch nieudanych próbach tej samej przyczyny lub po 2 minutach analizy bez
+minimalnego kroku zatrzymaj
+pracę. Nazwij jeden nowy fakt, który rozszerza zakres, i poproś użytkownika o
+decyzję; nie kontynuuj discovery, redesignu ani refaktoru w tle.
 Nową decyzję biznesową lub rozszerzenie wrażliwego zakresu przedstaw użytkownikowi.
 Zakończ wynikiem, rzeczywistymi kontrolami i pozostałymi ograniczeniami.
 Bez merge chronionego brancha, produkcji i samodzielnego zatwierdzania pracy.

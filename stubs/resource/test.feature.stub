@@ -1,0 +1,189 @@
+<?php
+
+use App\Models\{{ Model }};
+use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
+{{ imports }}
+
+beforeEach(function () {
+    config(['fortify.require_two_factor_for_admin' => false]);
+});
+
+/**
+ * A valid store/update payload.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function {{ variable }}Payload(array $overrides = []): array
+{
+    return [
+{{ payload }}
+        ...$overrides,
+    ];
+}
+
+test('guests are redirected to the login page', function () {
+    $this->get(route('admin.{{ kebabPlural }}.index'))->assertRedirect(route('login'));
+});
+
+test('the list exposes the typed list payload with defaults', function () {
+    $editor = User::factory()->editor()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+
+    $this->actingAs($editor)->get(route('admin.{{ kebabPlural }}.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/{{ kebabPlural }}/index', false)
+            ->has('items', 1)
+            ->where('items.0.id', ${{ variable }}->id)
+            ->where('pagination', ['page' => 1, 'totalPages' => 1, 'total' => 1, 'perPage' => 15])
+            ->where('filters', [
+{{ defaultFilters }}
+            ])
+            ->where('can', ['create' => true, 'delete' => false])
+        );
+});
+{{ searchTest }}
+test('sorting accepts only allowlisted columns', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get(route('admin.{{ kebabPlural }}.index', ['sort' => '{{ sortColumn }}', 'direction' => 'asc']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/{{ kebabPlural }}/index', false)
+            ->where('filters.sort', '{{ sortColumn }}')
+            ->where('filters.direction', 'asc')
+        );
+
+    $this->actingAs($admin)
+        ->from(route('admin.{{ kebabPlural }}.index'))
+        ->get(route('admin.{{ kebabPlural }}.index', ['sort' => 'not_a_column', 'direction' => 'sideways']))
+        ->assertRedirect(route('admin.{{ kebabPlural }}.index'))
+        ->assertSessionHasErrors(['sort', 'direction']);
+});
+{{ filterTest }}
+test('the create screen receives a blank form', function () {
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->get(route('admin.{{ kebabPlural }}.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/{{ kebabPlural }}/create', false)
+            ->where('{{ variable }}.id', null)
+            ->where('{{ variable }}.updatedAt', null)
+            ->where('can.create', true)
+        );
+});
+
+test('an editor creates a {{ singularLower }}', function () {
+    $editor = User::factory()->editor()->create();
+
+    $response = $this->actingAs($editor)->post(route('admin.{{ kebabPlural }}.store'), {{ variable }}Payload());
+
+    ${{ variable }} = {{ Model }}::query()->sole();
+    $response->assertRedirect(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.created')]);
+
+{{ createdExpectations }}
+});
+
+test('store validates required fields and creates nothing', function () {
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->post(route('admin.{{ kebabPlural }}.store'), [])
+        ->assertSessionHasErrors([{{ requiredFields }}]);
+
+    $this->actingAs($editor)->post(route('admin.{{ kebabPlural }}.store'), {{ variable }}Payload(['{{ invalidField }}' => {{ invalidValue }}]))
+        ->assertSessionHasErrors(['{{ invalidField }}']);
+
+    expect({{ Model }}::query()->count())->toBe(0);
+});
+
+test('the edit screen exposes the stored values and the version for locking', function () {
+    $admin = User::factory()->admin()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+
+    $this->actingAs($admin)->get(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/{{ kebabPlural }}/edit', false)
+            ->where('{{ variable }}.id', ${{ variable }}->id)
+            ->where('{{ variable }}.updatedAt', ${{ variable }}->updated_at?->toIso8601String())
+            ->where('can.delete', true)
+        );
+});
+
+test('an update with the current version saves the values', function () {
+    $admin = User::factory()->admin()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+
+    $this->travel(5)->minutes();
+
+    $this->actingAs($admin)->put(route('admin.{{ kebabPlural }}.update', ${{ variable }}), {{ variable }}Payload([
+        'updated_at' => ${{ variable }}->updated_at?->toIso8601String(),
+    ]))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.updated')]);
+
+    $original = ${{ variable }};
+    ${{ variable }} = ${{ variable }}->fresh();
+    expect(${{ variable }}?->updated_at?->greaterThan($original->updated_at))->toBeTrue();
+
+{{ updatedExpectations }}
+});
+
+test('a stale version is rejected with a conflict error and nothing changes', function () {
+    $admin = User::factory()->admin()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+    $original = ${{ variable }}->fresh()?->toArray();
+
+    $this->actingAs($admin)
+        ->from(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
+        ->put(route('admin.{{ kebabPlural }}.update', ${{ variable }}), {{ variable }}Payload([
+            'updated_at' => ${{ variable }}->updated_at?->subMinute()->toIso8601String(),
+        ]))
+        ->assertRedirect(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
+        ->assertSessionHasErrors(['conflict' => __('admin.{{ camelPlural }}.conflict')]);
+
+    expect(${{ variable }}->fresh()?->toArray())->toBe($original);
+});
+
+test('users without a panel role can neither open nor mutate {{ pluralLower }}', function () {
+    $user = User::factory()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+    $original = ${{ variable }}->fresh()?->toArray();
+
+    $this->actingAs($user)->get(route('admin.{{ kebabPlural }}.index'))->assertForbidden();
+    $this->actingAs($user)->get(route('admin.{{ kebabPlural }}.create'))->assertForbidden();
+    $this->actingAs($user)->get(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))->assertForbidden();
+    $this->actingAs($user)->post(route('admin.{{ kebabPlural }}.store'), {{ variable }}Payload())->assertForbidden();
+    $this->actingAs($user)->put(route('admin.{{ kebabPlural }}.update', ${{ variable }}), {{ variable }}Payload([
+        'updated_at' => ${{ variable }}->updated_at?->toIso8601String(),
+    ]))->assertForbidden();
+    $this->actingAs($user)->delete(route('admin.{{ kebabPlural }}.destroy', ${{ variable }}))->assertForbidden();
+
+    expect({{ Model }}::query()->count())->toBe(1)
+        ->and(${{ variable }}->fresh()?->toArray())->toBe($original);
+});
+
+test('an editor cannot delete a {{ singularLower }}', function () {
+    $editor = User::factory()->editor()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+
+    $this->actingAs($editor)->delete(route('admin.{{ kebabPlural }}.destroy', ${{ variable }}))->assertForbidden();
+
+    expect({{ Model }}::query()->whereKey(${{ variable }}->id)->exists())->toBeTrue();
+});
+
+test('an admin deletes a {{ singularLower }}', function () {
+    $admin = User::factory()->admin()->create();
+    ${{ variable }} = {{ Model }}::factory()->create();
+
+    $this->actingAs($admin)->delete(route('admin.{{ kebabPlural }}.destroy', ${{ variable }}))
+        ->assertRedirect(route('admin.{{ kebabPlural }}.index'))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.deleted')]);
+
+    expect({{ Model }}::query()->count())->toBe(0);
+});

@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Http\Requests\Admin\{{ Plural }};
+
+use App\Support\Listing\ListQuery;
+use Illuminate\Foundation\Http\FormRequest;
+{{ imports }}
+
+class List{{ Plural }}Request extends FormRequest
+{
+    /**
+     * Authorization is enforced on the route (`can:viewAny,App\Models\{{ Model }}`);
+     * this request only validates input.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Single source of the list contract: search columns, sort and filter
+     * allowlists, and page size.
+     */
+    public function listQuery(): ListQuery
+    {
+        return ListQuery::make()
+{{ definition }}
+            ->perPage(15);
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    public function rules(): array
+    {
+        return $this->listQuery()->rules();
+    }
+}

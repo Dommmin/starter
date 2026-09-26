@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Data\Admin\{{ Plural }};
+
+use App\Models\{{ Model }};
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+{{ imports }}
+
+/**
+ * Form state for creating or editing a {{ singularLower }}. `updatedAt` must be
+ * sent back on update for optimistic locking.
+ */
+#[TypeScript]
+class {{ Model }}FormData extends Data
+{
+    public function __construct(
+        public ?int $id,
+        public ?string $updatedAt,
+{{ properties }}
+    ) {}
+
+    public static function blank(): self
+    {
+        return new self(
+            id: null,
+            updatedAt: null,
+{{ blankAssignments }}
+        );
+    }
+
+    public static function fromModel({{ Model }} ${{ variable }}): self
+    {
+        return new self(
+            id: ${{ variable }}->id,
+            updatedAt: ${{ variable }}->updated_at?->toIso8601String(),
+{{ assignments }}
+        );
+    }
+}

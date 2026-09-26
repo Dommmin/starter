@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Http\Controllers\Admin\{{ Plural }};
+
+use App\Actions\{{ Plural }}\Update{{ Model }};
+use App\Data\Admin\{{ Plural }}\{{ Model }}AbilitiesData;
+use App\Data\Admin\{{ Plural }}\{{ Model }}EditorData;
+use App\Data\Admin\{{ Plural }}\{{ Model }}FormData;
+use App\Data\Admin\{{ Plural }}\{{ Model }}IndexData;
+use App\Data\Admin\{{ Plural }}\{{ Model }}ListFiltersData;
+use App\Data\Admin\{{ Plural }}\{{ Model }}ListItemData;
+use App\Data\Listing\ListPaginationData;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\{{ Plural }}\List{{ Plural }}Request;
+use App\Http\Requests\Admin\{{ Plural }}\Store{{ Model }}Request;
+use App\Http\Requests\Admin\{{ Plural }}\Update{{ Model }}Request;
+use App\Models\{{ Model }};
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+/**
+ * Admin CRUD of {{ pluralLower }}. Authorization: `can` middleware on every
+ * route ({{ Model }}Policy), re-checked by the store/update requests.
+ */
+class {{ Model }}Controller extends Controller
+{
+    /**
+     * Display the searchable, filterable, paginated list.
+     */
+    public function index(List{{ Plural }}Request $request): Response
+    {
+        $listQuery = $request->listQuery();
+        $validated = $request->validated();
+
+        $paginator = $listQuery->paginate({{ Model }}::query(), $validated);
+
+        $items = [];
+        foreach ($paginator->items() as ${{ variable }}) {
+            $items[] = {{ Model }}ListItemData::fromModel(${{ variable }});
+        }
+
+        return Inertia::render('admin/{{ kebabPlural }}/index', new {{ Model }}IndexData(
+            items: $items,
+            pagination: ListPaginationData::from($listQuery->paginationPayload($paginator)),
+            filters: {{ Model }}ListFiltersData::from($listQuery->filtersPayload($validated)),
+            can: $this->abilities($request, null),
+        ));
+    }
+
+    /**
+     * Show the form for a new {{ singularLower }}.
+     */
+    public function create(Request $request): Response
+    {
+        return Inertia::render('admin/{{ kebabPlural }}/create', new {{ Model }}EditorData(
+            {{ variable }}: {{ Model }}FormData::blank(),
+            can: $this->abilities($request, null),
+        ));
+    }
+
+    /**
+     * Store a new {{ singularLower }}.
+     */
+    public function store(Store{{ Model }}Request $request): RedirectResponse
+    {
+        ${{ variable }} = {{ Model }}::query()->create($request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.created')]);
+
+        return to_route('admin.{{ kebabPlural }}.edit', ${{ variable }});
+    }
+
+    /**
+     * Show the form for editing the {{ singularLower }}.
+     */
+    public function edit(Request $request, {{ Model }} ${{ variable }}): Response
+    {
+        return Inertia::render('admin/{{ kebabPlural }}/edit', new {{ Model }}EditorData(
+            {{ variable }}: {{ Model }}FormData::fromModel(${{ variable }}),
+            can: $this->abilities($request, ${{ variable }}),
+        ));
+    }
+
+    /**
+     * Update the {{ singularLower }}; a stale `updated_at` yields a `conflict` error.
+     */
+    public function update(Update{{ Model }}Request $request, {{ Model }} ${{ variable }}, Update{{ Model }} $update{{ Model }}): RedirectResponse
+    {
+        $update{{ Model }}->handle(${{ variable }}, $request->fieldValues(), $request->expectedUpdatedAt());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.updated')]);
+
+        return to_route('admin.{{ kebabPlural }}.edit', ${{ variable }});
+    }
+
+    /**
+     * Permanently delete the {{ singularLower }} (administrators only).
+     */
+    public function destroy({{ Model }} ${{ variable }}): RedirectResponse
+    {
+        ${{ variable }}->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.deleted')]);
+
+        return to_route('admin.{{ kebabPlural }}.index');
+    }
+
+    private function abilities(Request $request, ?{{ Model }} ${{ variable }}): {{ Model }}AbilitiesData
+    {
+        $user = $request->user();
+
+        return new {{ Model }}AbilitiesData(
+            create: $user?->can('create', {{ Model }}::class) ?? false,
+            delete: ${{ variable }} !== null
+                ? ($user?->can('delete', ${{ variable }}) ?? false)
+                : ($user?->isAdmin() ?? false),
+        );
+    }
+}

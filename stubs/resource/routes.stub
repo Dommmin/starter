@@ -1,0 +1,19 @@
+
+        Route::get('/{{ kebabPlural }}', [{{ Model }}Controller::class, 'index'])
+            ->name('{{ kebabPlural }}.index')
+            ->can('viewAny', {{ Model }}::class);
+        Route::get('/{{ kebabPlural }}/create', [{{ Model }}Controller::class, 'create'])
+            ->name('{{ kebabPlural }}.create')
+            ->can('create', {{ Model }}::class);
+        Route::post('/{{ kebabPlural }}', [{{ Model }}Controller::class, 'store'])
+            ->name('{{ kebabPlural }}.store')
+            ->can('create', {{ Model }}::class);
+        Route::get('/{{ kebabPlural }}/{{{ variable }}}/edit', [{{ Model }}Controller::class, 'edit'])
+            ->name('{{ kebabPlural }}.edit')
+            ->can('update', '{{ variable }}');
+        Route::put('/{{ kebabPlural }}/{{{ variable }}}', [{{ Model }}Controller::class, 'update'])
+            ->name('{{ kebabPlural }}.update')
+            ->can('update', '{{ variable }}');
+        Route::delete('/{{ kebabPlural }}/{{{ variable }}}', [{{ Model }}Controller::class, 'destroy'])
+            ->name('{{ kebabPlural }}.destroy')
+            ->can('delete', '{{ variable }}');

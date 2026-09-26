@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Data\Admin\{{ Plural }};
+
+use App\Models\{{ Model }};
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+{{ imports }}
+
+/**
+ * One row of the admin {{ singularLower }} list.
+ */
+#[TypeScript]
+class {{ Model }}ListItemData extends Data
+{
+    public function __construct(
+        public int $id,
+{{ properties }}
+        public ?string $createdAt,
+        public ?string $updatedAt,
+    ) {}
+
+    public static function fromModel({{ Model }} ${{ variable }}): self
+    {
+        return new self(
+            id: ${{ variable }}->id,
+{{ assignments }}
+            createdAt: ${{ variable }}->created_at?->toIso8601String(),
+            updatedAt: ${{ variable }}->updated_at?->toIso8601String(),
+        );
+    }
+}

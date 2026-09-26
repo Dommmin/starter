@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Data\Admin\{{ Plural }};
+
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+/**
+ * Effective list state echoed back to the {{ singularLower }} list (defaults applied).
+ */
+#[TypeScript]
+class {{ Model }}ListFiltersData extends Data
+{
+    public function __construct(
+        public string $search,
+        #[LiteralTypeScriptType("{{ sortType }}")]
+        public string $sort,
+        #[LiteralTypeScriptType("'asc' | 'desc'")]
+        public string $direction,
+{{ filterProperties }}
+    ) {}
+}

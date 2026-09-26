@@ -137,6 +137,14 @@ P0 zawiera wyłącznie adminowy DAM. `MediaAsset` ma właściciela, status kwara
 
 Wzorzec CRUD obejmuje listę z paginacją, allowlistę sortowania, create/edit, walidację, policy, audit, confirmation dla usunięcia i test odmowy. Pierwszy CRUD napisać jawnie na wspólnych klockach (`ListQuery`, `ResourceTable`, `ResourceForm`); decyzją z 2026-09-27 generator powstaje zaraz po nim, w P0-B, a nie dopiero po drugim CRUD-zie. Generator ma emitować zwykłe pliki i testy, bez runtime metaprogramowania, klas BaseEverything i automatycznego nadpisywania ręcznych zmian. Bulk actions, eksporty i soft-delete są osobnymi przypadkami użycia. Nie zakładać, że wszystkie modele mają te same uprawnienia i cykl życia.
 
+### Generator zasobów
+
+`make artisan ARGS='app:make-resource Product --fields="name:string:required,price:decimal,active:boolean,status:enum(draft|published)" --searchable=name --sortable=name,created_at --filters=status,active'` (alias `make:admin-resource`; `make:resource` jest zajęte przez Laravel). Typy pól: `string`, `text`, `integer`, `decimal`, `boolean`, `date`, `enum(a|b)`; `:required` oznacza pole wymagane (boolean i enum są zawsze wymagane, domyślnie `false`/pierwsza wartość). `--searchable` przyjmuje pola string/text, `--sortable` pola nie-tekstowe oraz `id`/`created_at`/`updated_at` (domyślnie `created_at`), `--filters` pola boolean/enum. `--dry-run` wypisuje planowane pliki bez zapisu.
+
+Generuje zwykłe pliki z edytowalnych stubów `stubs/resource/*.stub`: migrację, model z castami i `#[Fillable]`, enum per pole enum, factory, policy (admin/editor przez `canAccessAdminPanel()`, usuwanie tylko `isAdmin()`), controller, `List/Store/Update` FormRequesty (`ListQuery`), akcję `Update{Name}` z optimistic lockingiem po `updated_at`, klasy Data z `#[TypeScript]`, strony React na `ResourceTable`/`ResourceForm`, test Pest (lista, allowlisty, walidacja, konflikt, odmowy bez mutacji) i test vitest listy. Dopisuje trasy do `routes/admin.php` i klucze `admin.{camelPlural}.*` do `lang/{en,pl,de}/admin.php` (pl/de to generyczne teksty do przeglądu). Po zapisie formatuje nowe pliki Pintem i `vp fmt` (`--no-format` wyłącza).
+
+Czego nie robi: nie nadpisuje niczego i nie ma `--force` — istniejący plik, trasa, klucz katalogu lub migracja tabeli blokują całość (zapis atomowy z rollbackiem); nie tworzy tłumaczeń per locale, relacji, uploadów, soft-delete ani bulk actions; nie modyfikuje nawigacji, nie uruchamia migracji ani generowania typów — wypisuje te kroki jako „Next steps”. Przykład: zasób `Faq`.
+
 ## Ryzyka
 
 - Pozorna modularność folderów bez reguł zapisu tabel; kontrolować zależności w review.

@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\{{ Model }};
+use App\Models\User;
+
+/**
+ * {{ pluralLabel }} are managed by the panel roles (admin and editor); only
+ * administrators may delete them.
+ */
+class {{ Model }}Policy
+{
+    /**
+     * Determine whether the user can list {{ pluralLower }} in the panel.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
+     * Determine whether the user can create {{ pluralLower }}.
+     */
+    public function create(User $user): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
+     * Determine whether the user can edit the {{ singularLower }}.
+     */
+    public function update(User $user, {{ Model }} ${{ variable }}): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
+     * Determine whether the user can permanently delete the {{ singularLower }}.
+     */
+    public function delete(User $user, {{ Model }} ${{ variable }}): bool
+    {
+        return $user->isAdmin();
+    }
+}

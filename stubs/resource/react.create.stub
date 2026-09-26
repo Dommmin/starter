@@ -1,0 +1,25 @@
+import { Head, usePage } from '@inertiajs/react';
+import { useTranslation } from '@/i18n';
+import { index as adminIndex } from '@/routes/admin';
+import { create, index } from '@/routes/admin/{{ kebabPlural }}';
+import { {{ Model }}Form } from './form';
+
+export default function Admin{{ Plural }}Create() {
+    const editor = usePage<App.Data.Admin.{{ Plural }}.{{ Model }}EditorData>().props;
+    const { t } = useTranslation();
+
+    return (
+        <>
+            <Head title={t('admin.{{ camelPlural }}.createTitle')} />
+            <{{ Model }}Form editor={editor} />
+        </>
+    );
+}
+
+Admin{{ Plural }}Create.layout = {
+    breadcrumbs: [
+        { title: 'admin.dashboard', href: adminIndex() },
+        { title: 'admin.{{ camelPlural }}.title', href: index() },
+        { title: 'admin.{{ camelPlural }}.createTitle', href: create() },
+    ],
+};

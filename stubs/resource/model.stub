@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Models;
+
+use Carbon\CarbonImmutable;
+use Database\Factories\{{ Model }}Factory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+{{ imports }}
+
+/**
+ * {{ singularLabel }} managed in the administration panel.
+ *
+ * @property int $id
+{{ propertyDocs }}
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ */
+#[Fillable([{{ fillable }}])]
+class {{ Model }} extends Model
+{
+    /** @use HasFactory<{{ Model }}Factory> */
+    use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return {{ casts }};
+    }
+}

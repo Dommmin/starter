@@ -1,0 +1,136 @@
+import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
+import { act, type ReactNode } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '@/i18n';
+import Admin{{ Plural }}Index from './index';
+
+type IndexProps = App.Data.Admin.{{ Plural }}.{{ Model }}IndexData;
+
+const getMock = vi.fn();
+
+let pageProps: IndexProps;
+
+function makeProps(can: IndexProps['can']): IndexProps {
+    return {
+        items: [
+{{ items }}
+        ],
+        pagination: { page: 1, totalPages: 1, total: 2, perPage: 15 },
+        filters: {
+{{ filters }}
+        },
+        can,
+    };
+}
+
+vi.mock('@inertiajs/react', () => ({
+    usePage: () => ({ props: pageProps }),
+    router: {
+        get: (...args: unknown[]) => getMock(...args),
+        delete: vi.fn(),
+        visit: vi.fn(),
+        on: () => () => {},
+    },
+    Head: ({ children }: { children?: ReactNode }) => <>{children}</>,
+    Link: ({
+        href,
+        children,
+        prefetch: _prefetch,
+        ...props
+    }: {
+        href: string | { url: string };
+        children: ReactNode;
+        prefetch?: boolean;
+        [key: string]: unknown;
+    }) => (
+        <a href={typeof href === 'string' ? href : href.url} {...props}>
+            {children}
+        </a>
+    ),
+}));
+
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+const mountedRoots: Root[] = [];
+
+const initialPage = {
+    props: {
+        i18n: {
+            area: 'admin',
+            locale: 'en',
+            defaultLocale: 'en',
+            messages: {},
+            fallback: 'en',
+            dir: 'ltr',
+            availableLocales: [],
+        },
+    },
+} as unknown as Page<PageProps & SharedPageProps>;
+
+async function render(): Promise<HTMLElement> {
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    mountedRoots.push(root);
+
+    await act(async () => {
+        root.render(
+            <I18nProvider initialPage={initialPage}>
+                <Admin{{ Plural }}Index />
+            </I18nProvider>,
+        );
+    });
+
+    return container;
+}
+
+async function unmountAll() {
+    await act(async () => {
+        mountedRoots.splice(0).forEach((root) => root.unmount());
+    });
+    document.body.replaceChildren();
+}
+
+afterEach(async () => {
+    getMock.mockClear();
+    await unmountAll();
+});
+
+describe('Admin{{ Plural }}Index', () => {
+    it('renders a captioned table whose first column links to the editor', async () => {
+        pageProps = makeProps({ create: true, delete: true });
+        const container = await render();
+
+        expect(container.querySelector('table caption')?.textContent).toBe(
+            'admin.{{ camelPlural }}.tableCaption',
+        );
+        const editLink = Array.from(container.querySelectorAll('a')).find(
+            (link) => link.textContent === '{{ firstRowTitle }}',
+        );
+        expect(editLink?.getAttribute('href')).toBe('/admin/{{ kebabPlural }}/7/edit');
+    });
+
+    it('offers the create action and row menus only with the abilities', async () => {
+        pageProps = makeProps({ create: true, delete: true });
+        let container = await render();
+
+        const createLink = Array.from(container.querySelectorAll('a')).find(
+            (link) => link.textContent === 'admin.{{ camelPlural }}.create',
+        );
+        expect(createLink?.getAttribute('href')).toBe('/admin/{{ kebabPlural }}/create');
+        expect(
+            container.querySelectorAll(
+                'button[aria-label="admin.{{ camelPlural }}.rowActionsLabel"]',
+            ),
+        ).toHaveLength(2);
+
+        await unmountAll();
+
+        pageProps = makeProps({ create: false, delete: false });
+        container = await render();
+
+        expect(container.textContent).not.toContain('admin.{{ camelPlural }}.create');
+    });
+{{ filterTest }}
+});

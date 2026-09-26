@@ -1,0 +1,11 @@
+<?php
+
+namespace App\Enums;
+
+/**
+ * Allowed values of {{ Model }}::${{ field }}.
+ */
+enum {{ Enum }}: string
+{
+{{ cases }}
+}

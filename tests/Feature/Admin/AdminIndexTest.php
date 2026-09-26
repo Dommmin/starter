@@ -45,6 +45,34 @@ test('users with confirmed two factor authentication can visit the administratio
         );
 });
 
+test('admin start screen renders with authenticated user context', function () {
+    $user = User::factory()->withTwoFactor()->create([
+        'name' => 'Jan Kowalski',
+        'email_verified_at' => now(),
+    ]);
+
+    $response = $this->actingAs($user)->get(route('admin.index'));
+
+    $response
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/index')
+            ->where('auth.user.name', 'Jan Kowalski')
+            ->where('auth.user.email', $user->email)
+            ->where('auth.user.two_factor_enabled', true)
+            ->whereNot('auth.user.email_verified_at', null)
+            ->has('system')
+            ->where('system.appName', config('app.name'))
+            ->has('security')
+            ->where('security.requireTwoFactorForAdmin', (bool) config('fortify.require_two_factor_for_admin', false))
+            ->has('modules')
+            ->has('adminSettings')
+            ->has('i18n.messages.admin.platformBadge')
+            ->has('i18n.messages.admin.systemStatus')
+            ->has('i18n.messages.admin.platformSettings')
+        );
+});
+
 test('the home page is publicly accessible', function () {
     $response = $this->get(route('home'));
 

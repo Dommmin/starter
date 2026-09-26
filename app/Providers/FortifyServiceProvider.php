@@ -3,14 +3,21 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\RedirectIfTwoFactorAuthenticatable;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Services\Localization\LocalizedUrlGenerator;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\RedirectsIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -21,7 +28,10 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(
+            RedirectsIfTwoFactorAuthenticatable::class,
+            RedirectIfTwoFactorAuthenticatable::class,
+        );
     }
 
     /**
@@ -32,6 +42,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureEmails();
     }
 
     /**
@@ -95,6 +106,41 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by(
                 ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
             );
+        });
+    }
+
+    /**
+     * Configure localized authentication emails.
+     */
+    private function configureEmails(): void
+    {
+        VerifyEmail::toMailUsing(function ($notifiable, string $url) {
+            $locale = ($notifiable instanceof HasLocalePreference ? $notifiable->preferredLocale() : null) ?: app()->getLocale();
+
+            return (new MailMessage)
+                ->subject(__('auth.emails.verify_email.subject', [], $locale))
+                ->line(__('auth.emails.verify_email.line_1', [], $locale))
+                ->action(__('auth.emails.verify_email.action', [], $locale), $url)
+                ->line(__('auth.emails.verify_email.line_2', [], $locale));
+        });
+
+        ResetPassword::toMailUsing(function ($notifiable, string $token) {
+            $locale = ($notifiable instanceof HasLocalePreference ? $notifiable->preferredLocale() : null) ?: app()->getLocale();
+            /** @var LocalizedUrlGenerator $urlGenerator */
+            $urlGenerator = app(LocalizedUrlGenerator::class);
+            $url = $urlGenerator->url('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], $locale);
+
+            return (new MailMessage)
+                ->subject(__('auth.emails.reset_password.subject', [], $locale))
+                ->line(__('auth.emails.reset_password.line_1', [], $locale))
+                ->action(__('auth.emails.reset_password.action', [], $locale), $url)
+                ->line(__('auth.emails.reset_password.line_2', [
+                    'count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire'),
+                ], $locale))
+                ->line(__('auth.emails.reset_password.line_3', [], $locale));
         });
     }
 }

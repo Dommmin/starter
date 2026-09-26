@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Localization\LocalizationManager;
+use App\Services\Localization\LocalizedUrlGenerator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -15,6 +18,11 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function __construct(
+        protected LocalizationManager $localization,
+        protected LocalizedUrlGenerator $urlGenerator,
+    ) {}
 
     /**
      * Determines the current asset version.
@@ -35,12 +43,37 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $i18n = $this->localization->getPayload($request);
+        if ($i18n['area'] === 'public') {
+            $currentRoute = $request->route();
+            $currentRouteName = $currentRoute ? $currentRoute->getName() : null;
+
+            $baseRouteName = 'home';
+            $parameters = [];
+
+            if ($currentRouteName) {
+                $candidateName = str_starts_with($currentRouteName, 'localized.')
+                    ? substr($currentRouteName, 10)
+                    : $currentRouteName;
+
+                if (Route::has($candidateName)) {
+                    $baseRouteName = $candidateName;
+                    $parameters = $currentRoute->parameters();
+                    unset($parameters['locale']);
+                }
+            }
+
+            $i18n['alternateUrls'] = $this->urlGenerator->getAlternateUrls($baseRouteName, $parameters);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
             ],
+            'locale' => app()->getLocale(),
+            'i18n' => $i18n,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

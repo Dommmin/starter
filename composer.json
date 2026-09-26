@@ -66,8 +66,10 @@
             "Composer\\Config::disableProcessTimeout",
             "npm run check",
             "npm run types:check",
+            "@check:i18n",
             "@test"
         ],
+        "check:i18n": "@php artisan test --compact tests/Feature/LocalizationCatalogGateTest.php",
         "types:check": [
             "phpstan analyse"
         ],

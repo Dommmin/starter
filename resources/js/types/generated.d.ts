@@ -1,6 +1,44 @@
 declare namespace App {
     namespace Data {
         namespace Admin {
+            namespace Faqs {
+                export type FaqAbilitiesData = {
+                    create: boolean;
+                    delete: boolean;
+                };
+                export type FaqEditorData = {
+                    faq: App.Data.Admin.Faqs.FaqFormData;
+                    can: App.Data.Admin.Faqs.FaqAbilitiesData;
+                };
+                export type FaqFormData = {
+                    id: number | null;
+                    updatedAt: string | null;
+                    question: string | null;
+                    answer: string | null;
+                    position: number | null;
+                    published: boolean;
+                };
+                export type FaqIndexData = {
+                    items: App.Data.Admin.Faqs.FaqListItemData[];
+                    pagination: App.Data.Listing.ListPaginationData;
+                    filters: App.Data.Admin.Faqs.FaqListFiltersData;
+                    can: App.Data.Admin.Faqs.FaqAbilitiesData;
+                };
+                export type FaqListFiltersData = {
+                    search: string;
+                    sort: 'question' | 'position' | 'created_at';
+                    direction: 'asc' | 'desc';
+                    published: 'all' | 'yes' | 'no';
+                };
+                export type FaqListItemData = {
+                    id: number;
+                    question: string;
+                    position: number | null;
+                    published: boolean;
+                    createdAt: string | null;
+                    updatedAt: string | null;
+                };
+            }
             namespace Pages {
                 export type PageAbilitiesData = {
                     create: boolean;

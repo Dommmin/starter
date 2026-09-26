@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
+use App\Models\Faq;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -35,4 +37,23 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/pages/{page}', [PageController::class, 'destroy'])
             ->name('pages.destroy')
             ->can('delete', 'page');
+
+        Route::get('/faqs', [FaqController::class, 'index'])
+            ->name('faqs.index')
+            ->can('viewAny', Faq::class);
+        Route::get('/faqs/create', [FaqController::class, 'create'])
+            ->name('faqs.create')
+            ->can('create', Faq::class);
+        Route::post('/faqs', [FaqController::class, 'store'])
+            ->name('faqs.store')
+            ->can('create', Faq::class);
+        Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
+            ->name('faqs.edit')
+            ->can('update', 'faq');
+        Route::put('/faqs/{faq}', [FaqController::class, 'update'])
+            ->name('faqs.update')
+            ->can('update', 'faq');
+        Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
+            ->name('faqs.destroy')
+            ->can('delete', 'faq');
     });

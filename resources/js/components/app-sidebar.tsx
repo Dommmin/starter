@@ -1,5 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { FileText, LayoutGrid, Settings, Users } from 'lucide-react';
+import {
+    CircleHelp,
+    FileText,
+    LayoutGrid,
+    Settings,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,6 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
+import { index as faqsIndex } from '@/routes/admin/faqs';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as usersIndex } from '@/routes/admin/users';
 import { edit as editProfile } from '@/routes/profile';
@@ -33,6 +40,11 @@ export function AppSidebar() {
             title: t('admin.pages.navLabel'),
             href: pagesIndex(),
             icon: FileText,
+        },
+        {
+            title: t('admin.faqs.navLabel'),
+            href: faqsIndex(),
+            icon: CircleHelp,
         },
         ...(auth.can.manageUsers
             ? [

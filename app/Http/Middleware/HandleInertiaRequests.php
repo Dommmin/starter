@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
 use Illuminate\Http\Request;
@@ -71,6 +72,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'can' => [
+                    'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,
+                ],
             ],
             'locale' => app()->getLocale(),
             'i18n' => $i18n,

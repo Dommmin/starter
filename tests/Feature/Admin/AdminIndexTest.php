@@ -12,7 +12,7 @@ test('guests are redirected to the login page', function () {
 test('users without confirmed two factor authentication are redirected to security settings', function () {
     config(['fortify.require_two_factor_for_admin' => true]);
 
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
 
     $response = $this->actingAs($user)->get(route('admin.index'));
 
@@ -22,7 +22,7 @@ test('users without confirmed two factor authentication are redirected to securi
 test('users without confirmed two factor authentication can visit the administration panel when it is not required', function () {
     config(['fortify.require_two_factor_for_admin' => false]);
 
-    $user = User::factory()->create();
+    $user = User::factory()->admin()->create();
 
     $response = $this->actingAs($user)->get(route('admin.index'));
 
@@ -34,7 +34,7 @@ test('users without confirmed two factor authentication can visit the administra
 });
 
 test('users with confirmed two factor authentication can visit the administration panel', function () {
-    $user = User::factory()->withTwoFactor()->create();
+    $user = User::factory()->admin()->withTwoFactor()->create();
 
     $response = $this->actingAs($user)->get(route('admin.index'));
 
@@ -46,7 +46,7 @@ test('users with confirmed two factor authentication can visit the administratio
 });
 
 test('admin start screen renders with authenticated user context', function () {
-    $user = User::factory()->withTwoFactor()->create([
+    $user = User::factory()->admin()->withTwoFactor()->create([
         'name' => 'Jan Kowalski',
         'email_verified_at' => now(),
     ]);

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
@@ -10,5 +11,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
-        Route::get('/users', [UserIndexController::class, 'index'])->name('users.index');
+        Route::get('/users', [UserIndexController::class, 'index'])
+            ->name('users.index')
+            ->can('viewAny', User::class);
     });

@@ -1,3 +1,5 @@
+export type UserRole = 'admin' | 'editor';
+
 export type User = {
     id: number;
     name: string;
@@ -5,13 +7,19 @@ export type User = {
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
+    role: UserRole | null;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 };
 
+export type AuthAbilities = {
+    manageUsers: boolean;
+};
+
 export type Auth = {
     user: User;
+    can: AuthAbilities;
 };
 
 export type Passkey = {

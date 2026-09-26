@@ -111,7 +111,7 @@ test('public url is not overridden by admin profile or session preference', func
 test('patching admin locale updates preference and reflects in subsequent admin page props', function () {
     config(['fortify.require_two_factor_for_admin' => false]);
 
-    $user = User::factory()->create([
+    $user = User::factory()->admin()->create([
         'admin_locale' => 'en',
     ]);
 

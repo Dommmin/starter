@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -27,6 +28,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
  * @property string|null $admin_locale
+ * @property UserRole|null $role
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -58,6 +60,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'admin_locale' => 'string',
+            'role' => UserRole::class,
         ];
     }
 
@@ -70,13 +73,43 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     }
 
     /**
-     * Determine whether the user may access the administration panel.
+     * Determine whether the user has the given role.
+     */
+    public function hasRole(UserRole $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Determine whether the user has administrator privileges.
      *
-     * @todo Replace the temporary allow-all policy with role-based authorization.
+     * The local environment grants administrator privileges to every user.
      */
     public function isAdmin(): bool
     {
-        return true;
+        return app()->environment('local') || $this->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Determine whether the user may access the administration panel.
+     *
+     * The local environment grants panel access to every user.
+     */
+    public function canAccessAdminPanel(): bool
+    {
+        return app()->environment('local')
+            || $this->hasRole(UserRole::Admin)
+            || $this->hasRole(UserRole::Editor);
+    }
+
+    /**
+     * Assign the given role, or revoke the current one when null, and persist it.
+     *
+     * The role is intentionally not mass assignable.
+     */
+    public function assignRole(?UserRole $role): void
+    {
+        $this->forceFill(['role' => $role])->save();
     }
 
     /**

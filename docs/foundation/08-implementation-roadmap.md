@@ -48,10 +48,10 @@ Użytkownik wskazał szybkie tworzenie CRUD-ów, walidację frontową i tabele w
 | Etap | Zakres | Dowód ukończenia |
 | --- | --- | --- |
 | P0-B, zadania 09–10 | Wspólny formularz i tabela użyte we wzorcowym CRUDzie; walidacja podczas edycji, wyszukiwanie, filtry, sortowanie, paginacja i akcje rekordu. | Create/edit współdzielą pola; testy obejmują błędny zapis i brak uprawnień, niedozwolone filtry/sortowanie, reset paginacji oraz odtworzenie URL po odświeżeniu i Wstecz. Test UI sprawdza feedback walidacji, starsze odpowiedzi oraz obsługę błędów i klawiatury. |
-| P1, przy drugim rzeczywistym CRUDzie | Generator sprawdzonego szablonu z dry-run i ochroną istniejących plików; wspólne testy i fabryki danych. | Drugi CRUD korzysta ze wspólnej tabeli/formularza bez kopiowania ich logiki; wygenerowany moduł przechodzi adekwatne testy, typecheck i kontrakt UI. Test generatora potwierdza odmowę nadpisania; porównanie czasu z pierwszym CRUDem wykazuje oszczędność. |
+| P0-B, zaraz po wzorcowym CRUDzie (decyzja 2026-09-27) | Generator `make:resource` emitujący zwykłe pliki (controller, FormRequest, policy, strony React, testy) na bazie wzorcowego CRUD-a, ze wspólnym `ListQuery`, `ResourceTable` i `ResourceForm`; dry-run i odmowa nadpisania istniejących plików. | Wygenerowany moduł przechodzi testy, typecheck i kontrakt UI bez ręcznych poprawek; test generatora potwierdza dry-run i odmowę nadpisania. |
 | P2, po pomiarach | Ocena uniwersalnego silnika zasobów i ewentualnej ekstrakcji paczki. | Korzyść i koszt utrzymania potwierdzone użyciem w co najmniej dwóch projektach; osobna decyzja zakresowa. |
 
-To rozróżnia wcześniejsze odłożenie **uniwersalnego** generatora do P2 od prostego generatora sprawdzonego szablonu proponowanego w P1. Nie zakłada budowy wszystkich kontrolek i automatyzacji przed pierwszym klientem. Rozszerzenie P0-B wymaga aktualizacji szacunku; wcześniejsze 5–7 dni nie obejmuje automatycznie całego nowego kontraktu.
+Decyzja 2026-09-27 (właściciel): generator szablonu przesunięty z P1 do P0-B, bo szybkie CRUD-y są celem startera. Zasady z 01 pozostają: generator emituje jawne pliki, bez runtime metaprogramowania i klas BaseEverything. Uniwersalny silnik zasobów nadal pozostaje w P2. Rozszerzenie P0-B wymaga aktualizacji szacunku.
 
 ## Wielojęzyczność — wymaganie 2026-09-10
 

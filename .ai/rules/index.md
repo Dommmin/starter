@@ -21,3 +21,4 @@ Nie pisz kodu, dopóki nie przeczytałeś i nie stosujesz wszystkich pasujących
 | `.agents/**`, `.claude/**`, `.codex/**`, `AGENTS.md`, `CLAUDE.md`, `tests/ai/**`, `.ai/rules/**` | [agents.md](agents.md)              |
 | `resources/js/**` | [js.md](js.md) — obowiązkowe RWD każdego layoutu i kontrakty Inertia |
 | `app/**` | [app.md](app.md) — zaakceptowany kontrakt architektury i typowania |
+| `.claude/skills/**`, `.agents/skills/**`, `composer.json` | [skills.md](skills.md) — Boost nadpisuje skille po każdej zmianie composer |

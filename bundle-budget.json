@@ -1,0 +1,17 @@
+{
+    "description": "Regresyjny budżet gzip (KB) krytycznej ścieżki stron publicznych; progi = pomiar z 2026-09-27 + ok. 10%. Cel docelowy z docs/foundation/05: ≤100 KB JS strony publicznej. Podniesienie progu wymaga uzasadnienia i review.",
+    "entry": "resources/js/app.tsx",
+    "css": ["resources/css/app.css"],
+    "publicPages": [
+        "resources/js/pages/welcome.tsx",
+        "resources/js/pages/pages/show.tsx"
+    ],
+    "forbiddenSourcePattern": "\\.test\\.[jt]sx?$",
+    "limits": {
+        "entryJsGzipKb": 202,
+        "cssGzipKb": 22,
+        "pageJsGzipKb": 35,
+        "publicPageTotalJsGzipKb": 236,
+        "largestChunkGzipKb": 125
+    }
+}

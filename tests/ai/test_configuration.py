@@ -466,3 +466,124 @@ class AiConfigurationTest(unittest.TestCase):
             "make npm",
         ):
             self.assertIn(cmd, runtime_text)
+
+    def test_ci_builds_assets_and_enforces_bundle_budget(self):
+        package = json.loads((ROOT / "package.json").read_text())
+        self.assertEqual(
+            package["scripts"]["check:budget"],
+            "node scripts/check-bundle-budget.mjs",
+        )
+
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        build_step = ci.index("run: npm run build\n")
+        budget_step = ci.index("run: npm run check:budget")
+        self.assertLess(build_step, budget_step)
+
+        budget = json.loads((ROOT / "bundle-budget.json").read_text())
+        self.assertEqual(budget["entry"], "resources/js/app.tsx")
+        self.assertIn("resources/js/pages/welcome.tsx", budget["publicPages"])
+        self.assertIn("resources/js/pages/pages/show.tsx", budget["publicPages"])
+        for limit in (
+            "entryJsGzipKb",
+            "cssGzipKb",
+            "pageJsGzipKb",
+            "publicPageTotalJsGzipKb",
+            "largestChunkGzipKb",
+        ):
+            self.assertGreater(budget["limits"][limit], 0)
+
+    def test_bundle_budget_script_fails_on_overrun_and_leaked_tests(self):
+        script_path = ROOT / "scripts/check-bundle-budget.mjs"
+
+        def run_budget(build_dir, limits, manifest_extra=None):
+            manifest = {
+                "resources/js/app.tsx": {
+                    "file": "assets/app.js",
+                    "isEntry": True,
+                    "imports": ["_vendor.js"],
+                    "dynamicImports": ["resources/js/pages/welcome.tsx"],
+                },
+                "_vendor.js": {"file": "assets/vendor.js"},
+                "resources/css/app.css": {"file": "assets/app.css", "isEntry": True},
+                "resources/js/pages/welcome.tsx": {
+                    "file": "assets/welcome.js",
+                    "src": "resources/js/pages/welcome.tsx",
+                    "isDynamicEntry": True,
+                    "imports": ["resources/js/app.tsx", "_vendor.js"],
+                },
+                **(manifest_extra or {}),
+            }
+            (build_dir / "manifest.json").write_text(json.dumps(manifest))
+            budget_path = build_dir / "budget.json"
+            budget_path.write_text(
+                json.dumps(
+                    {
+                        "entry": "resources/js/app.tsx",
+                        "css": ["resources/css/app.css"],
+                        "publicPages": ["resources/js/pages/welcome.tsx"],
+                        "limits": limits,
+                    }
+                )
+            )
+            return subprocess.run(
+                [
+                    "node",
+                    str(script_path),
+                    "--build-dir",
+                    str(build_dir),
+                    "--budget",
+                    str(budget_path),
+                ],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+            )
+
+        generous = {
+            "entryJsGzipKb": 100,
+            "cssGzipKb": 100,
+            "pageJsGzipKb": 100,
+            "publicPageTotalJsGzipKb": 100,
+            "largestChunkGzipKb": 100,
+        }
+
+        with tempfile.TemporaryDirectory() as temp_root:
+            build_dir = Path(temp_root)
+            assets = build_dir / "assets"
+            assets.mkdir()
+            (assets / "app.js").write_text("export const app = 1;")
+            (assets / "vendor.js").write_bytes(os.urandom(8 * 1024))
+            (assets / "app.css").write_text("body{margin:0}")
+            (assets / "welcome.js").write_text("export default 1;")
+            (assets / "leak.js").write_text("export default 1;")
+
+            passing = run_budget(build_dir, generous)
+            self.assertEqual(passing.returncode, 0, passing.stderr)
+            self.assertIn("PASS bundle-budget", passing.stdout)
+
+            over = run_budget(build_dir, {**generous, "entryJsGzipKb": 1})
+            self.assertEqual(over.returncode, 1)
+            self.assertIn("entry JS", over.stderr)
+
+            leaked = run_budget(
+                build_dir,
+                generous,
+                {
+                    "resources/js/pages/admin/index.test.tsx": {
+                        "file": "assets/leak.js",
+                        "src": "resources/js/pages/admin/index.test.tsx",
+                        "isDynamicEntry": True,
+                    }
+                },
+            )
+            self.assertEqual(leaked.returncode, 1)
+            self.assertIn("index.test.tsx", leaked.stderr)
+
+    def test_local_nginx_caches_hashed_assets_and_compresses_text(self):
+        nginx = (ROOT / "docker/local/nginx.conf").read_text()
+        self.assertIn("location ^~ /build/assets/", nginx)
+        self.assertIn('"public, max-age=31536000, immutable"', nginx)
+        self.assertIn("gzip on;", nginx)
+        self.assertIn("gzip_vary on;", nginx)
+        for mime in ("text/css", "application/javascript", "application/json", "image/svg+xml"):
+            self.assertIn(mime, nginx)

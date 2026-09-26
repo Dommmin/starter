@@ -117,5 +117,9 @@ jobs:
           else
             echo "Brak referencji bazowej dla bramki UI; pomijam kontrolę różnic."
           fi
+      - name: Build frontend assets
+        run: npm run build
+      - name: Enforce bundle budget
+        run: npm run check:budget
       - name: Run quality checks
         run: composer ci:check

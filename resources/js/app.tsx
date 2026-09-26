@@ -3,33 +3,16 @@ import { Toaster } from '@/components/ui/sonner';
 import PasswordConfirmationModal from '@/components/password-confirmation-modal';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
-import AppLayout from '@/layouts/app-layout';
-import AdminLayout from '@/layouts/admin-layout';
-import AuthLayout from '@/layouts/auth-layout';
-import SettingsLayout from '@/layouts/settings/layout';
 
 import { I18nProvider } from '@/i18n';
+import { loadPage, resolveLayout } from '@/lib/page-resolver';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    layout: (name) => {
-        switch (true) {
-            case name === 'welcome':
-            case name.startsWith('pages/'):
-            case name.startsWith('errors/'):
-                return null;
-            case name.startsWith('auth/'):
-                return AuthLayout;
-            case name.startsWith('settings/'):
-                return [AdminLayout, SettingsLayout];
-            case name.startsWith('admin/'):
-                return AdminLayout;
-            default:
-                return AppLayout;
-        }
-    },
+    resolve: loadPage,
+    layout: resolveLayout,
     strictMode: true,
     withApp(app, { page }) {
         return (

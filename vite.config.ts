@@ -18,6 +18,15 @@ export default defineConfig({
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
+                    // latin-ext carries Polish diacritics (ą, ę, ł...); faces are
+                    // split by unicode-range, so browsers fetch it only when used.
+                    subsets: ['latin', 'latin-ext'],
+                    // No preload: laravel-vite-plugin 3.x emits separate woff2 and
+                    // woff @font-face rules with identical descriptors, so browsers
+                    // use the last (woff) one and preloaded woff2 files are wasted.
+                    // Revisit (preload weight 400 only) once the plugin merges
+                    // formats into one `src` list.
+                    preload: false,
                 }),
             ],
         }),
@@ -31,6 +40,22 @@ export default defineConfig({
             formVariants: true,
         }),
     ]),
+    build: {
+        rolldownOptions: {
+            treeshake: {
+                // Design-system primitives are pure component modules reached
+                // through the `@/design-system/primitives` barrel. Without this
+                // hint every re-exported primitive (select, data table, rich
+                // text...) is kept on the critical path of each page.
+                moduleSideEffects: [
+                    {
+                        test: /\/resources\/js\/design-system\/primitives\/.+\.tsx?$/,
+                        sideEffects: false,
+                    },
+                ],
+            },
+        },
+    },
     server: {
         ...(process.env.DOCKER_LOCAL === '1'
             ? {

@@ -33,7 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveLocalization::class,
             PreventIndexingOfPrivateAreas::class,
             HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
+            // The HTML still carries every modulepreload tag; the header is
+            // capped so a split bundle cannot overflow proxy/FastCGI header buffers.
+            AddLinkHeadersForPreloadedAssets::using(20),
         ]);
 
         $middleware->alias([

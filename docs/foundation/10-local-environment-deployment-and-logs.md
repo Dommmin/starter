@@ -31,6 +31,10 @@ CI buduje archiwum kodu, vendor oraz bundle klienta/SSR z lockfile na zgodnym Li
 7. Kontrolowane zakończenie Horizon po bieżących jobach i uruchomienie nowej wersji; potwierdzenie SHA workera oraz heartbeat. Stop timeout większy od limitu joba, limit joba krótszy od retry_after. Payloady muszą działać ze starym i nowym kodem. Scheduler przechodzi na nowy kod bez podwójnego wykonywania; trwające zadania są uwzględnione w drenażu.
 8. Dopiero po sukcesie zapis manifestu jako healthy i cleanup. Stary SSR wyłączyć po oknie rollbacku i zakończeniu starych requestów. Dłuższy ręczny rollback najpierw uruchamia SSR poprzedniej wersji. Zachować hashowane assety starych wersji w osobnym append-only katalogu; propozycja retencji 30 dni, aby otwarta karta nie traciła lazy-loaded JS. Retencja mediów to oddzielna polityka.
 
+### Cache i kompresja statycznych assetów (Nginx)
+
+Polityka jest wspólna dla lokalnego Dockera i produkcyjnego Nginx; wzorcem jest `docker/local/nginx.conf` (produkcyjny vhost konfiguruje administrator, recepta Deployer go nie zmienia). `/build/assets/*` (nazwy z hashem Vite) → `Cache-Control: public, max-age=31536000, immutable`; `/build/manifest.json` i `fonts-manifest.json` → `no-cache`; niehashowane pliki z `public/` (favicon, obrazy, fonty) → `max-age=86400, stale-while-revalidate=604800`; HTML i odpowiedzi Inertia zachowują nagłówki Laravel (`no-cache, private`). Gzip (`gzip_vary on`) dla HTML, CSS, JS, JSON, SVG i XML. Brotli tylko, jeśli moduł jest dostępny w produkcyjnym Nginx — oficjalny obraz lokalny go nie ma. Budżet bundla pilnuje `npm run check:budget` (`bundle-budget.json`) w CI.
+
 ### Granice automatycznego cofnięcia
 
 | Miejsce awarii                                       | Reakcja recepty                                                                                           |

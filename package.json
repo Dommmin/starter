@@ -11,7 +11,7 @@
         "check:fix": "vp check --fix resources/js resources/css scripts vite.config.ts",
         "check:budget": "node scripts/check-bundle-budget.mjs",
         "check:ui-contract": "node scripts/check-ui-contract.mjs",
-        "test:ui": "vp test --dom resources/js/design-system/primitives resources/js/pages",
+        "test:ui": "vp test --dom resources/js/design-system/primitives resources/js/pages resources/js/i18n",
         "test:ssr": "node scripts/verify-ssr-i18n.mjs",
         "test:e2e": "playwright test",
         "types:check": "tsc --noEmit"

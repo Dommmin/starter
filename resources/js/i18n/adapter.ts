@@ -11,7 +11,7 @@ function isPluralObject(obj: unknown): boolean {
 export function convertPlaceholders(template: string): string {
     return template
         .replace(/:([a-zA-Z_]+)/g, '{{$1}}')
-        .replace(/\{([a-zA-Z_]+)\}/g, '{{$1}}');
+        .replace(/(?<!\{)\{([a-zA-Z_]+)\}(?!\})/g, '{{$1}}');
 }
 
 /**

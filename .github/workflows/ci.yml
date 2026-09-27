@@ -146,7 +146,9 @@ jobs:
       - name: Start database services and migrate
         run: |
           docker compose up -d --wait postgres redis mailpit
-          docker compose run --rm --no-deps app sh -ec 'php artisan key:generate --no-interaction; php artisan migrate --no-interaction; php artisan storage:link --no-interaction'
+          make artisan ARGS='key:generate --no-interaction'
+          make artisan ARGS='migrate --no-interaction'
+          make artisan ARGS='storage:link --no-interaction'
       - name: Run browser E2E journeys and web vitals
         run: make e2e
       - name: Upload Playwright report

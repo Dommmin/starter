@@ -7,6 +7,12 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 
+// Vitest boots a Vite server only to transform modules, not to serve HMR, so
+// laravel-vite-plugin's "no dev server in CI" guard must not abort the tests.
+if (process.env.VITEST) {
+    process.env.LARAVEL_BYPASS_ENV_CHECK = '1';
+}
+
 const vitePort = Number(process.env.VITE_PORT ?? 5173);
 const appOrigin = `http://localhost:${process.env.APP_PORT ?? 8080}`;
 

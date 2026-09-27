@@ -10,13 +10,17 @@
     ],
     "forbiddenSourcePattern": "\\.test\\.[jt]sx?$",
     "limits": {
-        "entryJsGzipKb": 202,
+        "entryJsGzipKb": 174,
         "cssGzipKb": 22,
-        "pageJsGzipKb": 40,
-        "publicPageTotalJsGzipKb": 236,
+        "pageJsGzipKb": 51,
+        "publicPageTotalJsGzipKb": 225,
         "largestChunkGzipKb": 125
     },
     "changelog": [
-        "2026-09-27: pageJsGzipKb 35→40 — welcome zawiera działający formularz kontaktowy (~4 KB gzip: ContactSection, ErrorSummary, TextareaField, Alert, useForm). Limit łączny JS strony publicznej bez zmian (236 KB); zatwierdził właściciel („wszystko po kolei”)."
+        "2026-09-27: pageJsGzipKb 35→40 — welcome zawiera działający formularz kontaktowy (~4 KB gzip: ContactSection, ErrorSummary, TextareaField, Alert, useForm). Limit łączny JS strony publicznej bez zmian (236 KB); zatwierdził właściciel („wszystko po kolei”).",
+        "2026-09-27: okno potwierdzania hasła (Radix Dialog, passkeys) ładowane leniwie przy pierwszej odpowiedzi 423 (lazyModules). Pomiar: entry 184,55→165,81 KB, łączny JS welcome 222,74→213,96 KB, pages/show 214,54→205,74 KB. Zapadka w dół: entryJsGzipKb 202→174 i publicPageTotalJsGzipKb 236→225 (pomiar +~5%). pageJsGzipKb 40→51 wyłącznie z powodu atrybucji: prymitywy Radix współdzielone z nagłówkiem publicznym (Combination, dropdown ~16 KB) nie są już w entry, więc liczą się do chunku strony (welcome 38,19→48,14 KB); suma entry+strona maleje. Podniesienie pageJsGzipKb wymaga review człowieka."
+    ],
+    "lazyModules": [
+        "resources/js/components/password-confirmation-dialog.tsx"
     ]
 }

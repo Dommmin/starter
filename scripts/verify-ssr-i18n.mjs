@@ -67,11 +67,6 @@ async function runSsrVerification() {
                         userMenu: 'User menu',
                         themeSwitcher: 'Theme',
                     },
-                    public: {
-                        landing: {
-                            heroTitle,
-                        },
-                    },
                     landing: {
                         heroTitle,
                         metaTitle: 'Meta title',

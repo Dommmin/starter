@@ -176,7 +176,7 @@ test('literal PHP translation keys exist in the English catalog schema', functio
     }
 });
 
-test('public payload does not leak admin catalogs', function () {
+test('public payload does not leak admin catalogs nor duplicate unprefixed groups', function () {
     /** @var LocalizationManager $manager */
     $manager = app(LocalizationManager::class);
 
@@ -184,12 +184,98 @@ test('public payload does not leak admin catalogs', function () {
     $payload = $manager->getPayload($request);
 
     expect($payload['area'])->toBe('public')
-        ->and(array_key_exists('common', $payload['messages']))->toBeTrue()
-        ->and(array_key_exists('public', $payload['messages']))->toBeTrue()
-        ->and(array_key_exists('a11y', $payload['messages']))->toBeTrue()
-        ->and(array_key_exists('landing', $payload['messages']))->toBeTrue()
-        ->and(array_key_exists('admin', $payload['messages']))->toBeFalse()
-        ->and(array_key_exists('settings', $payload['messages']))->toBeFalse();
+        ->and(array_keys($payload['messages']))->toContain('a11y', 'landing', 'contact', 'errors')
+        ->and(array_keys($payload['messages']))->not->toContain('common', 'public', 'validation', 'auth', 'admin', 'settings');
+});
+
+test('each request resolves the catalog scope of its area', function (string $path, string $scope) {
+    /** @var LocalizationManager $manager */
+    $manager = app(LocalizationManager::class);
+
+    expect($manager->catalogScope(Request::create($path, 'GET')))->toBe($scope);
+})->with([
+    'landing' => ['/', 'public'],
+    'localized landing' => ['/pl', 'public'],
+    'cms page' => ['/privacy-policy', 'public'],
+    'login' => ['/login', 'auth'],
+    'localized login' => ['/pl/login', 'auth'],
+    'password reset' => ['/reset-password/token', 'auth'],
+    'two-factor challenge' => ['/two-factor-challenge', 'auth'],
+    'password confirmation' => ['/user/confirm-password', 'admin'],
+    'admin panel' => ['/admin/pages', 'admin'],
+    'account settings' => ['/settings/profile', 'admin'],
+]);
+
+test('catalog scopes send only their mapped groups', function (string $scope, array $prefixedGroups, array $absentGroups) {
+    /** @var LocalizationManager $manager */
+    $manager = app(LocalizationManager::class);
+
+    $messages = $manager->getMessagesForScope($scope, 'en');
+
+    expect(data_get($messages, 'brand.name'))->toBe('Punkt Startowy')
+        ->and(array_keys($messages))->toContain(...$prefixedGroups)
+        ->and(array_keys($messages))->not->toContain('common', 'public', 'validation', ...$absentGroups);
+})->with([
+    'public' => ['public', ['errors', 'landing', 'contact'], ['auth', 'admin', 'settings']],
+    'auth' => ['auth', ['errors', 'auth'], ['admin', 'settings', 'landing', 'contact']],
+    'admin' => ['admin', ['errors', 'admin', 'settings', 'auth'], ['landing', 'contact']],
+]);
+
+test('shared i18n prop of rendered pages follows the scope mapping', function () {
+    $this->get('/login')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('i18n.messages.auth.login')
+            ->missing('i18n.messages.landing')
+            ->missing('i18n.messages.admin')
+            ->missing('i18n.messages.validation'));
+
+    $this->get('/')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('i18n.messages.landing')
+            ->missing('i18n.messages.auth')
+            ->missing('i18n.messages.public')
+            ->missing('i18n.messages.common'));
+});
+
+test('React translation keys resolve within every catalog scope the module renders in', function () {
+    /** @var LocalizationManager $manager */
+    $manager = app(LocalizationManager::class);
+
+    $scopeKeys = [];
+    foreach (array_keys(LocalizationManager::CATALOG_SCOPES) as $scope) {
+        $scopeKeys[$scope] = flattenTranslationKeys($manager->getMessagesForScope($scope, 'en'));
+    }
+
+    $missing = [];
+
+    foreach (reactModuleScopes() as $file => $scopes) {
+        $source = (string) file_get_contents($file);
+        $relative = str_replace(resource_path('js').'/', '', $file);
+
+        preg_match_all("/\\bt\\(\\s*['\"]([^'\"]+)['\"]/", $source, $literal);
+        preg_match_all('/\\bt\\(\\s*`([^`$]*)\\$\\{/', $source, $templates);
+
+        foreach ($scopes as $scope) {
+            foreach ($literal[1] as $key) {
+                if (! array_key_exists($key, $scopeKeys[$scope])) {
+                    $missing[] = "[{$key}] in {$relative} (scope {$scope})";
+                }
+            }
+
+            foreach ($templates[1] as $prefix) {
+                $hasPrefix = collect(array_keys($scopeKeys[$scope]))
+                    ->contains(fn (string $key): bool => str_starts_with($key, $prefix));
+
+                if (! $hasPrefix) {
+                    $missing[] = "[{$prefix}*] in {$relative} (scope {$scope})";
+                }
+            }
+        }
+    }
+
+    expect($missing)->toBe([], 'Translation keys missing from the catalog scope of the module');
 });
 
 test('admin payload exposes common UI keys without a catalog prefix', function () {
@@ -289,4 +375,228 @@ function assertPluralForms(array $catalog, string $locale, array $requiredCatego
 
         assertPluralForms($value, $locale, $requiredCategories, $fullKey);
     }
+}
+
+/**
+ * Catalog scopes each React module can render in, derived from the static
+ * import graph (`import ... from`, `export ... from`; dynamic imports and
+ * type-only imports are not followed). Roots mirror page-resolver.ts: pages
+ * by name, layouts by group, the app shell in every scope and lazily loaded
+ * modules explicitly.
+ *
+ * @return array<string, list<string>>
+ */
+function reactModuleScopes(): array
+{
+    $base = resource_path('js');
+    $allScopes = array_keys(LocalizationManager::CATALOG_SCOPES);
+
+    $roots = [
+        "{$base}/app.tsx" => $allScopes,
+        "{$base}/layouts/auth-layout.tsx" => ['auth'],
+        "{$base}/layouts/admin-layout.tsx" => ['admin'],
+        "{$base}/layouts/settings/layout.tsx" => ['admin'],
+        "{$base}/layouts/app-layout.tsx" => ['admin'],
+        // Loaded on the first 423 response of a password-confirmed route.
+        "{$base}/components/password-confirmation-dialog.tsx" => ['admin'],
+    ];
+
+    foreach (File::allFiles("{$base}/pages") as $pageFile) {
+        $path = $pageFile->getPathname();
+
+        if (! str_ends_with($path, '.tsx') || str_ends_with($path, '.test.tsx')) {
+            continue;
+        }
+
+        $name = substr(str_replace("{$base}/pages/", '', $path), 0, -4);
+
+        $roots[$path] = match (true) {
+            $name === 'welcome', str_starts_with($name, 'pages/') => ['public'],
+            str_starts_with($name, 'errors/') => $allScopes,
+            // Unprefixed /user/confirm-password belongs to the admin area.
+            $name === 'auth/confirm-password' => ['auth', 'admin'],
+            str_starts_with($name, 'auth/') => ['auth'],
+            default => ['admin'],
+        };
+    }
+
+    $scopes = [];
+    $queue = [];
+
+    foreach ($roots as $file => $rootScopes) {
+        expect(File::exists($file))->toBeTrue("Scope root [{$file}] does not exist");
+        $queue[] = [$file, $rootScopes];
+    }
+
+    while ($queue !== []) {
+        [$file, $fileScopes] = array_shift($queue);
+        $known = $scopes[$file] ?? [];
+        $added = array_values(array_diff($fileScopes, $known));
+
+        if ($added === []) {
+            continue;
+        }
+
+        $scopes[$file] = [...$known, ...$added];
+
+        foreach (staticImports($file) as $imported) {
+            $queue[] = [$imported, $added];
+        }
+    }
+
+    return $scopes;
+}
+
+/**
+ * Resolved local files statically imported by a module. Named imports from
+ * an `export *` barrel (design-system primitives) resolve to the modules
+ * that declare those names, so importing `Button` does not pull in every
+ * primitive of the barrel.
+ *
+ * @return list<string>
+ */
+function staticImports(string $file): array
+{
+    $source = (string) file_get_contents($file);
+    preg_match_all(
+        '/^\s*(import|export)\s+(?!type\b)(?:([^;]*?)\s+from\s+)?[\'"]([^\'"]+)[\'"]/ms',
+        $source,
+        $matches,
+        PREG_SET_ORDER,
+    );
+
+    $resolved = [];
+
+    foreach ($matches as [, $keyword, $clause, $specifier]) {
+        $target = resolveModule($file, $specifier);
+
+        if ($target === null) {
+            continue;
+        }
+
+        $names = $keyword === 'import' ? importedNames($clause) : null;
+        $barrel = barrelExports($target);
+
+        if ($names !== null && $barrel !== null) {
+            foreach ($names as $name) {
+                $resolved = [...$resolved, ...($barrel[$name] ?? [$target])];
+            }
+
+            continue;
+        }
+
+        $resolved[] = $target;
+    }
+
+    return array_values(array_unique($resolved));
+}
+
+function resolveModule(string $from, string $specifier): ?string
+{
+    if (str_starts_with($specifier, '@/')) {
+        $candidate = resource_path('js/'.substr($specifier, 2));
+    } elseif (str_starts_with($specifier, '.')) {
+        $candidate = dirname($from).'/'.$specifier;
+    } else {
+        return null;
+    }
+
+    foreach (['', '.tsx', '.ts', '/index.tsx', '/index.ts'] as $suffix) {
+        $path = realpath($candidate.$suffix);
+
+        if ($path !== false && is_file($path)) {
+            return $path;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Value names of an import clause (`Foo, { A, B as C, type D }`); null for
+ * namespace imports, which need the whole module.
+ *
+ * @return list<string>|null
+ */
+function importedNames(string $clause): ?array
+{
+    if ($clause === '' || str_contains($clause, '*')) {
+        return null;
+    }
+
+    $names = [];
+
+    if (preg_match('/\{([^}]*)\}/', $clause, $braces) === 1) {
+        foreach (explode(',', $braces[1]) as $part) {
+            $part = trim($part);
+
+            if ($part === '' || str_starts_with($part, 'type ')) {
+                continue;
+            }
+
+            $names[] = trim(explode(' as ', $part)[0]);
+        }
+    }
+
+    $default = trim((string) preg_replace('/\{[^}]*\}/', '', $clause), " ,\n\t");
+
+    if ($default !== '') {
+        $names[] = 'default';
+    }
+
+    return $names;
+}
+
+/**
+ * For a module consisting of `export * from` lines only: exported name =>
+ * declaring modules. Null for any other module.
+ *
+ * @return array<string, list<string>>|null
+ */
+function barrelExports(string $file): ?array
+{
+    static $cache = [];
+
+    if (array_key_exists($file, $cache)) {
+        return $cache[$file];
+    }
+
+    $source = trim((string) preg_replace('~//[^\n]*|/\*.*?\*/~s', '', (string) file_get_contents($file)));
+    $lines = array_filter(array_map('trim', explode("\n", $source)));
+
+    if ($lines === [] || array_filter($lines, fn (string $line): bool => preg_match('/^export \* from [\'"][^\'"]+[\'"];?$/', $line) !== 1) !== []) {
+        return $cache[$file] = null;
+    }
+
+    $exports = [];
+
+    foreach ($lines as $line) {
+        preg_match('/[\'"]([^\'"]+)[\'"]/', $line, $specifier);
+        $module = resolveModule($file, $specifier[1]);
+
+        if ($module === null) {
+            continue;
+        }
+
+        $moduleSource = (string) file_get_contents($module);
+        preg_match_all('/export\s+(?:default\s+)?(?:async\s+)?(?:function|const|let|class)\s+(\w+)/', $moduleSource, $declared);
+        preg_match_all('/export\s*\{([^}]*)\}/', $moduleSource, $lists);
+
+        $names = $declared[1];
+        foreach ($lists[1] as $list) {
+            foreach (explode(',', $list) as $part) {
+                $part = trim($part);
+                if ($part !== '' && ! str_starts_with($part, 'type ')) {
+                    $segments = explode(' as ', $part);
+                    $names[] = trim(end($segments));
+                }
+            }
+        }
+
+        foreach ($names as $name) {
+            $exports[$name][] = $module;
+        }
+    }
+
+    return $cache[$file] = $exports;
 }

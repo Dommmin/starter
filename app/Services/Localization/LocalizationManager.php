@@ -4,6 +4,8 @@ namespace App\Services\Localization;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use InvalidArgumentException;
+use LogicException;
 
 class LocalizationManager
 {
@@ -190,65 +192,103 @@ class LocalizationManager
     }
 
     /**
-     * Load message catalog for area and locale with fallback.
+     * Catalog groups (lang/{locale}/{group}.php) sent to the browser per UI
+     * scope. The mapping is static on purpose: a page never fetches a
+     * missing group at runtime, so every React key must resolve within the
+     * scope it renders in (enforced by LocalizationCatalogGateTest). The
+     * `validation` group is server-only: validation messages reach the UI
+     * already translated in the error bag.
      *
-     * @return array<string, mixed>
+     * - public: landing, CMS pages and public error pages,
+     * - auth: login, password reset, e-mail verification, 2FA challenge,
+     * - admin: panel and account settings; passkey management and the
+     *   password confirmation dialog reuse `auth.passkey`/`auth.confirmPassword`.
+     *
+     * @var array<string, list<string>>
      */
-    public function getMessagesForArea(string $area, string $locale, bool $includeAuth = false): array
+    public const array CATALOG_SCOPES = [
+        'public' => ['common', 'public', 'errors'],
+        'auth' => ['common', 'auth', 'errors'],
+        'admin' => ['common', 'admin', 'settings', 'auth', 'errors'],
+    ];
+
+    /**
+     * Groups whose keys the UI reads without the group prefix, such as
+     * `brand.name` (common) or `landing.heroTitle` (public). They are sent
+     * once, unprefixed; the other groups keep their prefix (`admin.*`).
+     *
+     * @var list<string>
+     */
+    public const array UNPREFIXED_GROUPS = ['common', 'public'];
+
+    /**
+     * UI scope of the request: the admin area, an authentication flow or
+     * the public website.
+     */
+    public function catalogScope(Request $request, ?string $area = null): string
     {
-        $fallback = $area === 'admin'
-            ? $this->config->getAdminFallback()
-            : $this->config->getPublicFallback();
+        $area ??= $this->determineArea($request);
 
         if ($area === 'admin') {
-            $groups = ['common', 'auth', 'settings', 'admin', 'validation', 'errors'];
-        } elseif ($includeAuth) {
-            $groups = ['common', 'public', 'auth', 'validation', 'errors'];
-        } else {
-            $groups = ['common', 'public', 'validation', 'errors'];
+            return 'admin';
         }
 
-        $fallbackCatalog = $this->loadGroupsForLocale($groups, $fallback);
-
-        if ($locale === $fallback) {
-            return $this->prepareMessagesForArea($area, $fallbackCatalog);
-        }
-
-        $localeCatalog = $this->loadGroupsForLocale($groups, $locale);
-
-        return $this->prepareMessagesForArea(
-            $area,
-            array_replace_recursive($fallbackCatalog, $localeCatalog),
-        );
+        return $this->isAuthPath($request) ? 'auth' : 'public';
     }
 
     /**
-     * Common UI uses stable keys without catalog group prefixes, such as
-     * `brand.name` and `a11y.skipToContent`. Public pages additionally expose
-     * public content as `landing.heroTitle`. Keep source groups in the payload
-     * for diagnostics and isolate panel-only groups from public pages.
+     * Load the message catalog of a UI scope and locale with fallback.
+     *
+     * @return array<string, mixed>
+     */
+    public function getMessagesForScope(string $scope, string $locale): array
+    {
+        $groups = self::CATALOG_SCOPES[$scope]
+            ?? throw new InvalidArgumentException("Unknown localization catalog scope [{$scope}].");
+
+        $fallback = $scope === 'admin'
+            ? $this->config->getAdminFallback()
+            : $this->config->getPublicFallback();
+
+        $catalog = $this->loadGroupsForLocale($groups, $fallback);
+
+        if ($locale !== $fallback) {
+            $catalog = array_replace_recursive($catalog, $this->loadGroupsForLocale($groups, $locale));
+        }
+
+        return $this->flattenUnprefixedGroups($catalog);
+    }
+
+    /**
+     * Merge the unprefixed groups into the payload root and keep the other
+     * groups under their own key, so no translation is sent twice.
      *
      * @param  array<string, mixed>  $catalog
      * @return array<string, mixed>
      */
-    protected function prepareMessagesForArea(string $area, array $catalog): array
+    protected function flattenUnprefixedGroups(array $catalog): array
     {
-        $common = $catalog['common'] ?? [];
-        $messages = array_replace_recursive(
-            $catalog,
-            is_array($common) ? $common : [],
-        );
+        $messages = [];
 
-        if ($area !== 'public') {
-            return $messages;
+        foreach ($catalog as $group => $entries) {
+            if (in_array($group, self::UNPREFIXED_GROUPS, true)) {
+                $messages = array_replace_recursive($messages, is_array($entries) ? $entries : []);
+            }
         }
 
-        $public = $catalog['public'] ?? [];
+        foreach ($catalog as $group => $entries) {
+            if (in_array($group, self::UNPREFIXED_GROUPS, true)) {
+                continue;
+            }
 
-        return array_replace_recursive(
-            $messages,
-            is_array($public) ? $public : [],
-        );
+            if (array_key_exists($group, $messages)) {
+                throw new LogicException("Unprefixed translation key [{$group}] collides with the catalog group of the same name.");
+            }
+
+            $messages[$group] = $entries;
+        }
+
+        return $messages;
     }
 
     /**
@@ -317,7 +357,7 @@ class LocalizationManager
             'fallback' => $fallback,
             'dir' => $dir,
             'availableLocales' => $this->config->getAvailableLocalesForArea($area),
-            'messages' => $this->getMessagesForArea($area, $locale, $this->isAuthPath($request)),
+            'messages' => $this->getMessagesForScope($this->catalogScope($request, $area), $locale),
         ];
     }
 }

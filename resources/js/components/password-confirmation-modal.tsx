@@ -1,36 +1,48 @@
 import type { PendingVisit } from '@inertiajs/core';
-import { router, useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import InputError from '@/components/input-error';
-import PasskeyVerify from '@/components/passkey-verify';
-import PasswordInput from '@/components/password-input';
-import { Button, Stack } from '@/design-system/primitives';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { store } from '@/routes/password/confirm';
-import {
-    index as confirmOptions,
-    store as confirmWithPasskey,
-} from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyConfirmationController';
+import type { PasswordConfirmationDialogProps } from '@/components/password-confirmation-dialog';
+import { confirm as confirmPasswordPage } from '@/routes/password';
 
 type Props = {
     children: React.ReactNode;
 };
 
+type DialogComponent = (
+    props: PasswordConfirmationDialogProps,
+) => React.ReactNode;
+
+/**
+ * Remembers the last Inertia visit and, when the server answers 423 with
+ * `X-Password-Confirmation-Required`, asks for the password and retries that
+ * visit. Only this listener is part of the entry chunk: the dialog (Radix
+ * dialog, passkey client) is imported on the first 423 response. If that
+ * chunk cannot be loaded, the full-page confirmation screen is opened.
+ */
 export default function PasswordConfirmationModal({ children }: Props) {
     const [isOpen, setIsOpen] = useState(false);
+    const [ConfirmationDialog, setConfirmationDialog] =
+        useState<DialogComponent | null>(null);
     const pendingVisit = useRef<PendingVisit | null>(null);
     const isConfirming = useRef(false);
-    const passwordInput = useRef<HTMLInputElement>(null);
-    const form = useForm({ password: '' });
+    const isLoadingDialog = useRef(false);
 
     useEffect(() => {
+        function loadDialog(): void {
+            if (isLoadingDialog.current) {
+                return;
+            }
+
+            isLoadingDialog.current = true;
+
+            import('@/components/password-confirmation-dialog')
+                .then((module) => setConfirmationDialog(() => module.default))
+                .catch(() => {
+                    isLoadingDialog.current = false;
+                    window.location.assign(confirmPasswordPage.url());
+                });
+        }
+
         const removeBeforeListener = router.on('before', (event) => {
             if (!isConfirming.current) {
                 pendingVisit.current = event.detail.visit;
@@ -50,8 +62,8 @@ export default function PasswordConfirmationModal({ children }: Props) {
                 }
 
                 event.preventDefault();
+                loadDialog();
                 setIsOpen(true);
-                requestAnimationFrame(() => passwordInput.current?.focus());
             },
         );
 
@@ -61,17 +73,19 @@ export default function PasswordConfirmationModal({ children }: Props) {
         };
     }, []);
 
-    function closeModal(): void {
-        form.reset();
-        form.clearErrors();
+    function closeDialog(): void {
         pendingVisit.current = null;
         setIsOpen(false);
+    }
+
+    function setConfirming(value: boolean): void {
+        isConfirming.current = value;
     }
 
     function resumePendingVisit(): void {
         const visit = pendingVisit.current;
 
-        closeModal();
+        closeDialog();
 
         if (!visit) {
             return;
@@ -99,90 +113,18 @@ export default function PasswordConfirmationModal({ children }: Props) {
         });
     }
 
-    function submit(event: React.FormEvent<HTMLFormElement>): void {
-        event.preventDefault();
-        isConfirming.current = true;
-
-        form.post(store.url(), {
-            headers: {
-                Accept: 'application/json',
-            },
-            onSuccess: resumePendingVisit,
-            onError: () => passwordInput.current?.focus(),
-            onFinish: () => {
-                isConfirming.current = false;
-            },
-        });
-    }
-
     return (
         <>
             {children}
 
-            <Dialog
-                open={isOpen}
-                onOpenChange={(open) => !open && closeModal()}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Confirm password</DialogTitle>
-                        <DialogDescription>
-                            Confirm your password to continue with this action.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <PasskeyVerify
-                        routes={{
-                            options: confirmOptions(),
-                            submit: confirmWithPasskey(),
-                        }}
-                        label="Confirm with passkey"
-                        loadingLabel="Confirming..."
-                        separator="Or confirm with password"
-                        onSuccess={resumePendingVisit}
-                    />
-
-                    <form onSubmit={submit}>
-                        <Stack gap="default">
-                            <Stack gap="tight">
-                                <Label htmlFor="confirm-password">
-                                    Password
-                                </Label>
-                                <PasswordInput
-                                    id="confirm-password"
-                                    ref={passwordInput}
-                                    name="password"
-                                    autoComplete="current-password"
-                                    value={form.data.password}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'password',
-                                            event.target.value,
-                                        )
-                                    }
-                                    aria-describedby={
-                                        form.errors.password
-                                            ? 'confirm-password-error'
-                                            : undefined
-                                    }
-                                />
-                                <InputError
-                                    id="confirm-password-error"
-                                    message={form.errors.password}
-                                />
-                            </Stack>
-
-                            <Button
-                                type="submit"
-                                isPending={form.processing}
-                                disabled={form.processing}
-                            >
-                                Confirm password
-                            </Button>
-                        </Stack>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            {ConfirmationDialog && (
+                <ConfirmationDialog
+                    open={isOpen}
+                    onClose={closeDialog}
+                    onConfirmed={resumePendingVisit}
+                    onConfirmingChange={setConfirming}
+                />
+            )}
         </>
     );
 }

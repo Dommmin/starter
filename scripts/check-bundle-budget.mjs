@@ -10,7 +10,9 @@
  *     the self-hosted font stylesheet from fonts-manifest.json),
  *   - each public page: the JS it adds on top of the entry closure,
  *   - the largest single JS chunk loaded by any public page.
- * It also fails when a test module (*.test.*) leaked into the client build.
+ * It also fails when a test module (*.test.*) leaked into the client build
+ * and when a module listed in `lazyModules` is not a separate dynamic chunk
+ * or is statically reachable from the entry (it would load on every page).
  *
  * Usage: node scripts/check-bundle-budget.mjs
  *          [--build-dir public/build] [--budget bundle-budget.json] [--json]
@@ -180,6 +182,18 @@ function main() {
         )
         .map(([key]) => key);
 
+    const lazyViolations = (budget.lazyModules ?? []).flatMap((key) => {
+        if (!manifest[key]?.isDynamicEntry) {
+            return [
+                `moduł leniwy ${key} nie jest osobnym chunkiem dynamicznym`,
+            ];
+        }
+
+        return entryKeys.has(key) || entryJs.has(manifest[key].file)
+            ? [`moduł leniwy ${key} jest statycznie w entry`]
+            : [];
+    });
+
     const limits = budget.limits;
     const failures = [];
     const check = (label, value, limit) => {
@@ -213,6 +227,8 @@ function main() {
         failures.push(`moduł testowy trafił do buildu klienta: ${key}`);
     }
 
+    failures.push(...lazyViolations);
+
     if (options.json) {
         console.log(
             JSON.stringify({ measurements, limits, failures }, null, 2),
@@ -236,6 +252,9 @@ function main() {
             `  największy chunk          ${measurements.largestPublicChunk.gzipKb} KB / ${limits.largestChunkGzipKb} KB (${largest.file})`,
         );
         console.log(`  liczba chunków JS         ${measurements.chunkCount}`);
+        console.log(
+            `  moduły leniwe poza entry  ${(budget.lazyModules ?? []).length - lazyViolations.length}/${(budget.lazyModules ?? []).length}`,
+        );
     }
 
     if (failures.length > 0) {

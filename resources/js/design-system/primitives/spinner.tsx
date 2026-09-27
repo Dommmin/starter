@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 type SpinnerSize = 'sm' | 'default' | 'lg';
 
 export type SpinnerProps = {
-    /** Translated accessible label, e.g. t('common.actions.loading'). */
+    /** Translated accessible label, e.g. t('actions.loading'). */
     label: string;
     size?: SpinnerSize;
 };

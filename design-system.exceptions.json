@@ -2109,7 +2109,7 @@
         "id": "DS-EXC-UPSTREAM-LAYOUTS-APP-APP-SIDEBAR-LAYOUT",
         "rule": "ds/no-style-escape",
         "file": "resources/js/layouts/app/app-sidebar-layout.tsx",
-        "contentHash": "sha256:8640b1ec7400a88009d7dfd6347b1af9b617c9659ccf186bcad8f1d622239122",
+        "contentHash": "sha256:1e35bee7741314a1d1e603cdadd91b5849ffc909ebf3e138ab5da22f1646fd8e",
         "reason": "Upstream scaffold pending design system primitives refactoring",
         "alternatives": "Refactor using design system primitives",
         "scope": "className in component/layout markup",
@@ -2119,8 +2119,8 @@
         "task": "P0-B Task 09",
         "lineRanges": [
             [
-                14,
-                14
+                15,
+                15
             ]
         ]
     },

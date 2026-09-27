@@ -19,14 +19,14 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Pre-CSS background to avoid a flash; keep in sync with --background in app.css --}}
         <style>
             html {
-                background-color: oklch(1 0 0);
+                background-color: oklch(0.985 0.005 85);
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: oklch(0.14 0.005 85);
             }
         </style>
 

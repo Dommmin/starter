@@ -173,8 +173,13 @@
         @apply border-border;
     }
 
+    html,
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background;
+    }
+
+    body {
+        @apply text-foreground;
     }
 
     button:not(:disabled),

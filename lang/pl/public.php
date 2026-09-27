@@ -35,7 +35,7 @@ return [
         'stackLabel' => 'Stos technologiczny',
         'stackValue' => 'Laravel 13 + React 19',
         'ctaBottomTitle' => 'Gotowy, by nadać swojemu projektowi właściwy rytm?',
-        'ctaBottomDescription' => 'Przekonaj się, jak płynnie współpracuje część publiczna z modułem administracyjnym. Zarejestruj konto lub zaloguj się do panelu.',
+        'ctaBottomDescription' => 'Przekonaj się, jak płynnie współpracuje część publiczna z modułem administracyjnym. Zaloguj się do panelu i zobacz to w działaniu.',
         'footerCopy' => 'Punkt Startowy. Baza aplikacji internetowych.',
     ],
     'page' => [

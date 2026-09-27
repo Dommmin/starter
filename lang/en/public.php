@@ -35,7 +35,7 @@ return [
         'stackLabel' => 'Technology stack',
         'stackValue' => 'Laravel 13 + React 19',
         'ctaBottomTitle' => 'Ready to give your project the right rhythm?',
-        'ctaBottomDescription' => 'Experience how seamlessly the public website and administration module work together. Register an account or log in to the panel.',
+        'ctaBottomDescription' => 'Experience how seamlessly the public website and administration module work together. Log in to the panel to see it in action.',
         'footerCopy' => 'Punkt Startowy. Web application foundation.',
     ],
     'page' => [

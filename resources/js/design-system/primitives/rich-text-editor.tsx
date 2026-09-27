@@ -1,5 +1,7 @@
 import {
     EditorContent,
+    mergeAttributes,
+    Node,
     useEditor,
     useEditorState,
     type Editor,
@@ -11,6 +13,7 @@ import {
     Heading2,
     Heading3,
     Heading4,
+    ImagePlus,
     Italic,
     Link2,
     List,
@@ -22,6 +25,8 @@ import {
     type LucideIcon,
 } from 'lucide-react';
 import {
+    lazy,
+    Suspense,
     useEffect,
     useMemo,
     useRef,
@@ -34,36 +39,112 @@ import {
     isAllowedRichTextHref,
     type RichTextDocument,
     type RichTextFieldLabels,
+    type RichTextImagePicker,
 } from './rich-text-document';
 import { richTextFrame, richTextTypography } from './rich-text-typography';
 import { Skeleton } from './skeleton';
 import { TextField } from './text-field';
 
+const RichTextImageDialog = lazy(() =>
+    import('./rich-text-image-dialog').then((module) => ({
+        default: module.RichTextImageDialog,
+    })),
+);
+
+type MediaImageOptions = {
+    /** Resolves the editor-only preview URL of a media id. */
+    previewUrl: (mediaId: number) => string;
+};
+
+/**
+ * Block image referencing a DAM asset. Only `mediaId` and `alt` are stored;
+ * the preview `src` exists in the editor DOM only. HTML is parsed back only
+ * from `img[data-media-id]` (copy/paste inside the editor); the server
+ * accepts ids of clean DAM images only.
+ */
+const MediaImage = Node.create<MediaImageOptions>({
+    name: 'image',
+    group: 'block',
+    atom: true,
+    draggable: true,
+    selectable: true,
+
+    addOptions() {
+        return { previewUrl: () => '' };
+    },
+
+    addAttributes() {
+        return {
+            mediaId: {
+                default: null,
+                parseHTML: (element) => {
+                    const id = Number(element.getAttribute('data-media-id'));
+                    return Number.isInteger(id) && id > 0 ? id : null;
+                },
+                renderHTML: (attributes) => ({
+                    'data-media-id': String(attributes.mediaId),
+                }),
+            },
+            alt: {
+                default: '',
+                parseHTML: (element) => element.getAttribute('alt') ?? '',
+                renderHTML: (attributes) => ({
+                    alt:
+                        typeof attributes.alt === 'string'
+                            ? attributes.alt
+                            : '',
+                }),
+            },
+        };
+    },
+
+    parseHTML() {
+        return [{ tag: 'img[data-media-id]' }];
+    },
+
+    renderHTML({ node, HTMLAttributes }) {
+        const mediaId = node.attrs.mediaId as number | null;
+
+        return [
+            'img',
+            mergeAttributes(HTMLAttributes, {
+                src: mediaId ? this.options.previewUrl(mediaId) : '',
+                loading: 'lazy',
+                decoding: 'async',
+                draggable: 'false',
+            }),
+        ];
+    },
+});
+
 /**
  * Closed schema: paragraph, heading (2–4), bold, italic, strike, code,
  * bulletList, orderedList, listItem, blockquote, hardBreak, horizontalRule,
- * link. Code blocks and underline are disabled; anything else pasted into
- * the editor is dropped by the schema.
+ * link and block `image` (DAM reference). Code blocks and underline are
+ * disabled; anything else pasted into the editor is dropped by the schema.
  */
-const extensions = [
-    StarterKit.configure({
-        codeBlock: false,
-        underline: false,
-        heading: { levels: [2, 3, 4] },
-        link: {
-            openOnClick: false,
-            autolink: true,
-            linkOnPaste: true,
-            defaultProtocol: 'https',
-            protocols: ['mailto'],
-            isAllowedUri: (url) => isAllowedRichTextHref(url),
-            HTMLAttributes: {
-                rel: 'noopener noreferrer nofollow',
-                target: null,
+function createExtensions(previewUrl: (mediaId: number) => string) {
+    return [
+        StarterKit.configure({
+            codeBlock: false,
+            underline: false,
+            heading: { levels: [2, 3, 4] },
+            link: {
+                openOnClick: false,
+                autolink: true,
+                linkOnPaste: true,
+                defaultProtocol: 'https',
+                protocols: ['mailto'],
+                isAllowedUri: (url) => isAllowedRichTextHref(url),
+                HTMLAttributes: {
+                    rel: 'noopener noreferrer nofollow',
+                    target: null,
+                },
             },
-        },
-    }),
-];
+        }),
+        MediaImage.configure({ previewUrl }),
+    ];
+}
 
 const EMPTY_DOCUMENT: RichTextDocument = {
     type: 'doc',
@@ -87,7 +168,8 @@ type ToolKey =
     | 'blockquote'
     | 'horizontalRule'
     | 'link'
-    | 'unlink';
+    | 'unlink'
+    | 'image';
 
 type ToolbarItem = {
     key: ToolKey;
@@ -101,7 +183,7 @@ type ToolbarItem = {
 };
 
 type ActiveState = Record<
-    Exclude<ToolKey, 'horizontalRule' | 'unlink'>,
+    Exclude<ToolKey, 'horizontalRule' | 'unlink' | 'image'>,
     boolean
 >;
 
@@ -136,6 +218,7 @@ export type RichTextEditorProps = {
     value: RichTextDocument;
     onChange: (value: RichTextDocument) => void;
     labels: RichTextFieldLabels;
+    imagePicker?: RichTextImagePicker;
 };
 
 /**
@@ -155,13 +238,24 @@ export function RichTextEditor({
     value,
     onChange,
     labels,
+    imagePicker,
 }: RichTextEditorProps) {
     const onChangeRef = useRef(onChange);
     const lastEmittedRef = useRef<RichTextDocument | null>(null);
+    const previewUrlRef = useRef(imagePicker?.previewUrl);
 
     useEffect(() => {
         onChangeRef.current = onChange;
+        previewUrlRef.current = imagePicker?.previewUrl;
     });
+
+    const extensions = useMemo(
+        () =>
+            createExtensions(
+                (mediaId) => previewUrlRef.current?.(mediaId) ?? '',
+            ),
+        [],
+    );
 
     const editorProps = useMemo(() => {
         const attributes: Record<string, string> = {
@@ -230,6 +324,9 @@ export function RichTextEditor({
     });
 
     const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+    const [imageDialogOpen, setImageDialogOpen] = useState(false);
+    /** The picker chunk is fetched on first use and then stays mounted. */
+    const [imageDialogLoaded, setImageDialogLoaded] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
     const [linkError, setLinkError] = useState<string | undefined>();
 
@@ -371,6 +468,21 @@ export function RichTextEditor({
                         .run(),
             },
         ],
+        ...(imagePicker
+            ? [
+                  [
+                      {
+                          key: 'image' as const,
+                          icon: ImagePlus,
+                          opensDialog: true,
+                          run: () => {
+                              setImageDialogLoaded(true);
+                              setImageDialogOpen(true);
+                          },
+                      },
+                  ],
+              ]
+            : []),
     ];
 
     const toolbarDisabled = disabled || !editor;
@@ -433,7 +545,10 @@ export function RichTextEditor({
                             )}
                             {group.map((item) => {
                                 const Icon = item.icon;
-                                const itemLabel = labels[item.key];
+                                const itemLabel =
+                                    item.key === 'image'
+                                        ? (imagePicker?.labels.image ?? '')
+                                        : labels[item.key];
 
                                 return (
                                     <button
@@ -512,6 +627,26 @@ export function RichTextEditor({
                     autoComplete="url"
                 />
             </FormDialog>
+            {imagePicker && imageDialogLoaded && (
+                <Suspense fallback={null}>
+                    <RichTextImageDialog
+                        open={imageDialogOpen}
+                        onOpenChange={setImageDialogOpen}
+                        name={name}
+                        picker={imagePicker}
+                        onInsert={({ mediaId, alt }) => {
+                            editor
+                                ?.chain()
+                                .focus()
+                                .insertContent({
+                                    type: 'image',
+                                    attrs: { mediaId, alt },
+                                })
+                                .run();
+                        }}
+                    />
+                </Suspense>
+            )}
         </>
     );
 }

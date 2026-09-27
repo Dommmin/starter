@@ -13,6 +13,7 @@ import {
     type RichTextDocument,
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
+import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useTranslation } from '@/i18n';
 import { slugify } from '@/lib/slug';
 import {
@@ -281,6 +282,7 @@ export function PageForm({ editor }: PageFormProps) {
         });
     }
 
+    const imagePicker = useMediaImagePicker();
     const richTextLabels: RichTextFieldLabels = {
         toolbar: t('admin.richText.toolbar'),
         heading2: t('admin.richText.heading2'),
@@ -459,6 +461,7 @@ export function PageForm({ editor }: PageFormProps) {
                                                     'admin.pages.fields.body',
                                                 ),
                                                 labels: richTextLabels,
+                                                imagePicker,
                                             },
                                             {
                                                 type: 'select',

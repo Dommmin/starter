@@ -11,6 +11,7 @@ import {
     RichTextField,
     type RichTextDocument,
     type RichTextFieldLabels,
+    type RichTextImagePicker,
 } from './rich-text-field';
 import { SelectField, type SelectFieldOption } from './select-field';
 import { Stack } from './stack';
@@ -92,6 +93,8 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   name: KeysOfType<Values, RichTextDocument>;
                   /** Translated toolbar/link-dialog labels. */
                   labels: RichTextFieldLabels;
+                  /** Enables inserting images from the DAM picker. */
+                  imagePicker?: RichTextImagePicker;
               }
         );
 
@@ -318,6 +321,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         disabled={common.disabled}
                         required={field.required}
                         labels={field.labels}
+                        imagePicker={field.imagePicker}
                         value={values[field.name] as RichTextDocument}
                         onChange={(value) =>
                             onChange(

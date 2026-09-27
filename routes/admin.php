@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\Audit\AuditLogController;
+use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
+use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
 use App\Models\AuditLog;
+use App\Models\ContactMessage;
 use App\Models\Faq;
+use App\Models\MediaAsset;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -61,4 +65,42 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
             ->name('faqs.destroy')
             ->can('delete', 'faq');
+
+        Route::get('/media', [MediaAssetController::class, 'index'])
+            ->name('media.index')
+            ->can('viewAny', MediaAsset::class);
+        Route::get('/media/picker', [MediaAssetController::class, 'picker'])
+            ->name('media.picker')
+            ->can('viewAny', MediaAsset::class);
+        Route::post('/media', [MediaAssetController::class, 'store'])
+            ->name('media.store')
+            ->can('create', MediaAsset::class);
+        Route::get('/media/{mediaAsset}/edit', [MediaAssetController::class, 'edit'])
+            ->name('media.edit')
+            ->can('view', 'mediaAsset');
+        Route::get('/media/{mediaAsset}/download', [MediaAssetController::class, 'download'])
+            ->name('media.download')
+            ->can('view', 'mediaAsset');
+        Route::get('/media/{mediaAsset}/preview', [MediaAssetController::class, 'preview'])
+            ->name('media.preview')
+            ->can('view', 'mediaAsset');
+        Route::put('/media/{mediaAsset}', [MediaAssetController::class, 'update'])
+            ->name('media.update')
+            ->can('update', 'mediaAsset');
+        Route::delete('/media/{mediaAsset}', [MediaAssetController::class, 'destroy'])
+            ->name('media.destroy')
+            ->can('delete', 'mediaAsset');
+
+        Route::get('/contact', [ContactMessageController::class, 'index'])
+            ->name('contact.index')
+            ->can('viewAny', ContactMessage::class);
+        Route::get('/contact/{contactMessage}', [ContactMessageController::class, 'show'])
+            ->name('contact.show')
+            ->can('view', 'contactMessage');
+        Route::post('/contact/{contactMessage}/retry', [ContactMessageController::class, 'retry'])
+            ->name('contact.retry')
+            ->can('retry', 'contactMessage');
+        Route::delete('/contact/{contactMessage}', [ContactMessageController::class, 'destroy'])
+            ->name('contact.destroy')
+            ->can('delete', 'contactMessage');
     });

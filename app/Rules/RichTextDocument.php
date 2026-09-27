@@ -9,7 +9,8 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 
 /**
  * Accept only Tiptap documents that fit the closed rich text schema.
- * Unknown nodes, marks, unsafe links and oversized documents are rejected.
+ * Unknown nodes, marks, unsafe links, images that are not clean DAM images
+ * and oversized documents are rejected.
  */
 class RichTextDocument implements ValidationRule
 {
@@ -29,6 +30,7 @@ class RichTextDocument implements ValidationRule
         $fail(match ($violations[0]) {
             'too_large' => __('admin.pages.validation.bodyTooLarge'),
             'invalid_link' => __('admin.pages.validation.bodyInvalidLink'),
+            'invalid_image' => __('admin.richText.imageInvalid'),
             default => __('admin.pages.validation.bodyInvalid'),
         });
     }

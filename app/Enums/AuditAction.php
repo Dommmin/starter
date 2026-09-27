@@ -13,6 +13,11 @@ enum AuditAction: string
     case PageUnpublished = 'page.unpublished';
     case PageDeleted = 'page.deleted';
     case UserRoleChanged = 'user.role_changed';
+    case MediaUploaded = 'media.uploaded';
+    case MediaCleaned = 'media.cleaned';
+    case MediaRejected = 'media.rejected';
+    case MediaUpdated = 'media.updated';
+    case MediaDeleted = 'media.deleted';
 
     /**
      * @return list<string>

@@ -47,6 +47,16 @@ return [
             'report' => false,
         ],
 
+        // Private DAM originals (every scan status). Never linked from
+        // public/; files leave it only through the authorized download route.
+        'media' => [
+            'driver' => 'local',
+            'root' => storage_path('app/media'),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

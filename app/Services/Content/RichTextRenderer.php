@@ -2,6 +2,10 @@
 
 namespace App\Services\Content;
 
+use App\Data\Media\MediaImageData;
+use App\Models\MediaAsset;
+use App\Repositories\Media\MediaAssetRepository;
+use App\Services\Content\RichText\MediaImage;
 use Tiptap\Editor;
 use Tiptap\Marks\Bold;
 use Tiptap\Marks\Code;
@@ -23,9 +27,12 @@ use Tiptap\Nodes\Text;
  * Closed rich text schema shared by validation, storage and rendering.
  *
  * Content is stored as a Tiptap JSON document. Only the allowlisted nodes,
- * marks and attributes below survive: no images, embeds, raw HTML, inline
- * styles, classes or event handler attributes. Rendering always sanitizes
- * first, so HTML output never depends on the stored JSON being trusted.
+ * marks and attributes below survive: no embeds, raw HTML, inline styles,
+ * classes or event handler attributes. Images exist only as block `image`
+ * nodes referencing a clean DAM image (`mediaId` + `alt`); URLs are never
+ * stored and the `<picture>` markup is built from the current variants.
+ * Rendering always sanitizes first, so HTML output never depends on the
+ * stored JSON being trusted.
  */
 final class RichTextRenderer
 {
@@ -47,7 +54,19 @@ final class RichTextRenderer
         'blockquote',
         'hardBreak',
         'horizontalRule',
+        'image',
     ];
+
+    /** Nodes that may contain block content, and therefore images. */
+    public const IMAGE_PARENTS = ['doc', 'blockquote', 'listItem'];
+
+    /** Maximum number of images in one document. */
+    public const MAX_IMAGES = 100;
+
+    public const MAX_ALT_LENGTH = 500;
+
+    /** `sizes` of rich text images: the content column is at most 48rem wide. */
+    public const IMAGE_SIZES = '(min-width: 48rem) 48rem, 100vw';
 
     /** @var list<string> */
     public const MARK_TYPES = ['bold', 'italic', 'strike', 'code', 'link'];
@@ -59,6 +78,19 @@ final class RichTextRenderer
     public const LINK_SCHEMES = ['http', 'https', 'mailto'];
 
     private const MAX_HREF_LENGTH = 2048;
+
+    /**
+     * Clean images referenced by the document being processed, keyed by id.
+     *
+     * @var array<int, MediaAsset>
+     */
+    private array $images = [];
+
+    /**
+     * Without the media repository (`null`, e.g. isolated unit use) no image
+     * reference can be verified, so every image node is rejected.
+     */
+    public function __construct(private readonly ?MediaAssetRepository $media) {}
 
     /**
      * Describe why the value is not an acceptable document. An empty list
@@ -78,7 +110,8 @@ final class RichTextRenderer
         }
 
         $violations = [];
-        $this->collectViolations($document, 0, $violations);
+        $this->loadImages($document);
+        $this->collectViolations($document, 0, $violations, null);
 
         return array_values(array_unique($violations));
     }
@@ -94,10 +127,11 @@ final class RichTextRenderer
     public function sanitize(array $document): array
     {
         $content = is_array($document['content'] ?? null) ? $document['content'] : [];
+        $this->loadImages($document);
 
         return [
             'type' => 'doc',
-            'content' => $this->sanitizeChildren($content, 1),
+            'content' => $this->sanitizeChildren($content, 1, 'doc'),
         ];
     }
 
@@ -138,6 +172,9 @@ final class RichTextRenderer
                     'HTMLAttributes' => ['rel' => 'noopener noreferrer'],
                     'allowedProtocols' => self::LINK_SCHEMES,
                 ]),
+                new MediaImage([
+                    'render' => fn (object $attributes): string => $this->renderImage($attributes),
+                ]),
             ],
         ]);
 
@@ -176,7 +213,7 @@ final class RichTextRenderer
      * @param  array<mixed>  $node
      * @param  list<string>  $violations
      */
-    private function collectViolations(array $node, int $depth, array &$violations): void
+    private function collectViolations(array $node, int $depth, array &$violations, ?string $parentType): void
     {
         if ($depth > self::MAX_DEPTH) {
             $violations[] = 'too_deep';
@@ -206,6 +243,10 @@ final class RichTextRenderer
             $violations[] = 'invalid_text';
         }
 
+        if ($type === 'image' && ! $this->isValidImage($node, $parentType)) {
+            $violations[] = 'invalid_image';
+        }
+
         foreach ($this->listOrEmpty($node['marks'] ?? null, $violations) as $mark) {
             $markType = is_array($mark) ? ($mark['type'] ?? null) : null;
 
@@ -227,7 +268,7 @@ final class RichTextRenderer
                 continue;
             }
 
-            $this->collectViolations($child, $depth + 1, $violations);
+            $this->collectViolations($child, $depth + 1, $violations, $type);
         }
     }
 
@@ -254,7 +295,7 @@ final class RichTextRenderer
      * @param  array<mixed>  $children
      * @return list<array<string, mixed>>
      */
-    private function sanitizeChildren(array $children, int $depth): array
+    private function sanitizeChildren(array $children, int $depth, string $parentType): array
     {
         if ($depth > self::MAX_DEPTH) {
             return [];
@@ -267,7 +308,7 @@ final class RichTextRenderer
                 continue;
             }
 
-            $node = $this->sanitizeNode($child, $depth);
+            $node = $this->sanitizeNode($child, $depth, $parentType);
 
             if ($node !== null) {
                 $result[] = $node;
@@ -281,12 +322,25 @@ final class RichTextRenderer
      * @param  array<mixed>  $node
      * @return array<string, mixed>|null
      */
-    private function sanitizeNode(array $node, int $depth): ?array
+    private function sanitizeNode(array $node, int $depth, string $parentType): ?array
     {
         $type = $node['type'] ?? null;
 
         if (! is_string($type) || $type === 'doc' || ! in_array($type, self::NODE_TYPES, true)) {
             return null;
+        }
+
+        if ($type === 'image') {
+            if (! $this->isValidImage($node, $parentType)) {
+                return null;
+            }
+
+            $alt = $node['attrs']['alt'] ?? null;
+
+            return ['type' => 'image', 'attrs' => [
+                'mediaId' => $node['attrs']['mediaId'],
+                'alt' => is_string($alt) ? trim($alt) : '',
+            ]];
         }
 
         if ($type === 'text') {
@@ -325,7 +379,7 @@ final class RichTextRenderer
         }
 
         $content = is_array($node['content'] ?? null) ? $node['content'] : [];
-        $sanitized['content'] = $this->sanitizeChildren($content, $depth + 1);
+        $sanitized['content'] = $this->sanitizeChildren($content, $depth + 1, $type);
 
         return $sanitized;
     }
@@ -365,5 +419,118 @@ final class RichTextRenderer
         }
 
         return $result;
+    }
+
+    /**
+     * An image node is valid as a block child, with an integer `mediaId` of
+     * a clean DAM image that has variants, and an optional bounded `alt`.
+     *
+     * @param  array<mixed>  $node
+     */
+    private function isValidImage(array $node, ?string $parentType): bool
+    {
+        if (! in_array($parentType, self::IMAGE_PARENTS, true)) {
+            return false;
+        }
+
+        $attrs = $node['attrs'] ?? null;
+
+        if (! is_array($attrs)) {
+            return false;
+        }
+
+        $mediaId = $attrs['mediaId'] ?? null;
+        $alt = $attrs['alt'] ?? null;
+
+        if ($alt !== null && (! is_string($alt) || mb_strlen($alt) > self::MAX_ALT_LENGTH)) {
+            return false;
+        }
+
+        return is_int($mediaId) && isset($this->images[$mediaId]);
+    }
+
+    /**
+     * Load every referenced clean image with one query (bounded count).
+     *
+     * @param  array<mixed>  $document
+     */
+    private function loadImages(array $document): void
+    {
+        $this->images = [];
+
+        if ($this->media === null) {
+            return;
+        }
+
+        $ids = [];
+        $this->collectImageIds($document, 0, $ids);
+
+        if ($ids === []) {
+            return;
+        }
+
+        $this->images = $this->media
+            ->usableImagesByIds(array_slice(array_values(array_unique($ids)), 0, self::MAX_IMAGES))
+            ->all();
+    }
+
+    /**
+     * @param  array<mixed>  $node
+     * @param  list<int>  $ids
+     */
+    private function collectImageIds(array $node, int $depth, array &$ids): void
+    {
+        if ($depth > self::MAX_DEPTH || count($ids) >= self::MAX_IMAGES) {
+            return;
+        }
+
+        if (($node['type'] ?? null) === 'image') {
+            $mediaId = $node['attrs']['mediaId'] ?? null;
+
+            if (is_int($mediaId) && $mediaId > 0) {
+                $ids[] = $mediaId;
+            }
+
+            return;
+        }
+
+        $content = $node['content'] ?? null;
+
+        if (! is_array($content)) {
+            return;
+        }
+
+        foreach ($content as $child) {
+            if (is_array($child)) {
+                $this->collectImageIds($child, $depth + 1, $ids);
+            }
+        }
+    }
+
+    /**
+     * `<picture>` with AVIF/WebP sources and a fallback `<img>` carrying the
+     * intrinsic size, lazy loading and async decoding. Every value is escaped.
+     */
+    private function renderImage(object $attributes): string
+    {
+        $mediaId = $attributes->mediaId ?? null;
+        $asset = is_int($mediaId) ? ($this->images[$mediaId] ?? null) : null;
+        $image = $asset === null ? null : MediaImageData::fromAsset($asset);
+
+        if ($image === null) {
+            return '';
+        }
+
+        $alt = is_string($attributes->alt ?? null) ? $attributes->alt : '';
+        $sizes = e(self::IMAGE_SIZES);
+        $html = '<picture>';
+
+        foreach ($image->sources as $source) {
+            $html .= '<source type="'.e($source->type).'" srcset="'.e($source->srcset).'" sizes="'.$sizes.'">';
+        }
+
+        return $html.'<img src="'.e($image->src).'" srcset="'.e($image->srcset).'" sizes="'.$sizes.'"'
+            .' width="'.$image->width.'" height="'.$image->height.'" alt="'.e($alt).'"'
+            .' loading="lazy" decoding="async"></picture>';
     }
 }

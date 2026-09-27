@@ -2,7 +2,8 @@ import { cn } from '@/lib/utils';
 
 /**
  * Internal typography for rich text rendered from the closed Tiptap schema
- * (headings 2–4, paragraphs, lists, blockquote, inline code, links, rules).
+ * (headings 2–4, paragraphs, lists, blockquote, inline code, links, rules,
+ * DAM images).
  * Shared by `RichTextField` (editing surface) and `RichTextContent` (published
  * output) so both look the same. Not part of the public DS API.
  */
@@ -20,6 +21,8 @@ export const richTextTypography = cn(
     '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_a:hover]:no-underline',
     '[&_hr]:border-border [&_hr]:my-6',
     '[&_s]:line-through [&_strong]:font-semibold',
+    '[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_picture]:block',
+    '[&_img.ProseMirror-selectednode]:ring-ring [&_img.ProseMirror-selectednode]:ring-2',
 );
 
 /** Internal frame (border, focus ring, invalid/disabled states) of the rich text editor. */

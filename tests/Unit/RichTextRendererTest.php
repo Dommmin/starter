@@ -25,7 +25,7 @@ function linkedText(string $href, array $marks = []): array
 }
 
 test('allowlisted nodes and marks render to html', function () {
-    $html = (new RichTextRenderer)->toHtml(doc([
+    $html = (new RichTextRenderer(null))->toHtml(doc([
         ['type' => 'heading', 'attrs' => ['level' => 3], 'content' => [['type' => 'text', 'text' => 'Title']]],
         ['type' => 'paragraph', 'content' => [
             ['type' => 'text', 'text' => 'bold', 'marks' => [['type' => 'bold']]],
@@ -46,13 +46,13 @@ test('allowlisted nodes and marks render to html', function () {
 });
 
 test('links keep only an allowed href and get a safe rel', function (string $href) {
-    $html = (new RichTextRenderer)->toHtml(doc([linkedText($href)]));
+    $html = (new RichTextRenderer(null))->toHtml(doc([linkedText($href)]));
 
     expect($html)->toBe('<p><a rel="noopener noreferrer" href="'.htmlspecialchars($href).'">link</a></p>');
 })->with(['https://example.com/a?b=1', 'http://example.com', 'mailto:hello@example.com']);
 
 test('unsafe links lose the link mark', function (string $href) {
-    $renderer = new RichTextRenderer;
+    $renderer = new RichTextRenderer(null);
     $html = $renderer->toHtml(doc([linkedText($href)]));
 
     expect($html)->toBe('<p>link</p>')
@@ -60,7 +60,7 @@ test('unsafe links lose the link mark', function (string $href) {
 })->with(['javascript:alert(1)', ' JavaScript:alert(1)', 'java&#10;script:x', 'data:text/html,x', 'vbscript:x', '/relative', '//evil.example', 'https:evil', 'ftp://example.com']);
 
 test('text is escaped and unknown nodes, marks and attributes never reach the html', function () {
-    $renderer = new RichTextRenderer;
+    $renderer = new RichTextRenderer(null);
     $document = doc([
         ['type' => 'paragraph', 'attrs' => ['onclick' => 'alert(1)', 'class' => 'x', 'style' => 'color:red'], 'content' => [
             ['type' => 'text', 'text' => '<script>alert(1)</script>', 'marks' => [['type' => 'textStyle', 'attrs' => ['style' => 'x']]]],
@@ -79,7 +79,7 @@ test('text is escaped and unknown nodes, marks and attributes never reach the ht
 });
 
 test('sanitize keeps the allowed structure and drops everything else', function () {
-    $sanitized = (new RichTextRenderer)->sanitize([
+    $sanitized = (new RichTextRenderer(null))->sanitize([
         'type' => 'doc',
         'attrs' => ['x' => 1],
         'content' => [
@@ -95,7 +95,7 @@ test('sanitize keeps the allowed structure and drops everything else', function 
 });
 
 test('violations reject non documents, oversized and too deep documents', function () {
-    $renderer = new RichTextRenderer;
+    $renderer = new RichTextRenderer(null);
 
     $deep = ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'x']]];
     for ($i = 0; $i < RichTextRenderer::MAX_DEPTH + 1; $i++) {

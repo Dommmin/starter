@@ -66,3 +66,48 @@ export function isAllowedRichTextHref(href: string): boolean {
         return false;
     }
 }
+
+/** Clean DAM image offered by the rich text image picker. */
+export type RichTextImageOption = {
+    id: number;
+    name: string;
+    /** Default alternative text stored on the asset. */
+    alt: string | null;
+    thumbnailUrl: string;
+    width: number;
+    height: number;
+};
+
+/** Translated labels of the image toolbar button and picker dialog. */
+export type RichTextImageLabels = {
+    /** Toolbar button. */
+    image: string;
+    dialogTitle: string;
+    dialogDescription: string;
+    searchLabel: string;
+    searchPlaceholder: string;
+    searchClear: string;
+    listLabel: string;
+    loading: string;
+    empty: string;
+    error: string;
+    retry: string;
+    selectRequired: string;
+    altLabel: string;
+    altHint: string;
+    submit: string;
+    cancel: string;
+    close: string;
+};
+
+/**
+ * Enables inserting images from the DAM. Images are stored as
+ * `{ type: 'image', attrs: { mediaId, alt } }`; URLs are never stored.
+ */
+export type RichTextImagePicker = {
+    /** Loads clean images matching the search; rejects on failure. */
+    load: (search: string) => Promise<RichTextImageOption[]>;
+    /** Editor-only preview URL of an inserted image. */
+    previewUrl: (mediaId: number) => string;
+    labels: RichTextImageLabels;
+};

@@ -3,7 +3,9 @@ import {
     CircleHelp,
     FileText,
     History,
+    Images,
     LayoutGrid,
+    Mail,
     Settings,
     Users,
 } from 'lucide-react';
@@ -22,7 +24,9 @@ import {
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index as auditIndex } from '@/routes/admin/audit';
+import { index as contactIndex } from '@/routes/admin/contact';
 import { index as faqsIndex } from '@/routes/admin/faqs';
+import { index as mediaIndex } from '@/routes/admin/media';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as usersIndex } from '@/routes/admin/users';
 import { edit as editProfile } from '@/routes/profile';
@@ -47,6 +51,16 @@ export function AppSidebar() {
             title: t('admin.faqs.navLabel'),
             href: faqsIndex(),
             icon: CircleHelp,
+        },
+        {
+            title: t('admin.media.navLabel'),
+            href: mediaIndex(),
+            icon: Images,
+        },
+        {
+            title: t('admin.contact.navLabel'),
+            href: contactIndex(),
+            icon: Mail,
         },
         ...(auth.can.manageUsers
             ? [

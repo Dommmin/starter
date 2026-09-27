@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useId, useState } from 'react';
 import type {
     RichTextDocument,
     RichTextFieldLabels,
+    RichTextImagePicker,
 } from './rich-text-document';
 import { richTextFrame } from './rich-text-typography';
 import { Skeleton } from './skeleton';
@@ -10,6 +11,9 @@ export {
     isAllowedRichTextHref,
     type RichTextDocument,
     type RichTextFieldLabels,
+    type RichTextImageLabels,
+    type RichTextImageOption,
+    type RichTextImagePicker,
     type RichTextMark,
     type RichTextNode,
 } from './rich-text-document';
@@ -28,6 +32,11 @@ export type RichTextFieldProps = {
     onChange: (value: RichTextDocument) => void;
     /** Translated toolbar and link-dialog labels (i18n from the screen). */
     labels: RichTextFieldLabels;
+    /**
+     * Enables the image button (DAM picker). Without it existing image nodes
+     * are kept but no new image can be inserted.
+     */
+    imagePicker?: RichTextImagePicker;
     className?: never;
     style?: never;
 };
@@ -41,7 +50,8 @@ const RichTextEditor = lazy(() =>
 /**
  * Controlled rich text field backed by Tiptap v3 with a closed schema
  * (paragraph, headings 2–4, bold, italic, strike, code, lists, blockquote,
- * hard break, horizontal rule, http(s)/mailto links).
+ * hard break, horizontal rule, http(s)/mailto links, block images from the
+ * DAM picker).
  *
  * SSR and the first client render show a skeleton; the editor chunk is
  * loaded only after mount, so Tiptap never enters the SSR output or the
@@ -58,6 +68,7 @@ export function RichTextField({
     value,
     onChange,
     labels,
+    imagePicker,
 }: RichTextFieldProps) {
     const reactId = useId();
     const labelId = `${reactId}-label`;
@@ -106,6 +117,7 @@ export function RichTextField({
                         value={value}
                         onChange={onChange}
                         labels={labels}
+                        imagePicker={imagePicker}
                     />
                 </Suspense>
             ) : (

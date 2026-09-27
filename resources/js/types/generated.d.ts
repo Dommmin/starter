@@ -24,6 +24,48 @@ declare namespace App {
                     changedFields: string[];
                 };
             }
+            namespace Contact {
+                export type ContactMessageAbilitiesData = {
+                    retry: boolean;
+                    delete: boolean;
+                };
+                export type ContactMessageDetailData = {
+                    id: number;
+                    name: string;
+                    email: string;
+                    message: string;
+                    locale: string;
+                    status: App.Enums.ContactMessageStatus;
+                    attempts: number;
+                    lastError: string | null;
+                    sentAt: string | null;
+                    createdAt: string | null;
+                };
+                export type ContactMessageIndexData = {
+                    items: App.Data.Admin.Contact.ContactMessageListItemData[];
+                    pagination: App.Data.Listing.ListPaginationData;
+                    filters: App.Data.Admin.Contact.ContactMessageListFiltersData;
+                };
+                export type ContactMessageListFiltersData = {
+                    search: string;
+                    sort: 'created_at';
+                    direction: 'asc' | 'desc';
+                    status: 'all' | App.Enums.ContactMessageStatus;
+                };
+                export type ContactMessageListItemData = {
+                    id: number;
+                    name: string;
+                    email: string;
+                    locale: string;
+                    status: App.Enums.ContactMessageStatus;
+                    attempts: number;
+                    createdAt: string | null;
+                };
+                export type ContactMessageShowData = {
+                    contactMessage: App.Data.Admin.Contact.ContactMessageDetailData;
+                    can: App.Data.Admin.Contact.ContactMessageAbilitiesData;
+                };
+            }
             namespace Faqs {
                 export type FaqAbilitiesData = {
                     create: boolean;
@@ -60,6 +102,87 @@ declare namespace App {
                     published: boolean;
                     createdAt: string | null;
                     updatedAt: string | null;
+                };
+            }
+            namespace Media {
+                export type MediaAssetAbilitiesData = {
+                    create: boolean;
+                    update: boolean;
+                    delete: boolean;
+                };
+                export type MediaAssetDetailData = {
+                    id: number;
+                    updatedAt: string | null;
+                    originalName: string;
+                    mime: string;
+                    isImage: boolean;
+                    size: number;
+                    width: number | null;
+                    height: number | null;
+                    checksum: string;
+                    status: App.Enums.MediaStatus;
+                    scanError: string | null;
+                    alt: string | null;
+                    ownerName: string | null;
+                    createdAt: string | null;
+                    image: App.Data.Media.MediaImageData | null;
+                    variants: App.Data.Admin.Media.MediaVariantData[];
+                    downloadUrl: string | null;
+                };
+                export type MediaAssetEditorData = {
+                    asset: App.Data.Admin.Media.MediaAssetDetailData;
+                    can: App.Data.Admin.Media.MediaAssetAbilitiesData;
+                };
+                export type MediaAssetIndexData = {
+                    items: App.Data.Admin.Media.MediaAssetListItemData[];
+                    pagination: App.Data.Listing.ListPaginationData;
+                    filters: App.Data.Admin.Media.MediaAssetListFiltersData;
+                    can: App.Data.Admin.Media.MediaAssetAbilitiesData;
+                    upload: App.Data.Admin.Media.MediaUploadRulesData;
+                };
+                export type MediaAssetListFiltersData = {
+                    search: string;
+                    sort: 'original_name' | 'size' | 'created_at';
+                    direction: 'asc' | 'desc';
+                    status: 'all' | 'quarantine' | 'clean' | 'rejected';
+                    type: 'all' | 'image' | 'document';
+                };
+                export type MediaAssetListItemData = {
+                    id: number;
+                    originalName: string;
+                    mime: string;
+                    isImage: boolean;
+                    size: number;
+                    width: number | null;
+                    height: number | null;
+                    status: App.Enums.MediaStatus;
+                    hasScanError: boolean;
+                    alt: string | null;
+                    thumbnailUrl: string | null;
+                    createdAt: string | null;
+                };
+                export type MediaPickerData = {
+                    items: App.Data.Admin.Media.MediaPickerItemData[];
+                    pagination: App.Data.Listing.ListPaginationData;
+                };
+                export type MediaPickerItemData = {
+                    id: number;
+                    name: string;
+                    alt: string | null;
+                    thumbnailUrl: string;
+                    width: number;
+                    height: number;
+                };
+                export type MediaUploadRulesData = {
+                    maxBytes: number;
+                    extensions: string[];
+                };
+                export type MediaVariantData = {
+                    format: string;
+                    width: number;
+                    height: number;
+                    size: number;
+                    url: string;
                 };
             }
             namespace Pages {
@@ -114,6 +237,11 @@ declare namespace App {
                 };
             }
         }
+        namespace Contact {
+            export type ContactFormData = {
+                token: string;
+            };
+        }
         namespace Content {
             export type ContentLocaleData = {
                 code: string;
@@ -133,6 +261,9 @@ declare namespace App {
                 publishedAt: string | null;
                 alternates: Record<string, string>;
             };
+            export type WelcomePageData = {
+                contactForm: App.Data.Contact.ContactFormData;
+            };
         }
         namespace Errors {
             export type ErrorPageData = {
@@ -145,6 +276,19 @@ declare namespace App {
                 totalPages: number;
                 total: number;
                 perPage: number;
+            };
+        }
+        namespace Media {
+            export type MediaImageData = {
+                sources: App.Data.Media.MediaImageSourceData[];
+                src: string;
+                srcset: string;
+                width: number;
+                height: number;
+            };
+            export type MediaImageSourceData = {
+                type: string;
+                srcset: string;
             };
         }
         namespace Seo {
@@ -168,7 +312,14 @@ declare namespace App {
             | 'page.published'
             | 'page.unpublished'
             | 'page.deleted'
-            | 'user.role_changed';
+            | 'user.role_changed'
+            | 'media.uploaded'
+            | 'media.cleaned'
+            | 'media.rejected'
+            | 'media.updated'
+            | 'media.deleted';
+        export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
+        export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type PublicationStatus = 'draft' | 'published';
         export type UserRole = 'admin' | 'editor';
     }

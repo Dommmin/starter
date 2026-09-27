@@ -10,6 +10,8 @@ import {
     type RichTextDocument,
     type RichTextFieldLabels,
     type RichTextFieldProps,
+    type RichTextImageLabels,
+    type RichTextImagePicker,
 } from './rich-text-field';
 
 vi.mock('@inertiajs/react', () => ({
@@ -437,5 +439,166 @@ describe('ResourceForm richText field', () => {
             container.querySelector<HTMLInputElement>('input[name="body"]')
                 ?.value,
         ).toBe(JSON.stringify(helloDocument));
+    });
+});
+
+describe('RichTextField image picker', () => {
+    const imageLabels: RichTextImageLabels = {
+        image: 'Insert image',
+        dialogTitle: 'Insert image',
+        dialogDescription: 'Clean images only',
+        searchLabel: 'Search images',
+        searchPlaceholder: 'Name',
+        searchClear: 'Clear',
+        listLabel: 'Available images',
+        loading: 'Loading images',
+        empty: 'No images',
+        error: 'Could not load images',
+        retry: 'Retry',
+        selectRequired: 'Select an image.',
+        altLabel: 'Alternative text',
+        altHint: 'Describe it',
+        submit: 'Insert',
+        cancel: 'Cancel',
+        close: 'Close',
+    };
+
+    function picker(
+        load: RichTextImagePicker['load'] = async () => [
+            {
+                id: 7,
+                name: 'red.jpg',
+                alt: 'A red square',
+                thumbnailUrl: '/storage/media/u/red-320.jpg',
+                width: 640,
+                height: 360,
+            },
+        ],
+    ): RichTextImagePicker {
+        return {
+            load: vi.fn(load),
+            previewUrl: (mediaId) => `/admin/media/${mediaId}/preview`,
+            labels: imageLabels,
+        };
+    }
+
+    async function waitForDialogGrid(): Promise<HTMLElement> {
+        for (let attempt = 0; attempt < 100; attempt++) {
+            const dialog =
+                document.querySelector<HTMLElement>('[role="dialog"]');
+
+            if (dialog?.querySelector('input[type="radio"]')) {
+                return dialog;
+            }
+
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+            });
+        }
+
+        throw new Error('Image picker did not render.');
+    }
+
+    it('shows the image button only with a picker', async () => {
+        const container = await render(<RichTextField {...props()} />);
+
+        expect(button(container, 'Insert image')).toBeNull();
+    });
+
+    it('inserts a DAM reference with alt text and previews it in the editor', async () => {
+        const onChange = vi.fn();
+        const imagePicker = picker();
+        const container = await render(
+            <RichTextField {...props({ onChange, imagePicker })} />,
+        );
+
+        const trigger = button(container, 'Insert image');
+        expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+
+        await act(async () => trigger.click());
+        let dialog = await waitForDialogGrid();
+        expect(imagePicker.load).toHaveBeenCalledWith('');
+
+        await act(async () => {
+            dialog.querySelector('form')!.requestSubmit();
+        });
+        expect(dialog.textContent).toContain('Select an image.');
+
+        await act(async () => {
+            dialog
+                .querySelector<HTMLInputElement>('input[type="radio"]')!
+                .click();
+        });
+        dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+        const alt = Array.from(
+            dialog.querySelectorAll<HTMLInputElement>('input'),
+        ).find((input) => input.name === 'body-image-alt')!;
+        expect(alt.value).toBe('A red square');
+
+        await act(async () => {
+            dialog.querySelector('form')!.requestSubmit();
+        });
+
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+        const inserted = JSON.stringify(onChange.mock.lastCall?.[0]);
+        expect(inserted).toContain(
+            '{"type":"image","attrs":{"mediaId":7,"alt":"A red square"}}',
+        );
+        expect(inserted).not.toContain('src');
+
+        const preview = editorSurface(container).querySelector('img')!;
+        expect(preview.getAttribute('src')).toBe('/admin/media/7/preview');
+        expect(preview.getAttribute('data-media-id')).toBe('7');
+        expect(preview.getAttribute('alt')).toBe('A red square');
+    });
+
+    it('keeps only the media id and alt of pasted DAM images', async () => {
+        const container = await render(
+            <RichTextField {...props({ imagePicker: picker() })} />,
+        );
+        const editor = editorOf(container);
+
+        await act(async () => {
+            editor.commands.setContent(
+                '<img data-media-id="3" alt="Kept" src="https://evil.test/x.png" onerror="alert(1)"><img src="https://evil.test/y.png">',
+            );
+        });
+
+        const images = (editor.getJSON().content ?? []).filter(
+            (node) => node.type === 'image',
+        );
+        expect(images).toEqual([
+            { type: 'image', attrs: { mediaId: 3, alt: 'Kept' } },
+        ]);
+    });
+
+    it('offers a retry when images cannot be loaded', async () => {
+        const imagePicker = picker(async () => {
+            throw new Error('offline');
+        });
+        const container = await render(
+            <RichTextField {...props({ imagePicker })} />,
+        );
+
+        await act(async () => button(container, 'Insert image').click());
+
+        for (let attempt = 0; attempt < 50; attempt++) {
+            if (document.body.textContent?.includes('Could not load images')) {
+                break;
+            }
+
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+            });
+        }
+
+        expect(document.body.textContent).toContain('Could not load images');
+        const retry = Array.from(
+            document.querySelectorAll<HTMLButtonElement>(
+                '[role="dialog"] button',
+            ),
+        ).find((candidate) => candidate.textContent === 'Retry')!;
+        await act(async () => retry.click());
+        expect(imagePicker.load).toHaveBeenCalledTimes(2);
     });
 });

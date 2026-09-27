@@ -34,6 +34,17 @@ export default defineConfig({
                     // formats into one `src` list.
                     preload: false,
                 }),
+                // Admin surface only (`--admin-font-*`); faces load on first use.
+                bunny('Geist', {
+                    weights: [400, 500, 600],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: false,
+                }),
+                bunny('Geist Mono', {
+                    weights: [400, 500],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: false,
+                }),
             ],
         }),
         inertia(),

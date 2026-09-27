@@ -99,6 +99,10 @@ export default defineConfig({
             typeAware: true,
         },
     },
+    test: {
+        // Playwright specs run through `make e2e`, never under vitest.
+        exclude: ['**/node_modules/**', 'tests/e2e/**'],
+    },
     fmt: {
         printWidth: 80,
         tabWidth: 4,

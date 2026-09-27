@@ -123,3 +123,41 @@ jobs:
         run: npm run check:budget
       - name: Run quality checks
         run: composer ci:check
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Same Docker/Makefile runtime as locally, configured only from the
+      # committed .env.example (no secrets). ClamAV and the Vite dev server are
+      # never started: `make e2e` brings up web + queue (and their
+      # dependencies) and serves the production build with the SSR server.
+      - name: Prepare environment from example
+        run: cp .env.example .env
+      - name: Build runtime image and install locked dependencies
+        run: |
+          docker compose build app
+          make deps
+      - name: Start database services and migrate
+        run: |
+          docker compose up -d --wait postgres redis mailpit
+          docker compose run --rm --no-deps app sh -ec 'php artisan key:generate --no-interaction; php artisan migrate --no-interaction; php artisan storage:link --no-interaction'
+      - name: Run browser E2E journeys and web vitals
+        run: make e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+      - name: Stop stack
+        if: always()
+        run: docker compose --profile e2e down --volumes --remove-orphans

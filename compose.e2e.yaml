@@ -1,0 +1,13 @@
+# Override used only by `make e2e` (docker compose -f compose.yaml -f
+# compose.e2e.yaml). The web app runs as APP_ENV=e2e: in `local`
+# User::isAdmin() and canAccessAdminPanel() grant every account full access,
+# so role journeys (editor without audit/users) need a non-local environment.
+# TrustHosts is active outside local, hence APP_URL is the host the
+# Playwright container uses. Queue workers keep APP_ENV=local (Horizon has
+# supervisors only for configured environments); database, cache and .env
+# are the local ones. `make e2e` switches app back to local afterwards.
+services:
+    app:
+        environment:
+            APP_ENV: e2e
+            APP_URL: http://web

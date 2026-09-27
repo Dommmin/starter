@@ -9,6 +9,7 @@ x-runtime: &runtime
         LOCAL_UID: ${LOCAL_UID:-1000}
         LOCAL_GID: ${LOCAL_GID:-1000}
         DOCKER_LOCAL: '1'
+        CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
         APP_PORT: ${APP_PORT:-8080}
         VITE_PORT: ${VITE_PORT:-5173}
     volumes:
@@ -114,6 +115,27 @@ services:
             timeout: 3s
             retries: 20
 
+    # Malware scanner for DAM uploads (clamd over TCP 3310 inside the compose
+    # network only; no host port). The first start downloads signatures into
+    # the clamav volume, so the service may need a few minutes to turn
+    # healthy. Tests use a fake scanner and never depend on it.
+    clamav:
+        image: clamav/clamav:1.5.4-debian
+        environment:
+            CLAMAV_NO_MILTERD: 'true'
+            # Accept the 50 MB DAM limit over INSTREAM (default is 25 MB).
+            CLAMD_CONF_StreamMaxLength: 52M
+            CLAMD_CONF_MaxFileSize: 52M
+            CLAMD_CONF_MaxScanSize: 200M
+        volumes:
+            - clamav:/var/lib/clamav
+        healthcheck:
+            test: [CMD, clamdcheck.sh]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 10m
+
     mailpit:
         image: axllent/mailpit:v1.27
         ports:
@@ -126,3 +148,4 @@ volumes:
     bootstrap_cache:
     postgres:
     redis:
+    clamav:

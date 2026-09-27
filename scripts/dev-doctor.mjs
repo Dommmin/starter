@@ -60,8 +60,15 @@ check('Node 24', 'node', [
 check('PHP 8.5 i rozszerzenia', 'php', [
     '-r',
     `
-    $required = ['pdo_pgsql', 'pdo_sqlite', 'redis', 'intl', 'mbstring', 'zip', 'pcntl'];
+    $required = ['pdo_pgsql', 'pdo_sqlite', 'redis', 'intl', 'mbstring', 'zip', 'pcntl', 'gd', 'exif', 'fileinfo'];
     exit(str_starts_with(PHP_VERSION, '8.5.') && !array_diff($required, get_loaded_extensions()) ? 0 : 1);
+`,
+]);
+check('GD: JPEG, PNG, WebP i AVIF (warianty DAM)', 'php', [
+    '-r',
+    `
+    $gd = gd_info();
+    exit($gd['JPEG Support'] && $gd['PNG Support'] && $gd['WebP Support'] && ($gd['AVIF Support'] ?? false) ? 0 : 1);
 `,
 ]);
 check('Zależności PHP', 'composer', ['check-platform-reqs']);
@@ -80,6 +87,17 @@ check('Redis i lokalny SMTP', 'php', [
     Illuminate\\Support\\Facades\\Redis::connection()->ping();
     $smtp = @fsockopen('mailpit', 1025, $code, $message, 5);
     exit($smtp ? 0 : 1);
+`,
+]);
+check('ClamAV clamd (PING/PONG)', 'php', [
+    '-r',
+    `
+    $socket = @fsockopen(getenv('CLAMAV_HOST') ?: 'clamav', (int) (getenv('CLAMAV_PORT') ?: 3310), $code, $message, 5);
+    if ($socket === false) { exit(1); }
+    stream_set_timeout($socket, 5);
+    fwrite($socket, "zPING\\0");
+    $reply = (string) fread($socket, 16);
+    exit(trim($reply, "\\0\\n") === 'PONG' ? 0 : 1);
 `,
 ]);
 check('HTTP Laravel', 'curl', [

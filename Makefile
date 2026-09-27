@@ -94,7 +94,7 @@ e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymu
 	@E2E_PASSWORD="$${E2E_PASSWORD:-$$(od -An -tx1 -N18 /dev/urandom | tr -d ' \n')}"; export E2E_PASSWORD; \
 	$(COMPOSE) run --rm --no-deps -e E2E_PASSWORD app php artisan app:e2e-prepare --client-host=playwright --no-interaction \
 	&& $(E2E_COMPOSE) exec -T -e E2E_PASSWORD playwright npx playwright test $(ARGS); \
-	status=$$?; $(E2E_COMPOSE) stop ssr playwright; \
+	status=$$?; $(E2E_COMPOSE) rm --stop --force ssr playwright; \
 	$(COMPOSE) up -d --wait --wait-timeout 180 web queue; \
 	echo 'Usługi wróciły do APP_ENV=local; serwer Vite dev pozostaje zatrzymany (`make up`).'; exit $$status
 

@@ -41,4 +41,25 @@ return [
     'page' => [
         'publishedOn' => 'Published :date',
     ],
+    'contact' => [
+        'title' => 'Contact us',
+        'description' => 'Send us a message and we will get back to you by email.',
+        'fields' => [
+            'name' => 'Name',
+            'email' => 'Email',
+            'message' => 'Message',
+        ],
+        'honeypotLabel' => 'Leave this field empty',
+        'submit' => 'Send message',
+        'errorSummaryTitle' => 'Please correct the following fields',
+        'success' => 'Thank you, your message has been received.',
+        'successTitle' => 'Message received',
+        'successDescription' => 'Thank you for getting in touch. We will reply to the email address you provided.',
+        'tooManyAttempts' => 'Too many messages were sent in a short time. Please try again later.',
+        'genericError' => 'The message could not be sent. Please try again.',
+        'errors' => [
+            'invalidCharacters' => 'This field contains characters that are not allowed.',
+            'formExpired' => 'This form has expired. Please reload the page and try again.',
+        ],
+    ],
 ];

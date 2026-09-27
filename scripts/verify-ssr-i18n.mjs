@@ -25,6 +25,7 @@ async function runSsrVerification() {
             name: 'Starter',
             auth: { user: null },
             seo,
+            contactForm: { token: 'ssr-fixture-token' },
             i18n: {
                 area: 'public',
                 locale,

@@ -158,4 +158,62 @@ describe('ContactSection', () => {
         expect(container.querySelector('form')).toBeNull();
         expect(container.textContent).toContain('Thanks, we will reply soon.');
     });
+
+    it('renders a form-level error as an alert', async () => {
+        const container = await render(
+            <ContactSection
+                title="Get in touch"
+                labels={{ name: 'Name', email: 'Email', message: 'Message' }}
+                errorSummaryTitle="Please fix the following"
+                values={{
+                    name: 'Ada',
+                    email: 'ada@example.com',
+                    message: 'Hi',
+                }}
+                onChange={vi.fn()}
+                onSubmit={vi.fn()}
+                formError="Too many messages. Try again later."
+                submitLabel="Send"
+            />,
+        );
+
+        const alert = container.querySelector('[role="alert"]');
+        expect(alert?.textContent).toContain(
+            'Too many messages. Try again later.',
+        );
+    });
+
+    it('hides the spam trap from people and assistive technology', async () => {
+        const onSpamChange = vi.fn();
+        const container = await render(
+            <ContactSection
+                title="Get in touch"
+                labels={{ name: 'Name', email: 'Email', message: 'Message' }}
+                errorSummaryTitle="Please fix the following"
+                values={{ name: '', email: '', message: '' }}
+                onChange={vi.fn()}
+                onSubmit={vi.fn()}
+                spamTrap={{
+                    name: 'website',
+                    label: 'Leave this field empty',
+                    value: '',
+                    onChange: onSpamChange,
+                }}
+                submitLabel="Send"
+            />,
+        );
+
+        const trap = container.querySelector<HTMLInputElement>(
+            'input[name="website"]',
+        );
+        expect(trap).not.toBeNull();
+        expect(trap?.tabIndex).toBe(-1);
+        expect(trap?.getAttribute('autocomplete')).toBe('off');
+        expect(trap?.closest('[aria-hidden="true"]')).not.toBeNull();
+        expect(
+            container
+                .querySelector('input[name="name"]')
+                ?.getAttribute('autocomplete'),
+        ).toBe('name');
+    });
 });

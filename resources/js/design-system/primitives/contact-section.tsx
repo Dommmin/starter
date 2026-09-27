@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { Alert } from './alert';
 import { Button } from './button';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { Heading } from './heading';
@@ -24,6 +25,17 @@ export type ContactSectionLabels = {
     message: string;
 };
 
+/**
+ * Honeypot field for spam bots: rendered off-screen, hidden from assistive
+ * technology and removed from the tab order. People never fill it in.
+ */
+export type ContactSectionSpamTrap = {
+    name: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+};
+
 export type ContactSectionProps = {
     title: string;
     description?: string;
@@ -35,6 +47,9 @@ export type ContactSectionProps = {
     /** The caller owns the actual submission request; no backend contract is assumed. */
     onSubmit: () => void;
     errors?: ContactSectionErrors;
+    /** Form-level error not tied to a field (e.g. rate limit, expired form). */
+    formError?: string;
+    spamTrap?: ContactSectionSpamTrap;
     submitLabel: string;
     isPending?: boolean;
     /** Rendered instead of the form after a successful submission. */
@@ -50,6 +65,8 @@ export function ContactSection({
     onChange,
     onSubmit,
     errors = {},
+    formError,
+    spamTrap,
     submitLabel,
     isPending = false,
     success,
@@ -107,6 +124,7 @@ export function ContactSection({
                         className="flex flex-col gap-4"
                         noValidate
                     >
+                        {formError && <Alert title={formError} tone="danger" />}
                         <ErrorSummary
                             title={errorSummaryTitle}
                             items={summaryItems}
@@ -118,6 +136,7 @@ export function ContactSection({
                             value={values.name}
                             onChange={(name) => onChange({ ...values, name })}
                             error={errors.name}
+                            autoComplete="name"
                             disabled={isPending}
                             required
                         />
@@ -129,6 +148,7 @@ export function ContactSection({
                             value={values.email}
                             onChange={(email) => onChange({ ...values, email })}
                             error={errors.email}
+                            autoComplete="email"
                             disabled={isPending}
                             required
                         />
@@ -144,6 +164,24 @@ export function ContactSection({
                             disabled={isPending}
                             required
                         />
+                        {spamTrap && (
+                            <div aria-hidden="true" className="sr-only">
+                                <label htmlFor={`${reactId}-${spamTrap.name}`}>
+                                    {spamTrap.label}
+                                </label>
+                                <input
+                                    id={`${reactId}-${spamTrap.name}`}
+                                    type="text"
+                                    name={spamTrap.name}
+                                    value={spamTrap.value}
+                                    onChange={(event) =>
+                                        spamTrap.onChange(event.target.value)
+                                    }
+                                    tabIndex={-1}
+                                    autoComplete="off"
+                                />
+                            </div>
+                        )}
                         <Button type="submit" isPending={isPending}>
                             {submitLabel}
                         </Button>

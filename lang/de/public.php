@@ -41,4 +41,25 @@ return [
     'page' => [
         'publishedOn' => 'Veröffentlicht am :date',
     ],
+    'contact' => [
+        'title' => 'Kontakt',
+        'description' => 'Senden Sie uns eine Nachricht, wir antworten Ihnen per E-Mail.',
+        'fields' => [
+            'name' => 'Name',
+            'email' => 'E-Mail',
+            'message' => 'Nachricht',
+        ],
+        'honeypotLabel' => 'Dieses Feld leer lassen',
+        'submit' => 'Nachricht senden',
+        'errorSummaryTitle' => 'Bitte korrigieren Sie die folgenden Felder',
+        'success' => 'Vielen Dank, Ihre Nachricht ist eingegangen.',
+        'successTitle' => 'Nachricht eingegangen',
+        'successDescription' => 'Vielen Dank für Ihre Nachricht. Wir antworten an die angegebene E-Mail-Adresse.',
+        'tooManyAttempts' => 'In kurzer Zeit wurden zu viele Nachrichten gesendet. Bitte versuchen Sie es später erneut.',
+        'genericError' => 'Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.',
+        'errors' => [
+            'invalidCharacters' => 'Dieses Feld enthält unzulässige Zeichen.',
+            'formExpired' => 'Das Formular ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut.',
+        ],
+    ],
 ];

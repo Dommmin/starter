@@ -12,3 +12,13 @@ Schedule::command('audit:prune')
     ->daily()
     ->onOneServer()
     ->withoutOverlapping();
+
+Schedule::command('contact:retry-failed')
+    ->everyFifteenMinutes()
+    ->onOneServer()
+    ->withoutOverlapping();
+
+Schedule::command('contact:prune')
+    ->daily()
+    ->onOneServer()
+    ->withoutOverlapping();

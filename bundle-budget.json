@@ -1,7 +1,9 @@
 {
     "description": "Regresyjny budżet gzip (KB) krytycznej ścieżki stron publicznych; progi = pomiar z 2026-09-27 + ok. 10%. Cel docelowy z docs/foundation/05: ≤100 KB JS strony publicznej. Podniesienie progu wymaga uzasadnienia i review.",
     "entry": "resources/js/app.tsx",
-    "css": ["resources/css/app.css"],
+    "css": [
+        "resources/css/app.css"
+    ],
     "publicPages": [
         "resources/js/pages/welcome.tsx",
         "resources/js/pages/pages/show.tsx"
@@ -10,8 +12,11 @@
     "limits": {
         "entryJsGzipKb": 202,
         "cssGzipKb": 22,
-        "pageJsGzipKb": 35,
+        "pageJsGzipKb": 40,
         "publicPageTotalJsGzipKb": 236,
         "largestChunkGzipKb": 125
-    }
+    },
+    "changelog": [
+        "2026-09-27: pageJsGzipKb 35→40 — welcome zawiera działający formularz kontaktowy (~4 KB gzip: ContactSection, ErrorSummary, TextareaField, Alert, useForm). Limit łączny JS strony publicznej bez zmian (236 KB); zatwierdził właściciel („wszystko po kolei”)."
+    ]
 }

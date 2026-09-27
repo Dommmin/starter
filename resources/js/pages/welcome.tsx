@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { Accessibility, ArrowRight, Lock, Palette, Zap } from 'lucide-react';
+import { ContactForm } from '@/components/contact-form';
 import {
     Button,
     CTA,
@@ -18,10 +19,12 @@ import { useTranslation } from '@/i18n';
 import { login, register } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
 
+type WelcomeProps = App.Data.Content.WelcomePageData;
+
 export default function Welcome() {
     const { t, locale } = useTranslation();
-    const page = usePage();
-    const { auth, seo } = page.props;
+    const page = usePage<WelcomeProps>();
+    const { auth, seo, contactForm } = page.props;
     const alternateUrls =
         (page.props as { i18n?: { alternateUrls?: Record<string, string> } })
             .i18n?.alternateUrls ?? {};
@@ -230,6 +233,8 @@ export default function Welcome() {
                         </Grid>
                     </Surface>
                 </Section>
+
+                <ContactForm contactForm={contactForm} />
 
                 <CTA
                     title={t('landing.ctaBottomTitle')}

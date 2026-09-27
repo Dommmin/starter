@@ -41,4 +41,25 @@ return [
     'page' => [
         'publishedOn' => 'Opublikowano :date',
     ],
+    'contact' => [
+        'title' => 'Skontaktuj się z nami',
+        'description' => 'Wyślij wiadomość, a odpowiemy na podany adres e-mail.',
+        'fields' => [
+            'name' => 'Imię i nazwisko',
+            'email' => 'E-mail',
+            'message' => 'Wiadomość',
+        ],
+        'honeypotLabel' => 'Pozostaw to pole puste',
+        'submit' => 'Wyślij wiadomość',
+        'errorSummaryTitle' => 'Popraw następujące pola',
+        'success' => 'Dziękujemy, otrzymaliśmy Twoją wiadomość.',
+        'successTitle' => 'Wiadomość przyjęta',
+        'successDescription' => 'Dziękujemy za kontakt. Odpowiemy na podany adres e-mail.',
+        'tooManyAttempts' => 'Wysłano zbyt wiele wiadomości w krótkim czasie. Spróbuj ponownie później.',
+        'genericError' => 'Nie udało się wysłać wiadomości. Spróbuj ponownie.',
+        'errors' => [
+            'invalidCharacters' => 'To pole zawiera niedozwolone znaki.',
+            'formExpired' => 'Formularz wygasł. Odśwież stronę i spróbuj ponownie.',
+        ],
+    ],
 ];

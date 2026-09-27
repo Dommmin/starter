@@ -4,12 +4,13 @@ SHELL := /bin/sh
 export LOCAL_UID := $(shell id -u)
 export LOCAL_GID := $(shell id -g)
 COMPOSE := docker compose
+E2E_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.e2e.yaml --profile e2e
 RUN := $(COMPOSE) run --rm --no-deps app
 ARGS ?=
 SERVICE ?=
 TEST_PROCESSES ?= 4
 
-.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup check assets artisan composer npm shell db config
+.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup check assets artisan composer npm shell db config backup restore-drill e2e
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -85,6 +86,18 @@ assets: ## Zbuduj assety klienta i SSR
 	@rm -f public/hot
 	$(RUN) npm run build:ssr
 
+e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymuje Vite); ARGS='--grep nazwa'
+	$(COMPOSE) stop vite
+	@rm -f public/hot
+	$(RUN) npm run build:ssr
+	$(E2E_COMPOSE) up -d --wait --wait-timeout 180 web queue ssr playwright
+	@E2E_PASSWORD="$${E2E_PASSWORD:-$$(od -An -tx1 -N18 /dev/urandom | tr -d ' \n')}"; export E2E_PASSWORD; \
+	$(COMPOSE) run --rm --no-deps -e E2E_PASSWORD app php artisan app:e2e-prepare --client-host=playwright --no-interaction \
+	&& $(E2E_COMPOSE) exec -T -e E2E_PASSWORD playwright npx playwright test $(ARGS); \
+	status=$$?; $(E2E_COMPOSE) stop ssr playwright; \
+	$(COMPOSE) up -d --wait --wait-timeout 180 web queue; \
+	echo 'Usługi wróciły do APP_ENV=local; serwer Vite dev pozostaje zatrzymany (`make up`).'; exit $$status
+
 artisan: ## Artisan, np. ARGS='migrate:status'
 	$(RUN) php artisan $(ARGS)
 
@@ -102,3 +115,10 @@ db: ## Konsola PostgreSQL (bez publikowania portu DB)
 
 config: env ## Sprawdź poprawność Compose bez wypisywania sekretów
 	$(COMPOSE) config --quiet
+
+backup: env ## Lokalny backup DB + storage do ./.backups (manifest SHA-256, rotacja BACKUP_KEEP)
+	@mkdir -p .backups
+	$(COMPOSE) --profile ops run --rm backup /opt/backup/backup.sh
+
+restore-drill: env ## Próba odtworzenia ostatniego backupu do tymczasowej bazy (weryfikacja + czas)
+	$(COMPOSE) --profile ops run --rm backup /opt/backup/restore.sh --drill $(ARGS)

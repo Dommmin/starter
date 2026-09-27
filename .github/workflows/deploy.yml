@@ -95,6 +95,9 @@ jobs:
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       DEPLOY_ARTIFACT: .release/starter.tar.gz
       DEPLOY_ALLOW_MIGRATIONS: ${{ inputs.allow_migrations }}
+      # Public host of APP_URL; the post-switch readiness smoke pins it to the
+      # local Nginx (curl --resolve). Set as a GitHub Environment variable.
+      DEPLOY_SMOKE_HOST: ${{ vars.DEPLOY_SMOKE_HOST }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
     steps:

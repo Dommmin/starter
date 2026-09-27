@@ -28,3 +28,7 @@ yarn-error.log
 /.vscode
 /.zed
 .superpowers
+/.backups
+/playwright-report
+/test-results
+/blob-report

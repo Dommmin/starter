@@ -18,7 +18,7 @@ Status: proponowany. P0: logi JSON, error alert, zewnętrzny uptime, heartbeat q
 
 ## Lokalne środowisko i artefakt
 
-Lokalny development: Docker Compose i Makefile, PHP 8.5 CLI/FPM, Nginx, PostgreSQL 18, Redis, queue:work, scheduler, Node 24 oraz Mailpit. Zaimplementowany workflow opisuje [README](../../README.md), a decyzję [ADR-021](10-local-environment-deployment-and-logs.md). Horizon pozostaje planowaną paczką.
+Lokalny development: Docker Compose i Makefile, PHP 8.5 CLI/FPM, Nginx, PostgreSQL 18, Redis, Horizon, scheduler, Node 24 oraz Mailpit. Zaimplementowany workflow opisuje [README](../../README.md), a decyzję [ADR-021](10-local-environment-deployment-and-logs.md).
 
 Artefakt P0 to archiwum o zweryfikowanej sumie SHA-256 z kodem/vendor/bundle klienta i SSR, zbudowane przez CI na zgodnym Linux/CPU. Ten sam artefakt trafia na staging i produkcję; config cache powstaje na hoście w nowym katalogu release’u. Bez sekretów w archiwum, bez ponownego rozwiązywania zależności na produkcji. Natywne usługi mają ograniczone konta i prawa; zapis tylko do wymaganych katalogów. Aktualizacje runtime wymagają osobnej kwalifikacji.
 
@@ -49,11 +49,15 @@ Rollback aplikacji w oknie deployu wykonuje automatycznie zatwierdzona recepta, 
 
 ## Backup i disaster recovery
 
+Stan 2026-09-27: skrypty `scripts/backup/{backup,restore}.sh`, `make backup`/`make restore-drill`, unit i timer systemd oraz lokalna próba odtworzenia są w repo ([10 — Stan P0-C](10-local-environment-deployment-and-logs.md#stan-p0-c-co-jest-w-repo-a-co-wymaga-operatora)). Kopia poza hostem, klucze szyfrowania, retencja 30 dni i drill na danych docelowego rozmiaru wymagają operatora.
+
 P0 propozycja do akceptacji: RPO ≤24 h, RTO ≤4 h dla strony firmowej. Aplikacja transakcyjna może wymagać PITR i niższego RPO przed pierwszym klientem. Codzienna kopia DB oraz mediów, szyfrowana, poza hostem i najlepiej poza tożsamością produkcyjnego runtime; retention roboczo 30 dni, alarm po nieudanym backupie lub przekroczeniu wieku 26 h. Konfiguracja infrastruktury i dostęp do kluczy uwzględnione w runbooku.
 
 Przed produkcją odtworzyć kopię do izolowanej bazy/storage: sprawdzić liczby rekordów, integralność, login testowy i stronę; zmierzyć czas. P1 miesięczny restore drill, P0 ponowić po zmianie sposobu backupu. Odtwarzanie nie wysyła prawdziwych maili/webhooków. Operator musi odzyskać dane również przy niedziałającym Laravel/schedulerze — dlatego preferowany backup infrastruktury nad samą paczką w aplikacji.
 
 ## Obserwowalność i reakcja
+
+Stan 2026-09-27: w repo są logi JSON z service/environment/release/request ID, `/health/ready` (krytyczne DB/Redis/storage, tła Horizon/heartbeat schedulera/clamd), alerty `ops.*` (failed job, long wait, backup, deploy, awaria unitu) z opcjonalnym mailem `OPS_ALERT_EMAIL` oraz readiness z jednorazowym rollbackiem w recepcie. Zewnętrzny uptime, kanał powiadomień (Q7), monitor journal i dead-man heartbeat wymagają operatora — szczegóły w [10](10-local-environment-deployment-and-logs.md#stan-p0-c-co-jest-w-repo-a-co-wymaga-operatora).
 
 Szczegółowy kontrakt zbierania, redakcji, rotacji, archiwizacji poza hostem i widoku administratora: [ADR-023](10-local-environment-deployment-and-logs.md). P0: pliki JSON + journal, osobny audit i ograniczona projekcja zdarzeń w panelu. Operator ma pełną diagnostykę; administrator bez surowych plików i stack trace. Archiwizacja co godzinę nie zastępuje natychmiastowych alarmów i zewnętrznego uptime.
 

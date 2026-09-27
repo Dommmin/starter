@@ -1,0 +1,28 @@
+# Horizon master supervisor (/etc/systemd/system/starter-horizon.service).
+# `php artisan horizon:terminate` (deploy:restart_workers) lets running jobs
+# finish and exits; systemd restarts it from the new `current` release.
+# Timeout chain: job <= 80 s < supervisor 85 s < retry_after 90 s < stop 100 s.
+[Unit]
+Description=starter Horizon queue workers
+After=network-online.target redis-server.service postgresql.service
+Wants=network-online.target
+OnFailure=starter-alert@%n.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/starter/current
+Environment=LOG_SERVICE=horizon
+ExecStart=/usr/bin/php /var/www/starter/current/artisan horizon
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=100
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

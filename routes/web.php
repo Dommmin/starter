@@ -3,6 +3,7 @@
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__.'/health.php';
 require __DIR__.'/seo.php';
 require __DIR__.'/front.php';
 require __DIR__.'/auth.php';

@@ -319,6 +319,8 @@ declare namespace App {
             | 'media.updated'
             | 'media.deleted';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
+        export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
+        export type HealthStatus = 'ok' | 'degraded' | 'fail';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type PublicationStatus = 'draft' | 'published';
         export type UserRole = 'admin' | 'editor';

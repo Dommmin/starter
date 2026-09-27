@@ -100,12 +100,24 @@ check('ClamAV clamd (PING/PONG)', 'php', [
     exit(trim($reply, "\\0\\n") === 'PONG' ? 0 : 1);
 `,
 ]);
+check('Horizon (kolejka)', 'php', [
+    'artisan',
+    'horizon:status',
+    '--no-interaction',
+]);
 check('HTTP Laravel', 'curl', [
     '--fail',
     '--silent',
     '--max-time',
     '10',
     'http://web/up',
+]);
+check('Readiness /health/ready', 'curl', [
+    '--fail',
+    '--silent',
+    '--max-time',
+    '10',
+    'http://web/health/ready',
 ]);
 check('Vite/HMR', 'curl', [
     '--fail',

@@ -23,7 +23,7 @@ Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:
 | `make restart`                           | Odtworzenie usług po zmianie env lub kodu workera               |
 | `make ps`                                | Status, także zakończone procesy                                |
 | `make logs SERVICE=queue`                | Logi wybranej usługi; bez SERVICE — wszystkich                  |
-| `make doctor`                            | Wersje, rozszerzenia, zależności, DB, Redis, SMTP, HTTP, Vite   |
+| `make doctor`                            | Wersje, rozszerzenia, DB, Redis, SMTP, Horizon, HTTP, readiness, Vite |
 | `make deps`                              | Zatrzymanie usług aplikacji i instalacja zależności z lockfile  |
 | `make build`                             | Przebudowa runtime z aktualizacją obrazów bazowych              |
 | `make test`                              | Pest, SQLite w pamięci zgodnie z `.env.testing`                 |
@@ -39,8 +39,10 @@ Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:
 | `make db`                                | Konsola lokalnego PostgreSQL                                    |
 | `make config`                            | Walidacja Compose bez wypisywania konfiguracji z hasłami        |
 | `make hooks`                             | Włącza wersjonowane hooki po instalacji hostowego Gitleaks      |
+| `make backup`                            | Backup lokalnej DB + storage do `./.backups` (manifest SHA-256) |
+| `make restore-drill`                     | Odtworzenie ostatniego backupu do tymczasowej bazy + weryfikacja |
 
-Nie uruchamiaj równolegle starego `composer dev`, Herda ani hostowego Vite dla tego checkoutu. Zwykłe zmiany PHP/React są widoczne przez bind mount i HMR. Worker wymaga `make restart` po zmianie kodu. Po zmianie Dockerfile: `make build`, następnie `make restart`. Po zmianie lockfile: `make deps` i `make up`; instalacja zatrzymuje usługi aplikacji, aby nie pracowały na częściowo wymienionych zależnościach. `make assets` buduje SSR, ale nie uruchamia osobnego serwera SSR ze zbudowanego bundle; development SSR zapewnia Vite.
+Nie uruchamiaj równolegle starego `composer dev`, Herda ani hostowego Vite dla tego checkoutu. Zwykłe zmiany PHP/React są widoczne przez bind mount i HMR. Worker (Horizon) wymaga `make restart` lub `make artisan ARGS='horizon:terminate'` po zmianie kodu. Po zmianie Dockerfile: `make build`, następnie `make restart`. Po zmianie lockfile: `make deps` i `make up`; instalacja zatrzymuje usługi aplikacji, aby nie pracowały na częściowo wymienionych zależnościach. `make assets` buduje SSR, ale nie uruchamia osobnego serwera SSR ze zbudowanego bundle; development SSR zapewnia Vite.
 
 ## Commity, CI i deploy
 
@@ -61,6 +63,7 @@ W GitHub utwórz Environments `staging` i `production`. W każdym z nich ustaw n
 | Variable | `DEPLOY_PATH` | Katalog aplikacji na serwerze, np. `/var/www/starter`. |
 | Secret | `DEPLOY_SSH_KEY` | Prywatny klucz SSH dla `DEPLOY_USER`; nie używaj klucza osobistego. |
 | Secret | `DEPLOY_KNOWN_HOSTS` | Zweryfikowany wpis `known_hosts` dla `DEPLOY_HOST`. |
+| Variable | `DEPLOY_SMOKE_HOST` | Publiczny host z `APP_URL`; smoke `/health/ready` po przełączeniu łączy się z lokalnym Nginx przez `curl --resolve`. |
 
 Workflow sam ustawia `DEPLOY_ENVIRONMENT`, `DEPLOY_ARTIFACT`, `DEPLOY_ARTIFACT_SHA256` i `DEPLOY_ALLOW_MIGRATIONS` — nie dodawaj ich w GitHub. Przed pierwszym wydaniem administrator przygotowuje też plik `DEPLOY_PATH/shared/.env` na serwerze; nie trafia on ani do repozytorium, ani do artefaktu.
 
@@ -83,11 +86,11 @@ Jeżeli po konfiguracji IDE nadal wyświetla jedynie powiadomienie o brakującym
 | `vite`      | Vite Plus, HMR i development SSR Inertia; PHP dla Wayfinder        |
 | `postgres`  | PostgreSQL 18, trwała baza developerska                            |
 | `redis`     | Redis 8.2 z AOF; cache, sesje, kolejka                             |
-| `queue`     | Jeden queue:work, 3 próby, timeout 60 s, 75 s na zatrzymanie       |
+| `queue`     | Horizon (`config/horizon.php`), timeout 85 s, 100 s na zatrzymanie |
 | `scheduler` | Jeden schedule:work                                                |
 | `mailpit`   | Mailpit 1.27, lokalny SMTP i podgląd wiadomości                    |
 
-Horizon nie jest jeszcze zainstalowany; aktualny worker używa wbudowanej kolejki Laravel. SMTP nie ma fallbacku do realnego dostawcy. PostgreSQL, Redis, SMTP i FPM nie publikują portów hosta. Web, Vite i Mailpit nasłuchują tylko na loopback.
+Dashboard Horizon: `http://localhost:8080/horizon` (lokalnie każdy zalogowany użytkownik, poza local tylko administrator). Readiness: `/health/ready`. SMTP nie ma fallbacku do realnego dostawcy. PostgreSQL, Redis, SMTP i FPM nie publikują portów hosta. Web, Vite i Mailpit nasłuchują tylko na loopback.
 
 `compose.yaml` opisuje usługi i wolumeny, `docker/local/` zawiera obraz, konfigurację PHP/Nginx i entrypoint. `.dockerignore` ogranicza kontekst budowy do plików runtime — kod, dane i sekrety nie trafiają do obrazu. Runtime jest developerski, nie służy do publikowania produkcji.
 

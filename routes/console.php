@@ -22,3 +22,16 @@ Schedule::command('contact:prune')
     ->daily()
     ->onOneServer()
     ->withoutOverlapping();
+
+Schedule::command('ops:heartbeat')
+    ->everyMinute()
+    ->onOneServer();
+
+Schedule::command('ops:check-backup')
+    ->hourly()
+    ->onOneServer()
+    ->withoutOverlapping();
+
+Schedule::command('horizon:snapshot')
+    ->everyFiveMinutes()
+    ->onOneServer();

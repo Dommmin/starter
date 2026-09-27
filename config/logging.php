@@ -1,5 +1,7 @@
 <?php
 
+use App\Logging\AddRuntimeContext;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -110,6 +112,34 @@ return [
                 'stream' => 'php://stderr',
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        /*
+         * Production (ADR-023): one JSON object per line, with service,
+         * environment, release and request ID (AddRuntimeContext). `json` is
+         * the shared file rotated by deploy/logrotate/starter (LOG_STACK=json);
+         * `json_stderr` additionally sends records to the journal of the
+         * systemd unit (LOG_STACK=json,json_stderr).
+         */
+        'json' => [
+            'driver' => 'single',
+            'path' => env('LOG_JSON_PATH', storage_path('logs/laravel.json.log')),
+            'level' => env('LOG_LEVEL', 'info'),
+            'formatter' => JsonFormatter::class,
+            'tap' => [AddRuntimeContext::class],
+            'replace_placeholders' => true,
+        ],
+
+        'json_stderr' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => JsonFormatter::class,
+            'tap' => [AddRuntimeContext::class],
             'processors' => [PsrLogMessageProcessor::class],
         ],
 

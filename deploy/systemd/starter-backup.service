@@ -1,0 +1,29 @@
+# Daily backup (/etc/systemd/system/starter-backup.service). Runs outside
+# Laravel so it works while the application is down. Configuration and the
+# database password live in /etc/starter/backup.env (mode 0600, root-owned,
+# see deploy/backup/backup.env.example); nothing secret is in the repository.
+# A non-zero exit triggers starter-alert@ (plus the script's own critical
+# log); `php artisan ops:check-backup` alerts hourly on a stale backup.
+[Unit]
+Description=starter database and storage backup
+After=network-online.target postgresql.service
+Wants=network-online.target
+OnFailure=starter-alert@%n.service
+
+[Service]
+Type=oneshot
+# www-data: the private disks are created 0700 by Laravel, so another
+# account (even with ACLs) cannot read them. The runtime already holds the
+# application's DB credentials; the backup role only adds read access.
+User=www-data
+Group=www-data
+ReadWritePaths=/var/backups/starter
+EnvironmentFile=/etc/starter/backup.env
+ExecStart=/var/www/starter/current/scripts/backup/backup.sh
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true

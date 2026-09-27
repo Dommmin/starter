@@ -1,12 +1,12 @@
 # Lokalne środowisko, bezprzerwowy deploy i logi
 
-Status: lokalny setup Docker Compose jest zaimplementowany. 2026-09-10 dodano `deploy.php` oraz ręczny workflow GitHub Actions: buduje on testowany artefakt z manifestem SHA-256 i przekazuje go Deployerowi. Produkcyjny host, systemd/SSR, Nginx, monitoring, sekrety i GitHub Environment nadal wymagają konfiguracji administratora; nie są deklarowane jako wdrożone przez samą receptę. Produkcja nadal używa natywnego Nginx/PHP-FPM; ta zmiana dotyczy developmentu.
+Status: lokalny setup Docker Compose jest zaimplementowany. 2026-09-10 dodano `deploy.php` oraz ręczny workflow GitHub Actions: buduje on testowany artefakt z manifestem SHA-256 i przekazuje go Deployerowi. 2026-09-27 (P0-C) dodano Horizon, `/health/ready`, alerty i logi JSON, skrypty backup/restore z próbą odtworzenia, szablony produkcyjne w `deploy/` oraz readiness z jednorazowym automatycznym rollbackiem w recepcie — szczegóły i podział „gotowe w repo / wymaga operatora” w sekcji [Stan P0-C](#stan-p0-c-co-jest-w-repo-a-co-wymaga-operatora). Produkcyjny host, instalacja szablonów systemd/Nginx/FPM, TLS, DNS, monitoring zewnętrzny, sekrety i GitHub Environment nadal wymagają administratora; nie są deklarowane jako wdrożone przez samą receptę. Produkcja nadal używa natywnego Nginx/PHP-FPM; ta zmiana dotyczy developmentu.
 
 ## ADR-021: środowisko developerskie Docker Compose
 
 Decyzja właściciela z 2026-09-10 zastępuje wcześniejszy plan natywnego developmentu. Jedyny wspierany lokalny workflow to Docker Compose sterowany przez Makefile. Instrukcja instalacji, komendy, dane, ograniczenia i rozwiązywanie problemów: [README](../../README.md).
 
-Manifest usług to `compose.yaml`, runtime jest w `docker/local`, a konfiguracja lokalna powstaje z `.env.example`. PHP 8.5 FPM/CLI (z GD: JPEG/PNG/WebP/AVIF i `exif` dla wariantów DAM), Node 24, PostgreSQL 18, Redis 8.2, Nginx, Mailpit i ClamAV (`clamd`, skan uploadów DAM, dostępny tylko w sieci Compose jako `clamav:3310`; pierwszy start pobiera sygnatury do wolumenu `clamav`) działają w kontenerach. Kolejkę obsługuje `queue:work`; Horizon pozostaje planowaną paczką. Jeden `schedule:work` obsługuje scheduler. Vite zapewnia development SSR Inertia v3.
+Manifest usług to `compose.yaml`, runtime jest w `docker/local`, a konfiguracja lokalna powstaje z `.env.example`. PHP 8.5 FPM/CLI (z GD: JPEG/PNG/WebP/AVIF i `exif` dla wariantów DAM), Node 24, PostgreSQL 18, Redis 8.2, Nginx, Mailpit i ClamAV (`clamd`, skan uploadów DAM, dostępny tylko w sieci Compose jako `clamav:3310`; pierwszy start pobiera sygnatury do wolumenu `clamav`) działają w kontenerach. Kolejkę obsługuje Horizon (`laravel/horizon` 5.x, serwis `queue`, healthcheck `horizon:status`, dashboard `/horizon` tylko dla administratora); `make doctor` sprawdza jego status i `/health/ready`. Jeden `schedule:work` obsługuje scheduler. Vite zapewnia development SSR Inertia v3.
 
 Kontenery mają własne wolumeny danych i zależności; `.env` jest wspólnym, lokalnym źródłem konfiguracji dla aplikacji i Compose, tworzonym z `.env.example` tylko gdy go brakuje. `make setup` instaluje lockfile, generuje klucz tylko gdy go brakuje, uruchamia migracje w lokalnym PostgreSQL i startuje usługi. Nie seeduje kont automatycznie. `make down` zachowuje wszystkie wolumeny. Nie ma automatycznego resetu ani kasowania danych.
 
@@ -33,7 +33,7 @@ CI buduje archiwum kodu, vendor oraz bundle klienta/SSR z lockfile na zgodnym Li
 
 ### Cache i kompresja statycznych assetów (Nginx)
 
-Polityka jest wspólna dla lokalnego Dockera i produkcyjnego Nginx; wzorcem jest `docker/local/nginx.conf` (produkcyjny vhost konfiguruje administrator, recepta Deployer go nie zmienia). `/build/assets/*` (nazwy z hashem Vite) → `Cache-Control: public, max-age=31536000, immutable`; `/build/manifest.json` i `fonts-manifest.json` → `no-cache`; niehashowane pliki z `public/` (favicon, obrazy, fonty) → `max-age=86400, stale-while-revalidate=604800`; HTML i odpowiedzi Inertia zachowują nagłówki Laravel (`no-cache, private`). Gzip (`gzip_vary on`) dla HTML, CSS, JS, JSON, SVG i XML. Brotli tylko, jeśli moduł jest dostępny w produkcyjnym Nginx — oficjalny obraz lokalny go nie ma. Budżet bundla pilnuje `npm run check:budget` (`bundle-budget.json`) w CI.
+Polityka jest wspólna dla lokalnego Dockera i produkcyjnego Nginx; wzorcem jest `docker/local/nginx.conf`, a szablonem produkcyjnego vhosta `deploy/nginx/starter.conf` (instaluje go administrator, recepta Deployer go nie zmienia). `/build/assets/*` (nazwy z hashem Vite) → `Cache-Control: public, max-age=31536000, immutable`; `/build/manifest.json` i `fonts-manifest.json` → `no-cache`; niehashowane pliki z `public/` (favicon, obrazy, fonty) → `max-age=86400, stale-while-revalidate=604800`; HTML i odpowiedzi Inertia zachowują nagłówki Laravel (`no-cache, private`). Gzip (`gzip_vary on`) dla HTML, CSS, JS, JSON, SVG i XML. Brotli tylko, jeśli moduł jest dostępny w produkcyjnym Nginx — oficjalny obraz lokalny go nie ma. Budżet bundla pilnuje `npm run check:budget` (`bundle-budget.json`) w CI.
 
 ### Granice automatycznego cofnięcia
 
@@ -76,6 +76,53 @@ Laravel 13 nie dostarcza wbudowanego, szyfrującego kanału logów. `SESSION_ENC
 Alarmy P0 działają oddzielnie: zewnętrzny uptime oraz systemowy monitor heartbeat/backup/dysku i krytycznych błędów wysyła deduplikowane powiadomienia do operatora przez wybrany kanał niezależny od aplikacyjnej kolejki. Sam monitor ma zewnętrzny dead-man heartbeat. Właściciel kanału, test dostarczenia i zasady quiet hours są bramką stagingu.
 
 Alternatywa przy potrzebie przeszukiwania logów na żywo: jeden zarządzany centralny system logów/APM po akceptacji regionu, kosztu i retencji; zastępuje odpowiednią część zbierania/alertów. Nightwatch pozostaje kandydatem z rejestru 07. Własny Loki/Grafana/ELK na tej samej małej VM zwiększa koszt utrzymania i nie usuwa wspólnego punktu awarii, więc nie jest baseline P0. Konkretny storage i kanał powiadomień wybieramy wraz z dostawcą VM; nie są jeszcze skonfigurowane.
+
+## Stan P0-C: co jest w repo, a co wymaga operatora
+
+Stan na 2026-09-27. „Gotowe w repo” oznacza kod, konfigurację i testy lokalne; nic z tego nie zostało uruchomione na stagingu ani produkcji.
+
+### Kolejka i Horizon
+
+- `config/horizon.php`: jeden supervisor `supervisor-default` na kolejce `default` (wszystkie joby: `ScanMediaAsset`, `GenerateImageVariants`, `SendContactMessage`). Łańcuch limitów: najdłuższy job 80 s < timeout supervisora 85 s < `REDIS_QUEUE_RETRY_AFTER` 90 s < stop 100 s (Compose `stop_grace_period`, systemd `TimeoutStopSec`); test `tests/ai` pilnuje kolejności. Procesy: local 2, staging 2, production `HORIZON_MAX_PROCESSES` (domyślnie 4 — do pomiaru na VM).
+- Dashboard `/horizon`: middleware panelu (`auth`, `verified`, `EnsureCanAccessAdminPanel` z wymogiem MFA admina) i gate `viewHorizon` → `User::isAdmin()` we wszystkich środowiskach (lokalnie, jak reszta panelu, każdy zalogowany jest administratorem; gość nie ma dostępu także lokalnie). `X-Robots-Tag: noindex, nofollow`. Testy odmowy: gość, editor, użytkownik bez roli.
+- Scheduler: `horizon:snapshot` co 5 min, `ops:heartbeat` co minutę, `ops:check-backup` co godzinę (wszystkie `onOneServer`).
+
+### Readiness `/health/ready`
+
+- Liveness pozostaje na `/up`. `/health/ready` jest bezstanowy (bez grupy `web`: brak sesji, cookies, CSRF), `Cache-Control: no-store`, `noindex`, limit `HEALTH_RATE_LIMIT`/min na IP. Ta sama logika działa z CLI: `php artisan ops:readiness [--strict]`.
+- Krytyczne (HTTP 503 `fail`): baza (`select 1`, `DB_CONNECT_TIMEOUT` 5 s), Redis (`PING`, `REDIS_TIMEOUT` 2 s), zapis/odczyt/usunięcie pliku na dysku `local`. Tła (HTTP 200 `degraded`): Horizon (reguła `horizon:status`), heartbeat schedulera starszy niż `OPS_HEARTBEAT_MAX_AGE` (180 s), opcjonalnie clamd `PING` (`HEALTH_CHECK_SCANNER=true`). Restart Horizon podczas deployu nie wyłącza więc węzła webowego.
+- Anonimowo tylko `{"status": ...}`; wyniki per check wyłącznie z nagłówkiem `X-Health-Token` równym `HEALTH_TOKEN`. Brak nazw hostów, wersji i treści wyjątków.
+
+### Alerty i logi
+
+- `App\Services\Ops\OpsAlerter`: każdy alert to wpis `critical` `ops.*` (bez PII: klasy, nazwy kolejek, liczniki). Przy `OPS_ALERT_EMAIL` dodatkowo deduplikowany (`OPS_ALERT_DEDUPE_MINUTES`) mail tekstowy wysyłany synchronicznie, nie przez kolejkę. Błąd maila nie przerywa wywołującego i nie tworzy pętli logowania.
+- Źródła: nieudany job (`JobFailed` → `ops.queue.job_failed`), długie oczekiwanie Horizon (`LongWaitDetected`, próg `HORIZON_WAIT_THRESHOLD` 300 s → `ops.queue.long_wait`), brak lub przeterminowany backup (`ops:check-backup` → `ops.backup.missing|stale`), nieudany backup (skrypt: JSON `critical` na stderr + `logger -p user.crit`; unit: `OnFailure=starter-alert@`), nieudana readiness/rollback deployu (`logger -t starter-deploy`), awaria unitu systemd (`starter-alert@`, opcjonalny hook `/etc/starter/alert-hook`).
+- Logi: kanał `json` (plik `storage/logs/laravel.json.log`, rotacja `deploy/logrotate/starter`, 7 dni) i `json_stderr` (journal). Produkcja: `LOG_CHANNEL=stack`, `LOG_STACK=json` (opcjonalnie `json,json_stderr`), `LOG_LEVEL=info`. Każdy rekord ma `service` (`LOG_SERVICE` z unitu systemd), `environment`, `release` (plik `RELEASE` zapisywany przez receptę, utrwalany w `config:cache`) i `request_id` z Nginx (`fastcgi_param REQUEST_ID $request_id`, tylko 32 znaki hex; nagłówek klienta jest ignorowany). Access log Nginx w JSON bez query stringu i cookies.
+
+### Backup i restore
+
+- `scripts/backup/backup.sh`: `pg_dump -Fc` + `tar.gz` katalogów `media` i `public` z `storage/app` + `manifest.json` (SHA-256 i rozmiar plików, liczby wierszy tabel, liczba plików storage). Zapis do `*.partial` i atomowe przemianowanie, rotacja `BACKUP_KEEP` kopii, znacznik `BACKUP_STATUS_FILE`. Opcjonalne szyfrowanie `BACKUP_ENCRYPT=age|gpg` — przy braku narzędzia backup kończy się błędem zamiast zapisać jawną kopię. Konfiguracja wyłącznie przez env (libpq `PG*`); przykład `deploy/backup/backup.env.example`.
+- `scripts/backup/restore.sh --drill [BACKUP]`: weryfikuje sumy, odtwarza dump do nowej, tymczasowej bazy, porównuje liczbę tabel i dokładne liczby wierszy z manifestem, rozpakowuje storage do katalogu tymczasowego i liczy pliki, mierzy czas, zawsze usuwa bazę tymczasową; wynik JSON trafia do `BACKUP/drill-*.json`. `--restore BACKUP --target-db NAZWA --storage-target KATALOG` odtwarza wyłącznie do nieistniejącej bazy i pustego katalogu — przełączenie aplikacji to decyzja i krok operatora (zatrzymanie zapisów, ocena utraty danych od backupu, zgoda właściciela danych, ponowne zastosowanie żądań usunięcia według 02).
+- Lokalnie: `make backup` i `make restore-drill` (serwis Compose `backup`, profil `ops`, klient PostgreSQL 18, storage tylko do odczytu, wynik w `./.backups`, poza Git). Produkcja: `deploy/systemd/starter-backup.{service,timer}` codziennie 02:30 UTC (+ do 15 min), `Persistent=true`, niezależnie od Laravel.
+- Próba 2026-09-27 (lokalna baza developerska z danymi syntetycznymi, 17 tabel, 31 wierszy, 13 plików storage): backup 1 s (44 KB dump, 3 KB storage), drill `passed` — sumy zgodne, 17/17 tabel, brak różnic wierszy, 13/13 plików, odtworzenie DB 384 ms, cały drill 490 ms. Negatywne: zmodyfikowane archiwum → `checksum mismatch`, drill przerwany; niedostępny host DB → backup kończy się kodem ≠0, logiem `ops.backup.failed`, bez pozostawionego `*.partial`. Czas nie jest miarą RTO produkcji — należy go powtórzyć na danych o docelowym rozmiarze.
+
+### Deploy (Deployer) i szablony hosta
+
+- `deploy.php` definiuje jawny przepływ zamiast domyślnego z `recipe/laravel.php`. Poprawka: domyślny przepływ uruchamiał `artisan:migrate` bez względu na `DEPLOY_ALLOW_MIGRATIONS`; teraz migracje wykonuje wyłącznie `deploy:migrate` przy `DEPLOY_ALLOW_MIGRATIONS=true` (polityka bez zmian, tylko egzekwowana).
+- Kolejność: `deploy:check_blocked` → prepare (weryfikacja SHA-256 artefaktu, zapis `RELEASE`) → `storage:link` → `config/route/view/event:cache` → `deploy:migrate` → `deploy:smoke` (manifest Vite, `about`, `ops:readiness` kandydata przed przełączeniem) → `deploy:remember_healthy` (`.dep/healthy_release`) → atomowy symlink → `deploy:restart_workers` (`horizon:terminate`, `schedule:interrupt`, `inertia:stop-ssr`; systemd uruchamia procesy z nowego `current`) → `deploy:smoke:live` → cleanup.
+- `deploy:smoke:live`: `/health/ready` 3 próby × 5 s timeoutu co 5 s (przez `curl --resolve DEPLOY_SMOKE_HOST:443:127.0.0.1`, więc TrustHosts i TLS działają jak dla ruchu). Porażka → alert, jednokrotny powrót symlinka do zapamiętanego zdrowego release'u, oznaczenie `BAD_RELEASE`, restart workerów, ponowna readiness, alert z wynikiem i nieudany deploy. Jeśli poprzednia wersja też nie przechodzi — `.dep/deploy_blocked` blokuje kolejne deploye do decyzji operatora. Pierwszy deploy nie ma celu rollbacku. Schemat nigdy nie jest cofany.
+- Szablony w `deploy/`: `nginx/starter.conf` + `nginx/security-headers.conf` (HTTP→HTTPS, ACME, TLS 1.2/1.3, HSTS bez `includeSubDomains`, nosniff/frame/referrer/permissions policy, `client_max_body_size 52m`, immutable cache `/build/assets` i `/storage/media`, gzip, brotli zakomentowany, większe bufory FastCGI, `$realpath_root`, blokada plików ukrytych, JSON access log; `nginx -t` przechodzi w `nginx:1.28-alpine` z testowym certyfikatem), `php-fpm/starter.conf`, `systemd/starter-{horizon,ssr,scheduler,backup}.service`, timery schedulera (co minutę) i backupu, `starter-alert@.service`, `logrotate/starter`.
+
+### Wymaga operatora (poza repo)
+
+- Hosting/VM w UE, DNS, certyfikat TLS i jego odnowienie (certbot lub dostawca), decyzja o HSTS `includeSubDomains`/preload, CSP (wymaga nonce dla Inertia/SSR — osobna decyzja).
+- Instalacja i dopasowanie szablonów (ścieżki, użytkownicy, rozmiar puli FPM, `HORIZON_MAX_PROCESSES`), `systemctl enable --now` dla unitów i timerów; `systemd-analyze verify` na docelowym hoście (nie wykonano lokalnie).
+- `shared/.env` produkcji: `LOG_CHANNEL`/`LOG_STACK`, `OPS_ALERT_EMAIL`, `HEALTH_TOKEN`, `BACKUP_STATUS_FILE`, `HEALTH_CHECK_SCANNER`; zmienna GitHub Environment `DEPLOY_SMOKE_HOST`.
+- ClamAV na hoście: `clamd` + `freshclam` (aktualizacja sygnatur), limity 52 MB jak w Compose, monitoring świeżości sygnatur.
+- Backup poza hostem: szyfrowany storage w UE z osobnymi poświadczeniami (np. rclone/restic/replikacja obiektowa katalogu `BACKUP_DIR`), klucz prywatny `age` przechowywany poza VM, retencja 30 dni, miesięczny restore drill na kopii poza hostem, pomiar RTO/RPO na danych docelowego rozmiaru.
+- Kanał alertów (Q7): zewnętrzny uptime `/health/ready` i `/up`, monitor journal/`logger` z deduplikacją, dead-man heartbeat monitora, test dostarczenia alertu; skrypt `/etc/starter/alert-hook` po wyborze kanału.
+- Równoległy SSR per release na osobnym porcie (ADR-022 krok 3), watchdog niezależny od runnera CI, kontrola SSR/logowania w smoke po przełączeniu, retencja starych assetów — nadal niezaimplementowane; obecny restart SSR może na chwilę przełączyć rendering na klienta.
+- `opcache.validate_timestamps=off` w puli: pamięć opcache rośnie z kolejnymi release'ami — okresowy `reload` PHP-FPM w oknie serwisowym lub monitoring zapełnienia.
 
 ## Dowody wymagane przed produkcją
 

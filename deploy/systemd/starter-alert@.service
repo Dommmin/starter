@@ -1,0 +1,11 @@
+# Failure hook for every starter unit (OnFailure=starter-alert@%n.service).
+# Always writes a critical syslog/journal entry for the host monitor; an
+# optional operator hook (/etc/starter/alert-hook, executable, e.g. a mail
+# or webhook sender chosen with Q7) receives the failed unit name.
+[Unit]
+Description=starter alert for failed unit %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger -p user.crit -t starter-alert "ops.unit_failed unit=%i"
+ExecStart=/bin/sh -c 'if [ -x /etc/starter/alert-hook ]; then /etc/starter/alert-hook "$1"; fi' starter-alert %i

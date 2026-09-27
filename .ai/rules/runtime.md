@@ -26,8 +26,8 @@ Glob: `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.testing`, `
 
 ## Usługi
 
-- PHP 8.5 FPM/CLI, Nginx, PostgreSQL 18, Redis 8.2, queue:work, schedule:work, Vite (dev SSR), Mailpit.
-- Horizon pozostaje planowany — aktualnie `queue:work`.
+- PHP 8.5 FPM/CLI, Nginx, PostgreSQL 18, Redis 8.2, Horizon, schedule:work, Vite (dev SSR), Mailpit.
+- Kolejkę obsługuje Horizon (`php artisan horizon`, serwis `queue`); `make doctor` sprawdza `horizon:status`.
 - `.env` jest jedynym lokalnym źródłem konfiguracji — Compose czyta je bezpośrednio. Nie nadpisuj hostowego `.env`.
 
 ## Deploy (Deployer)

@@ -8,8 +8,9 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Marks the panel, account settings and authentication flows as
- * non-indexable with `X-Robots-Tag`, independently of their layouts.
+ * Marks the panel, account settings, authentication flows and the Horizon
+ * dashboard as non-indexable with `X-Robots-Tag`, independently of their
+ * layouts.
  */
 class PreventIndexingOfPrivateAreas
 {
@@ -33,6 +34,15 @@ class PreventIndexingOfPrivateAreas
     {
         $area = $request->attributes->get('localization.area') ?? $this->localization->determineArea($request);
 
-        return $area === 'admin' || $this->localization->isAuthPath($request);
+        return $area === 'admin'
+            || $this->localization->isAuthPath($request)
+            || $this->isHorizonPath($request);
+    }
+
+    protected function isHorizonPath(Request $request): bool
+    {
+        $path = trim((string) config('horizon.path', 'horizon'), '/');
+
+        return $path !== '' && $request->is($path, $path.'/*');
     }
 }

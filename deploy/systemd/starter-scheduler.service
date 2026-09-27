@@ -1,0 +1,21 @@
+# One scheduler run (/etc/systemd/system/starter-scheduler.service), started
+# every minute by starter-scheduler.timer on exactly one host. Events use
+# onOneServer()/withoutOverlapping() with Redis locks; `ops:heartbeat`
+# proves to /health/ready that this timer works.
+[Unit]
+Description=starter Laravel scheduler run
+After=network-online.target redis-server.service postgresql.service
+OnFailure=starter-alert@%n.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/starter/current
+Environment=LOG_SERVICE=scheduler
+ExecStart=/usr/bin/php /var/www/starter/current/artisan schedule:run --no-interaction
+TimeoutStartSec=55min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true

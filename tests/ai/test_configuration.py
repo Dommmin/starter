@@ -43,7 +43,7 @@ class AiConfigurationTest(unittest.TestCase):
         package = json.loads((ROOT / "package.json").read_text())
         self.assertEqual(
             package["scripts"]["check"],
-            "vp check resources/js resources/css scripts vite.config.ts && npm run test:ui",
+            "vp check resources/js resources/css scripts tests/e2e vite.config.ts playwright.config.ts && npm run test:ui",
         )
         composer = json.loads((ROOT / "composer.json").read_text())
         self.assertEqual(
@@ -87,6 +87,99 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('DEPLOY_ALLOW_MIGRATIONS', deployer)
         self.assertNotIn('migrate:rollback', deployer)
         self.assertIn("after('deploy:failed', 'deploy:unlock')", deployer)
+
+    def test_deployer_flow_gates_migrations_and_rolls_back_once_on_failed_readiness(self):
+        deployer = (ROOT / "deploy.php").read_text()
+        flow = re.search(r"task\('deploy', \[(.*?)\]\);", deployer, re.S)
+        self.assertIsNotNone(flow, "deploy.php must define the deploy flow explicitly")
+        steps = re.findall(r"'([a-z:_]+)'", flow.group(1))
+        # The recipe default runs artisan:migrate unconditionally.
+        self.assertNotIn("artisan:migrate", steps)
+        self.assertNotIn("artisan:optimize", steps)
+        for step in ("deploy:migrate", "artisan:storage:link", "artisan:config:cache",
+                     "artisan:route:cache", "artisan:view:cache", "artisan:event:cache"):
+            self.assertIn(step, steps)
+        order = [
+            "deploy:migrate", "deploy:smoke", "deploy:remember_healthy", "deploy:symlink",
+            "deploy:restart_workers", "deploy:smoke:live", "deploy:cleanup",
+        ]
+        self.assertEqual([step for step in steps if step in order], order)
+        self.assertIn("getenv('DEPLOY_ALLOW_MIGRATIONS') !== 'true'", deployer)
+        self.assertIn("php artisan ops:readiness", deployer)
+        self.assertIn("/health/ready", deployer)
+        self.assertIn("horizon:terminate", deployer)
+        self.assertIn("set('smoke_attempts', 3)", deployer)
+        self.assertIn("set('smoke_timeout_seconds', 5)", deployer)
+        # Exactly one automatic switch back, never a schema rollback.
+        self.assertEqual(deployer.count("mv -T current.rollback current"), 1)
+        self.assertIn("deploy_blocked", deployer)
+        self.assertEqual(steps[0], "deploy:check_blocked")
+        self.assertNotIn("migrate:rollback", deployer)
+        self.assertNotIn("invoke('rollback')", deployer)
+
+    def test_production_templates_keep_limits_headers_and_timeout_chain(self):
+        nginx = (ROOT / "deploy/nginx/starter.conf").read_text()
+        headers = (ROOT / "deploy/nginx/security-headers.conf").read_text()
+        self.assertIn("client_max_body_size 52m;", nginx)
+        self.assertIn("$realpath_root/index.php", nginx)
+        self.assertIn("fastcgi_param REQUEST_ID $request_id;", nginx)
+        self.assertIn("fastcgi_buffer_size 32k;", nginx)
+        self.assertIn("location ~ /\\.(?!well-known)", nginx)
+        for location in ("location ^~ /build/assets/", "location ^~ /storage/media/"):
+            block = nginx.split(location, 1)[1].split("}", 1)[0]
+            self.assertIn('"public, max-age=31536000, immutable"', block)
+            self.assertIn("starter-security-headers.conf", block)
+        for header in ("X-Content-Type-Options", "Referrer-Policy", "Strict-Transport-Security"):
+            self.assertIn(header, headers)
+        self.assertNotIn("$request_uri\",", nginx.split("log_format", 1)[1].split(";", 1)[0])
+
+        horizon_config = (ROOT / "config/horizon.php").read_text()
+        queue_config = (ROOT / "config/queue.php").read_text()
+        supervisor_timeout = int(re.search(r"'timeout' => (\d+)", horizon_config).group(1))
+        retry_after = int(re.search(r"REDIS_QUEUE_RETRY_AFTER', (\d+)", queue_config).group(1))
+        job_timeouts = [
+            int(value)
+            for job in (ROOT / "app/Jobs").glob("*.php")
+            for value in re.findall(r"public int \$timeout = (\d+);", job.read_text())
+        ]
+        unit = (ROOT / "deploy/systemd/starter-horizon.service").read_text()
+        stop_timeout = int(re.search(r"TimeoutStopSec=(\d+)", unit).group(1))
+        self.assertTrue(job_timeouts)
+        self.assertLess(max(job_timeouts), supervisor_timeout)
+        self.assertLess(supervisor_timeout, retry_after)
+        self.assertLess(retry_after, stop_timeout)
+        self.assertIn("artisan horizon", unit)
+
+        compose = (ROOT / "compose.yaml").read_text()
+        queue_service = compose.split("\n    queue:\n", 1)[1].split("\n    scheduler:\n", 1)[0]
+        self.assertIn("command: [php, artisan, horizon]", queue_service)
+        self.assertIn("horizon:status", queue_service)
+        grace = int(re.search(r"stop_grace_period: (\d+)s", queue_service).group(1))
+        self.assertLess(retry_after, grace)
+
+        for name in ("starter-horizon.service", "starter-ssr.service", "starter-scheduler.service", "starter-backup.service"):
+            self.assertIn("OnFailure=starter-alert@%n.service", (ROOT / "deploy/systemd" / name).read_text())
+
+    def test_backup_scripts_fail_loudly_and_never_overwrite_live_data(self):
+        backup = (ROOT / "scripts/backup/backup.sh").read_text()
+        restore = (ROOT / "scripts/backup/restore.sh").read_text()
+        for script in (backup, restore):
+            self.assertTrue(script.startswith("#!/usr/bin/env bash"))
+            self.assertIn("set -Eeuo pipefail", script)
+            self.assertIn("umask 077", script)
+            self.assertNotRegex(script, r"PGPASSWORD=\S")
+        self.assertIn("--format=custom", backup)
+        self.assertIn("sha256sum", backup)
+        self.assertIn(".partial", backup)
+        self.assertIn("ops.backup.failed", backup)
+        self.assertIn("logger -p user.crit", backup)
+        self.assertIn("already exists; refusing to overwrite", restore)
+        self.assertIn("is not empty; refusing to overwrite", restore)
+        self.assertIn("dropdb --if-exists", restore)
+        self.assertNotIn("--clean", restore)
+        for path in ("scripts/backup/backup.sh", "scripts/backup/restore.sh"):
+            self.assertTrue(os.access(ROOT / path, os.X_OK), path)
+            subprocess.run(["bash", "-n", str(ROOT / path)], check=True)
 
     def test_manual_skills_resolve_shared_workflows(self):
         for name in ("foundation-fast", "foundation-ui"):
@@ -495,7 +588,7 @@ class AiConfigurationTest(unittest.TestCase):
     def test_bundle_budget_script_fails_on_overrun_and_leaked_tests(self):
         script_path = ROOT / "scripts/check-bundle-budget.mjs"
 
-        def run_budget(build_dir, limits, manifest_extra=None):
+        def run_budget(build_dir, limits, manifest_extra=None, lazy_modules=None):
             manifest = {
                 "resources/js/app.tsx": {
                     "file": "assets/app.js",
@@ -521,6 +614,7 @@ class AiConfigurationTest(unittest.TestCase):
                         "entry": "resources/js/app.tsx",
                         "css": ["resources/css/app.css"],
                         "publicPages": ["resources/js/pages/welcome.tsx"],
+                        "lazyModules": lazy_modules or [],
                         "limits": limits,
                     }
                 )
@@ -578,6 +672,97 @@ class AiConfigurationTest(unittest.TestCase):
             )
             self.assertEqual(leaked.returncode, 1)
             self.assertIn("index.test.tsx", leaked.stderr)
+
+            lazy_ok = run_budget(
+                build_dir, generous, lazy_modules=["resources/js/pages/welcome.tsx"]
+            )
+            self.assertEqual(lazy_ok.returncode, 0, lazy_ok.stderr)
+
+            lazy_in_entry = run_budget(
+                build_dir,
+                generous,
+                {
+                    "resources/js/app.tsx": {
+                        "file": "assets/app.js",
+                        "isEntry": True,
+                        "imports": ["_vendor.js", "resources/js/components/dialog.tsx"],
+                    },
+                    "resources/js/components/dialog.tsx": {
+                        "file": "assets/leak.js",
+                        "src": "resources/js/components/dialog.tsx",
+                        "isDynamicEntry": True,
+                    },
+                },
+                lazy_modules=["resources/js/components/dialog.tsx"],
+            )
+            self.assertEqual(lazy_in_entry.returncode, 1)
+            self.assertIn("statycznie w entry", lazy_in_entry.stderr)
+
+            lazy_missing = run_budget(
+                build_dir, generous, lazy_modules=["resources/js/components/missing.tsx"]
+            )
+            self.assertEqual(lazy_missing.returncode, 1)
+            self.assertIn("nie jest osobnym chunkiem", lazy_missing.stderr)
+
+    def test_bundle_budget_keeps_password_confirmation_dialog_lazy(self):
+        budget = json.loads((ROOT / "bundle-budget.json").read_text())
+        self.assertIn(
+            "resources/js/components/password-confirmation-dialog.tsx",
+            budget["lazyModules"],
+        )
+        gate = (ROOT / "resources/js/components/password-confirmation-modal.tsx").read_text()
+        self.assertIn("import('@/components/password-confirmation-dialog')", gate)
+        self.assertNotIn("from '@/components/ui/dialog'", gate)
+        self.assertNotIn("passkey-verify", gate)
+        self.assertNotIn("@laravel/passkeys", gate)
+
+    def test_ci_runs_browser_e2e_against_the_docker_stack(self):
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("\n  e2e:\n    name: e2e\n", ci)
+        e2e_job = ci[ci.index("\n  e2e:\n"):]
+        self.assertIn("cp .env.example .env", e2e_job)
+        self.assertIn("run: make e2e", e2e_job)
+        self.assertIn("actions/upload-artifact@", e2e_job)
+        self.assertIn("if: failure()", e2e_job)
+        self.assertIn("playwright-report/", e2e_job)
+        self.assertNotIn("secrets.", e2e_job)
+        for line in e2e_job.splitlines():
+            if "docker compose up" in line:
+                self.assertNotIn("clamav", line)
+
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("e2e: env ##", makefile)
+        self.assertIn("app:e2e-prepare --client-host=playwright", makefile)
+        self.assertIn("npx playwright test", makefile)
+        self.assertNotRegex(makefile, r"(?m)^E2E_PASSWORD\s*[:?]?=")
+
+        package = json.loads((ROOT / "package.json").read_text())
+        playwright_version = package["devDependencies"]["@playwright/test"]
+        self.assertRegex(playwright_version, r"^\d+\.\d+\.\d+$")
+        compose = (ROOT / "compose.yaml").read_text()
+        self.assertIn(
+            f"image: mcr.microsoft.com/playwright:v{playwright_version}-noble",
+            compose,
+        )
+        self.assertIn("profiles: [e2e]", compose)
+        e2e_override = (ROOT / "compose.e2e.yaml").read_text()
+        self.assertIn("APP_ENV: e2e", e2e_override)
+        self.assertIn("-f compose.e2e.yaml", makefile)
+
+        for spec in ("journeys.spec.ts", "perf.spec.ts"):
+            self.assertTrue((ROOT / "tests/e2e" / spec).is_file(), spec)
+        perf = (ROOT / "tests/e2e/perf.spec.ts").read_text()
+        self.assertIn("LCP_BUDGET_MS = 2_500", perf)
+        self.assertIn("CLS_BUDGET = 0.1", perf)
+
+    def test_e2e_accounts_are_synthetic_and_local_only(self):
+        command = (ROOT / "app/Console/Commands/PrepareE2eCommand.php").read_text()
+        self.assertIn("app()->environment(['local', 'testing'])", command)
+        config = (ROOT / "config/e2e.php").read_text()
+        self.assertIn("env('E2E_PASSWORD')", config)
+        self.assertIn("@example.test", config)
+        env_example = (ROOT / ".env.example").read_text()
+        self.assertIn("# E2E_PASSWORD=", env_example)
 
     def test_local_nginx_caches_hashed_assets_and_compresses_text(self):
         nginx = (ROOT / "docker/local/nginx.conf").read_text()

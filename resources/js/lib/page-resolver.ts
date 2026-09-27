@@ -55,6 +55,28 @@ function layoutGroup(name: string): LayoutGroup {
     }
 }
 
+/**
+ * Visual surface of a page. Panel layouts (admin, settings) use the admin
+ * surface; app.blade.php renders the same decision on <html> for the first
+ * response, `syncSurface` keeps it current across Inertia visits.
+ */
+export function surfaceFor(name: string): 'admin' | null {
+    const group = layoutGroup(name);
+
+    return group === 'admin' || group === 'settings' ? 'admin' : null;
+}
+
+export function syncSurface(name: string): void {
+    const surface = surfaceFor(name);
+    const root = document.documentElement;
+
+    if (surface) {
+        root.dataset.surface = surface;
+    } else {
+        delete root.dataset.surface;
+    }
+}
+
 export async function loadPage(name: string): Promise<ResolvedComponent> {
     const importPage = pages[`../pages/${name}.tsx`];
 

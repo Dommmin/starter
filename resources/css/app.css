@@ -71,6 +71,14 @@
     --color-overlay: var(--overlay);
     --color-status-success: var(--status-success);
     --color-status-success-foreground: var(--status-success-foreground);
+    --color-status-success-subtle: var(--status-success-subtle);
+    --color-status-warning: var(--status-warning);
+    --color-status-warning-subtle: var(--status-warning-subtle);
+    --color-status-info: var(--status-info);
+    --color-status-info-subtle: var(--status-info-subtle);
+    --color-status-danger: var(--status-danger);
+    --color-status-danger-subtle: var(--status-danger-subtle);
+    --color-brand-text: var(--brand-text);
 }
 
 :root {
@@ -119,6 +127,14 @@
     --brand-subtle: oklch(0.97 0.015 85);
     --status-success: oklch(0.55 0.15 145);
     --status-success-foreground: oklch(0.99 0 0);
+    --status-success-subtle: oklch(0.955 0.035 150);
+    --status-warning: oklch(0.48 0.11 70);
+    --status-warning-subtle: oklch(0.965 0.045 85);
+    --status-info: oklch(0.48 0.13 255);
+    --status-info-subtle: oklch(0.955 0.025 255);
+    --status-danger: oklch(0.52 0.19 27);
+    --status-danger-subtle: oklch(0.96 0.025 25);
+    --brand-text: oklch(0.52 0.15 45);
 }
 
 .dark {
@@ -166,6 +182,165 @@
     --brand-subtle: oklch(0.19 0.015 85);
     --status-success: oklch(0.65 0.15 145);
     --status-success-foreground: oklch(0.12 0.005 85);
+    --status-success-subtle: oklch(0.26 0.05 150);
+    --status-warning: oklch(0.83 0.12 80);
+    --status-warning-subtle: oklch(0.27 0.05 75);
+    --status-info: oklch(0.8 0.1 250);
+    --status-info-subtle: oklch(0.26 0.05 255);
+    --status-danger: oklch(0.72 0.17 25);
+    --status-danger-subtle: oklch(0.27 0.06 25);
+    --brand-text: oklch(0.78 0.13 55);
+}
+
+/*
+ * Admin surface (approved mockup, wave 0). `data-surface="admin"` is rendered
+ * on <html> by app.blade.php for panel pages and kept in sync on Inertia
+ * visits, so Radix portals and the body background share these values.
+ * Existing semantic names get admin values; `--admin-*` carry density.
+ */
+[data-surface='admin'] {
+    --background: oklch(0.984 0.003 255);
+    --foreground: oklch(0.21 0.012 260);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.21 0.012 260);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.21 0.012 260);
+    --primary: oklch(0.56 0.16 45);
+    --primary-foreground: oklch(0.99 0.003 60);
+    --secondary: oklch(0.955 0.004 255);
+    --secondary-foreground: oklch(0.25 0.012 260);
+    --muted: oklch(0.955 0.004 255);
+    --muted-foreground: oklch(0.5 0.014 258);
+    --accent: oklch(0.95 0.005 255);
+    --accent-foreground: oklch(0.21 0.012 260);
+    --destructive: oklch(0.55 0.2 27);
+    --destructive-foreground: oklch(0.99 0 0);
+    --border: oklch(0.91 0.005 255);
+    --input: oklch(0.66 0.01 258);
+    --ring: oklch(0.62 0.17 48);
+    --radius: 0.375rem;
+    --sidebar: oklch(0.967 0.004 255);
+    --sidebar-foreground: oklch(0.3 0.012 260);
+    --sidebar-primary: oklch(0.56 0.16 45);
+    --sidebar-primary-foreground: oklch(0.99 0.003 60);
+    --sidebar-accent: oklch(0.925 0.006 255);
+    --sidebar-accent-foreground: oklch(0.18 0.012 260);
+    --sidebar-border: oklch(0.91 0.005 255);
+    --sidebar-ring: oklch(0.62 0.17 48);
+    --surface-subtle: oklch(0.975 0.003 255);
+    --surface-raised: oklch(1 0 0);
+    --surface-inverted: oklch(0.21 0.012 260);
+    --surface-inverted-foreground: oklch(0.984 0.003 255);
+    --overlay: oklch(0.21 0.012 260 / 0.4);
+    --border-subtle: oklch(0.945 0.004 255);
+    --text-subtle: oklch(0.55 0.012 258);
+    --brand-glow: oklch(0.62 0.17 48 / 0.28);
+    --brand-subtle: oklch(0.965 0.022 60);
+    --brand-text: oklch(0.52 0.15 45);
+    --status-success: oklch(0.46 0.12 150);
+    --status-success-foreground: oklch(0.99 0 0);
+    --status-success-subtle: oklch(0.955 0.035 150);
+    --status-warning: oklch(0.48 0.11 70);
+    --status-warning-subtle: oklch(0.965 0.045 85);
+    --status-info: oklch(0.48 0.13 255);
+    --status-info-subtle: oklch(0.955 0.025 255);
+    --status-danger: oklch(0.52 0.19 27);
+    --status-danger-subtle: oklch(0.96 0.025 25);
+
+    --admin-font-sans:
+        'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+        sans-serif;
+    --admin-font-mono:
+        'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --admin-text-xs: 11.5px;
+    --admin-text-sm: 12.5px;
+    --admin-text-base: 13.5px;
+    --admin-text-md: 15px;
+    --admin-text-lg: 18px;
+    --admin-text-xl: 22px;
+    --admin-text-stat: 28px;
+    --admin-row-height: 40px;
+    --admin-control-height: 34px;
+    --admin-control-height-sm: 28px;
+    --admin-sidebar-width: 236px;
+    --admin-topbar-height: 48px;
+    --admin-page-gutter: 24px;
+    --admin-shadow-overlay:
+        0 16px 40px -12px oklch(0.2 0.02 260 / 0.28),
+        0 2px 6px -2px oklch(0.2 0.02 260 / 0.12);
+
+    /* Panel typography: Geist, 13.5 px body; text-sm/xs follow the scale. */
+    --font-sans: var(--admin-font-sans);
+    --font-mono: var(--admin-font-mono);
+    --text-xs: var(--admin-text-xs);
+    --text-sm: var(--admin-text-base);
+
+    color-scheme: light;
+}
+
+.dark[data-surface='admin'],
+.dark [data-surface='admin'] {
+    --background: oklch(0.165 0.006 260);
+    --foreground: oklch(0.95 0.004 255);
+    --card: oklch(0.195 0.007 260);
+    --card-foreground: oklch(0.95 0.004 255);
+    --popover: oklch(0.215 0.008 260);
+    --popover-foreground: oklch(0.95 0.004 255);
+    --primary: oklch(0.7 0.16 50);
+    --primary-foreground: oklch(0.18 0.02 50);
+    --secondary: oklch(0.235 0.008 260);
+    --secondary-foreground: oklch(0.95 0.004 255);
+    --muted: oklch(0.235 0.008 260);
+    --muted-foreground: oklch(0.7 0.012 258);
+    --accent: oklch(0.245 0.008 260);
+    --accent-foreground: oklch(0.95 0.004 255);
+    --destructive: oklch(0.58 0.19 25);
+    --destructive-foreground: oklch(0.99 0 0);
+    --border: oklch(0.27 0.008 260);
+    --input: oklch(0.5 0.01 260);
+    --ring: oklch(0.7 0.16 50);
+    --sidebar: oklch(0.145 0.006 260);
+    --sidebar-foreground: oklch(0.8 0.01 258);
+    --sidebar-primary: oklch(0.72 0.15 52);
+    --sidebar-primary-foreground: oklch(0.18 0.02 50);
+    --sidebar-accent: oklch(0.225 0.008 260);
+    --sidebar-accent-foreground: oklch(0.97 0.004 255);
+    --sidebar-border: oklch(0.235 0.007 260);
+    --sidebar-ring: oklch(0.7 0.16 50);
+    --surface-subtle: oklch(0.18 0.006 260);
+    --surface-raised: oklch(0.215 0.008 260);
+    --surface-inverted: oklch(0.95 0.004 255);
+    --surface-inverted-foreground: oklch(0.18 0.006 260);
+    --overlay: oklch(0.08 0.005 260 / 0.6);
+    --border-subtle: oklch(0.235 0.007 260);
+    --text-subtle: oklch(0.62 0.012 258);
+    --brand-glow: oklch(0.7 0.16 50 / 0.3);
+    --brand-subtle: oklch(0.25 0.045 50);
+    --brand-text: oklch(0.78 0.13 55);
+    --status-success: oklch(0.8 0.13 150);
+    --status-success-foreground: oklch(0.18 0.03 150);
+    --status-success-subtle: oklch(0.26 0.05 150);
+    --status-warning: oklch(0.83 0.12 80);
+    --status-warning-subtle: oklch(0.27 0.05 75);
+    --status-info: oklch(0.8 0.1 250);
+    --status-info-subtle: oklch(0.26 0.05 255);
+    --status-danger: oklch(0.72 0.17 25);
+    --status-danger-subtle: oklch(0.27 0.06 25);
+    --admin-shadow-overlay:
+        0 16px 40px -12px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(0.3 0.008 260);
+
+    color-scheme: dark;
+}
+
+/* Touch and narrow screens: 44 px targets. */
+@media (max-width: 767px), (pointer: coarse) {
+    [data-surface='admin'] {
+        --admin-control-height: 44px;
+        --admin-control-height-sm: 44px;
+        --admin-topbar-height: 56px;
+        --admin-page-gutter: 16px;
+        --admin-text-xl: 20px;
+    }
 }
 
 @layer base {
@@ -180,6 +355,11 @@
 
     body {
         @apply text-foreground;
+    }
+
+    [data-surface='admin'] body {
+        font-size: var(--admin-text-base);
+        line-height: 1.45;
     }
 
     button:not(:disabled),

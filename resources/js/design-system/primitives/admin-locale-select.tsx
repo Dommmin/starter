@@ -16,15 +16,18 @@ export type AdminLocaleSelectProps = {
     style?: never;
 };
 
-export function AdminLocaleSelect() {
-    const { t, locale, availableLocales } = useTranslation();
+/**
+ * Persists the admin UI locale. Shared by AdminLocaleSelect (settings) and the
+ * admin shell user menu so both report success and failure the same way.
+ */
+export function useAdminLocaleChange(): {
+    isPending: boolean;
+    changeLocale: (value: string) => void;
+} {
+    const { t, locale } = useTranslation();
     const [isPending, setIsPending] = useState(false);
 
-    if (availableLocales.length <= 1) {
-        return null;
-    }
-
-    const handleChange = (value: string) => {
+    const changeLocale = (value: string) => {
         if (value === locale || isPending) {
             return;
         }
@@ -48,10 +51,21 @@ export function AdminLocaleSelect() {
         );
     };
 
+    return { isPending, changeLocale };
+}
+
+export function AdminLocaleSelect() {
+    const { t, locale, availableLocales } = useTranslation();
+    const { isPending, changeLocale } = useAdminLocaleChange();
+
+    if (availableLocales.length <= 1) {
+        return null;
+    }
+
     return (
         <Select
             value={locale}
-            onValueChange={handleChange}
+            onValueChange={changeLocale}
             disabled={isPending}
         >
             <SelectTrigger

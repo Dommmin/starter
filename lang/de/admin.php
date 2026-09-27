@@ -77,6 +77,33 @@ return [
         'dashboard' => 'Übersicht',
         'modules' => 'Geschäftsmodule',
         'settings' => 'Plattform-Einstellungen',
+        'content' => 'Inhalte',
+        'communication' => 'Kommunikation',
+        'system' => 'System',
+        'subtitle' => 'Verwaltung',
+    ],
+
+    'shell' => [
+        'sidebarLabel' => 'Panel-Navigation',
+        'modulesLabel' => 'Module',
+        'breadcrumbLabel' => 'Brotkrumen',
+        'search' => 'Suchen…',
+        'openSearch' => 'Suchen und zu einem Modul springen',
+        'theme' => 'Design',
+        'language' => 'Sprache',
+        'roleAdmin' => 'Administrator',
+        'roleEditor' => 'Redakteur',
+    ],
+
+    'command' => [
+        'title' => 'Suche und Befehle',
+        'placeholder' => 'Zu einem Modul springen…',
+        'results' => 'Ergebnisse',
+        'navigation' => 'Navigation',
+        'empty' => 'Keine Ergebnisse für „:query“',
+        'hintSelect' => 'auswählen',
+        'hintOpen' => 'öffnen',
+        'hintClose' => 'schließen',
     ],
 
     'users' => [

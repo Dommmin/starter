@@ -557,29 +557,6 @@
         ]
     },
     {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-APP-SIDEBAR-HEADER",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/app-sidebar-header.tsx",
-        "contentHash": "sha256:e294126a1f1caa8eab811c5f109182d38b546a6737e485a8b7f52043a246b19e",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                12,
-                14
-            ],
-            [
-                17,
-                17
-            ]
-        ]
-    },
-    {
         "id": "DS-EXC-UPSTREAM-COMPONENTS-DELETE-USER",
         "rule": "ds/no-style-escape",
         "file": "resources/js/components/delete-user.tsx",
@@ -723,79 +700,6 @@
             [
                 83,
                 84
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-NAV-FOOTER",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/nav-footer.tsx",
-        "contentHash": "sha256:357eeed7fde8937dcb629272896526ab223343f540bd30c2a087504d8433550a",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                22,
-                22
-            ],
-            [
-                30,
-                30
-            ],
-            [
-                38,
-                38
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-NAV-MAIN",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/nav-main.tsx",
-        "contentHash": "sha256:c2676058b117944f5b2b8a48c7d3dd9728dfad638bc66b5cd43e830060915864",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                18,
-                18
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-NAV-USER",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/nav-user.tsx",
-        "contentHash": "sha256:7a003397c732b1d25df125c43ee58b1a906ba3353f5d721aeacf99fbed165cc6",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                34,
-                34
-            ],
-            [
-                38,
-                38
-            ],
-            [
-                42,
-                42
             ]
         ]
     },
@@ -2102,25 +2006,6 @@
             [
                 71,
                 71
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-LAYOUTS-APP-APP-SIDEBAR-LAYOUT",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/layouts/app/app-sidebar-layout.tsx",
-        "contentHash": "sha256:1e35bee7741314a1d1e603cdadd91b5849ffc909ebf3e138ab5da22f1646fd8e",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                15,
-                15
             ]
         ]
     },

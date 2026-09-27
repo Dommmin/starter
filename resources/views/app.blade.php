@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+{{-- Panel pages (admin/*, settings/*) share the admin surface; keep in sync with surfaceFor() in resources/js/lib/page-resolver.ts --}}
+@php($surface = str_starts_with($page['component'], 'admin/') || str_starts_with($page['component'], 'settings/') ? 'admin' : null)
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) @if($surface) data-surface="{{ $surface }}" @endif>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,6 +29,14 @@
 
             html.dark {
                 background-color: oklch(0.14 0.005 85);
+            }
+
+            html[data-surface="admin"] {
+                background-color: oklch(0.984 0.003 255);
+            }
+
+            html.dark[data-surface="admin"] {
+                background-color: oklch(0.165 0.006 260);
             }
         </style>
 

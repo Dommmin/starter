@@ -1,6 +1,7 @@
 export * from './accordion';
 export * from './action-menu';
 export * from './admin-locale-select';
+export * from './admin-shell';
 export * from './alert';
 export * from './avatar';
 export * from './badge';
@@ -9,6 +10,7 @@ export * from './button';
 export * from './card';
 export * from './checkbox-field';
 export * from './collapsible';
+export * from './command-palette';
 export * from './conflict-dialog';
 export * from './confirm-dialog';
 export * from './contact-section';

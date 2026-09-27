@@ -162,7 +162,7 @@ Pierwszy przykład ResourceList (2026-09-11): [UserIndexController](../../app/Ht
 
 Uwaga: dotyczy panelu administracyjnego — publiczna nawigacja (`PublicHeader`, `MobileNav`) jest opisana w WEB-01, gdzie w tej sesji dodano typowane elementy nawigacji i realny hamburger na wąskich ekranach.
 
-AdminShell/Sidebar/Topbar/Breadcrumbs/UserMenu już działają jako `app-shell.tsx`, `app-sidebar.tsx`, `app-header.tsx`, `breadcrumbs.tsx`, `user-menu-content.tsx` w `resources/js/components/` — **nie są jeszcze przeniesione do `design-system/primitives`** i część (`user-menu-content.tsx`) ma dziś aktywne naruszenia `ui-contract` (ADR-019) z wcześniejszej, niedokończonej pracy w tym repo — poza zakresem tej sesji, do zamknięcia osobno. GlobalSearch/CommandPalette = `planned` (P1). Przełącznik organizacji = `planned` (P2), wymaga modelu dostępu multi-tenant (decyzja produktowa + backend).
+AdminShell (sidebar z grupami, drawer mobilny, topbar z okruszkami, UserMenu z motywem i językiem) oraz CommandPalette (⌘K / Ctrl+K, nawigacja do modułów) działają jako prymitywy `design-system/primitives/admin-shell.tsx` i `command-palette.tsx`, składane w `layouts/admin-layout.tsx`. Wyszukiwanie rekordów w CommandPalette = `planned` (wymaga endpointu wyszukiwania). Przełącznik organizacji = `planned` (P2), wymaga modelu dostępu multi-tenant (decyzja produktowa + backend).
 
 ### ADM-16 — Powiadomienia (P0 feedback; P1 centrum; P2 realtime) — częściowo `implemented`
 

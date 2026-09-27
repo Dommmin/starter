@@ -77,6 +77,33 @@ return [
         'dashboard' => 'Pulpit',
         'modules' => 'Moduły biznesowe',
         'settings' => 'Ustawienia platformy',
+        'content' => 'Treść',
+        'communication' => 'Komunikacja',
+        'system' => 'System',
+        'subtitle' => 'Administracja',
+    ],
+
+    'shell' => [
+        'sidebarLabel' => 'Nawigacja panelu',
+        'modulesLabel' => 'Moduły',
+        'breadcrumbLabel' => 'Ścieżka',
+        'search' => 'Szukaj…',
+        'openSearch' => 'Szukaj i przejdź do modułu',
+        'theme' => 'Motyw',
+        'language' => 'Język',
+        'roleAdmin' => 'Administrator',
+        'roleEditor' => 'Redaktor',
+    ],
+
+    'command' => [
+        'title' => 'Wyszukiwanie i polecenia',
+        'placeholder' => 'Przejdź do modułu…',
+        'results' => 'Wyniki',
+        'navigation' => 'Nawigacja',
+        'empty' => 'Brak wyników dla „:query”',
+        'hintSelect' => 'wybierz',
+        'hintOpen' => 'otwórz',
+        'hintClose' => 'zamknij',
     ],
 
     'users' => [

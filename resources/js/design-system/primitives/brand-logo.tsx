@@ -4,14 +4,29 @@ import { useTranslation } from '@/i18n';
 import { home } from '@/routes';
 import { home as localizedHome } from '@/routes/localized';
 
+/**
+ * Uploaded logo. Structurally compatible with `App.Data.Media.MediaImageData`
+ * plus `alt` (`{ ...media, alt }`), so a DAM image can be passed directly.
+ */
+export type BrandLogoImage = {
+    src: string;
+    /** Accessible name of the logo link, e.g. the organisation name. */
+    alt: string;
+    width?: number;
+    height?: number;
+    srcset?: string;
+};
+
 export type BrandLogoProps = {
     href?: string;
     ariaLabel?: string;
+    /** Image logo; falls back to the text logo when absent. */
+    image?: BrandLogoImage;
     className?: never;
     style?: never;
 };
 
-export function BrandLogo({ href, ariaLabel }: BrandLogoProps) {
+export function BrandLogo({ href, ariaLabel, image }: BrandLogoProps) {
     const { t, locale } = useTranslation();
     const targetHref =
         href ?? (locale === 'en' ? home.url() : localizedHome.url({ locale }));
@@ -20,16 +35,33 @@ export function BrandLogo({ href, ariaLabel }: BrandLogoProps) {
         <Link
             href={targetHref}
             prefetch
-            aria-label={ariaLabel ?? t('brand.name')}
+            aria-label={image ? ariaLabel : (ariaLabel ?? t('brand.name'))}
             className="group focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-2.5 rounded-lg text-base font-semibold tracking-tight transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
-            <span className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
-                <Compass className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="text-foreground font-serif text-lg tracking-tight">
-                {t('brand.firstPart')}{' '}
-                <span className="text-primary">{t('brand.secondPart')}</span>
-            </span>
+            {image ? (
+                <img
+                    src={image.src}
+                    srcSet={image.srcset || undefined}
+                    sizes={image.srcset ? '10rem' : undefined}
+                    alt={image.alt}
+                    width={image.width}
+                    height={image.height}
+                    decoding="async"
+                    className="block h-9 w-auto max-w-40 object-contain"
+                />
+            ) : (
+                <>
+                    <span className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
+                        <Compass className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span className="text-foreground font-serif text-lg tracking-tight">
+                        {t('brand.firstPart')}{' '}
+                        <span className="text-primary">
+                            {t('brand.secondPart')}
+                        </span>
+                    </span>
+                </>
+            )}
         </Link>
     );
 }

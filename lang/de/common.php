@@ -16,6 +16,7 @@ return [
         'themeSwitcherNext' => 'Thema zu :mode wechseln',
         'openMenu' => 'Menü öffnen',
         'closeMenu' => 'Menü schließen',
+        'opensInNewTab' => 'öffnet in einem neuen Tab',
     ],
     'nav' => [
         'home' => 'Startseite',
@@ -31,6 +32,16 @@ return [
         'articles' => 'Artikel',
         'features' => 'Funktionen',
         'menuTitle' => 'Menü',
+        'submenu' => 'Untermenü: :label',
+    ],
+    'footer' => [
+        'contact' => 'Kontakt',
+        'social' => 'Soziale Medien',
+    ],
+    'orderable' => [
+        'moveUp' => ':label nach oben verschieben',
+        'moveDown' => ':label nach unten verschieben',
+        'moved' => ':label auf Position :position von :total verschoben',
     ],
     'theme' => [
         'light' => 'Hell',

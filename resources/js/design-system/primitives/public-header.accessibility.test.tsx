@@ -25,7 +25,7 @@ vi.mock('@inertiajs/react', () => ({
     }) => {
         const targetHref = typeof href === 'string' ? href : href.url;
         return (
-            <a href={targetHref} {...props}>
+            <a href={targetHref} data-inertia-link="" {...props}>
                 {children}
             </a>
         );
@@ -85,7 +85,12 @@ describe('PublicHeader', () => {
         const container = await render(
             <PublicHeader
                 navItems={[
-                    { id: 'features', label: 'Features', href: '#features' },
+                    {
+                        id: 'features',
+                        kind: 'anchor',
+                        label: 'Features',
+                        href: '#features',
+                    },
                 ]}
             />,
         );
@@ -118,5 +123,160 @@ describe('PublicHeader', () => {
         expect(
             document.querySelector('nav[aria-label="nav.menuTitle"]'),
         ).toBeNull();
+    });
+
+    it('renders each link kind with the element and attributes it requires', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                    },
+                    {
+                        id: 'features',
+                        kind: 'anchor',
+                        label: 'Features',
+                        href: '#features',
+                    },
+                    {
+                        id: 'docs',
+                        kind: 'external',
+                        label: 'Docs',
+                        href: 'https://docs.example.test',
+                        newTab: true,
+                    },
+                ]}
+            />,
+        );
+
+        const desktop = container;
+        const internal = desktop?.querySelector('a[href="/articles"]');
+        const anchor = desktop?.querySelector('a[href="#features"]');
+        const external = desktop?.querySelector<HTMLAnchorElement>(
+            'a[href="https://docs.example.test"]',
+        );
+
+        expect(internal?.hasAttribute('data-inertia-link')).toBe(true);
+        expect(anchor?.hasAttribute('data-inertia-link')).toBe(false);
+        expect(external?.hasAttribute('data-inertia-link')).toBe(false);
+        expect(external?.target).toBe('_blank');
+        expect(external?.rel).toBe('noopener noreferrer');
+        expect(external?.textContent).toContain('a11y.opensInNewTab');
+    });
+
+    it('opens a disclosure submenu, closes it with Escape and returns focus', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'company',
+                        kind: 'group',
+                        label: 'Company',
+                        children: [
+                            {
+                                id: 'about',
+                                kind: 'internal',
+                                label: 'About',
+                                href: '/about',
+                            },
+                            {
+                                id: 'blog',
+                                kind: 'external',
+                                label: 'Blog',
+                                href: 'https://blog.example.test',
+                            },
+                        ],
+                    },
+                ]}
+            />,
+        );
+
+        const trigger = Array.from(
+            container.querySelectorAll<HTMLButtonElement>('button'),
+        ).find((button) => button.textContent === 'Company');
+
+        expect(trigger).toBeDefined();
+        expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(container.querySelector('[role="menu"]')).toBeNull();
+        expect(container.querySelector('a[href="/about"]')).toBeNull();
+
+        await act(async () => {
+            trigger?.click();
+        });
+
+        expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+        const submenu = container.querySelector('ul[aria-label="nav.submenu"]');
+        const about =
+            submenu?.querySelector<HTMLAnchorElement>('a[href="/about"]');
+        expect(about).not.toBeNull();
+        expect(
+            submenu
+                ?.querySelector('a[href="https://blog.example.test"]')
+                ?.getAttribute('rel'),
+        ).toBe('noopener noreferrer');
+
+        about?.focus();
+        await act(async () => {
+            about?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+            );
+        });
+
+        expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(trigger);
+        expect(container.querySelector('a[href="/about"]')).toBeNull();
+    });
+
+    it('closes the submenu when focus leaves it', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'services',
+                        kind: 'internal',
+                        label: 'Services',
+                        href: '/services',
+                        children: [
+                            {
+                                id: 'design',
+                                kind: 'internal',
+                                label: 'Design',
+                                href: '/services/design',
+                            },
+                        ],
+                    },
+                ]}
+            />,
+        );
+
+        const trigger = Array.from(
+            container.querySelectorAll<HTMLButtonElement>('button'),
+        ).find((button) => button.textContent === 'Services');
+
+        await act(async () => {
+            trigger?.click();
+        });
+
+        // A parent with its own href is listed first inside the submenu.
+        const links = container.querySelectorAll(
+            'ul[aria-label="nav.submenu"] a',
+        );
+        expect(
+            Array.from(links).map((link) => link.getAttribute('href')),
+        ).toEqual(['/services', '/services/design']);
+
+        await act(async () => {
+            trigger?.dispatchEvent(
+                new FocusEvent('focusout', {
+                    bubbles: true,
+                    relatedTarget: document.body,
+                }),
+            );
+        });
+
+        expect(trigger?.getAttribute('aria-expanded')).toBe('false');
     });
 });

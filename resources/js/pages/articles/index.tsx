@@ -2,13 +2,12 @@ import { router } from '@inertiajs/react';
 import {
     Card,
     EmptyState,
-    Footer,
     Grid,
     Heading,
     Image,
     Link,
     Paginator,
-    PublicHeader,
+    PublicChrome,
     Section,
     Seo,
     Stack,
@@ -44,9 +43,11 @@ export default function ArticlesIndex({
                 }}
             />
 
-            <PublicHeader />
-
-            <main id="main-content">
+            <PublicChrome
+                footer={{
+                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
+                }}
+            >
                 <Section spacing="default" container="wide">
                     <Stack gap="relaxed">
                         <Stack gap="tight">
@@ -137,11 +138,7 @@ export default function ArticlesIndex({
                         )}
                     </Stack>
                 </Section>
-            </main>
-
-            <Footer
-                copyright={`© ${new Date().getFullYear()} ${t('landing.footerCopy')}`}
-            />
+            </PublicChrome>
         </>
     );
 }

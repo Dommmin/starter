@@ -1,9 +1,8 @@
 import {
-    Footer,
     Heading,
     Image,
     Link,
-    PublicHeader,
+    PublicChrome,
     RichTextContent,
     Section,
     Seo,
@@ -53,9 +52,11 @@ export default function ArticleShow({
                 }}
             />
 
-            <PublicHeader />
-
-            <main id="main-content">
+            <PublicChrome
+                footer={{
+                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
+                }}
+            >
                 <Section spacing="default" container="reading">
                     <article>
                         <Stack gap="default">
@@ -97,11 +98,7 @@ export default function ArticleShow({
                         </Stack>
                     </article>
                 </Section>
-            </main>
-
-            <Footer
-                copyright={`© ${new Date().getFullYear()} ${t('landing.footerCopy')}`}
-            />
+            </PublicChrome>
         </>
     );
 }

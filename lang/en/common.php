@@ -16,6 +16,7 @@ return [
         'themeSwitcherNext' => 'Switch theme to :mode',
         'openMenu' => 'Open menu',
         'closeMenu' => 'Close menu',
+        'opensInNewTab' => 'opens in a new tab',
     ],
     'nav' => [
         'home' => 'Home',
@@ -31,6 +32,16 @@ return [
         'articles' => 'Articles',
         'features' => 'Features',
         'menuTitle' => 'Menu',
+        'submenu' => ':label submenu',
+    ],
+    'footer' => [
+        'contact' => 'Contact',
+        'social' => 'Social media',
+    ],
+    'orderable' => [
+        'moveUp' => 'Move :label up',
+        'moveDown' => 'Move :label down',
+        'moved' => ':label moved to position :position of :total',
     ],
     'theme' => [
         'light' => 'Light',

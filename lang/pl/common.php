@@ -16,6 +16,7 @@ return [
         'themeSwitcherNext' => 'Zmień motyw na: :mode',
         'openMenu' => 'Otwórz menu',
         'closeMenu' => 'Zamknij menu',
+        'opensInNewTab' => 'otwiera się w nowej karcie',
     ],
     'nav' => [
         'home' => 'Strona główna',
@@ -31,6 +32,16 @@ return [
         'articles' => 'Artykuły',
         'features' => 'Funkcje',
         'menuTitle' => 'Menu',
+        'submenu' => 'Podmenu: :label',
+    ],
+    'footer' => [
+        'contact' => 'Kontakt',
+        'social' => 'Media społecznościowe',
+    ],
+    'orderable' => [
+        'moveUp' => 'Przesuń :label w górę',
+        'moveDown' => 'Przesuń :label w dół',
+        'moved' => ':label przesunięto na pozycję :position z :total',
     ],
     'theme' => [
         'light' => 'Jasny',

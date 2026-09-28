@@ -1,7 +1,6 @@
 import {
-    Footer,
     Heading,
-    PublicHeader,
+    PublicChrome,
     RichTextContent,
     Section,
     Seo,
@@ -43,9 +42,11 @@ export default function PageShow({
                 }}
             />
 
-            <PublicHeader />
-
-            <main id="main-content">
+            <PublicChrome
+                footer={{
+                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
+                }}
+            >
                 <Section spacing="default" container="reading">
                     <Stack gap="default">
                         <Stack gap="tight">
@@ -65,11 +66,7 @@ export default function PageShow({
                         <RichTextContent html={bodyHtml} />
                     </Stack>
                 </Section>
-            </main>
-
-            <Footer
-                copyright={`© ${new Date().getFullYear()} ${t('landing.footerCopy')}`}
-            />
+            </PublicChrome>
         </>
     );
 }

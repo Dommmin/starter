@@ -1,15 +1,17 @@
 import { useTranslation } from '@/i18n';
-import { BrandLogo } from './brand-logo';
+import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { LocaleSwitcher } from './locale-switcher';
 import { ThemeSwitcher } from './theme-switcher';
 
 export type HeaderUtilityProps = {
     children?: React.ReactNode;
+    /** Optional image logo; the text logo otherwise. */
+    logo?: BrandLogoImage;
     className?: never;
     style?: never;
 };
 
-export function HeaderUtility({ children }: HeaderUtilityProps) {
+export function HeaderUtility({ children, logo }: HeaderUtilityProps) {
     const { t } = useTranslation();
 
     return (
@@ -21,7 +23,7 @@ export function HeaderUtility({ children }: HeaderUtilityProps) {
                 {t('a11y.skipToContent')}
             </a>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
-                <BrandLogo />
+                <BrandLogo image={logo} />
 
                 <nav
                     aria-label={t('a11y.mainNavigation')}

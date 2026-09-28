@@ -19,6 +19,11 @@ export type ButtonProps = {
     variant?: ButtonVariant;
     size?: ButtonSize;
     href?: string | RouteDefinition<'get'> | { url: string };
+    /**
+     * With `href`: render a plain `<a download>` (no Inertia visit) so the
+     * browser saves the response. A string suggests the file name.
+     */
+    download?: boolean | string;
     isPending?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
@@ -56,6 +61,7 @@ export function Button({
     variant = 'primary',
     size = 'default',
     href,
+    download,
     isPending = false,
     disabled = false,
     type = 'button',
@@ -95,6 +101,21 @@ export function Button({
             typeof href === 'object' && href !== null && 'url' in href
                 ? href.url
                 : href;
+
+        if (download) {
+            return (
+                <a
+                    href={targetHref}
+                    download={download === true ? '' : download}
+                    aria-label={ariaLabel}
+                    className={baseClasses}
+                    onClick={onClick}
+                >
+                    {content}
+                </a>
+            );
+        }
+
         return (
             <Link
                 href={targetHref}

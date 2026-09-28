@@ -5,10 +5,9 @@ import {
     Button,
     CTA,
     FeatureGrid,
-    Footer,
     Grid,
     Hero,
-    PublicHeader,
+    PublicChrome,
     Section,
     Seo,
     Stack,
@@ -77,15 +76,17 @@ export default function Welcome() {
                 ]}
             />
 
-            <PublicHeader
+            <PublicChrome
                 navItems={[
                     {
                         id: 'features',
+                        kind: 'anchor',
                         label: t('nav.features'),
                         href: '#features',
                     },
                     {
                         id: 'articles',
+                        kind: 'internal',
                         label: t('nav.articles'),
                         href: (locale === defaultLocale
                             ? articlesIndex()
@@ -93,9 +94,10 @@ export default function Welcome() {
                         ).url,
                     },
                 ]}
-            />
-
-            <main id="main-content">
+                footer={{
+                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
+                }}
+            >
                 <Hero
                     eyebrow={t('landing.badge')}
                     title={t('landing.heroTitle')}
@@ -252,11 +254,7 @@ export default function Welcome() {
                     tone="inverted"
                     actions={primaryActions}
                 />
-            </main>
-
-            <Footer
-                copyright={`© ${new Date().getFullYear()} ${t('landing.footerCopy')}`}
-            />
+            </PublicChrome>
         </>
     );
 }

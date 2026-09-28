@@ -1,6 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Download, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Badge,
@@ -21,6 +21,7 @@ import {
     Text,
     TextareaField,
 } from '@/design-system/primitives';
+import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import {
@@ -48,6 +49,20 @@ export default function AdminMediaEdit() {
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const errors = form.errors as Partial<Record<string, string>>;
+
+    useMediaScanPoll(asset.status === 'quarantine', ['asset']);
+
+    // The scan result bumps `updated_at`; adopt it so saving the alt text
+    // afterwards is not rejected as a conflicting edit.
+    const renderedStatus = useRef(asset.status);
+    useEffect(() => {
+        if (renderedStatus.current === asset.status) {
+            return;
+        }
+
+        renderedStatus.current = asset.status;
+        form.setData('updated_at', asset.updatedAt ?? '');
+    });
 
     const formatSize = (bytes: number) =>
         formatNumber(bytes / 1024, {

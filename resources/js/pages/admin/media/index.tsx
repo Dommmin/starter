@@ -14,6 +14,7 @@ import {
     UploadQueue,
     type UploadQueueItem,
 } from '@/design-system/primitives';
+import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import {
@@ -47,6 +48,11 @@ export default function AdminMediaIndex() {
     const [isDeleting, setIsDeleting] = useState(false);
     const isUploadingRef = useRef(false);
     const maxMegabytes = Math.floor(upload.maxBytes / 1024 / 1024);
+
+    useMediaScanPoll(
+        items.some((item) => item.status === 'quarantine'),
+        ['items'],
+    );
 
     const formatSize = (bytes: number) =>
         bytes >= 1024 * 1024

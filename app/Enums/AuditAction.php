@@ -17,7 +17,10 @@ enum AuditAction: string
     case ArticlePublished = 'article.published';
     case ArticleUnpublished = 'article.unpublished';
     case ArticleDeleted = 'article.deleted';
+    case UserCreated = 'user.created';
+    case UserUpdated = 'user.updated';
     case UserRoleChanged = 'user.role_changed';
+    case UserDeleted = 'user.deleted';
     case MediaUploaded = 'media.uploaded';
     case MediaCleaned = 'media.cleaned';
     case MediaRejected = 'media.rejected';

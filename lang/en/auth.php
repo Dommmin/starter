@@ -120,6 +120,13 @@ return [
             'action' => 'Verify Email Address',
             'line_2' => 'If you did not create an account, no further action is required.',
         ],
+        'invitation' => [
+            'subject' => 'Your :app account',
+            'line_1' => 'An administrator created an account for you at :app. Set your password to sign in.',
+            'action' => 'Set password',
+            'line_2' => 'This link will expire in :count minutes. After that, use "Forgot password" on the sign-in page.',
+            'line_3' => 'If you did not expect this invitation, you can ignore this email.',
+        ],
         'reset_password' => [
             'subject' => 'Reset your password',
             'line_1' => 'You are receiving this email because we received a password reset request for your account.',

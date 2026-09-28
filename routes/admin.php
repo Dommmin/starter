@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\UserIndexController;
+use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
 use App\Models\Article;
 use App\Models\AuditLog;
@@ -26,6 +27,24 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/users', [UserIndexController::class, 'index'])
             ->name('users.index')
             ->can('viewAny', User::class);
+        Route::get('/users/create', [UserController::class, 'create'])
+            ->name('users.create')
+            ->can('create', User::class);
+        Route::post('/users', [UserController::class, 'store'])
+            ->name('users.store')
+            ->can('create', User::class)
+            ->middleware('password.confirm');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])
+            ->name('users.edit')
+            ->can('update', 'user');
+        Route::put('/users/{user}', [UserController::class, 'update'])
+            ->name('users.update')
+            ->can('update', 'user')
+            ->middleware('password.confirm');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])
+            ->name('users.destroy')
+            ->can('delete', 'user')
+            ->middleware('password.confirm');
         Route::get('/audit', [AuditLogController::class, 'index'])
             ->name('audit.index')
             ->can('viewAny', AuditLog::class);

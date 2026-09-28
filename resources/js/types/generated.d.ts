@@ -291,6 +291,25 @@ declare namespace App {
                     publishedAt: string | null;
                 };
             }
+            namespace Users {
+                export type UserAbilitiesData = {
+                    delete: boolean;
+                    changeRole: boolean;
+                };
+                export type UserEditorData = {
+                    user: App.Data.Admin.Users.UserFormData;
+                    can: App.Data.Admin.Users.UserAbilitiesData;
+                };
+                export type UserFormData = {
+                    id: number | null;
+                    updatedAt: string | null;
+                    name: string;
+                    email: string;
+                    role: App.Enums.UserRole | null;
+                    emailVerified: boolean;
+                    twoFactorEnabled: boolean;
+                };
+            }
         }
         namespace Contact {
             export type ContactFormData = {
@@ -398,7 +417,10 @@ declare namespace App {
             | 'article.published'
             | 'article.unpublished'
             | 'article.deleted'
+            | 'user.created'
+            | 'user.updated'
             | 'user.role_changed'
+            | 'user.deleted'
             | 'media.uploaded'
             | 'media.cleaned'
             | 'media.rejected'

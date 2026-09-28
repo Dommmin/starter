@@ -59,6 +59,22 @@ await test('shell opens Bash in the application container', () => {
     });
 });
 
+await test('init-project starts the database and passes ARGS to the command', () => {
+    fixture((cwd) => {
+        const command = execFileSync(
+            'make',
+            ['--dry-run', 'init-project', 'ARGS=--dry-run'],
+            { cwd, encoding: 'utf8' },
+        );
+
+        assert.match(command, /up -d --wait postgres redis/);
+        assert.match(
+            command,
+            /run --rm --no-deps app php artisan app:init-project --dry-run/,
+        );
+    });
+});
+
 await test('parallel test target runs Pest in four processes by default', () => {
     fixture((cwd) => {
         const command = execFileSync('make', ['--dry-run', 'test-parallel'], {

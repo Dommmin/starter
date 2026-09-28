@@ -10,7 +10,7 @@ ARGS ?=
 SERVICE ?=
 TEST_PROCESSES ?= 4
 
-.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup check assets artisan composer npm shell db config backup restore-drill e2e
+.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup check assets artisan composer npm shell db config backup restore-drill e2e init-project
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -97,6 +97,10 @@ e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymu
 	status=$$?; $(E2E_COMPOSE) rm --stop --force ssr playwright; \
 	$(COMPOSE) up -d --wait --wait-timeout 180 web queue; \
 	echo 'Usługi wróciły do APP_ENV=local; serwer Vite dev pozostaje zatrzymany (`make up`).'; exit $$status
+
+init-project: env ## Start nowego projektu: marka, języki, admin, demo; ARGS='--dry-run' (local)
+	$(COMPOSE) up -d --wait postgres redis
+	$(RUN) php artisan app:init-project $(ARGS)
 
 artisan: ## Artisan, np. ARGS='migrate:status'
 	$(RUN) php artisan $(ARGS)

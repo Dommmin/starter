@@ -11,16 +11,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Create an account on behalf of an administrator: an unusable random
- * password, the chosen panel role (or none) and `user.created` in the audit
- * log, all in one transaction. The invitation with a set-password link is
- * queued after the commit; the administrator never sets or sees a password.
+ * Create an account on behalf of an administrator (or the console): an
+ * unusable random password, the chosen panel role (or none) and
+ * `user.created` in the audit log, all in one transaction. The invitation
+ * with a set-password link is queued after the commit; nobody sets or sees
+ * a password.
  */
 class CreateUser
 {
     public function __construct(private readonly RecordAuditEvent $audit) {}
 
-    public function handle(User $actor, string $name, string $email, ?UserRole $role): User
+    /**
+     * @param  User|null  $actor  Null when the account is created from the console.
+     */
+    public function handle(?User $actor, string $name, string $email, ?UserRole $role): User
     {
         $user = DB::transaction(function () use ($actor, $name, $email, $role): User {
             $user = User::query()->create([

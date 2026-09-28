@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->admin()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => DemoContent::USER_NAME,
+            'email' => DemoContent::USER_EMAIL,
         ]);
 
         if (app()->environment('local')) {

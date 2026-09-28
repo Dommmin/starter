@@ -18,11 +18,13 @@ import {
 import { useTranslation } from '@/i18n';
 import { login, register } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
+import { index as articlesIndex } from '@/routes/articles';
+import { index as localizedArticlesIndex } from '@/routes/localized/articles';
 
 type WelcomeProps = App.Data.Content.WelcomePageData;
 
 export default function Welcome() {
-    const { t, locale } = useTranslation();
+    const { t, locale, defaultLocale } = useTranslation();
     const page = usePage<WelcomeProps>();
     const { auth, seo, contactForm } = page.props;
     const alternateUrls =
@@ -81,6 +83,14 @@ export default function Welcome() {
                         id: 'features',
                         label: t('nav.features'),
                         href: '#features',
+                    },
+                    {
+                        id: 'articles',
+                        label: t('nav.articles'),
+                        href: (locale === defaultLocale
+                            ? articlesIndex()
+                            : localizedArticlesIndex({ locale })
+                        ).url,
                     },
                 ]}
             />

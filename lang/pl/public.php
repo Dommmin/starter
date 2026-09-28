@@ -41,6 +41,18 @@ return [
     'page' => [
         'publishedOn' => 'Opublikowano :date',
     ],
+    'articles' => [
+        'title' => 'Artykuły',
+        'description' => 'Aktualności i artykuły naszego zespołu.',
+        'listLabel' => 'Lista artykułów',
+        'empty' => 'Nie opublikowano jeszcze żadnych artykułów.',
+        'readMore' => 'Czytaj artykuł: :title',
+        'publishedOn' => 'Opublikowano :date',
+        'backToList' => 'Wszystkie artykuły',
+        'previousPage' => 'Poprzednia strona',
+        'nextPage' => 'Następna strona',
+        'paginationSummary' => 'Strona :page z :total',
+    ],
     'contact' => [
         'title' => 'Skontaktuj się z nami',
         'description' => 'Wyślij wiadomość, a odpowiemy na podany adres e-mail.',

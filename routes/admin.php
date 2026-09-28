@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\Articles\ArticleController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
+use App\Models\Article;
 use App\Models\AuditLog;
 use App\Models\ContactMessage;
 use App\Models\Faq;
@@ -46,6 +48,25 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/pages/{page}', [PageController::class, 'destroy'])
             ->name('pages.destroy')
             ->can('delete', 'page');
+
+        Route::get('/articles', [ArticleController::class, 'index'])
+            ->name('articles.index')
+            ->can('viewAny', Article::class);
+        Route::get('/articles/create', [ArticleController::class, 'create'])
+            ->name('articles.create')
+            ->can('create', Article::class);
+        Route::post('/articles', [ArticleController::class, 'store'])
+            ->name('articles.store')
+            ->can('create', Article::class);
+        Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])
+            ->name('articles.edit')
+            ->can('update', 'article');
+        Route::put('/articles/{article}', [ArticleController::class, 'update'])
+            ->name('articles.update')
+            ->can('update', 'article');
+        Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])
+            ->name('articles.destroy')
+            ->can('delete', 'article');
 
         Route::get('/faqs', [FaqController::class, 'index'])
             ->name('faqs.index')

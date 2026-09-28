@@ -28,6 +28,7 @@ return [
         'appearance' => 'Appearance',
         'settings' => 'Settings',
         'openAdmin' => 'Open admin panel',
+        'articles' => 'Articles',
         'features' => 'Features',
         'menuTitle' => 'Menu',
     ],

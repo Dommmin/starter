@@ -28,6 +28,7 @@ return [
         'appearance' => 'Wygląd',
         'settings' => 'Ustawienia',
         'openAdmin' => 'Otwórz panel administracyjny',
+        'articles' => 'Artykuły',
         'features' => 'Funkcje',
         'menuTitle' => 'Menu',
     ],

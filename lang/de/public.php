@@ -41,6 +41,18 @@ return [
     'page' => [
         'publishedOn' => 'Veröffentlicht am :date',
     ],
+    'articles' => [
+        'title' => 'Artikel',
+        'description' => 'Neuigkeiten und Artikel unseres Teams.',
+        'listLabel' => 'Artikelliste',
+        'empty' => 'Es wurden noch keine Artikel veröffentlicht.',
+        'readMore' => 'Artikel lesen: :title',
+        'publishedOn' => 'Veröffentlicht am :date',
+        'backToList' => 'Alle Artikel',
+        'previousPage' => 'Vorherige Seite',
+        'nextPage' => 'Nächste Seite',
+        'paginationSummary' => 'Seite :page von :total',
+    ],
     'contact' => [
         'title' => 'Kontakt',
         'description' => 'Senden Sie uns eine Nachricht, wir antworten Ihnen per E-Mail.',

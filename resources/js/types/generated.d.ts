@@ -1,6 +1,61 @@
 declare namespace App {
     namespace Data {
         namespace Admin {
+            namespace Articles {
+                export type ArticleAbilitiesData = {
+                    create: boolean;
+                    publish: boolean;
+                    delete: boolean;
+                };
+                export type ArticleEditorData = {
+                    article: App.Data.Admin.Articles.ArticleFormData;
+                    locales: App.Data.Content.ContentLocalesData;
+                    can: App.Data.Admin.Articles.ArticleAbilitiesData;
+                };
+                export type ArticleFormData = {
+                    id: number | null;
+                    updatedAt: string | null;
+                    coverMediaId: number | null;
+                    translations: Record<
+                        string,
+                        App.Data.Admin.Articles.ArticleTranslationFormData
+                    >;
+                };
+                export type ArticleIndexData = {
+                    items: App.Data.Admin.Articles.ArticleListItemData[];
+                    pagination: App.Data.Listing.ListPaginationData;
+                    filters: App.Data.Admin.Articles.ArticleListFiltersData;
+                    locales: App.Data.Content.ContentLocalesData;
+                    can: App.Data.Admin.Articles.ArticleAbilitiesData;
+                };
+                export type ArticleListFiltersData = {
+                    search: string;
+                    sort: 'title' | 'updated_at';
+                    direction: 'asc' | 'desc';
+                    status: 'all' | 'draft' | 'published';
+                    locale: string;
+                };
+                export type ArticleListItemData = {
+                    id: number;
+                    title: string;
+                    slug: string;
+                    status: App.Enums.PublicationStatus;
+                    scheduled: boolean;
+                    publishedAt: string | null;
+                    locale: string;
+                    locales: string[];
+                    updatedAt: string | null;
+                };
+                export type ArticleTranslationFormData = {
+                    title: string;
+                    slug: string;
+                    excerpt: string | null;
+                    metaDescription: string | null;
+                    body: { [key: string]: unknown } | null;
+                    status: App.Enums.PublicationStatus;
+                    publishedOn: string | null;
+                };
+            }
             namespace Audit {
                 export type AuditLogIndexData = {
                     items: App.Data.Admin.Audit.AuditLogListItemData[];
@@ -243,6 +298,14 @@ declare namespace App {
             };
         }
         namespace Content {
+            export type ArticleSummaryData = {
+                title: string;
+                url: string;
+                excerpt: string | null;
+                publishedAt: string | null;
+                cover: App.Data.Media.MediaImageData | null;
+                coverAlt: string;
+            };
             export type ContentLocaleData = {
                 code: string;
                 name: string;
@@ -252,6 +315,24 @@ declare namespace App {
             export type ContentLocalesData = {
                 available: App.Data.Content.ContentLocaleData[];
                 default: string;
+            };
+            export type PublicArticleData = {
+                title: string;
+                excerpt: string | null;
+                metaDescription: string | null;
+                bodyHtml: string;
+                locale: string;
+                publishedAt: string | null;
+                updatedAt: string | null;
+                cover: App.Data.Media.MediaImageData | null;
+                coverAlt: string;
+                listUrl: string;
+                alternates: Record<string, string>;
+            };
+            export type PublicArticleListData = {
+                items: App.Data.Content.ArticleSummaryData[];
+                pagination: App.Data.Listing.ListPaginationData;
+                locale: string;
             };
             export type PublicPageData = {
                 title: string;
@@ -312,6 +393,11 @@ declare namespace App {
             | 'page.published'
             | 'page.unpublished'
             | 'page.deleted'
+            | 'article.created'
+            | 'article.updated'
+            | 'article.published'
+            | 'article.unpublished'
+            | 'article.deleted'
             | 'user.role_changed'
             | 'media.uploaded'
             | 'media.cleaned'

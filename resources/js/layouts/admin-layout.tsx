@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import {
     CircleHelp,
+    Newspaper,
     FileText,
     History,
     Images,
@@ -20,6 +21,7 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useTranslation } from '@/i18n';
 import { logout } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
+import { index as articlesIndex } from '@/routes/admin/articles';
 import { index as auditIndex } from '@/routes/admin/audit';
 import { index as contactIndex } from '@/routes/admin/contact';
 import { index as faqsIndex } from '@/routes/admin/faqs';
@@ -77,6 +79,12 @@ export default function AdminLayout({
                     t('admin.pages.navLabel'),
                     pagesIndex(),
                     FileText,
+                ),
+                section(
+                    'articles',
+                    t('admin.articles.navLabel'),
+                    articlesIndex(),
+                    Newspaper,
                 ),
                 section(
                     'media',

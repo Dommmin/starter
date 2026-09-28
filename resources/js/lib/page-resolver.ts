@@ -42,6 +42,7 @@ function layoutGroup(name: string): LayoutGroup {
     switch (true) {
         case name === 'welcome':
         case name.startsWith('pages/'):
+        case name.startsWith('articles/'):
         case name.startsWith('errors/'):
             return 'none';
         case name.startsWith('auth/'):

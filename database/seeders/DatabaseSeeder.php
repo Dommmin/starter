@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
 
         if (app()->environment('local')) {
             $this->call(PageSeeder::class);
+            $this->call(ArticleSeeder::class);
         }
     }
 }

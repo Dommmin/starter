@@ -28,7 +28,7 @@ class HandleInertiaRequests extends Middleware
      *
      * @var list<string>
      */
-    private const TRANSLATED_PARAMETER_ROUTES = ['pages.show'];
+    private const TRANSLATED_PARAMETER_ROUTES = ['pages.show', 'articles.show'];
 
     public function __construct(
         protected LocalizationManager $localization,

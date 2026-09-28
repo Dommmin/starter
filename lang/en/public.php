@@ -41,6 +41,18 @@ return [
     'page' => [
         'publishedOn' => 'Published :date',
     ],
+    'articles' => [
+        'title' => 'Articles',
+        'description' => 'News and articles from our team.',
+        'listLabel' => 'Article list',
+        'empty' => 'No articles have been published yet.',
+        'readMore' => 'Read article: :title',
+        'publishedOn' => 'Published :date',
+        'backToList' => 'All articles',
+        'previousPage' => 'Previous page',
+        'nextPage' => 'Next page',
+        'paginationSummary' => 'Page :page of :total',
+    ],
     'contact' => [
         'title' => 'Contact us',
         'description' => 'Send us a message and we will get back to you by email.',

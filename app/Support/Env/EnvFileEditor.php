@@ -67,11 +67,18 @@ class EnvFileEditor
     }
 
     /**
-     * Copy the file next to itself as `.backup-YYYYmmddHHMMSS`, readable only by the owner.
+     * Copy the file next to itself as `.backup-YYYYmmddHHMMSS`, readable only
+     * by the owner. An existing backup is never overwritten: a taken name gets
+     * a `-2`, `-3`, … suffix.
      */
     public function backup(): string
     {
-        $backupPath = $this->path.'.backup-'.now()->format('YmdHis');
+        $basePath = $this->path.'.backup-'.now()->format('YmdHis');
+        $backupPath = $basePath;
+
+        for ($attempt = 2; file_exists($backupPath); $attempt++) {
+            $backupPath = $basePath.'-'.$attempt;
+        }
 
         if (! copy($this->path, $backupPath) || ! chmod($backupPath, 0600)) {
             throw new RuntimeException('The environment file backup could not be created.');

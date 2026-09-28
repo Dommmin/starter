@@ -276,7 +276,43 @@ test('invalid input is rejected without effects', function (array $overrides, st
     'unknown accent' => [['--accent' => 'purple'], 'accent'],
     'invalid e-mail' => [['--admin-email' => 'not-an-email'], 'admin email'],
     'missing value without interaction' => [['--name' => null], 'Missing required values: --name'],
+    'missing administrator without an administrator' => [['--admin-email' => null], 'Missing required values: --admin-email'],
 ]);
+
+test('an existing administrator makes the administrator options optional', function () {
+    User::factory()->admin()->create(['email' => 'boss@example.test']);
+    $before = recordCounts();
+
+    [$exitCode, $output] = runInit(['--admin-email' => null, '--admin-name' => null]);
+
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('already exists')
+        ->and(recordCounts())->toBe($before);
+    Notification::assertNothingSent();
+});
+
+test('a given administrator e-mail is validated even when an administrator exists', function () {
+    User::factory()->admin()->create(['email' => 'boss@example.test']);
+
+    [$exitCode] = runInit(['--admin-email' => 'not-an-email']);
+
+    expect($exitCode)->toBe(2)
+        ->and($this->siteName->calls)->toBe([]);
+});
+
+test('a backup never overwrites an earlier backup from the same second', function () {
+    $this->freezeTime();
+    $editor = new EnvFileEditor($this->envPath);
+
+    $first = $editor->backup();
+    $editor->write(['APP_PUBLIC_DEFAULT' => 'pl']);
+    $second = $editor->backup();
+
+    expect($second)->not->toBe($first)
+        ->and(file_get_contents($first))->toBe(INIT_ENV)
+        ->and(file_get_contents($second))->toBe(INIT_ENV.'APP_PUBLIC_DEFAULT=pl'."\n")
+        ->and(fileperms($second) & 0777)->toBe(0600);
+});
 
 test('--remove-demo removes only unedited registry records and then the sample account', function () {
     seedDemo();

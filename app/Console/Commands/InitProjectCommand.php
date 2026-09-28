@@ -54,7 +54,8 @@ class InitProjectCommand extends Command
             return self::FAILURE;
         }
 
-        $input = $this->collectInput();
+        $existingAdministrator = $this->existingAdministrator();
+        $input = $this->collectInput(adminRequired: $existingAdministrator === null);
 
         if ($input === null) {
             return self::INVALID;
@@ -66,10 +67,11 @@ class InitProjectCommand extends Command
             'APP_PUBLIC_FALLBACK' => $input['default_locale'],
         ];
 
-        $existingAdministrator = $this->existingAdministrator();
-        $emailOwner = User::query()->where('email', $input['admin_email'])->first();
+        $emailOwner = $existingAdministrator === null
+            ? User::query()->where('email', $input['admin_email'])->first()
+            : null;
 
-        if ($existingAdministrator === null && $emailOwner !== null) {
+        if ($emailOwner !== null) {
             $this->error(sprintf(
                 'The e-mail address %s belongs to an existing account without the administrator role. Nothing was changed; grant the role with `php artisan app:user-role %s admin`.',
                 $input['admin_email'],
@@ -105,7 +107,7 @@ class InitProjectCommand extends Command
         $administrator = $existingAdministrator;
 
         if ($administrator === null) {
-            $administrator = $createUser->handle(null, $input['admin_name'], $input['admin_email'], UserRole::Admin);
+            $administrator = $createUser->handle(null, (string) $input['admin_name'], (string) $input['admin_email'], UserRole::Admin);
             $this->info(sprintf('Administrator created. Invitation queued for %s.', $administrator->email));
         } else {
             $this->line('Administrator: an administrator account already exists — skipped.');
@@ -120,10 +122,13 @@ class InitProjectCommand extends Command
 
     /**
      * Read, ask for and validate all input; null when the input is invalid.
+     * Administrator details are required (and asked for) only when the
+     * administrator step will create an account; given values are validated
+     * either way.
      *
-     * @return array{name: string, locales: list<string>, default_locale: string, accent: AccentColor, admin_email: string, admin_name: string}|null
+     * @return array{name: string, locales: list<string>, default_locale: string, accent: AccentColor, admin_email: string|null, admin_name: string|null}|null
      */
-    private function collectInput(): ?array
+    private function collectInput(bool $adminRequired): ?array
     {
         $registry = array_keys((array) config('localization.registry', []));
         $interactive = $this->input->isInteractive();
@@ -152,16 +157,22 @@ class InitProjectCommand extends Command
         $accent = $this->stringOption('accent') ?? AccentColor::Default->value;
 
         $adminEmail = $this->stringOption('admin-email');
-        if ($adminEmail === null && $interactive) {
+        if ($adminEmail === null && $adminRequired && $interactive) {
             $adminEmail = trim((string) $this->ask('Administrator e-mail'));
         }
 
         $adminName = $this->stringOption('admin-name');
-        if ($adminName === null && $interactive) {
+        if ($adminName === null && $adminRequired && $interactive) {
             $adminName = trim((string) $this->ask('Administrator name'));
         }
 
-        foreach (['name' => $name, 'locales' => $locales, 'default-locale' => $defaultLocale, 'admin-email' => $adminEmail, 'admin-name' => $adminName] as $option => $value) {
+        $required = ['name' => $name, 'locales' => $locales, 'default-locale' => $defaultLocale];
+
+        if ($adminRequired) {
+            $required += ['admin-email' => $adminEmail, 'admin-name' => $adminName];
+        }
+
+        foreach ($required as $option => $value) {
             if ($value === null || $value === '' || $value === []) {
                 $missing[] = '--'.$option;
             }
@@ -186,8 +197,8 @@ class InitProjectCommand extends Command
             'locales.*' => ['string', Rule::in($registry)],
             'default_locale' => ['required', 'string', Rule::in((array) $locales)],
             'accent' => ['required', Rule::enum(AccentColor::class)],
-            'admin_email' => ['required', 'string', 'email:rfc', 'max:255', Rule::notIn([DemoContent::USER_EMAIL])],
-            'admin_name' => ['required', 'string', 'max:255'],
+            'admin_email' => [$adminRequired ? 'required' : 'nullable', 'string', 'email:rfc', 'max:255', Rule::notIn([DemoContent::USER_EMAIL])],
+            'admin_name' => [$adminRequired ? 'required' : 'nullable', 'string', 'max:255'],
         ], [
             'locales.*.in' => 'The language :input is not in the localization registry ('.implode(', ', $registry).').',
             'default_locale.in' => 'The default language must be one of the chosen languages.',
@@ -209,8 +220,8 @@ class InitProjectCommand extends Command
             'locales' => $locales,
             'default_locale' => (string) $defaultLocale,
             'accent' => AccentColor::from($accent),
-            'admin_email' => (string) $adminEmail,
-            'admin_name' => (string) $adminName,
+            'admin_email' => $adminEmail !== '' ? $adminEmail : null,
+            'admin_name' => $adminName !== '' ? $adminName : null,
         ];
     }
 

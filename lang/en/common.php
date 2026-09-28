@@ -63,4 +63,10 @@ return [
             'other' => ':count items',
         ],
     ],
+    'repeater' => [
+        'remove' => 'Remove :label',
+        'added' => ':label added',
+        'removed' => ':label removed',
+        'limit' => ':count of :max items',
+    ],
 ];

@@ -63,4 +63,10 @@ return [
             'other' => ':count Elemente',
         ],
     ],
+    'repeater' => [
+        'remove' => ':label entfernen',
+        'added' => ':label hinzugefügt',
+        'removed' => ':label entfernt',
+        'limit' => ':count von :max Einträgen',
+    ],
 ];

@@ -122,6 +122,32 @@ test('unpublished, scheduled, untranslated and deleted targets are hidden', func
     );
 });
 
+test('anchors on a deleted page disappear with it and home anchors stay', function () {
+    $admin = User::factory()->admin()->create();
+    $page = navigationPage('team');
+    $pageAnchor = MenuItem::factory()->anchor('members', $page)->create(['label' => 'Members', 'position' => 1]);
+    $child = MenuItem::factory()->childOf($pageAnchor)->create(['label' => 'Child']);
+    $pageLink = MenuItem::factory()->page($page)->create(['label' => 'Team page', 'position' => 2]);
+    MenuItem::factory()->anchor('features')->create(['label' => 'Features', 'position' => 3]);
+
+    $this->get('/')->assertInertia(fn (Assert $inertia) => $inertia
+        ->where('navigation.header.0.href', url('/team-en').'#members')
+    );
+
+    $this->actingAs($admin)->delete(route('admin.pages.destroy', $page))->assertRedirect();
+
+    expect(MenuItem::query()->whereKey([$pageAnchor->id, $child->id])->exists())->toBeFalse()
+        ->and($pageLink->fresh()?->page_id)->toBeNull();
+
+    auth()->logout();
+
+    $this->get('/')->assertInertia(fn (Assert $inertia) => $inertia
+        ->has('navigation.header', 1)
+        ->where('navigation.header.0.label', 'Features')
+        ->where('navigation.header.0.href', url('/').'#features')
+    );
+});
+
 test('a hidden parent hides its branch and an empty group is hidden', function () {
     $draftPage = Page::factory()->create();
     PageTranslation::factory()->for($draftPage)->draft()->create();
@@ -214,6 +240,9 @@ test('the seeder creates default menus once per public locale', function () {
 
     $this->seed(NavigationMenuSeeder::class);
     $this->seed(NavigationMenuSeeder::class);
+
+    expect(NavigationMenuSeeder::defaults('de', NavigationMenuSeeder::privacyPolicyPageId()))->not->toHaveKey('footer')
+        ->and(NavigationMenuSeeder::defaults('pl', $privacy->id)['footer'][0]['page_id'] ?? null)->toBe($privacy->id);
 
     expect(MenuItem::query()->where('location', 'header')->count())->toBe(6)
         ->and(MenuItem::query()->where('location', 'footer')->pluck('locale')->sort()->values()->all())->toBe(['en', 'pl']);

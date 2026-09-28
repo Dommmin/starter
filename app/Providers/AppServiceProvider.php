@@ -8,6 +8,7 @@ use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Observers\NavigationCacheObserver;
+use App\Observers\PageMenuAnchorObserver;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
@@ -75,13 +76,16 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Cached public menus depend on menu items and on the titles, slugs
-     * and publication of their page/article targets.
+     * and publication of their page/article targets. Anchors on a page are
+     * deleted with that page.
      */
     protected function configureNavigationCache(): void
     {
         foreach ([MenuItem::class, Page::class, PageTranslation::class, Article::class, ArticleTranslation::class] as $model) {
             $model::observe(NavigationCacheObserver::class);
         }
+
+        Page::observe(PageMenuAnchorObserver::class);
     }
 
     /**

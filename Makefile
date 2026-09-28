@@ -10,7 +10,7 @@ ARGS ?=
 SERVICE ?=
 TEST_PROCESSES ?= 4
 
-.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup check assets artisan composer npm shell db config backup restore-drill e2e
+.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -77,6 +77,9 @@ test-parallel: ## Równoległe testy Pest; TEST_PROCESSES=4 domyślnie
 
 test-setup: ## Testy bootstrappingu i ochrony konfiguracji
 	$(RUN) node --test scripts/dev-environment.test.mjs
+
+generator-smoke: ## Smoke generatora CRUD w tymczasowej kopii repo (bez zmian w drzewie roboczym)
+	$(RUN) sh scripts/generator-smoke.sh
 
 check: ## Pełne istniejące kontrole jakości projektu
 	$(RUN) composer ci:check

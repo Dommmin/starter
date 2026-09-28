@@ -729,6 +729,24 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertNotIn("passkey-verify", gate)
         self.assertNotIn("@laravel/passkeys", gate)
 
+    def test_ci_runs_the_generator_smoke_in_its_own_job(self):
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("\n  generator-smoke:\n    name: generator-smoke\n", ci)
+        job = ci[ci.index("\n  generator-smoke:\n"):ci.index("\n  e2e:\n")]
+        self.assertIn("run: sh scripts/generator-smoke.sh", job)
+        self.assertNotIn("secrets.", job)
+
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("generator-smoke: ##", makefile)
+        self.assertIn("$(RUN) sh scripts/generator-smoke.sh", makefile)
+
+        script = (ROOT / "scripts/generator-smoke.sh").read_text()
+        self.assertIn("mktemp -d", script)
+        self.assertIn("--exclude=./.env", script)
+        self.assertIn("--exclude=./.git", script)
+        self.assertIn("app:make-resource", script)
+        self.assertIn("check-ui-contract.mjs --files", script)
+
     def test_ci_runs_browser_e2e_against_the_docker_stack(self):
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("\n  e2e:\n    name: e2e\n", ci)

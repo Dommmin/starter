@@ -2,6 +2,7 @@
         Route::get('/{{ kebabPlural }}', [{{ Model }}Controller::class, 'index'])
             ->name('{{ kebabPlural }}.index')
             ->can('viewAny', {{ Model }}::class);
+{{ exportRoute }}
         Route::get('/{{ kebabPlural }}/create', [{{ Model }}Controller::class, 'create'])
             ->name('{{ kebabPlural }}.create')
             ->can('create', {{ Model }}::class);

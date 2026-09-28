@@ -8,6 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class List{{ Plural }}Request extends FormRequest
 {
+{{ properties }}
     /**
      * Authorization is enforced on the route (`can:viewAny,App\Models\{{ Model }}`);
      * this request only validates input.
@@ -35,4 +36,5 @@ class List{{ Plural }}Request extends FormRequest
     {
         return $this->listQuery()->rules();
     }
+{{ methods }}
 }

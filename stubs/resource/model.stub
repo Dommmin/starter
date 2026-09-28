@@ -32,4 +32,5 @@ class {{ Model }} extends Model
     {
         return {{ casts }};
     }
+{{ relations }}
 }

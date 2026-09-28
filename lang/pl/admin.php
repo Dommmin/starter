@@ -605,6 +605,9 @@ return [
                 'updated' => 'Plik zaktualizowany',
                 'deleted' => 'Plik usunięty',
             ],
+            'resource' => [
+                'exported' => 'Rekordy wyeksportowane do CSV',
+            ],
         ],
         'subjects' => [
             'article' => 'Artykuł',

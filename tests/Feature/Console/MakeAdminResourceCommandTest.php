@@ -2,8 +2,10 @@
 
 use App\Support\ResourceGenerator\PlannedChange;
 use App\Support\ResourceGenerator\ResourceBlueprint;
+use App\Support\ResourceGenerator\ResourceField;
 use App\Support\ResourceGenerator\ResourceGenerator;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 /**
@@ -280,3 +282,214 @@ test('resources without optional number or date fields get no input normalisatio
         ->and($test)->not->toContain('blank optional number and date inputs')
         ->and($this->files->get("{$this->sandbox}/resources/js/pages/admin/products/form.tsx"))->toContain("type: 'number',");
 });
+
+/**
+ * Copy an existing model into the sandbox so belongsTo targets resolve.
+ */
+function copyModelIntoSandbox(Filesystem $files, string $sandbox, string $model): void
+{
+    $files->ensureDirectoryExists("{$sandbox}/app/Models");
+    $files->copy(app_path("Models/{$model}.php"), "{$sandbox}/app/Models/{$model}.php");
+}
+
+dataset('full feature arguments', [[[
+    'name' => 'Product',
+    '--fields' => 'name:string:required,faq:belongsTo(Faq.question):required,cover:image,body:richtext,status:enum(draft|published:success|archived:danger),active:boolean',
+    '--searchable' => 'name',
+    '--sortable' => 'name,created_at',
+    '--filters' => 'status,faq',
+    '--export' => true,
+    '--no-format' => true,
+]]]);
+
+test('relation, image, rich text, badge tones and export generate the expected fragments', function (array $arguments) {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+
+    $this->artisan('app:make-resource', $arguments)->assertSuccessful();
+
+    foreach ($this->files->allFiles($this->sandbox) as $file) {
+        expect($file->getContents())->not->toContain('{{ ', "{$file->getRelativePathname()} has an unreplaced placeholder");
+
+        if ($file->getExtension() === 'php') {
+            expect(fn () => token_get_all($file->getContents(), TOKEN_PARSE))->not->toThrow(ParseError::class);
+        }
+    }
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+
+    expect($migration)->toContain("\$table->foreignId('faq_id')->index()->constrained('faqs')->restrictOnDelete();")
+        ->toContain("\$table->foreignId('cover_media_id')->nullable()->index()->constrained('media_assets')->nullOnDelete();")
+        ->toContain("\$table->json('body')->nullable();");
+
+    expect($read('app/Models/Product.php'))->toContain("#[Fillable(['name', 'faq_id', 'cover_media_id', 'body', 'status', 'active'])]")
+        ->toContain('public function faq(): BelongsTo')
+        ->toContain("return \$this->belongsTo(Faq::class, 'faq_id');")
+        ->toContain("return \$this->belongsTo(MediaAsset::class, 'cover_media_id');")
+        ->toContain("'body' => 'array',");
+
+    expect($read('database/factories/ProductFactory.php'))->toContain("'faq_id' => Faq::factory(),")
+        ->toContain('use App\Models\Faq;');
+
+    expect($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))
+        ->toContain("'faq_id' => ['required', 'integer', Rule::exists(Faq::class, 'id')],")
+        ->toContain("'cover_media_id' => ['nullable', 'integer', new DamImage],")
+        ->toContain("'body' => ['nullable', 'array', new RichTextDocument(app(RichTextRenderer::class))],")
+        ->toContain('return self::sanitizeRichText($this->validated());')
+        ->toContain('$renderer->sanitize($values[$name])');
+
+    expect($read('app/Http/Requests/Admin/Products/UpdateProductRequest.php'))
+        ->toContain("return StoreProductRequest::sanitizeRichText(\$this->safe()->except(['updated_at']));");
+
+    expect($read('app/Data/Admin/Products/ProductFormData.php'))
+        ->toContain("#[LiteralTypeScriptType('{ [key: string]: unknown } | null')]")
+        ->toContain('public ?array $body,')
+        ->toContain('public ?int $faqId,');
+
+    expect($read('app/Data/Admin/Products/ProductListItemData.php'))
+        ->toContain('public ?string $faqLabel,')
+        ->toContain('faqLabel: (string) $product->faq->question,')
+        ->not->toContain('$body');
+
+    expect($read('app/Data/Admin/Products/ProductEditorData.php'))
+        ->toContain('public array $faqOptions,')
+        ->toContain('public bool $faqOptionsTruncated,');
+
+    expect($read('app/Http/Requests/Admin/Products/ListProductsRequest.php'))
+        ->toContain("->filter('faq', ['all', ...\$this->faqFilterValues()]")
+        ->toContain("\$query->where('faq_id', (int) \$value);");
+
+    expect($read('app/Http/Controllers/Admin/Products/ProductController.php'))
+        ->toContain("Product::query()->with(['faq:id,question'])")
+        ->toContain('public const int EXPORT_MAX_ROWS = 10_000;')
+        ->toContain('public function export(ListProductsRequest $request, RecordAuditEvent $recordAuditEvent): HttpResponse|StreamedResponse')
+        ->toContain('(clone $query)->reorder()->count()')
+        ->toContain('AuditAction::ResourceExported')
+        ->toContain("RecordAuditEvent::change(null, Arr::except(\$filters, ['search']))")
+        ->toContain('fwrite($output, "\u{FEFF}");')
+        ->toContain('CsvCell::safe($product->faq->question),')
+        ->toContain("ProductStatus::Published => __('admin.products.options.status.published'),")
+        ->toContain('->limit(RecordOptionData::LIMIT + 1)')
+        ->not->toContain('CsvCell::safe($product->body)')
+        ->not->toContain('CsvCell::safe($product->cover_media_id)');
+
+    expect($read('app/Policies/ProductPolicy.php'))->toContain('public function export(User $user): bool');
+
+    expect($read('routes/admin.php'))->toContain("Route::get('/products/export', [ProductController::class, 'export'])")
+        ->toContain("->name('products.export')")
+        ->toContain("->can('export', Product::class)")
+        ->toContain("->middleware('throttle:6,1');");
+
+    expect($read('resources/js/pages/admin/products/index.tsx'))
+        ->toContain("published: 'success',")
+        ->toContain("archived: 'danger',")
+        ->toContain("draft: 'neutral',")
+        ->toContain('<Badge tone={statusTones[row.status]}>')
+        ->toContain('exportMethod({ query: { ...filters } })')
+        ->toContain('download')
+        ->toContain("row.faqLabel ?? '—'")
+        ->toContain('...faqOptions.map((option) => ({');
+
+    expect($read('resources/js/pages/admin/products/form.tsx'))
+        ->toContain("type: 'richText',")
+        ->toContain("type: 'image',")
+        ->toContain("name: 'faq_id',")
+        ->toContain('useMediaImagePicker')
+        ->toContain('documentPayload(data.body)')
+        ->toContain("t('admin.richText.toolbar')");
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('invalid references and documents are rejected without changing the record'")
+        ->toContain("test('an export above the row limit is refused without a file or an audit entry'")
+        ->toContain('=HYPERLINK')
+        ->toContain("\$this->actingAs(\$user)->get(route('admin.products.export'))->assertForbidden();");
+
+    $keys = [];
+    foreach (ResourceGenerator::LOCALES as $locale) {
+        $catalog = require "{$this->sandbox}/lang/{$locale}/admin.php";
+        $keys[$locale] = array_keys(Arr::dot($catalog['products']));
+
+        expect($catalog['products']['exportTooLarge'])->toContain(':max')
+            ->and($catalog['products']['exportFilename'])->toBe('products-:date.csv')
+            ->and($catalog['products'])->toHaveKeys(['export', 'faqPlaceholder', 'faqEmpty', 'noneOption', 'optionsTruncated', 'imageChoose'])
+            ->and($catalog['products']['fields'])->toHaveKeys(['faq', 'cover', 'body']);
+    }
+
+    expect($keys['pl'])->toBe($keys['en'])->and($keys['de'])->toBe($keys['en']);
+})->with('full feature arguments');
+
+test('a dry run with the export writes nothing', function (array $arguments) {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [...$arguments, '--dry-run' => true])
+        ->expectsOutputToContain('Dry run: nothing will be written.')
+        ->expectsOutputToContain('update routes/admin.php')
+        ->assertSuccessful();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+})->with('full feature arguments');
+
+test('an existing export route blocks the whole generation', function (array $arguments) {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+    $path = "{$this->sandbox}/routes/admin.php";
+    $this->files->put($path, str_replace("->name('pages.index')", "->name('products.export')", $this->files->get($path)));
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', $arguments)
+        ->expectsOutputToContain('routes/admin.php already defines products routes.')
+        ->assertFailed();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+})->with('full feature arguments');
+
+test('relations, rich text and badge tones are validated before planning', function (array $arguments, string $message) {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--searchable' => '',
+        '--sortable' => '',
+        '--filters' => '',
+        '--no-format' => true,
+        ...$arguments,
+    ])
+        ->expectsOutputToContain($message)
+        ->assertExitCode(2);
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+})->with([
+    'missing related model' => [['--fields' => 'name:string,category:belongsTo(Category.name)'], 'model app/Models/Category.php does not exist.'],
+    'user as related model' => [['--fields' => 'name:string,owner:belongsTo(User.name)'], 'cannot reference [User]'],
+    'unknown label column' => [['--fields' => 'name:string,faq:belongsTo(Faq.nope)'], 'column [nope] is not a fillable or documented attribute of App\Models\Faq.'],
+    'malformed relation' => [['--fields' => 'name:string,faq:belongsTo(faq)'], 'must reference its model as belongsTo(Model.label_column)'],
+    'relation named like a column' => [['--fields' => 'name:string,faq_id:belongsTo(Faq.question)'], 'must name the relation'],
+    'required image' => [['--fields' => 'name:string,cover:image:required'], 'Field [cover] of type image is always optional'],
+    'rich text searchable' => [['--fields' => 'name:string,body:richtext', '--searchable' => 'body'], 'Searchable column [body] must be a string or text field.'],
+    'rich text sortable' => [['--fields' => 'name:string,body:richtext', '--sortable' => 'body'], 'Sortable column [body] must be a non-text field'],
+    'relation sortable' => [['--fields' => 'name:string,faq:belongsTo(Faq.question)', '--sortable' => 'faq'], 'Sortable column [faq] must be a non-text field'],
+    'image filter' => [['--fields' => 'name:string,cover:image', '--filters' => 'cover'], 'Filter [cover] must be a boolean or enum field'],
+    'unknown badge tone' => [['--fields' => 'status:enum(draft|published:rainbow)'], 'Enum tone [rainbow] of value [published] of field [status] must be one of: neutral, primary, success, danger, outline.'],
+]);
+
+test('enum badge tones are parsed per value and default to neutral', function () {
+    $status = ResourceBlueprint::parse('Product', 'status:enum(draft|published:success|archived:danger)')->field('status');
+
+    expect($status?->enumValues)->toBe(['draft', 'published', 'archived'])
+        ->and($status?->enumTones)->toBe(['published' => 'success', 'archived' => 'danger'])
+        ->and($status?->toneOf('draft'))->toBe('neutral');
+});
+
+test('allowed badge tones match the Badge primitive', function () {
+    $badge = (string) file_get_contents(resource_path('js/design-system/primitives/badge.tsx'));
+    preg_match('/type BadgeTone = ([^;]+);/', $badge, $matches);
+    preg_match_all("/'([a-z]+)'/", $matches[1] ?? '', $tones);
+
+    expect($tones[1])->toBe(ResourceField::BADGE_TONES);
+});
+
+test('the reserved names cover the starter models and the navigation modules', function (string $name) {
+    expect(fn () => ResourceBlueprint::parse($name, 'name:string'))
+        ->toThrow(InvalidArgumentException::class, "Resource name [{$name}] is reserved.");
+})->with(['Menu', 'MenuItem', 'Navigation', 'HomeSection', 'SiteSetting', 'Article', 'AuditLog', 'ContactMessage', 'Faq']);

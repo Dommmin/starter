@@ -47,6 +47,7 @@
         'updated' => 'Zapisano zmiany.',
         'deleted' => 'Rekord został usunięty.',
         'conflict' => 'Ktoś inny zmienił ten rekord po jego otwarciu. Wczytaj go ponownie i wprowadź zmiany jeszcze raz.',
+{{ extraLabels }}
         'fields' => [
 {{ fieldLabels }}
         ],

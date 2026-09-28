@@ -1,3 +1,4 @@
+{{ coreImport }}
 import { router, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import {
@@ -8,7 +9,9 @@ import {
     PageHeader,
     ResourceForm,
     Stack,
+{{ typeImports }}
 } from '@/design-system/primitives';
+{{ pickerImport }}
 import { useTranslation } from '@/i18n';
 import {
     destroy,
@@ -21,16 +24,19 @@ import {
 type EditorProps = App.Data.Admin.{{ Plural }}.{{ Model }}EditorData;
 type RecordData = App.Data.Admin.{{ Plural }}.{{ Model }}FormData;
 
-/** Editable form state; keys are the request field names. */
+/** Values rendered by `ResourceForm`; keys are the request field names. */
 type FormValues = {
 {{ valueTypes }}
 };
 
+{{ stateType }}
+
 const FIELD_NAMES: string[] = [{{ fieldNames }}];
 
-function toValues(record: RecordData): FormValues {
+{{ helpers }}
+function toState(record: RecordData): FormState {
     return {
-{{ toValues }}
+{{ toState }}
     };
 }
 
@@ -48,11 +54,12 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
     const recordId = record.id;
     const { can } = editor;
     const { t } = useTranslation();
-    const form = useForm<FormValues>(toValues(record));
+    const form = useForm<FormState>(toState(record));
     const [isConflictOpen, setIsConflictOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+{{ pickerSetup }}
     const errors = form.errors as Partial<Record<string, string>>;
     /** Errors that no field renders inline (e.g. `updated_at`). */
     const generalErrors = Object.keys(errors)
@@ -84,6 +91,7 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
     function submit() {
         form.transform((data) => ({
             ...data,
+{{ transformFields }}
             ...(recordId !== null ? { updated_at: record.updatedAt ?? '' } : {}),
         }));
 
@@ -154,10 +162,10 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
             )}
 
             <ResourceForm<FormValues>
-                values={form.data}
+                values={{{ formValues }}}
                 errors={errors}
                 onChange={(name, value) =>
-                    form.setData((data) => ({ ...data, [name]: value }))
+                    form.setData((data) => ({ ...data, [name]: {{ changeValue }} }))
                 }
                 onSubmit={submit}
                 isPending={form.processing}

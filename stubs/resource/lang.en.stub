@@ -47,6 +47,7 @@
         'updated' => '{{ singularLabel }} saved.',
         'deleted' => '{{ singularLabel }} deleted.',
         'conflict' => 'This {{ singularLower }} was changed by someone else after you opened it. Reload it and apply your changes again.',
+{{ extraLabels }}
         'fields' => [
 {{ fieldLabels }}
         ],

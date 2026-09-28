@@ -14,5 +14,6 @@ class {{ Model }}AbilitiesData extends Data
     public function __construct(
         public bool $create,
         public bool $delete,
+{{ exportAbility }}
     ) {}
 }

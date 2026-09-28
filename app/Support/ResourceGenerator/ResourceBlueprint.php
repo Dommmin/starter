@@ -19,6 +19,9 @@ final readonly class ResourceBlueprint
         'admin', 'controller', 'dashboard', 'data', 'enum', 'error', 'listing', 'locale', 'media',
         'mediaasset', 'model', 'page', 'pagetranslation', 'policy', 'request', 'resource', 'role',
         'seo', 'setting', 'settings', 'sitemap', 'user', 'content',
+        'article', 'articletranslation', 'articleslugredirect', 'pageslugredirect', 'auditlog',
+        'contactmessage', 'faq', 'menu', 'menuitem', 'menuitems', 'navigation', 'homesection',
+        'homesections', 'sitesetting', 'sitesettings',
         // PHP and JavaScript keywords that become class, variable or import names.
         'abstract', 'and', 'array', 'as', 'async', 'await', 'bool', 'break', 'callable', 'case', 'catch',
         'class', 'clone', 'const', 'continue', 'debugger', 'declare', 'default', 'delete', 'do', 'echo',
@@ -44,10 +47,24 @@ final readonly class ResourceBlueprint
     private const array SYSTEM_SORT_COLUMNS = ['id', 'created_at', 'updated_at'];
 
     /**
+     * Eloquent model methods a generated relation method must not shadow.
+     */
+    private const array RESERVED_RELATIONS = [
+        'delete', 'fill', 'fresh', 'load', 'push', 'query', 'refresh', 'replicate', 'save', 'touch', 'update',
+    ];
+
+    /**
+     * Related models a generated resource must not reference: accounts are
+     * managed only by the users module.
+     */
+    private const array BLOCKED_RELATED_MODELS = ['user'];
+
+    /**
      * @param  list<ResourceField>  $fields
      * @param  list<string>  $searchable
      * @param  list<string>  $sortable
      * @param  list<string>  $filters
+     * @param  bool  $export  Whether the list gets a CSV export (admins only).
      */
     private function __construct(
         public string $model,
@@ -55,6 +72,7 @@ final readonly class ResourceBlueprint
         public array $searchable,
         public array $sortable,
         public array $filters,
+        public bool $export = false,
     ) {}
 
     /**
@@ -62,7 +80,7 @@ final readonly class ResourceBlueprint
      *
      * @throws InvalidArgumentException With every problem found, one per line.
      */
-    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = ''): self
+    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false): self
     {
         $errors = self::validateName($name);
 
@@ -86,16 +104,16 @@ final readonly class ResourceBlueprint
         foreach ($sortableList as $column) {
             $field = $byName[$column] ?? null;
             $isSystem = in_array($column, self::SYSTEM_SORT_COLUMNS, true);
-            if (! $isSystem && ($field === null || ! $field->isListed())) {
-                $errors[] = "Sortable column [{$column}] must be a non-text field or one of: ".implode(', ', self::SYSTEM_SORT_COLUMNS).'.';
+            if (! $isSystem && ($field === null || ! $field->isSortable())) {
+                $errors[] = "Sortable column [{$column}] must be a non-text field (not a relation, image or rich text) or one of: ".implode(', ', self::SYSTEM_SORT_COLUMNS).'.';
             }
         }
 
         $filterList = self::splitList($filters);
         foreach ($filterList as $column) {
             $field = $byName[$column] ?? null;
-            if ($field === null || ! in_array($field->type, ['boolean', 'enum'], true)) {
-                $errors[] = "Filter [{$column}] must be a boolean or enum field.";
+            if ($field === null || ! in_array($field->type, ['boolean', 'enum', 'belongsTo'], true)) {
+                $errors[] = "Filter [{$column}] must be a boolean or enum field. A belongsTo relation is accepted as well.";
             }
         }
 
@@ -109,6 +127,7 @@ final readonly class ResourceBlueprint
             searchable: $searchableList,
             sortable: $sortableList === [] ? ['created_at'] : $sortableList,
             filters: $filterList,
+            export: $export,
         );
     }
 
@@ -147,14 +166,19 @@ final readonly class ResourceBlueprint
         }
 
         foreach ($parts as $part) {
-            if (preg_match('/^([^:]+):(string|text|integer|decimal|boolean|date|enum\(([^)]*)\))(?::(required|nullable))?$/', $part, $matches) !== 1) {
-                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b)).';
+            if (preg_match('/^([^:]+):(string|text|integer|decimal|boolean|date|image|richtext|enum\(([^)]*)\)|belongsTo\(([^)]*)\))(?::(required|nullable))?$/', $part, $matches) !== 1) {
+                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column)).';
 
                 continue;
             }
 
             $name = $matches[1];
-            $type = str_starts_with($matches[2], 'enum(') ? 'enum' : $matches[2];
+            $type = match (true) {
+                str_starts_with($matches[2], 'enum(') => 'enum',
+                str_starts_with($matches[2], 'belongsTo(') => 'belongsTo',
+                default => $matches[2],
+            };
+            $required = ($matches[5] ?? '') === 'required';
 
             if (preg_match('/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/', $name) !== 1 || strlen($name) > 50) {
                 $errors[] = "Field name [{$name}] must be a snake_case identifier (max 50 characters).";
@@ -168,16 +192,16 @@ final readonly class ResourceBlueprint
                 continue;
             }
 
-            if (isset($seen[$name])) {
-                $errors[] = "Field [{$name}] is defined more than once.";
+            if (in_array($type, ['image', 'richtext'], true) && $required) {
+                $errors[] = "Field [{$name}] of type {$type} is always optional; remove :required.";
 
                 continue;
             }
 
             $values = [];
+            $tones = [];
             if ($type === 'enum') {
-                $values = array_values(array_filter(array_map('trim', explode('|', $matches[3] ?? '')), fn (string $value): bool => $value !== ''));
-                $valueErrors = self::validateEnumValues($name, $values);
+                [$values, $tones, $valueErrors] = self::parseEnumValues($name, $matches[3] ?? '');
                 if ($valueErrors !== []) {
                     $errors = [...$errors, ...$valueErrors];
 
@@ -185,11 +209,76 @@ final readonly class ResourceBlueprint
                 }
             }
 
+            $relatedModel = null;
+            $relatedLabel = null;
+            if ($type === 'belongsTo') {
+                $relationErrors = self::validateBelongsTo($name, $matches[4] ?? '');
+                if ($relationErrors !== []) {
+                    $errors = [...$errors, ...$relationErrors];
+
+                    continue;
+                }
+
+                [$relatedModel, $relatedLabel] = explode('.', trim($matches[4] ?? ''), 2);
+            }
+
+            if (in_array($type, ['belongsTo', 'image'], true) && (str_ends_with($name, '_id') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
+                $errors[] = "Relation field name [{$name}] must name the relation (e.g. category, not category_id) and must not shadow an Eloquent method.";
+
+                continue;
+            }
+
+            $field = new ResourceField($name, $type, $required, $values, $tones, $relatedModel, $relatedLabel);
+
+            if (isset($seen[$name]) || isset($seen[$field->column()])) {
+                $errors[] = "Field [{$name}] is defined more than once.";
+
+                continue;
+            }
+
             $seen[$name] = true;
-            $fields[] = new ResourceField($name, $type, ($matches[4] ?? '') === 'required', $values);
+            $seen[$field->column()] = true;
+            $fields[] = $field;
         }
 
         return [$fields, $errors];
+    }
+
+    /**
+     * Parse `draft|published:success|archived:danger` into values and their
+     * badge tones.
+     *
+     * @return array{0: list<string>, 1: array<string, string>, 2: list<string>}
+     */
+    private static function parseEnumValues(string $field, string $definition): array
+    {
+        $values = [];
+        $tones = [];
+        $errors = [];
+
+        foreach (explode('|', $definition) as $item) {
+            $item = trim($item);
+            if ($item === '') {
+                continue;
+            }
+
+            [$value, $tone] = str_contains($item, ':') ? explode(':', $item, 2) : [$item, null];
+            $values[] = $value;
+
+            if ($tone === null) {
+                continue;
+            }
+
+            if (! in_array($tone, ResourceField::BADGE_TONES, true)) {
+                $errors[] = "Enum tone [{$tone}] of value [{$value}] of field [{$field}] must be one of: ".implode(', ', ResourceField::BADGE_TONES).'.';
+
+                continue;
+            }
+
+            $tones[$value] = $tone;
+        }
+
+        return [$values, $tones, [...$errors, ...self::validateEnumValues($field, $values)]];
     }
 
     /**
@@ -216,6 +305,25 @@ final readonly class ResourceBlueprint
         }
 
         return $errors;
+    }
+
+    /**
+     * Syntax of `belongsTo(Model.label_column)`. Whether the model and the
+     * column exist is checked by {@see ResourceGenerator::relationErrors()}.
+     *
+     * @return list<string>
+     */
+    private static function validateBelongsTo(string $field, string $target): array
+    {
+        if (preg_match('/^([A-Z][A-Za-z0-9]*)\.([a-z][a-z0-9]*(?:_[a-z0-9]+)*)$/', trim($target), $matches) !== 1) {
+            return ["Field [{$field}] must reference its model as belongsTo(Model.label_column), e.g. belongsTo(Category.name)."];
+        }
+
+        if (in_array(strtolower($matches[1]), self::BLOCKED_RELATED_MODELS, true)) {
+            return ["Field [{$field}] cannot reference [{$matches[1]}]: user accounts are managed only by the users module."];
+        }
+
+        return [];
     }
 
     /**
@@ -315,6 +423,19 @@ final readonly class ResourceBlueprint
     public function enumFields(): array
     {
         return array_values(array_filter($this->fields, fn (ResourceField $field): bool => $field->type === 'enum'));
+    }
+
+    /**
+     * @return list<ResourceField>
+     */
+    public function fieldsOfType(string $type): array
+    {
+        return array_values(array_filter($this->fields, fn (ResourceField $field): bool => $field->type === $type));
+    }
+
+    public function hasType(string $type): bool
+    {
+        return $this->fieldsOfType($type) !== [];
     }
 
     /**

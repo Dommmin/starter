@@ -5,12 +5,11 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 import { I18nProvider } from '@/i18n';
+import { documentTitle } from '@/lib/document-title';
 import { loadPage, resolveLayout, syncSurface } from '@/lib/page-resolver';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-
 void createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: documentTitle,
     resolve: loadPage,
     layout: resolveLayout,
     strictMode: true,

@@ -7,11 +7,17 @@ export type HeaderUtilityProps = {
     children?: React.ReactNode;
     /** Optional image logo; the text logo otherwise. */
     logo?: BrandLogoImage;
+    /** One-tone text logo name; the catalog brand otherwise. */
+    brandName?: string;
     className?: never;
     style?: never;
 };
 
-export function HeaderUtility({ children, logo }: HeaderUtilityProps) {
+export function HeaderUtility({
+    children,
+    logo,
+    brandName,
+}: HeaderUtilityProps) {
     const { t } = useTranslation();
 
     return (
@@ -23,7 +29,7 @@ export function HeaderUtility({ children, logo }: HeaderUtilityProps) {
                 {t('a11y.skipToContent')}
             </a>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
-                <BrandLogo image={logo} />
+                <BrandLogo image={logo} name={brandName} />
 
                 <nav
                     aria-label={t('a11y.mainNavigation')}

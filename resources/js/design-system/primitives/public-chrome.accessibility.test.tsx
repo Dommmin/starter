@@ -3,12 +3,15 @@ import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
+import { BrandLogo } from './brand-logo';
 import { Button, type ButtonProps } from './button';
 import { PublicChrome } from './public-chrome';
 
+let site: App.Data.Settings.SiteSettingsData | undefined;
+
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
-        props: { auth: { user: null }, i18n: { alternateUrls: {} } },
+        props: { auth: { user: null }, i18n: { alternateUrls: {} }, site },
     }),
     router: {
         on: () => () => {},
@@ -44,7 +47,11 @@ const initialPage = {
             locale: 'en',
             defaultLocale: 'en',
             messages: {
-                brand: { name: 'Acme' },
+                brand: {
+                    name: 'Acme',
+                    firstPart: 'Punkt',
+                    secondPart: 'Startowy',
+                },
             },
             fallback: 'en',
             dir: 'ltr',
@@ -68,7 +75,33 @@ async function render(node: ReactNode): Promise<HTMLElement> {
     return container;
 }
 
+function makeSite(
+    overrides: Partial<App.Data.Settings.SiteSettingsData> = {},
+): App.Data.Settings.SiteSettingsData {
+    return {
+        name: 'Panel Name',
+        isCustomized: true,
+        logo: null,
+        tagline: null,
+        footerText: 'Panel footer line',
+        contact: {
+            email: 'office@panel.test',
+            phone: '+48 123 456 789',
+            address: null,
+        },
+        social: [
+            {
+                network: 'github',
+                label: 'GitHub',
+                url: 'https://github.com/panel',
+            },
+        ],
+        ...overrides,
+    };
+}
+
 afterEach(async () => {
+    site = undefined;
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -123,6 +156,103 @@ describe('PublicChrome', () => {
         expect(container.querySelector('footer')?.textContent).toContain(
             '© 2026 Custom',
         );
+    });
+});
+
+describe('PublicChrome site settings defaults', () => {
+    it('fills the brand, copyright, contact and social links from the shared site prop', async () => {
+        site = makeSite();
+        const container = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        const header = container.querySelector('header');
+        const footer = container.querySelector('footer');
+
+        expect(header?.textContent).toContain('Panel Name');
+        expect(footer?.textContent).toContain(
+            `© ${new Date().getFullYear()} Panel footer line`,
+        );
+        expect(
+            footer?.querySelector('a[href="mailto:office@panel.test"]'),
+        ).not.toBeNull();
+        expect(
+            footer?.querySelector('a[href="https://github.com/panel"]'),
+        ).not.toBeNull();
+    });
+
+    it('lets the page override the defaults and keeps the catalog brand before the first save', async () => {
+        site = makeSite({ isCustomized: false, footerText: null });
+        const container = await render(
+            <PublicChrome
+                footer={{
+                    copyright: '© 2026 Page line',
+                    contact: { email: 'page@example.test' },
+                    social: [],
+                }}
+            >
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        const header = container.querySelector('header');
+        const footer = container.querySelector('footer');
+
+        expect(header?.textContent).not.toContain('Panel Name');
+        expect(footer?.textContent).toContain('© 2026 Page line');
+        expect(
+            footer?.querySelector('a[href="mailto:page@example.test"]'),
+        ).not.toBeNull();
+        expect(
+            footer?.querySelector('a[href="mailto:office@panel.test"]'),
+        ).toBeNull();
+        expect(
+            footer?.querySelector('a[href="https://github.com/panel"]'),
+        ).toBeNull();
+    });
+
+    it('uses the site logo with the site name as its accessible name', async () => {
+        site = makeSite({
+            logo: {
+                sources: [],
+                src: '/storage/logo-640.png',
+                srcset: '/storage/logo-640.png 640w',
+                width: 640,
+                height: 360,
+            },
+        });
+        const container = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        const logo = container.querySelector<HTMLImageElement>(
+            'header img[src="/storage/logo-640.png"]',
+        );
+        expect(logo?.alt).toBe('Panel Name');
+    });
+});
+
+describe('BrandLogo', () => {
+    it('renders the saved name in one tone', async () => {
+        const container = await render(<BrandLogo name="Panel Name" />);
+
+        const link = container.querySelector('a');
+        expect(link?.getAttribute('aria-label')).toBe('Panel Name');
+        expect(link?.textContent).toBe('Panel Name');
+        expect(link?.querySelectorAll('span span')).toHaveLength(0);
+    });
+
+    it('renders the two-tone catalog brand without a name', async () => {
+        const container = await render(<BrandLogo />);
+
+        const link = container.querySelector('a');
+        expect(link?.getAttribute('aria-label')).toBe('Acme');
+        expect(link?.textContent).toBe('Punkt Startowy');
+        expect(link?.querySelectorAll('span span')).toHaveLength(1);
     });
 });
 

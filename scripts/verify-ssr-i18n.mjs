@@ -22,7 +22,8 @@ async function runSsrVerification() {
     };
 
     const site = {
-        name: 'Starter',
+        name: 'Nazwa z panelu',
+        isCustomized: true,
         logo: null,
         tagline: null,
         footerText: 'Stopka z ustawień',
@@ -141,17 +142,20 @@ async function runSsrVerification() {
     );
     const en1Head = en1.head.join('\n');
     assert.ok(
-        /<title[^>]*>Starter — domyślny tytuł/.test(en1Head) &&
+        /<title[^>]*>Starter — domyślny tytuł - Nazwa z panelu<\/title>/.test(
+            en1Head,
+        ) &&
             en1Head.includes(
                 'name="description" content="Domyślny opis strony z ustawień"',
             ),
-        'SSR strony głównej musi zawierać tytuł i opis z ustawień strony',
+        'SSR strony głównej musi zawierać tytuł (z sufiksem nazwy z panelu) i opis z ustawień strony',
     );
     assert.ok(
         en1.body.includes('Stopka z ustawień') &&
+            en1.body.includes('>Nazwa z panelu</span>') &&
             en1.body.includes('kontakt@example.test') &&
             en1.body.includes('https://github.com/example'),
-        'SSR stopki musi zawierać tekst, kontakt i social z ustawień strony',
+        'SSR nagłówka i stopki musi zawierać nazwę, tekst, kontakt i social z ustawień strony',
     );
     assert.ok(
         en1.body.includes('English'),
@@ -250,7 +254,7 @@ async function runSsrVerification() {
     const head = contentPage.head.join('\n');
 
     assert.ok(
-        /<title[^>]*>O nas &amp; zespół/.test(head),
+        /<title[^>]*>O nas &amp; zespół - Nazwa z panelu<\/title>/.test(head),
         'SSR strony treści musi zawierać <title> z escapowanym tytułem',
     );
     assert.ok(

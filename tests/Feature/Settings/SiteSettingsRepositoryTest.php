@@ -42,6 +42,7 @@ test('without saved settings the configuration and catalog fallbacks apply', fun
 
     $current = $settings->current('en');
     expect($current->name)->toBe('Configured Site')
+        ->and($current->isCustomized)->toBeFalse()
         ->and($current->logo)->toBeNull()
         ->and($current->tagline)->toBeNull()
         ->and($current->social)->toBe([]);
@@ -124,6 +125,7 @@ test('public pages share the site settings without the contact form recipient', 
         ->component('welcome')
         ->where('site', [
             'name' => 'Acme',
+            'isCustomized' => true,
             'logo' => null,
             'tagline' => 'We build things',
             'footerText' => 'Acme. All rights reserved.',

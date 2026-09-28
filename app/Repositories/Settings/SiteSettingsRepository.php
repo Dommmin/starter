@@ -76,6 +76,7 @@ class SiteSettingsRepository
 
         return new SiteSettingsData(
             name: $this->siteName(),
+            isCustomized: $snapshot['exists'],
             logo: $snapshot['logo'] === null ? null : MediaImageData::from($snapshot['logo']),
             tagline: $this->translated('tagline', $locale),
             footerText: $this->translated('footer_text', $locale),

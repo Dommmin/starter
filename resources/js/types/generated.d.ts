@@ -451,6 +451,7 @@ declare namespace App {
             };
             export type SiteSettingsData = {
                 name: string;
+                isCustomized: boolean;
                 logo: App.Data.Media.MediaImageData | null;
                 tagline: string | null;
                 footerText: string | null;

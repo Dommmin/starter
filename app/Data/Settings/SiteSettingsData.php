@@ -12,7 +12,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  *
  * `logo` is a clean DAM image with variants (null otherwise); `tagline` and
  * `footerText` fall back to the public fallback locale and are null when no
- * locale provides them.
+ * locale provides them. `isCustomized` is true once an administrator saved
+ * the settings; until then `name` is the configuration fallback and the UI
+ * keeps its catalog brand.
  */
 #[TypeScript]
 class SiteSettingsData extends Data
@@ -22,6 +24,7 @@ class SiteSettingsData extends Data
      */
     public function __construct(
         public string $name,
+        public bool $isCustomized,
         public ?MediaImageData $logo,
         public ?string $tagline,
         public ?string $footerText,

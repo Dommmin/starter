@@ -240,6 +240,66 @@ declare namespace App {
                     url: string;
                 };
             }
+            namespace Navigation {
+                export type MenuAbilitiesData = {
+                    create: boolean;
+                    reorder: boolean;
+                    delete: boolean;
+                };
+                export type MenuIndexData = {
+                    location: App.Enums.MenuLocation;
+                    locale: string;
+                    locales: App.Data.Content.ContentLocalesData;
+                    items: App.Data.Admin.Navigation.MenuTreeItemData[];
+                    can: App.Data.Admin.Navigation.MenuAbilitiesData;
+                };
+                export type MenuItemEditorData = {
+                    item: App.Data.Admin.Navigation.MenuItemFormData;
+                    locales: App.Data.Content.ContentLocalesData;
+                    pages: App.Data.Admin.Navigation.MenuTargetOptionData[];
+                    articles: App.Data.Admin.Navigation.MenuTargetOptionData[];
+                    parents: App.Data.Admin.Navigation.MenuParentOptionData[];
+                    can: App.Data.Admin.Navigation.MenuAbilitiesData;
+                };
+                export type MenuItemFormData = {
+                    id: number | null;
+                    updatedAt: string | null;
+                    location: App.Enums.MenuLocation;
+                    locale: string;
+                    parentId: number | null;
+                    type: App.Enums.MenuItemType;
+                    pageId: number | null;
+                    articleId: number | null;
+                    anchor: string | null;
+                    url: string | null;
+                    label: string | null;
+                    openInNewTab: boolean;
+                    targetMissing: boolean;
+                    draftTarget: boolean;
+                    hasChildren: boolean;
+                };
+                export type MenuParentOptionData = {
+                    id: number;
+                    label: string | null;
+                    type: App.Enums.MenuItemType;
+                };
+                export type MenuTargetOptionData = {
+                    id: number;
+                    title: string;
+                    draft: boolean;
+                };
+                export type MenuTreeItemData = {
+                    id: number;
+                    type: App.Enums.MenuItemType;
+                    label: string | null;
+                    anchor: string | null;
+                    url: string | null;
+                    openInNewTab: boolean;
+                    targetMissing: boolean;
+                    draftTarget: boolean;
+                    children: App.Data.Admin.Navigation.MenuTreeItemData[];
+                };
+            }
             namespace Pages {
                 export type PageAbilitiesData = {
                     create: boolean;
@@ -391,6 +451,30 @@ declare namespace App {
                 srcset: string;
             };
         }
+        namespace Navigation {
+            export type MenuItemInputData = {
+                parentId: number | null;
+                type: App.Enums.MenuItemType;
+                pageId: number | null;
+                articleId: number | null;
+                anchor: string | null;
+                url: string | null;
+                label: string | null;
+                openInNewTab: boolean;
+            };
+            export type NavigationData = {
+                header: App.Data.Navigation.NavigationItemData[];
+                footer: App.Data.Navigation.NavigationItemData[];
+            };
+            export type NavigationItemData = {
+                id: number;
+                label: string;
+                href?: string;
+                kind: 'internal' | 'anchor' | 'external' | 'group';
+                newTab: boolean;
+                children: App.Data.Navigation.NavigationItemData[];
+            };
+        }
         namespace Seo {
             export type SeoDefaultsData = {
                 siteName: string;
@@ -425,11 +509,23 @@ declare namespace App {
             | 'media.cleaned'
             | 'media.rejected'
             | 'media.updated'
-            | 'media.deleted';
+            | 'media.deleted'
+            | 'navigation.item_created'
+            | 'navigation.item_updated'
+            | 'navigation.item_deleted'
+            | 'navigation.reordered';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
+        export type MenuItemType =
+            | 'page'
+            | 'article'
+            | 'article_index'
+            | 'anchor'
+            | 'external'
+            | 'group';
+        export type MenuLocation = 'header' | 'footer';
         export type PublicationStatus = 'draft' | 'published';
         export type UserRole = 'admin' | 'editor';
     }

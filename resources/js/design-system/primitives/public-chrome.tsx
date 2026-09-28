@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import type { BrandLogoImage } from './brand-logo';
@@ -11,12 +12,14 @@ export type PublicChromeFooter = {
      * area). Public content pages pass their `landing.footerCopy` line.
      */
     copyright?: string;
+    /** Defaults to the shared `navigation.footer` menu of public pages. */
     groups?: NavItem[];
     contact?: FooterContact;
     social?: FooterSocialLink[];
 };
 
 export type PublicChromeProps = {
+    /** Defaults to the shared `navigation.header` menu of public pages. */
     navItems?: NavItem[];
     footer?: PublicChromeFooter;
     /** Optional image logo shown in the header and footer. */
@@ -30,7 +33,8 @@ export type PublicChromeProps = {
 /**
  * Frame of every public page: header (brand, theme and locale switchers,
  * auth controls, navigation), the `main` landmark targeted by the skip link,
- * and the footer.
+ * and the footer. Menus come from the shared `navigation` prop (managed in
+ * the admin panel) unless the page passes its own items.
  */
 export function PublicChrome({
     navItems,
@@ -39,18 +43,22 @@ export function PublicChrome({
     children,
 }: PublicChromeProps) {
     const { t } = useTranslation();
+    const { navigation } = usePage().props;
     const copyright =
         footer?.copyright ?? `© ${new Date().getFullYear()} ${t('brand.name')}`;
 
     return (
         <>
-            <PublicHeader navItems={navItems} logo={logo} />
+            <PublicHeader
+                navItems={navItems ?? navigation?.header}
+                logo={logo}
+            />
 
             <main id="main-content">{children}</main>
 
             <Footer
                 copyright={copyright}
-                groups={footer?.groups}
+                groups={footer?.groups ?? navigation?.footer}
                 contact={footer?.contact}
                 social={footer?.social}
                 logo={logo}

@@ -17,6 +17,8 @@ declare module '@inertiajs/core' {
             i18n: I18nPayload;
             seo: App.Data.Seo.SeoDefaultsData;
             sidebarOpen: boolean;
+            /** Public area only (lazy shared prop). */
+            navigation?: App.Data.Navigation.NavigationData;
             [key: string]: unknown;
         };
     }

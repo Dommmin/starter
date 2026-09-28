@@ -6,9 +6,17 @@ import { I18nProvider } from '@/i18n';
 import { Button, type ButtonProps } from './button';
 import { PublicChrome } from './public-chrome';
 
+const sharedProps = vi.hoisted(() => ({
+    current: {} as Record<string, unknown>,
+}));
+
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
-        props: { auth: { user: null }, i18n: { alternateUrls: {} } },
+        props: {
+            auth: { user: null },
+            i18n: { alternateUrls: {} },
+            ...sharedProps.current,
+        },
     }),
     router: {
         on: () => () => {},
@@ -69,6 +77,7 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 }
 
 afterEach(async () => {
+    sharedProps.current = {};
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -111,6 +120,72 @@ describe('PublicChrome', () => {
         // Header, main and footer are siblings, in document order.
         expect(header?.nextElementSibling).toBe(main);
         expect(main?.nextElementSibling).toBe(footer);
+    });
+
+    it('renders the shared navigation menus unless the page passes its own', async () => {
+        sharedProps.current = {
+            navigation: {
+                header: [
+                    {
+                        id: 1,
+                        label: 'Shared blog',
+                        href: '/articles',
+                        kind: 'internal',
+                        newTab: false,
+                        children: [],
+                    },
+                ],
+                footer: [
+                    {
+                        id: 2,
+                        label: 'Legal',
+                        kind: 'group',
+                        newTab: false,
+                        children: [
+                            {
+                                id: 3,
+                                label: 'Privacy',
+                                href: '/privacy-policy',
+                                kind: 'internal',
+                                newTab: false,
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const shared = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        expect(
+            shared.querySelector('header a[href="/articles"]')?.textContent,
+        ).toContain('Shared blog');
+        expect(shared.querySelector('footer')?.textContent).toContain('Legal');
+        expect(
+            shared.querySelector('footer a[href="/privacy-policy"]'),
+        ).not.toBeNull();
+
+        const own = await render(
+            <PublicChrome
+                navItems={[
+                    { id: 'own', kind: 'anchor', label: 'Own', href: '#own' },
+                ]}
+                footer={{ groups: [] }}
+            >
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        expect(own.querySelector('header a[href="#own"]')).not.toBeNull();
+        expect(own.querySelector('header a[href="/articles"]')).toBeNull();
+        expect(
+            own.querySelector('footer a[href="/privacy-policy"]'),
+        ).toBeNull();
     });
 
     it('uses the copyright line the page passes', async () => {

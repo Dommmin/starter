@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Article;
+use App\Models\ArticleTranslation;
+use App\Models\MenuItem;
+use App\Models\Page;
+use App\Models\PageTranslation;
+use App\Observers\NavigationCacheObserver;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
@@ -63,6 +69,19 @@ class AppServiceProvider extends ServiceProvider
                 session()->forget('admin_locale');
             }
         });
+
+        $this->configureNavigationCache();
+    }
+
+    /**
+     * Cached public menus depend on menu items and on the titles, slugs
+     * and publication of their page/article targets.
+     */
+    protected function configureNavigationCache(): void
+    {
+        foreach ([MenuItem::class, Page::class, PageTranslation::class, Article::class, ArticleTranslation::class] as $model) {
+            $model::observe(NavigationCacheObserver::class);
+        }
     }
 
     /**

@@ -576,19 +576,20 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(budget["entry"], "resources/js/app.tsx")
         self.assertIn("resources/js/pages/welcome.tsx", budget["publicPages"])
         self.assertIn("resources/js/pages/pages/show.tsx", budget["publicPages"])
-        for limit in (
-            "entryJsGzipKb",
-            "cssGzipKb",
-            "pageJsGzipKb",
-            "publicPageTotalJsGzipKb",
-            "largestChunkGzipKb",
-        ):
-            self.assertGreater(budget["limits"][limit], 0)
+        self.assertEqual(
+            set(budget["limits"]), {"cssGzipKb", "publicPageTotalJsGzipKb"}
+        )
+        for limit in budget["limits"].values():
+            self.assertGreater(limit, 0)
+        for warning in ("entryJsGzipKb", "pageJsGzipKb", "largestChunkGzipKb"):
+            self.assertGreater(budget["warnings"][warning], 0)
 
     def test_bundle_budget_script_fails_on_overrun_and_leaked_tests(self):
         script_path = ROOT / "scripts/check-bundle-budget.mjs"
 
-        def run_budget(build_dir, limits, manifest_extra=None, lazy_modules=None):
+        def run_budget(
+            build_dir, limits, manifest_extra=None, lazy_modules=None, warnings=None
+        ):
             manifest = {
                 "resources/js/app.tsx": {
                     "file": "assets/app.js",
@@ -616,6 +617,7 @@ class AiConfigurationTest(unittest.TestCase):
                         "publicPages": ["resources/js/pages/welcome.tsx"],
                         "lazyModules": lazy_modules or [],
                         "limits": limits,
+                        "warnings": warnings or {},
                     }
                 )
             )
@@ -634,11 +636,8 @@ class AiConfigurationTest(unittest.TestCase):
             )
 
         generous = {
-            "entryJsGzipKb": 100,
             "cssGzipKb": 100,
-            "pageJsGzipKb": 100,
             "publicPageTotalJsGzipKb": 100,
-            "largestChunkGzipKb": 100,
         }
 
         with tempfile.TemporaryDirectory() as temp_root:
@@ -655,9 +654,23 @@ class AiConfigurationTest(unittest.TestCase):
             self.assertEqual(passing.returncode, 0, passing.stderr)
             self.assertIn("PASS bundle-budget", passing.stdout)
 
-            over = run_budget(build_dir, {**generous, "entryJsGzipKb": 1})
+            over = run_budget(build_dir, {**generous, "publicPageTotalJsGzipKb": 1})
             self.assertEqual(over.returncode, 1)
-            self.assertIn("entry JS", over.stderr)
+            self.assertIn("łączny JS", over.stderr)
+
+            css_over = run_budget(build_dir, {**generous, "cssGzipKb": 0.001})
+            self.assertEqual(css_over.returncode, 1)
+            self.assertIn("krytyczny CSS", css_over.stderr)
+
+            warned = run_budget(
+                build_dir,
+                generous,
+                warnings={"entryJsGzipKb": 1, "pageJsGzipKb": 0.001},
+            )
+            self.assertEqual(warned.returncode, 0, warned.stderr)
+            self.assertIn("WARN bundle-budget", warned.stderr)
+            self.assertIn("entry JS", warned.stderr)
+            self.assertIn("PASS bundle-budget", warned.stdout)
 
             leaked = run_budget(
                 build_dir,

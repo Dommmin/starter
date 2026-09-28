@@ -25,12 +25,12 @@ const layoutLoaders: Record<
 > = {
     auth: async () => [(await import('@/layouts/auth-layout')).default],
     settings: async () => {
-        const [admin, settings] = await Promise.all([
-            import('@/layouts/admin-layout'),
+        const [publicLayout, settings] = await Promise.all([
+            import('@/layouts/public-layout'),
             import('@/layouts/settings/layout'),
         ]);
 
-        return [admin.default, settings.default];
+        return [publicLayout.default, settings.default];
     },
     admin: async () => [(await import('@/layouts/admin-layout')).default],
     app: async () => [(await import('@/layouts/app-layout')).default],
@@ -57,14 +57,14 @@ function layoutGroup(name: string): LayoutGroup {
 }
 
 /**
- * Visual surface of a page. Panel layouts (admin, settings) use the admin
- * surface; app.blade.php renders the same decision on <html> for the first
+ * Visual surface of a page. Only the admin panel uses the admin surface;
+ * account settings live in the public frame. app.blade.php renders the same decision on <html> for the first
  * response, `syncSurface` keeps it current across Inertia visits.
  */
 export function surfaceFor(name: string): 'admin' | null {
     const group = layoutGroup(name);
 
-    return group === 'admin' || group === 'settings' ? 'admin' : null;
+    return group === 'admin' ? 'admin' : null;
 }
 
 export function syncSurface(name: string): void {

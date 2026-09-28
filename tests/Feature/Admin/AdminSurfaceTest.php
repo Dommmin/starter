@@ -24,14 +24,14 @@ test('admin panel pages render the admin surface on the html element', function 
     expect($response->getContent())->toMatch(ADMIN_SURFACE_ON_HTML);
 });
 
-test('settings pages share the admin surface', function () {
+test('settings pages keep the public surface', function () {
     $user = User::factory()->editor()->create();
 
     $response = $this->actingAs($user)
         ->get(route('profile.edit'))
         ->assertOk();
 
-    expect($response->getContent())->toMatch(ADMIN_SURFACE_ON_HTML);
+    expect($response->getContent())->not->toMatch(ADMIN_SURFACE_ON_HTML);
 });
 
 test('public and authentication pages keep the public surface', function () {

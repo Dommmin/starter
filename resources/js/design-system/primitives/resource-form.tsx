@@ -6,6 +6,10 @@ import { DateField } from './date-field';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { FormActions } from './form-actions';
 import { FormSection } from './form-section';
+import {
+    ImagePickerField,
+    type ImagePickerFieldLabels,
+} from './image-picker-field';
 import { NumberField } from './number-field';
 import {
     RichTextField,
@@ -95,6 +99,14 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   labels: RichTextFieldLabels;
                   /** Enables inserting images from the DAM picker. */
                   imagePicker?: RichTextImagePicker;
+              }
+            | {
+                  /** One DAM image; the value is the asset id as a string (`''` = none). */
+                  type: 'image';
+                  name: KeysOfType<Values, string>;
+                  picker: RichTextImagePicker;
+                  /** Translated choose/change/remove/empty/preview labels. */
+                  labels: ImagePickerFieldLabels;
               }
         );
 
@@ -305,6 +317,28 @@ export function ResourceForm<Values extends ResourceFormValues>({
                             onChange(
                                 field.name,
                                 checked as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            case 'image':
+                return (
+                    <ImagePickerField
+                        key={field.name}
+                        id={common.id}
+                        name={common.name}
+                        label={common.label}
+                        hint={common.description}
+                        error={common.error}
+                        disabled={common.disabled}
+                        required={field.required}
+                        picker={field.picker}
+                        labels={field.labels}
+                        value={stringValue(values[field.name])}
+                        onChange={(value) =>
+                            onChange(
+                                field.name,
+                                value as Values[typeof field.name],
                             )
                         }
                     />

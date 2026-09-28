@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Pages\PageController;
+use App\Http\Controllers\Admin\Settings\SiteSettingsController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
@@ -16,6 +17,7 @@ use App\Models\ContactMessage;
 use App\Models\Faq;
 use App\Models\MediaAsset;
 use App\Models\Page;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -143,4 +145,11 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/contact/{contactMessage}', [ContactMessageController::class, 'destroy'])
             ->name('contact.destroy')
             ->can('delete', 'contactMessage');
+
+        Route::get('/site-settings', [SiteSettingsController::class, 'edit'])
+            ->name('site-settings.edit')
+            ->can('view', SiteSetting::class);
+        Route::put('/site-settings', [SiteSettingsController::class, 'update'])
+            ->name('site-settings.update')
+            ->can('update', SiteSetting::class);
     });

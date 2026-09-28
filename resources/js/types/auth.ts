@@ -16,6 +16,7 @@ export type User = {
 export type AuthAbilities = {
     manageUsers: boolean;
     viewAudit: boolean;
+    manageSiteSettings: boolean;
 };
 
 export type Auth = {

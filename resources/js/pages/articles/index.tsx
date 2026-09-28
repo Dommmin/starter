@@ -13,6 +13,7 @@ import {
     Stack,
     Text,
 } from '@/design-system/primitives';
+import { useSiteChrome } from '@/hooks/use-site-chrome';
 import { useTranslation } from '@/i18n';
 
 export default function ArticlesIndex({
@@ -21,6 +22,7 @@ export default function ArticlesIndex({
     locale,
 }: App.Data.Content.PublicArticleListData) {
     const { t, formatDate } = useTranslation();
+    const chrome = useSiteChrome();
 
     function goToPage(page: number) {
         router.get(window.location.pathname, page > 1 ? { page } : {}, {
@@ -43,11 +45,7 @@ export default function ArticlesIndex({
                 }}
             />
 
-            <PublicChrome
-                footer={{
-                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
-                }}
-            >
+            <PublicChrome logo={chrome.logo} footer={chrome.footer}>
                 <Section spacing="default" container="wide">
                     <Stack gap="relaxed">
                         <Stack gap="tight">

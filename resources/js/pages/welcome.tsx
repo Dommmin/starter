@@ -14,6 +14,7 @@ import {
     Surface,
     Text,
 } from '@/design-system/primitives';
+import { useSiteChrome } from '@/hooks/use-site-chrome';
 import { useTranslation } from '@/i18n';
 import { login, register } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
@@ -26,6 +27,7 @@ export default function Welcome() {
     const { t, locale, defaultLocale } = useTranslation();
     const page = usePage<WelcomeProps>();
     const { auth, seo, contactForm } = page.props;
+    const chrome = useSiteChrome();
     const alternateUrls =
         (page.props as { i18n?: { alternateUrls?: Record<string, string> } })
             .i18n?.alternateUrls ?? {};
@@ -51,8 +53,6 @@ export default function Welcome() {
     return (
         <>
             <Seo
-                title={t('landing.metaTitle')}
-                description={t('landing.metaDescription')}
                 canonical={canonicalUrl}
                 alternates={alternateUrls}
                 jsonLd={[
@@ -71,7 +71,9 @@ export default function Welcome() {
                         name: seo.siteName,
                         url: canonicalUrl ?? seo.canonical,
                         inLanguage: locale,
-                        description: t('landing.metaDescription'),
+                        ...(seo.defaultDescription
+                            ? { description: seo.defaultDescription }
+                            : {}),
                     },
                 ]}
             />
@@ -94,9 +96,8 @@ export default function Welcome() {
                         ).url,
                     },
                 ]}
-                footer={{
-                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
-                }}
+                logo={chrome.logo}
+                footer={chrome.footer}
             >
                 <Hero
                     eyebrow={t('landing.badge')}

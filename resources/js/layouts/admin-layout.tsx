@@ -8,6 +8,7 @@ import {
     LayoutGrid,
     Mail,
     Settings,
+    SlidersHorizontal,
     Users,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -27,6 +28,7 @@ import { index as contactIndex } from '@/routes/admin/contact';
 import { index as faqsIndex } from '@/routes/admin/faqs';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as pagesIndex } from '@/routes/admin/pages';
+import { edit as siteSettingsEdit } from '@/routes/admin/site-settings';
 import { index as usersIndex } from '@/routes/admin/users';
 import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem } from '@/types';
@@ -41,7 +43,7 @@ export default function AdminLayout({
     children: ReactNode;
 }) {
     const { t } = useTranslation();
-    const { auth } = usePage().props;
+    const { auth, site } = usePage().props;
     const { currentUrl, isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
     const section = (
@@ -136,6 +138,16 @@ export default function AdminLayout({
                           ),
                       ]
                     : []),
+                ...(auth.can.manageSiteSettings
+                    ? [
+                          section(
+                              'site-settings',
+                              t('admin.nav.siteSettings'),
+                              siteSettingsEdit(),
+                              SlidersHorizontal,
+                          ),
+                      ]
+                    : []),
             ],
         },
     ].filter((group) => group.items.length > 0);
@@ -166,7 +178,7 @@ export default function AdminLayout({
 
     return (
         <AdminShell
-            brandName={appName}
+            brandName={site?.name ?? appName}
             brandSubtitle={t('admin.nav.subtitle')}
             homeHref={adminIndex()}
             navGroups={navGroups}

@@ -26,6 +26,7 @@ enum AuditAction: string
     case MediaRejected = 'media.rejected';
     case MediaUpdated = 'media.updated';
     case MediaDeleted = 'media.deleted';
+    case SiteSettingsUpdated = 'site_settings.updated';
 
     /**
      * @return list<string>

@@ -22,6 +22,8 @@ test('the shared seo prop exposes site defaults and the canonical url without qu
                 'siteName' => 'Starter',
                 'canonical' => url('/pl'),
                 'defaultImage' => url('/images/og.png'),
+                'defaultTitle' => __('public.site.defaultTitle', [], 'pl'),
+                'defaultDescription' => __('public.site.defaultDescription', [], 'pl'),
                 'organization' => [
                     'name' => 'Acme',
                     'url' => url('/'),

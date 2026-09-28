@@ -55,7 +55,11 @@ export default function ErrorShow({ status }: App.Data.Errors.ErrorPageData) {
 
     return (
         <>
-            <Seo title={t(`errors.${key}.title`)} robots="noindex,nofollow" />
+            <Seo
+                title={t(`errors.${key}.title`)}
+                description={null}
+                robots="noindex,nofollow"
+            />
 
             <PublicChrome>
                 <Section spacing="relaxed" container="reading">

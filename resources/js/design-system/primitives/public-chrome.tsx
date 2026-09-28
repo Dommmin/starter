@@ -8,7 +8,8 @@ import { PublicHeader } from './public-header';
 export type PublicChromeFooter = {
     /**
      * Defaults to "© {year} {brand.name}" (common catalog, available in every
-     * area). Public content pages pass their `landing.footerCopy` line.
+     * area). Public pages pass the line built from the `site` settings
+     * (`useSiteChrome`).
      */
     copyright?: string;
     groups?: NavItem[];

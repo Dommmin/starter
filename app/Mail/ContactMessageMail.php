@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\ContactMessage;
+use App\Repositories\Settings\SiteSettingsRepository;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -21,7 +22,7 @@ class ContactMessageMail extends Mailable
     {
         return new Envelope(
             replyTo: [new Address($this->contactMessage->email, $this->contactMessage->name)],
-            subject: __('admin.contact.mail.subject', ['site' => (string) config('seo.site_name')]),
+            subject: __('admin.contact.mail.subject', ['site' => app(SiteSettingsRepository::class)->siteName()]),
         );
     }
 

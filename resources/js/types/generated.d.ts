@@ -291,6 +291,43 @@ declare namespace App {
                     publishedAt: string | null;
                 };
             }
+            namespace Settings {
+                export type SiteSettingTranslationFormData = {
+                    tagline: string | null;
+                    footerText: string | null;
+                    seoTitle: string | null;
+                    seoDescription: string | null;
+                };
+                export type SiteSettingsEditorData = {
+                    settings: App.Data.Admin.Settings.SiteSettingsFormData;
+                    locales: App.Data.Content.ContentLocalesData;
+                    socialNetworks: App.Data.Admin.Settings.SocialNetworkOptionData[];
+                };
+                export type SiteSettingsFormData = {
+                    updatedAt: string | null;
+                    siteName: string;
+                    logoMediaId: number | null;
+                    ogImageMediaId: number | null;
+                    contactEmail: string | null;
+                    contactPhone: string | null;
+                    addressLine: string | null;
+                    postalCode: string | null;
+                    city: string | null;
+                    countryCode: string | null;
+                    contactRecipientEmail: string | null;
+                    socialLinks: {
+                        [network in App.Enums.SocialNetwork]: string;
+                    };
+                    translations: Record<
+                        string,
+                        App.Data.Admin.Settings.SiteSettingTranslationFormData
+                    >;
+                };
+                export type SocialNetworkOptionData = {
+                    network: App.Enums.SocialNetwork;
+                    label: string;
+                };
+            }
             namespace Users {
                 export type UserAbilitiesData = {
                     delete: boolean;
@@ -396,12 +433,34 @@ declare namespace App {
                 siteName: string;
                 canonical: string;
                 defaultImage: string | null;
+                defaultTitle: string;
+                defaultDescription: string | null;
                 organization: App.Data.Seo.SeoOrganizationData;
             };
             export type SeoOrganizationData = {
                 name: string;
                 url: string;
                 logo: string | null;
+            };
+        }
+        namespace Settings {
+            export type SiteContactData = {
+                email: string | null;
+                phone: string | null;
+                address: string | null;
+            };
+            export type SiteSettingsData = {
+                name: string;
+                logo: App.Data.Media.MediaImageData | null;
+                tagline: string | null;
+                footerText: string | null;
+                contact: App.Data.Settings.SiteContactData;
+                social: App.Data.Settings.SiteSocialLinkData[];
+            };
+            export type SiteSocialLinkData = {
+                network: App.Enums.SocialNetwork;
+                label: string;
+                url: string;
             };
         }
     }
@@ -425,12 +484,21 @@ declare namespace App {
             | 'media.cleaned'
             | 'media.rejected'
             | 'media.updated'
-            | 'media.deleted';
+            | 'media.deleted'
+            | 'site_settings.updated';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type PublicationStatus = 'draft' | 'published';
+        export type SocialNetwork =
+            | 'facebook'
+            | 'instagram'
+            | 'linkedin'
+            | 'x'
+            | 'youtube'
+            | 'tiktok'
+            | 'github';
         export type UserRole = 'admin' | 'editor';
     }
 }

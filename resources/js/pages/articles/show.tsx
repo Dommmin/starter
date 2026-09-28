@@ -9,6 +9,7 @@ import {
     Stack,
     Text,
 } from '@/design-system/primitives';
+import { useSiteChrome } from '@/hooks/use-site-chrome';
 import { useTranslation } from '@/i18n';
 
 export default function ArticleShow({
@@ -25,6 +26,7 @@ export default function ArticleShow({
     alternates,
 }: App.Data.Content.PublicArticleData) {
     const { t, formatDate } = useTranslation();
+    const chrome = useSiteChrome();
     const canonical = alternates[locale];
 
     return (
@@ -52,11 +54,7 @@ export default function ArticleShow({
                 }}
             />
 
-            <PublicChrome
-                footer={{
-                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
-                }}
-            >
+            <PublicChrome logo={chrome.logo} footer={chrome.footer}>
                 <Section spacing="default" container="reading">
                     <article>
                         <Stack gap="default">

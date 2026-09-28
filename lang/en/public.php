@@ -74,4 +74,10 @@ return [
             'formExpired' => 'This form has expired. Please reload the page and try again.',
         ],
     ],
+    'home' => [
+        'latestArticlesEmpty' => 'No articles have been published yet.',
+        'allArticles' => 'All articles',
+        'readMore' => 'Read article: :title',
+        'faqEmpty' => 'No questions have been published yet.',
+    ],
 ];

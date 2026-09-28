@@ -52,6 +52,25 @@ class ArticleRepository
     }
 
     /**
+     * The newest visible translations of the given locale, same order as
+     * publishedPage() but independent of the `page` query parameter (home
+     * page teaser).
+     *
+     * @return Collection<int, ArticleTranslation>
+     */
+    public function latestPublished(string $locale, int $limit): Collection
+    {
+        return ArticleTranslation::query()
+            ->published()
+            ->where('locale', $locale)
+            ->with('article.cover')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Find the translation visitors may see at the given locale and slug,
      * with its cover and sibling translations for language alternates.
      */

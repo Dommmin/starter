@@ -74,4 +74,10 @@ return [
             'formExpired' => 'Das Formular ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut.',
         ],
     ],
+    'home' => [
+        'latestArticlesEmpty' => 'Es wurden noch keine Artikel veröffentlicht.',
+        'allArticles' => 'Alle Artikel',
+        'readMore' => 'Artikel lesen: :title',
+        'faqEmpty' => 'Es wurden noch keine Fragen veröffentlicht.',
+    ],
 ];

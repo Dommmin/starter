@@ -65,6 +65,29 @@ class PageRepository
     }
 
     /**
+     * Published translations of the locale, keyed by page id, optionally
+     * limited to the given pages (home page links and their editor options).
+     *
+     * @param  list<int>|null  $pageIds
+     * @return array<int, PageTranslation>
+     */
+    public function publishedInLocale(string $locale, ?array $pageIds = null): array
+    {
+        if ($pageIds === []) {
+            return [];
+        }
+
+        return PageTranslation::query()
+            ->published()
+            ->where('locale', $locale)
+            ->when($pageIds !== null, fn (Builder $query) => $query->whereIn('page_id', $pageIds))
+            ->orderBy('title')
+            ->get()
+            ->keyBy('page_id')
+            ->all();
+    }
+
+    /**
      * Pages with at least one published translation, each with only its
      * published translations loaded. Drafts never reach the sitemap.
      *

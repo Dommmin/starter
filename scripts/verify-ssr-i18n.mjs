@@ -26,6 +26,28 @@ async function runSsrVerification() {
             auth: { user: null },
             seo,
             contactForm: { token: 'ssr-fixture-token' },
+            // Home page content comes from the enabled sections of the
+            // locale (HomeSectionData); the hero title must be in the HTML.
+            sections: [
+                {
+                    id: 1,
+                    type: 'hero',
+                    anchor: 'hero',
+                    content: {
+                        eyebrow: null,
+                        title: heroTitle,
+                        description: 'Hero description',
+                        primaryAction: { label: 'Contact', url: '#contact' },
+                        secondaryAction: null,
+                    },
+                },
+                {
+                    id: 2,
+                    type: 'contact',
+                    anchor: 'contact',
+                    content: { title: 'Contact', description: null },
+                },
+            ],
             i18n: {
                 area: 'public',
                 locale,
@@ -114,6 +136,10 @@ async function runSsrVerification() {
     assert.ok(
         en1.body.includes('Hero EN Initial'),
         'SSR EN musi zawierać angielski tytuł',
+    );
+    assert.ok(
+        en1.body.includes('id="hero"') && en1.body.includes('id="contact"'),
+        'SSR strony głównej musi zawierać stałe kotwice sekcji (HomeSectionAnchor)',
     );
     assert.ok(
         !en1.body.includes('landing.heroTitle') &&

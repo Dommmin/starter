@@ -6,6 +6,7 @@ import {
     History,
     Images,
     LayoutGrid,
+    LayoutTemplate,
     Mail,
     Settings,
     Users,
@@ -25,6 +26,7 @@ import { index as articlesIndex } from '@/routes/admin/articles';
 import { index as auditIndex } from '@/routes/admin/audit';
 import { index as contactIndex } from '@/routes/admin/contact';
 import { index as faqsIndex } from '@/routes/admin/faqs';
+import { index as homeSectionsIndex } from '@/routes/admin/home-sections';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { index as usersIndex } from '@/routes/admin/users';
@@ -97,6 +99,12 @@ export default function AdminLayout({
                     t('admin.faqs.navLabel'),
                     faqsIndex(),
                     CircleHelp,
+                ),
+                section(
+                    'home-sections',
+                    t('admin.homeSections.navLabel'),
+                    homeSectionsIndex(),
+                    LayoutTemplate,
                 ),
             ],
         },

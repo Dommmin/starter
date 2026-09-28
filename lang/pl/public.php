@@ -74,4 +74,10 @@ return [
             'formExpired' => 'Formularz wygasł. Odśwież stronę i spróbuj ponownie.',
         ],
     ],
+    'home' => [
+        'latestArticlesEmpty' => 'Nie opublikowano jeszcze żadnych artykułów.',
+        'allArticles' => 'Wszystkie artykuły',
+        'readMore' => 'Przeczytaj artykuł: :title',
+        'faqEmpty' => 'Nie opublikowano jeszcze żadnych pytań.',
+    ],
 ];

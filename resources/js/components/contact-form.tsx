@@ -8,6 +8,9 @@ import { store as localizedContactStore } from '@/routes/localized/contact';
 type ContactFormProps = {
     /** Server-issued form state (encrypted render-time token). */
     contactForm: App.Data.Contact.ContactFormData;
+    /** Section heading; the translated default when omitted. */
+    title?: string;
+    description?: string | null;
 };
 
 type ContactFormFields = {
@@ -26,7 +29,11 @@ const HONEYPOT_FIELD = 'website';
  * limit (429) or another HTTP failure shows a form-level alert instead of
  * the Inertia error modal. The response never reveals delivery status.
  */
-export function ContactForm({ contactForm }: ContactFormProps) {
+export function ContactForm({
+    contactForm,
+    title,
+    description,
+}: ContactFormProps) {
     const { t, locale, defaultLocale } = useTranslation();
     const [isSent, setIsSent] = useState(false);
     const [requestError, setRequestError] = useState<string | undefined>();
@@ -72,8 +79,12 @@ export function ContactForm({ contactForm }: ContactFormProps) {
 
     return (
         <ContactSection
-            title={t('contact.title')}
-            description={t('contact.description')}
+            title={title ?? t('contact.title')}
+            description={
+                description === undefined
+                    ? t('contact.description')
+                    : (description ?? undefined)
+            }
             labels={{
                 name: t('contact.fields.name'),
                 email: t('contact.fields.email'),

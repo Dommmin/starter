@@ -26,23 +26,42 @@ type HomeSectionsProps = {
     sections: HomeSection[];
     /** Page-level contact form state (one form per page). */
     contactForm: App.Data.Contact.ContactFormData;
+    /**
+     * Page `h1` used only when no hero section is rendered (the hero title
+     * is otherwise the single `h1`), e.g. the site name.
+     */
+    fallbackTitle: string;
 };
 
 /**
  * Enabled home page sections in the order sent by the server. Each section
- * is wrapped in an element whose `id` is its fixed anchor
- * (`App.Enums.HomeSectionAnchor`), the contract navigation links rely on.
+ * carries its fixed anchor (`App.Enums.HomeSectionAnchor`) as `id`, the
+ * contract navigation links rely on: on its own `Section` where the page
+ * renders one, otherwise on a wrapping element (hero, contact, CTA render
+ * their `Section` inside the primitive, which takes no `id`).
  */
-export function HomeSections({ sections, contactForm }: HomeSectionsProps) {
+export function HomeSections({
+    sections,
+    contactForm,
+    fallbackTitle,
+}: HomeSectionsProps) {
+    const hasHero = sections.some((section) => section.type === 'hero');
+
     return (
         <>
+            {!hasHero && (
+                <Section spacing="compact" container="wide">
+                    <Heading level={1} variant="page" align="center">
+                        {fallbackTitle}
+                    </Heading>
+                </Section>
+            )}
             {sections.map((section) => (
-                <div key={section.id} id={section.anchor}>
-                    <HomeSectionContent
-                        section={section}
-                        contactForm={contactForm}
-                    />
-                </div>
+                <HomeSectionContent
+                    key={section.id}
+                    section={section}
+                    contactForm={contactForm}
+                />
             ))}
         </>
     );
@@ -55,27 +74,39 @@ function HomeSectionContent({
     section: HomeSection;
     contactForm: App.Data.Contact.ContactFormData;
 }) {
+    const id = section.anchor;
+
     switch (section.type) {
         case 'hero':
-            return <HeroSection content={section.content} />;
+            return (
+                <div id={id}>
+                    <HeroSection content={section.content} />
+                </div>
+            );
         case 'features':
-            return <FeaturesSection content={section.content} />;
+            return <FeaturesSection id={id} content={section.content} />;
         case 'faq':
-            return <FaqSection content={section.content} />;
+            return <FaqSection id={id} content={section.content} />;
         case 'testimonials':
-            return <TestimonialsSection content={section.content} />;
+            return <TestimonialsSection id={id} content={section.content} />;
         case 'latest_articles':
-            return <LatestArticlesSection content={section.content} />;
+            return <LatestArticlesSection id={id} content={section.content} />;
         case 'contact':
             return (
-                <ContactForm
-                    contactForm={contactForm}
-                    title={section.content.title}
-                    description={section.content.description}
-                />
+                <div id={id}>
+                    <ContactForm
+                        contactForm={contactForm}
+                        title={section.content.title}
+                        description={section.content.description}
+                    />
+                </div>
             );
         case 'cta':
-            return <CtaSection content={section.content} />;
+            return (
+                <div id={id}>
+                    <CtaSection content={section.content} />
+                </div>
+            );
         default:
             return assertNever(section);
     }
@@ -132,12 +163,14 @@ function HeroSection({ content }: { content: App.Data.Home.HomeHeroData }) {
 }
 
 function FeaturesSection({
+    id,
     content,
 }: {
+    id: string;
     content: App.Data.Home.FeaturesContentData;
 }) {
     return (
-        <Section spacing="relaxed" tone="subtle" container="wide">
+        <Section id={id} spacing="relaxed" tone="subtle" container="wide">
             <FeatureGrid
                 title={content.title ?? undefined}
                 description={content.description ?? undefined}
@@ -180,11 +213,17 @@ function SectionHeading({
     );
 }
 
-function FaqSection({ content }: { content: App.Data.Home.HomeFaqData }) {
+function FaqSection({
+    id,
+    content,
+}: {
+    id: string;
+    content: App.Data.Home.HomeFaqData;
+}) {
     const { t } = useTranslation();
 
     return (
-        <Section spacing="default" container="reading">
+        <Section id={id} spacing="default" container="reading">
             <Stack gap="relaxed">
                 <SectionHeading
                     title={content.title}
@@ -208,12 +247,14 @@ function FaqSection({ content }: { content: App.Data.Home.HomeFaqData }) {
 }
 
 function TestimonialsSection({
+    id,
     content,
 }: {
+    id: string;
     content: App.Data.Home.TestimonialsContentData;
 }) {
     return (
-        <Section spacing="relaxed" tone="subtle" container="wide">
+        <Section id={id} spacing="relaxed" tone="subtle" container="wide">
             <Stack gap="relaxed">
                 <SectionHeading title={content.title} />
                 <Grid layout="cards">
@@ -248,14 +289,16 @@ function TestimonialsSection({
 }
 
 function LatestArticlesSection({
+    id,
     content,
 }: {
+    id: string;
     content: App.Data.Home.HomeLatestArticlesData;
 }) {
     const { t, formatDate } = useTranslation();
 
     return (
-        <Section spacing="default" container="wide">
+        <Section id={id} spacing="default" container="wide">
             <Stack gap="relaxed">
                 <SectionHeading title={content.title} />
                 {content.items.length === 0 ? (

@@ -54,3 +54,19 @@ test('the demo seeder rebuilds the former landing page and is idempotent', funct
     $plHero = HomeSection::query()->where('locale', 'pl')->where('type', HomeSectionType::Hero)->sole();
     expect($plHero->content->title)->toBe(__('public.landing.heroTitle', [], 'pl'));
 });
+
+test('the demo definition covers every type and recognises untouched demo sections', function () {
+    $this->seed(HomeSectionSeeder::class);
+
+    $defaults = HomeSectionSeeder::defaults('de');
+    expect(array_keys($defaults))->toBe(array_map(fn (HomeSectionType $type): string => $type->value, HomeSectionType::cases()))
+        ->and($defaults['hero']['enabled'])->toBeTrue()
+        ->and($defaults['faq']['enabled'])->toBeFalse();
+
+    $hero = HomeSection::query()->where('locale', 'de')->where('type', HomeSectionType::Hero)->sole();
+    expect(HomeSectionSeeder::isDemo($hero))->toBeTrue();
+
+    $hero->content = new HeroContentData(title: 'Eigener Titel');
+    $hero->save();
+    expect(HomeSectionSeeder::isDemo($hero->fresh()))->toBeFalse();
+});

@@ -66,7 +66,11 @@ export default function Welcome() {
                     copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
                 }}
             >
-                <HomeSections sections={sections} contactForm={contactForm} />
+                <HomeSections
+                    sections={sections}
+                    contactForm={contactForm}
+                    fallbackTitle={seo.siteName}
+                />
             </PublicChrome>
         </>
     );

@@ -150,6 +150,7 @@ async function render(list: Section[]): Promise<HTMLElement> {
                 <HomeSections
                     sections={list}
                     contactForm={{ token: 'token' }}
+                    fallbackTitle="Starter site"
                 />
             </I18nProvider>,
         );
@@ -195,7 +196,9 @@ describe('HomeSections', () => {
         ]) {
             expect(text).toContain(expected);
         }
+        expect(container.querySelectorAll('h1')).toHaveLength(1);
         expect(container.querySelector('h1')?.textContent).toBe('Hero title');
+        expect(text).not.toContain('Starter site');
         expect(text).not.toContain('Default contact title');
     });
 
@@ -238,6 +241,17 @@ describe('HomeSections', () => {
         expect(container.textContent).toContain('No articles yet.');
 
         const empty = await render([]);
-        expect(empty.children).toHaveLength(0);
+        expect(empty.textContent).toBe('Starter site');
+        expect(empty.querySelectorAll('[id]')).toHaveLength(0);
+    });
+
+    it('renders exactly one h1 with the site name when there is no hero', async () => {
+        for (const list of [[], sections.filter((s) => s.type !== 'hero')]) {
+            const container = await render(list);
+            const headings = container.querySelectorAll('h1');
+
+            expect(headings).toHaveLength(1);
+            expect(headings[0].textContent).toBe('Starter site');
+        }
     });
 });

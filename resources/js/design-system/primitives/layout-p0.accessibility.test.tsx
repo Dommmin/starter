@@ -61,53 +61,85 @@ describe('Collapsible', () => {
 });
 
 describe('Accordion', () => {
+    const items = [
+        { id: 'a', trigger: 'Item A', content: 'Content A' },
+        { id: 'b', trigger: 'Item B', content: 'Content B' },
+    ];
+
+    function parts(container: HTMLElement) {
+        const details = Array.from(container.querySelectorAll('details'));
+
+        return {
+            details,
+            summaries: details.map(
+                (item) => item.querySelector('summary') as HTMLElement,
+            ),
+        };
+    }
+
+    /** Browsers turn Enter/Space on a focused summary into a click. */
+    async function activate(summary: HTMLElement) {
+        await act(async () => {
+            summary.focus();
+            summary.click();
+        });
+    }
+
+    it('uses native details/summary with content in the markup while closed', async () => {
+        const container = await render(<Accordion items={items} />);
+        const { details, summaries } = parts(container);
+
+        expect(details).toHaveLength(2);
+        expect(details.every((item) => !item.open)).toBe(true);
+        expect(container.textContent).toContain('Content A');
+        expect(summaries[0].getAttribute('role')).toBeNull();
+        expect(
+            summaries[0].querySelector('svg')?.getAttribute('aria-hidden'),
+        ).toBe('true');
+
+        summaries[0].focus();
+        expect(document.activeElement).toBe(summaries[0]);
+    });
+
     it('keeps only one item open in single mode', async () => {
         const container = await render(
-            <Accordion
-                type="single"
-                items={[
-                    { id: 'a', trigger: 'Item A', content: 'Content A' },
-                    { id: 'b', trigger: 'Item B', content: 'Content B' },
-                ]}
-            />,
+            <Accordion type="single" items={items} />,
         );
+        const { details, summaries } = parts(container);
 
-        const triggers = Array.from(container.querySelectorAll('button'));
+        await activate(summaries[0]);
+        expect(details[0].open).toBe(true);
 
-        await act(async () => {
-            triggers[0]?.click();
-        });
-        expect(triggers[0]?.getAttribute('aria-expanded')).toBe('true');
+        await activate(summaries[1]);
+        expect(details[0].open).toBe(false);
+        expect(details[1].open).toBe(true);
 
-        await act(async () => {
-            triggers[1]?.click();
-        });
-        expect(triggers[0]?.getAttribute('aria-expanded')).toBe('false');
-        expect(triggers[1]?.getAttribute('aria-expanded')).toBe('true');
+        await activate(summaries[1]);
+        expect(details[1].open).toBe(false);
     });
 
     it('allows multiple open items in multiple mode', async () => {
         const container = await render(
-            <Accordion
-                type="multiple"
-                items={[
-                    { id: 'a', trigger: 'Item A', content: 'Content A' },
-                    { id: 'b', trigger: 'Item B', content: 'Content B' },
-                ]}
-            />,
+            <Accordion type="multiple" items={items} defaultOpenIds={['a']} />,
         );
+        const { details, summaries } = parts(container);
 
-        const triggers = Array.from(container.querySelectorAll('button'));
+        expect(details[0].open).toBe(true);
+        await activate(summaries[1]);
 
-        await act(async () => {
-            triggers[0]?.click();
-        });
-        await act(async () => {
-            triggers[1]?.click();
-        });
+        expect(details[0].open).toBe(true);
+        expect(details[1].open).toBe(true);
+    });
 
-        expect(triggers[0]?.getAttribute('aria-expanded')).toBe('true');
-        expect(triggers[1]?.getAttribute('aria-expanded')).toBe('true');
+    it('does not toggle a disabled item', async () => {
+        const container = await render(
+            <Accordion items={[{ ...items[0], disabled: true }]} />,
+        );
+        const { details, summaries } = parts(container);
+
+        expect(summaries[0].getAttribute('aria-disabled')).toBe('true');
+        await activate(summaries[0]);
+        expect(details[0].open).toBe(false);
     });
 });
 

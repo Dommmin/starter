@@ -18,6 +18,7 @@ export type ButtonProps = {
     children: ReactNode;
     variant?: ButtonVariant;
     size?: ButtonSize;
+    /** A value starting with `#` renders a plain in-page anchor (no Inertia visit). */
     href?: string | RouteDefinition<'get'> | { url: string };
     /**
      * With `href`: render a plain `<a download>` (no Inertia visit) so the
@@ -102,11 +103,18 @@ export function Button({
                 ? href.url
                 : href;
 
-        if (download) {
+        // In-page anchor (`#section`): a plain link, no Inertia visit.
+        if (download || targetHref.startsWith('#')) {
             return (
                 <a
                     href={targetHref}
-                    download={download === true ? '' : download}
+                    download={
+                        download === undefined || download === false
+                            ? undefined
+                            : download === true
+                              ? ''
+                              : download
+                    }
                     aria-label={ariaLabel}
                     className={baseClasses}
                     onClick={onClick}

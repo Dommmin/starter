@@ -42,6 +42,22 @@ async function runSsrVerification() {
                     },
                 },
                 {
+                    id: 3,
+                    type: 'faq',
+                    anchor: 'faq',
+                    content: {
+                        title: 'FAQ',
+                        description: null,
+                        items: [
+                            {
+                                id: 1,
+                                question: 'SSR question',
+                                answer: 'SSR answer in first HTML',
+                            },
+                        ],
+                    },
+                },
+                {
                     id: 2,
                     type: 'contact',
                     anchor: 'contact',
@@ -140,6 +156,15 @@ async function runSsrVerification() {
     assert.ok(
         en1.body.includes('id="hero"') && en1.body.includes('id="contact"'),
         'SSR strony głównej musi zawierać stałe kotwice sekcji (HomeSectionAnchor)',
+    );
+    assert.ok(
+        en1.body.includes('SSR answer in first HTML') &&
+            en1.body.includes('<details'),
+        'SSR musi zawierać treść odpowiedzi FAQ (zwinięty <details>) w pierwszym HTML',
+    );
+    assert.ok(
+        /<a[^>]*href="#contact"/.test(en1.body),
+        'Przycisk z celem #contact musi być zwykłym linkiem do kotwicy',
     );
     assert.ok(
         !en1.body.includes('landing.heroTitle') &&

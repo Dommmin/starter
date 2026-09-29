@@ -605,6 +605,9 @@ return [
                 'updated' => 'File updated',
                 'deleted' => 'File deleted',
             ],
+            'resource' => [
+                'exported' => 'Records exported to CSV',
+            ],
         ],
         'subjects' => [
             'article' => 'Article',

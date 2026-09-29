@@ -68,6 +68,69 @@ final class ResourceGenerator
     }
 
     /**
+     * Problems with the models referenced by belongsTo fields. The model
+     * source is read instead of the database schema, so the check behaves the
+     * same in a dry run, in tests and before any migration ran: the label
+     * column must be a fillable or documented (`@property`, not `@property-read`) attribute and the
+     * model must use HasFactory (the generated factory calls `::factory()`).
+     *
+     * @return list<string>
+     */
+    public function relationErrors(ResourceBlueprint $resource): array
+    {
+        $errors = [];
+
+        foreach ($resource->fieldsOfType('belongsTo') as $field) {
+            $model = (string) $field->relatedModel;
+            $label = (string) $field->relatedLabel;
+            $relative = "app/Models/{$model}.php";
+
+            if ($model === $resource->model || ! $this->files->exists($this->path($relative))) {
+                $errors[] = "Field [{$field->name}]: model {$relative} does not exist.";
+
+                continue;
+            }
+
+            $source = $this->files->get($this->path($relative));
+
+            if (! in_array($label, self::modelAttributes($source), true)) {
+                $errors[] = "Field [{$field->name}]: column [{$label}] is not a fillable or documented attribute of App\\Models\\{$model}.";
+            }
+
+            if (! str_contains($source, 'HasFactory')) {
+                $errors[] = "Field [{$field->name}]: App\\Models\\{$model} must use HasFactory (the generated factory calls {$model}::factory()).";
+            }
+
+            if (preg_match('/\$table\s*=|#\[Table\(/', $source) === 1) {
+                $errors[] = "Field [{$field->name}]: App\\Models\\{$model} uses a custom table name, which the generated foreign key does not support.";
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Attribute names declared in a model source: `#[Fillable([...])]`,
+     * `$fillable = [...]` and `@property` docblock lines.
+     *
+     * @return list<string>
+     */
+    private static function modelAttributes(string $source): array
+    {
+        $attributes = [];
+
+        if (preg_match('/#\[Fillable\(\[(.*?)\]\)\]/s', $source, $fillable) === 1
+            || preg_match('/\$fillable\s*=\s*\[(.*?)\]/s', $source, $fillable) === 1) {
+            preg_match_all("/'([a-z0-9_]+)'/", $fillable[1], $names);
+            $attributes = $names[1];
+        }
+
+        preg_match_all('/@property\s+\S+\s+\$([a-z0-9_]+)/', $source, $documented);
+
+        return array_values(array_unique([...$attributes, ...$documented[1]]));
+    }
+
+    /**
      * Write every planned change, or nothing.
      *
      * @throws RuntimeException When the plan has conflicts or a write fails (after rollback).

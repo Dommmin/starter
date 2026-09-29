@@ -27,6 +27,16 @@ class Store{{ Model }}Request extends FormRequest
     }
 
     /**
+     * Validated field values ready to be stored.
+     *
+     * @return array<string, mixed>
+     */
+    public function fieldValues(): array
+    {
+        return {{ storeFieldValues }};
+    }
+
+    /**
      * Validation of the editable fields, shared with Update{{ Model }}Request.
      *
      * @return array<string, list<mixed>>
@@ -38,4 +48,5 @@ class Store{{ Model }}Request extends FormRequest
         ];
     }
 {{ blankInputsMethod }}
+{{ sanitizeMethod }}
 }

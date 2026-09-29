@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+{{ imports }}
 
 /**
  * Admin CRUD of {{ pluralLower }}. Authorization: `can` middleware on every
@@ -26,6 +27,7 @@ use Inertia\Response;
  */
 class {{ Model }}Controller extends Controller
 {
+{{ constants }}
     /**
      * Display the searchable, filterable, paginated list.
      */
@@ -34,7 +36,7 @@ class {{ Model }}Controller extends Controller
         $listQuery = $request->listQuery();
         $validated = $request->validated();
 
-        $paginator = $listQuery->paginate({{ Model }}::query(), $validated);
+        $paginator = $listQuery->paginate({{ Model }}::query(){{ with }}, $validated);
 
         $items = [];
         foreach ($paginator->items() as ${{ variable }}) {
@@ -46,6 +48,7 @@ class {{ Model }}Controller extends Controller
             pagination: ListPaginationData::from($listQuery->paginationPayload($paginator)),
             filters: {{ Model }}ListFiltersData::from($listQuery->filtersPayload($validated)),
             can: $this->abilities($request, null),
+{{ indexArguments }}
         ));
     }
 
@@ -54,10 +57,7 @@ class {{ Model }}Controller extends Controller
      */
     public function create(Request $request): Response
     {
-        return Inertia::render('admin/{{ kebabPlural }}/create', new {{ Model }}EditorData(
-            {{ variable }}: {{ Model }}FormData::blank(),
-            can: $this->abilities($request, null),
-        ));
+        return Inertia::render('admin/{{ kebabPlural }}/create', $this->editor($request, {{ Model }}FormData::blank(), null));
     }
 
     /**
@@ -65,7 +65,7 @@ class {{ Model }}Controller extends Controller
      */
     public function store(Store{{ Model }}Request $request): RedirectResponse
     {
-        ${{ variable }} = {{ Model }}::query()->create($request->validated());
+        ${{ variable }} = {{ Model }}::query()->create($request->fieldValues());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.created')]);
 
@@ -77,10 +77,7 @@ class {{ Model }}Controller extends Controller
      */
     public function edit(Request $request, {{ Model }} ${{ variable }}): Response
     {
-        return Inertia::render('admin/{{ kebabPlural }}/edit', new {{ Model }}EditorData(
-            {{ variable }}: {{ Model }}FormData::fromModel(${{ variable }}),
-            can: $this->abilities($request, ${{ variable }}),
-        ));
+        return Inertia::render('admin/{{ kebabPlural }}/edit', $this->editor($request, {{ Model }}FormData::fromModel(${{ variable }}), ${{ variable }}));
     }
 
     /**
@@ -106,6 +103,17 @@ class {{ Model }}Controller extends Controller
 
         return to_route('admin.{{ kebabPlural }}.index');
     }
+{{ exportMethods }}
+
+    private function editor(Request $request, {{ Model }}FormData $form, ?{{ Model }} ${{ variable }}): {{ Model }}EditorData
+    {
+{{ editorOptions }}
+        return new {{ Model }}EditorData(
+            {{ variable }}: $form,
+            can: $this->abilities($request, ${{ variable }}),
+{{ editorArguments }}
+        );
+    }
 
     private function abilities(Request $request, ?{{ Model }} ${{ variable }}): {{ Model }}AbilitiesData
     {
@@ -116,6 +124,8 @@ class {{ Model }}Controller extends Controller
             delete: ${{ variable }} !== null
                 ? ($user?->can('delete', ${{ variable }}) ?? false)
                 : ($user?->isAdmin() ?? false),
+{{ exportAbility }}
         );
     }
+{{ optionMethods }}
 }

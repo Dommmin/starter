@@ -33,13 +33,13 @@ class Update{{ Model }}Request extends FormRequest
     }
 
     /**
-     * Validated field values without the version.
+     * Validated field values without the version, ready to be stored.
      *
      * @return array<string, mixed>
      */
     public function fieldValues(): array
     {
-        return $this->safe()->except(['updated_at']);
+        return {{ updateFieldValues }};
     }
 
     public function expectedUpdatedAt(): string

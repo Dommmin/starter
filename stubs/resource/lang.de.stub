@@ -47,6 +47,7 @@
         'updated' => 'Änderungen gespeichert.',
         'deleted' => 'Eintrag gelöscht.',
         'conflict' => 'Dieser Eintrag wurde nach dem Öffnen von jemand anderem geändert. Laden Sie ihn neu und übernehmen Sie Ihre Änderungen erneut.',
+{{ extraLabels }}
         'fields' => [
 {{ fieldLabels }}
         ],

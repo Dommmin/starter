@@ -377,6 +377,10 @@ declare namespace App {
                 total: number;
                 perPage: number;
             };
+            export type RecordOptionData = {
+                id: number;
+                label: string;
+            };
         }
         namespace Media {
             export type MediaImageData = {
@@ -425,7 +429,8 @@ declare namespace App {
             | 'media.cleaned'
             | 'media.rejected'
             | 'media.updated'
-            | 'media.deleted';
+            | 'media.deleted'
+            | 'resource.exported';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';

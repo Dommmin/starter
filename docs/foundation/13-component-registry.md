@@ -1,18 +1,22 @@
 # Rejestr komponentów — inwentaryzacja i status realizacji
 
-Rejestr wykonawczy dla [11 — katalogu komponentów](11-component-catalog.md), zgodny z zasadami [05 — design system i frontend](05-design-system-and-frontend.md) (ADR-012/013/019) oraz [.ai/rules/frontend.md](../../.ai/rules/frontend.md). Katalog 11 jest źródłem zakresu i backlogiem. Komponenty oraz kompozycje budujemy we własnym repo; zewnętrzne produkty są tylko wzorcami zachowania i nie są kandydatami do zakupu, importu ani kopiowania kodu. Ten dokument aktualizowany jest podczas realizacji; zastępuje potrzebę osobnego demo do czasu powstania strony `local/staging` (dopuszczalne per 05: „dokumentacja z przykładami”).
+Rejestr wykonawczy dla [11 — katalogu komponentów](11-component-catalog.md), zgodny z zasadami [05 — design system i frontend](05-design-system-and-frontend.md) (ADR-012/013/019) oraz [.ai/rules/frontend.md](../../.ai/rules/frontend.md). Katalog 11 jest źródłem zakresu i backlogiem. Komponenty oraz kompozycje budujemy we własnym repo; zewnętrzne produkty są tylko wzorcami zachowania i nie są kandydatami do zakupu, importu ani kopiowania kodu. Ten dokument aktualizowany jest podczas realizacji.
 
 Statusy zgodne z 11: `planned`, `implemented`, `verified`, `deprecated`.
 
 Priorytety są wiążące: P0 oznacza obowiązkowy komponent startera, P1 oznacza planowaną wspólną bibliotekę po zamknięciu P0, a P2 oznacza komponent opcjonalny, uruchamiany wyłącznie dla potwierdzonego przypadku produktowego. Pełny podział jest w [11 — kolejność wdrażania](11-component-catalog.md#kolejność-wdrażania).
 
-`implemented` = kod istnieje, ma testy wszystkich zmienionych zachowań oraz przechodzi `npm run test:ui`, typecheck, lint i `ui-contract` dla ustalonego baseline'u albo jawnie wskazanego zakresu plików. Nie wolno wnioskować o wyniku własnych plików z czerwonej kontroli całego repo. **Nie jest `verified`** dopóki nie ma: dema stanów (default/loading/empty/error/disabled/pending/success + long content/brak media), i18n na poziomie ekranu, potwierdzonego light/dark, RWD od 360 px, obsługi klawiatury/focusu i poprawnego SSR bez błędu hydratacji. Żadna pozycja w tym rejestrze nie ma dziś statusu `verified` — wymaga to uruchomionego środowiska (`make up`) i przeglądu wizualnego, którego ta sesja nie wykonała.
+`implemented` = kod istnieje, ma testy wszystkich zmienionych zachowań oraz przechodzi `npm run test:ui`, typecheck, lint i `ui-contract` dla ustalonego baseline'u albo jawnie wskazanego zakresu plików. Nie wolno wnioskować o wyniku własnych plików z czerwonej kontroli całego repo. **Nie jest `verified`** dopóki nie ma: dema stanów (default/loading/empty/error/disabled/pending/success + long content/brak media), i18n na poziomie ekranu, potwierdzonego light/dark, RWD od 360 px, obsługi klawiatury/focusu i poprawnego SSR bez błędu hydratacji. Żadna pozycja w tym rejestrze nie ma dziś statusu `verified`; status nadaje człowiek po przeglądzie dema.
+
+**Demo stanów (showcase):** lokalna strona panelu `GET /admin/design-system` (link „Deweloper → Design system” w sidebarze). Trasa jest rejestrowana wyłącznie przy `APP_ENV=local` (w innych środowiskach 404), za middleware panelu (`auth`, `verified`, dostęp do panelu) i z `noindex` jak reszta `/admin`. Uruchomienie: `make up`, zaloguj się kontem z seeda i otwórz `http://localhost:<APP_PORT>/admin/design-system`. Każda rodzina to osobny plik `resources/js/pages/admin/design-system/sections/<rodzina>.tsx` zarejestrowany w `sections/index.ts`; kotwica sekcji = id rodziny (np. `#adm-01`). Komponent × stan prezentują `ShowcaseComponent`/`ShowcaseState` (`sections/showcase.tsx`), stany nieobsługiwane są wypisane jawnie jako „Nie dotyczy”. Teksty demo: `admin.designSystem.*` (PL/EN/DE), dane syntetyczne.
 
 Każda partia komponentów otrzymuje osobne zlecenie z maksymalnie 2–5 elementami jednej rodziny, publicznym API, stanami i kryteriami odbioru. Po gotowym diffie wykonawca uruchamia kontrole, następnie `foundation-reviewer` wykonuje jedno read-only review AC i wskazanych plików. Wykonawca weryfikuje findings, poprawia je i ponownie uruchamia kontrole zmienionego zakresu; kolejna runda review jest potrzebna tylko przy nowym ryzyku.
 
 ## ADM — panel administracyjny
 
 ### ADM-01 — Podstawy UI (P0) — `implemented`, nie `verified`
+
+Demo: [/admin/design-system#adm-01](../../resources/js/pages/admin/design-system/sections/foundations.tsx) — wszystkie komponenty tabeli w stanach wariant/rozmiar/disabled/pending/długa treść/brak mediów, light/dark, 360/768/desktop i klawiatura przejrzane 2026-09-30; status czeka na akceptację człowieka.
 
 | Komponent | Plik | Status |
 | --- | --- | --- |

@@ -39,14 +39,13 @@ class DemoHomeSections implements DemoContentProvider
 
     public function records(): array
     {
-        return HomeSection::query()
+        return array_values(HomeSection::query()
             ->orderBy('locale')
             ->orderBy('position')
             ->get()
             ->reject(fn (HomeSection $section): bool => ! $section->enabled
                 && $section->content->toArray() === EnsureHomeSections::placeholder($section->type, $section->locale)->toArray())
-            ->values()
-            ->all();
+            ->all());
     }
 
     public function isModifiedSinceSeed(Model $record): bool

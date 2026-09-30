@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Heading } from './heading';
+import { Inline } from './inline';
 import { Stack } from './stack';
 import { Text } from './text';
 
@@ -47,13 +48,15 @@ export function PageHeader({
             </Stack>
 
             {actions && (
-                <div
-                    className={cn(
-                        'mt-2 flex flex-wrap gap-3',
-                        isCenter ? 'justify-center' : 'justify-start',
-                    )}
-                >
-                    {actions}
+                <div className="mt-2">
+                    <Inline
+                        gap="default"
+                        align="stretch"
+                        justify={isCenter ? 'center' : 'start'}
+                        wrap
+                    >
+                        {actions}
+                    </Inline>
                 </div>
             )}
         </div>

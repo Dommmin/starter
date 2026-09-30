@@ -2,6 +2,7 @@ import { ImageIcon } from 'lucide-react';
 import { lazy, Suspense, useId, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { Inline } from './inline';
 import type { RichTextImagePicker } from './rich-text-document';
 
 export type ImagePickerFieldLabels = {
@@ -118,7 +119,7 @@ export function ImagePickerField({
                         />
                     )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <Inline gap="tight" align="stretch" wrap>
                     <Button
                         variant="outline"
                         onClick={open}
@@ -135,7 +136,7 @@ export function ImagePickerField({
                             {labels.remove}
                         </Button>
                     )}
-                </div>
+                </Inline>
             </div>
             <input type="hidden" name={name} value={value} />
             {hint && (

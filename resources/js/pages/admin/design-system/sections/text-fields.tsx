@@ -66,7 +66,7 @@ function TextFieldsSection() {
         <Stack gap="default">
             <ShowcaseComponent
                 name="TextField"
-                notApplicable={['readonly', 'pending', 'loading', 'empty']}
+                notApplicable={['pending', 'loading', 'empty']}
             >
                 <ShowcaseState state="default" fill>
                     <TextField
@@ -124,6 +124,20 @@ function TextFieldsSection() {
                         onChange={onChange('textDisabled')}
                     />
                 </ShowcaseState>
+                <ShowcaseState
+                    state="readonly"
+                    detail={demo('readonlyDetail')}
+                    fill
+                >
+                    <TextField
+                        name="demo-text-readonly"
+                        label={demo('slugLabel')}
+                        description={demo('readonlyDescription')}
+                        value={demo('slugValue')}
+                        required
+                        readOnly
+                    />
+                </ShowcaseState>
                 <ShowcaseState state="required" fill>
                     <TextField
                         name="demo-text-required"
@@ -178,7 +192,7 @@ function TextFieldsSection() {
 
             <ShowcaseComponent
                 name="TextareaField"
-                notApplicable={['readonly', 'pending', 'loading', 'empty']}
+                notApplicable={['pending', 'loading', 'empty']}
             >
                 <ShowcaseState state="default" fill>
                     <TextareaField
@@ -232,6 +246,15 @@ function TextFieldsSection() {
                         disabled
                         value={value('textareaDisabled')}
                         onChange={onChange('textareaDisabled')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="readonly" fill>
+                    <TextareaField
+                        name="demo-textarea-readonly"
+                        label={demo('bioLabel')}
+                        description={demo('readonlyDescription')}
+                        value={demo('bioValue')}
+                        readOnly
                     />
                 </ShowcaseState>
                 <ShowcaseState state="required" fill>
@@ -355,7 +378,7 @@ function TextFieldsSection() {
 
             <ShowcaseComponent
                 name="NumberField"
-                notApplicable={['readonly', 'pending', 'loading', 'empty']}
+                notApplicable={['pending', 'loading', 'empty']}
             >
                 <ShowcaseState state="default" fill>
                     <NumberField
@@ -425,6 +448,15 @@ function TextFieldsSection() {
                         onChange={onChange('numberDisabled')}
                     />
                 </ShowcaseState>
+                <ShowcaseState state="readonly" fill>
+                    <NumberField
+                        name="demo-number-readonly"
+                        label={demo('priceLabel')}
+                        value="129.99"
+                        step={0.01}
+                        readOnly
+                    />
+                </ShowcaseState>
                 <ShowcaseState state="required" fill>
                     <NumberField
                         name="demo-number-required"
@@ -450,13 +482,7 @@ function TextFieldsSection() {
 
             <ShowcaseComponent
                 name="DateField"
-                notApplicable={[
-                    'placeholder',
-                    'readonly',
-                    'pending',
-                    'loading',
-                    'empty',
-                ]}
+                notApplicable={['placeholder', 'pending', 'loading', 'empty']}
             >
                 <ShowcaseState state="default" fill>
                     <DateField
@@ -508,6 +534,14 @@ function TextFieldsSection() {
                         disabled
                         value={value('dateDisabled')}
                         onChange={onChange('dateDisabled')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="readonly" fill>
+                    <DateField
+                        name="demo-date-readonly"
+                        label={demo('dateLabel')}
+                        value="2026-10-15"
+                        readOnly
                     />
                 </ShowcaseState>
                 <ShowcaseState state="required" fill>

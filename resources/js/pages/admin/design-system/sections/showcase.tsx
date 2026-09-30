@@ -64,20 +64,41 @@ export type ShowcaseStateKey =
     | 'reversedOnMobile'
     | 'keyboard'
     | 'mobileDrawer'
-    | 'inContext';
+    | 'inContext'
+    | 'emptyFiltered'
+    | 'sortAscending'
+    | 'sortDescending'
+    | 'manyPages'
+    | 'narrowContainer'
+    | 'withoutPriority'
+    | 'destructive'
+    | 'conflict'
+    | 'withValue'
+    | 'placeholder'
+    | 'required'
+    | 'readonly'
+    | 'formError'
+    | 'focusFirstError';
 
 export type ShowcaseComponentProps = {
     /** Public API name of the component, e.g. `Button` (not translated). */
     name: string;
     /**
      * `compact` fits four states per row on desktop (buttons, badges);
-     * `wide` gives two per row for full-width demos (alerts, progress).
+     * `wide` gives two per row for full-width demos (alerts, progress);
+     * `full` gives each state the whole card width (tables, lists).
      */
-    layout?: 'compact' | 'wide';
+    layout?: 'compact' | 'wide' | 'full';
     /** States that do not apply to this component, listed explicitly. */
     notApplicable?: ShowcaseStateKey[];
     children: ReactNode;
 };
+
+const gridLayouts = {
+    compact: 'features',
+    wide: 'split',
+    full: 'single',
+} as const;
 
 /** A component card: its name, a grid of state demos and the N/A list. */
 export function ShowcaseComponent({
@@ -95,10 +116,7 @@ export function ShowcaseComponent({
             </CardHeader>
             <CardContent>
                 <Stack gap="default">
-                    <Grid
-                        layout={layout === 'compact' ? 'features' : 'split'}
-                        gap="tight"
-                    >
+                    <Grid layout={gridLayouts[layout]} gap="tight">
                         {children}
                     </Grid>
                     {notApplicable.length > 0 && (

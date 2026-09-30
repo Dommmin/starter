@@ -2,6 +2,7 @@ import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FilterBar } from './filter-bar';
+import { Paginator } from './paginator';
 import { SearchInput } from './search-input';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -85,5 +86,56 @@ describe('FilterBar', () => {
 
         expect(container.textContent).toContain('Status filter');
         expect(container.textContent).toContain('Clear filters');
+    });
+});
+
+describe('Paginator', () => {
+    it('disables the edge control and reports the adjacent page', async () => {
+        const onPageChange = vi.fn();
+        const container = await render(
+            <Paginator
+                page={1}
+                totalPages={3}
+                onPageChange={onPageChange}
+                previousLabel="Previous page"
+                nextLabel="Next page"
+                summary="Page 1 of 3"
+            />,
+        );
+        const previous = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="Previous page"]',
+        );
+        const next = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="Next page"]',
+        );
+
+        expect(container.querySelector('nav')?.getAttribute('aria-label')).toBe(
+            'Page 1 of 3',
+        );
+        expect(previous?.disabled).toBe(true);
+        expect(next?.disabled).toBe(false);
+
+        await act(async () => next?.click());
+
+        expect(onPageChange).toHaveBeenCalledWith(2);
+    });
+
+    it('uses the 44 px icon button target for both controls', async () => {
+        const container = await render(
+            <Paginator
+                page={2}
+                totalPages={3}
+                onPageChange={() => {}}
+                previousLabel="Previous page"
+                nextLabel="Next page"
+                summary="Page 2 of 3"
+            />,
+        );
+        const buttons = container.querySelectorAll('nav button');
+
+        expect(buttons).toHaveLength(2);
+        buttons.forEach((button) =>
+            expect(button.classList.contains('size-11')).toBe(true),
+        );
     });
 });

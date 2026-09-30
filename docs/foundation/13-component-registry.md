@@ -55,6 +55,14 @@ Demo: [/admin/design-system#adm-02](../../resources/js/pages/admin/design-system
 
 ### ADM-03 — Pola tekstowe (P0 podstawy; P1 specjalizacje) — częściowo `implemented`
 
+Demo: [/admin/design-system#adm-03](../../resources/js/pages/admin/design-system/sections/text-fields.tsx), przegląd 2026-09-30 (light/dark, 360/768/1280, klawiatura, axe). Dotyczy wszystkich pól: naprawiono 2026-09-30 (zgoda koordynatora, istniejące tokeny): tekst błędu i gwiazdka `required` pól używają `status-danger` (wcześniej `text-destructive` miał 3,86:1 w ciemnym motywie; axe bez naruszeń w obu motywach, także formularz kontaktowy); etykiety pól `leading-snug` zamiast `leading-none` (wielowierszowe etykiety miały zbyt ciasne linie). Stan „tylko do odczytu” nie istnieje w API (propozycja `readOnly` w raporcie przeglądu), `pending` pokazuje ADM-08.
+
+- TextField — default/wartość/placeholder/opis/błąd/disabled/required/długa treść/typy url·tel·search; `aria-describedby` opis+błąd, focus ring — OK.
+- TextareaField — jw. — OK.
+- PasswordField — jw. bez placeholder; przełącznik pokazywania: Tab, Enter, `aria-pressed`, nazwa — OK.
+- NumberField — jw. + min/max/step — OK.
+- DateField — jw. bez placeholder, min/max — OK.
+
 | Komponent | Plik | Status |
 | --- | --- | --- |
 | TextField (label/help/error, text/email/url/tel/search) | [text-field.tsx](../../resources/js/design-system/primitives/text-field.tsx) | implemented |
@@ -68,6 +76,13 @@ Demo: [/admin/design-system#adm-02](../../resources/js/pages/admin/design-system
 Kontrakt: pola są samodzielnymi „field” (label+control+description+error+`aria-describedby`), sterowane (`value`/`onChange`), z `ref` do fokusowania po 422 przez przyszły `ErrorSummary`/`FormSection` (ADM-08, patrz niżej — jeszcze nie zbudowany).
 
 ### ADM-04 — Wybór wartości (P0 podstawy; P1 reszta) — częściowo `implemented`
+
+Demo: [/admin/design-system#adm-04](../../resources/js/pages/admin/design-system/sections/choice-fields.tsx), przegląd 2026-09-30 (light/dark, 360/768/1280, klawiatura, axe). Wspólna poprawka: naprawiono 2026-09-30 (zgoda koordynatora, istniejące tokeny): tekst błędu i gwiazdka `required` pól używają `status-danger` (wcześniej `text-destructive` miał 3,86:1 w ciemnym motywie; axe bez naruszeń w obu motywach, także formularz kontaktowy).
+
+- CheckboxField — default/zaznaczony/opis/błąd/disabled/required/długa etykieta; Spacja, klik etykiety — OK.
+- SelectField — naprawiono 2026-09-30: długa wybrana wartość wychodziła poza wyzwalacz (wiele linii, wyśrodkowana); teraz jedna linia z wielokropkiem (weryfikacja wizualna, zachowanie bez zmian). Enter/strzałki (pomija opcję disabled)/Escape z powrotem fokusu — OK. Naprawiono też słabo widoczny fokus klawiatury opcji: pierścień `focus-visible` z tokena `ring` (spójnie z ActionMenu).
+- RadioGroupField — default/wartość/opisy opcji/błąd grupy/disabled/required/długa treść; strzałki pomijają opcję disabled — OK.
+- SwitchField — default/włączony/opis/błąd/disabled/długa etykieta; Spacja, nazwa z etykiety; brak `required` w API (nie dotyczy) — OK.
 
 | Komponent | Status | Uwaga |
 | --- | --- | --- |
@@ -108,6 +123,13 @@ Repeater, KeyValueEditor, pola warunkowe — brak blokera zależności, nie real
 
 ### ADM-08 — Formularz jako całość (P0/P1) — P0 `implemented`, nie `verified`
 
+Demo: [/admin/design-system#adm-08](../../resources/js/pages/admin/design-system/sections/forms.tsx), przegląd 2026-09-30 (light/dark, 360/768/1280, klawiatura, axe). Interaktywny `ResourceForm` bez backendu: pusty „Wyślij” → błędy przy polach, `ErrorSummary`, fokus na pierwszym błędzie; poprawny → pending (`aria-busy`, pola i przycisk zablokowane) → sukces.
+
+- ResourceForm — interaktywne demo, pending, sukces — OK; naprawiono 2026-09-30: fokus na pierwszym błędnym polu po każdym nieudanym wysłaniu (wcześniej tylko przy przejściu 0→N błędów); wewnętrzny hook `use-submit-error-focus.ts` (poza barrelem), użyty też w `ContactSection`. Testy: resource-form i contact-section accessibility.
+- ErrorSummary — błąd formularza z linkami (link przenosi fokus), długa treść, pusty (nic nie renderuje), błąd ogólny przez `Alert` — naprawiono 2026-09-30: kontrast linków w jasnym motywie 4,23:1 → `text-foreground` z podkreśleniem.
+- FormSection — default/opis/długa treść/pusta — OK.
+- FormActions — align end/start/between, pending, disabled, długa etykieta (kolumna odwrócona na mobile) — OK.
+
 | Komponent | Plik | Status |
 | --- | --- | --- |
 | FormSection | [form-section.tsx](../../resources/js/design-system/primitives/form-section.tsx) | implemented |
@@ -121,13 +143,15 @@ Formularz wieloetapowy (P1) pozostaje `planned`.
 
 ### ADM-09 — Tabela (P0 podstawy; P1 formatery) — częściowo `implemented`
 
+Demo: [/admin/design-system#adm-09](../../resources/js/pages/admin/design-system/sections/tables.tsx) — DataTable (sort rosnąco/malejąco z klawiatury, ładowanie, pusty z CTA, pusty po filtrze, błąd z ponowieniem, długa treść, brak mediów, wąski kontener, bez priorytetów), Paginator, SearchInput/FilterBar, ResourceTable; light/dark, 360/768/1280 i klawiatura przejrzane 2026-09-30. Tryb kart zależy od **viewportu** (< 768 px, `matchMedia`), a ukrywanie kolumn `optional` od **kontenera** (< 42rem, container query) — demo pokazuje oba. Status czeka na akceptację człowieka.
+
 | Komponent | Plik | Status |
 | --- | --- | --- |
-| DataTable (typowane kolumny, sort, loading/error/empty, responsywne priorytety kolumn) | [data-table.tsx](../../resources/js/design-system/primitives/data-table.tsx) | implemented — zamknięty typ `DataTableColumnPriority = 'primary' \| 'status' \| 'actions' \| 'secondary' \| 'optional'` (decyzja DS D3). Gdy choć jedna kolumna ma `priority`, poniżej `md` lista kart (`ul[aria-label=caption]` → `li > article[aria-labelledby=tytuł]`): `primary` = tytuł (łamie się `wrap-anywhere`), `status` = rząd badge, `actions` = menu wiersza, `secondary` (też kolumny bez `priority`) = para `dt`/`dd`, `optional` ukryte; sortowanie przez `SelectField` (`sortLabels`, wspólne klucze `table.sortBy/sortAscending/sortDescending`, helper `lib/table-sort-labels.ts`), `onSortChange(key, direction?)`. Od `md` tabela; kolumny `optional` ukrywa container query, gdy kontener tabeli < 42rem (768 px z rozwiniętym sidebarem), `primary`/`secondary` mają `min-w-32` i łamią długie wartości. Bez `priority` zachowanie bez zmian (tabela ze scrollem we własnym kontenerze). SSR renderuje oba układy przełączane CSS, klient zostawia jeden (`matchMedia`). Brak zaznaczania wierszy. Użycie: wszystkie listy panelu i szablon generatora CRUD. Test: [data-table.responsive.accessibility.test.tsx](../../resources/js/design-system/primitives/data-table.responsive.accessibility.test.tsx) |
-| Paginator | [paginator.tsx](../../resources/js/design-system/primitives/paginator.tsx) | implemented |
-| SearchInput | [search-input.tsx](../../resources/js/design-system/primitives/search-input.tsx) | implemented — debounce lokalny, `onChange` woła stronę, która prowadzi zapytanie Inertia |
-| FilterBar | [filter-bar.tsx](../../resources/js/design-system/primitives/filter-bar.tsx) | implemented — czysto układowa kompozycja, filtry przekazywane jako `children` |
-| ResourceTable | [resource-table.tsx](../../resources/js/design-system/primitives/resource-table.tsx) | implemented — kompozycja `PageHeader?`/`SearchInput`/`FilterBar`+`SelectField`/`DataTable`/`Paginator`/`EmptyState`/`RetryPanel`/`ActionMenu`; stan w URL przez Inertia `router.get` (`preserveState`, `preserveScroll`; wyszukiwanie z debounce 300 ms robi `replace`, sort/filtr/strona dodają wpis historii, więc Wstecz/Dalej odtwarza stan z propsów); każda zmiana poza stroną resetuje `page` do 1; rozróżnia pustą listę i brak wyników; `aria-busy` w trakcie wizyty. Test: [resource-table.accessibility.test.tsx](../../resources/js/design-system/primitives/resource-table.accessibility.test.tsx) |
+| DataTable (typowane kolumny, sort, loading/error/empty, responsywne priorytety kolumn) | [data-table.tsx](../../resources/js/design-system/primitives/data-table.tsx) | implemented — zamknięty typ `DataTableColumnPriority = 'primary' \| 'status' \| 'actions' \| 'secondary' \| 'optional'` (decyzja DS D3). Gdy choć jedna kolumna ma `priority`, poniżej `md` lista kart (`ul[aria-label=caption]` → `li > article[aria-labelledby=tytuł]`): `primary` = tytuł (łamie się `wrap-anywhere`), `status` = rząd badge, `actions` = menu wiersza, `secondary` (też kolumny bez `priority`) = para `dt`/`dd`, `optional` ukryte; sortowanie przez `SelectField` (`sortLabels`, wspólne klucze `table.sortBy/sortAscending/sortDescending`, helper `lib/table-sort-labels.ts`), `onSortChange(key, direction?)`. Od `md` tabela; kolumny `optional` ukrywa container query, gdy kontener tabeli < 42rem (768 px z rozwiniętym sidebarem), `primary`/`secondary` mają `min-w-32` i łamią długie wartości. Bez `priority` zachowanie bez zmian (tabela ze scrollem we własnym kontenerze). SSR renderuje oba układy przełączane CSS, klient zostawia jeden (`matchMedia`). Brak zaznaczania wierszy. Użycie: wszystkie listy panelu i szablon generatora CRUD. Test: [data-table.responsive.accessibility.test.tsx](../../resources/js/design-system/primitives/data-table.responsive.accessibility.test.tsx). Demo: /admin/design-system#adm-09 — przegląd 2026-09-30: naprawiono zapadanie się tabeli do szerokości ramki w rodzicu shrink-to-fit (np. `Stack align="start"`: kontener `@container` bez `w-full` nie ma szerokości wewnętrznej); usterka do decyzji: przy 768 px z rozwiniętym sidebarem sortowanie po ukrytej kolumnie `optional` nie ma widocznego wskaźnika ani kontrolki (select sortowania jest tylko w trybie kart). |
+| Paginator | [paginator.tsx](../../resources/js/design-system/primitives/paginator.tsx) | implemented. Demo: /admin/design-system#adm-09 — OK (klawiatura, zablokowane krańce, wiele stron); naprawiono 2026-09-30: przyciski 36 px → `IconButton` (`outline`, `sm`, 44×44 px), mieści się na 360 px. Test: [table-composition-p0.accessibility.test.tsx](../../resources/js/design-system/primitives/table-composition-p0.accessibility.test.tsx) |
+| SearchInput | [search-input.tsx](../../resources/js/design-system/primitives/search-input.tsx) | implemented — debounce lokalny, `onChange` woła stronę, która prowadzi zapytanie Inertia. Demo: /admin/design-system#adm-09 — OK (domyślny, zablokowany, długa wartość, czyszczenie) |
+| FilterBar | [filter-bar.tsx](../../resources/js/design-system/primitives/filter-bar.tsx) | implemented — czysto układowa kompozycja, filtry przekazywane jako `children`. Demo: /admin/design-system#adm-09 (stan „pusty po filtrze”) — OK |
+| ResourceTable | [resource-table.tsx](../../resources/js/design-system/primitives/resource-table.tsx) | implemented — kompozycja `PageHeader?`/`SearchInput`/`FilterBar`+`SelectField`/`DataTable`/`Paginator`/`EmptyState`/`RetryPanel`/`ActionMenu`; stan w URL przez Inertia `router.get` (`preserveState`, `preserveScroll`; wyszukiwanie z debounce 300 ms robi `replace`, sort/filtr/strona dodają wpis historii, więc Wstecz/Dalej odtwarza stan z propsów); każda zmiana poza stroną resetuje `page` do 1; rozróżnia pustą listę i brak wyników; `aria-busy` w trakcie wizyty. Test: [resource-table.accessibility.test.tsx](../../resources/js/design-system/primitives/resource-table.accessibility.test.tsx). Demo: /admin/design-system#adm-09 — domyślny, pusty (CTA tylko przez `header.actions`), pusty po filtrze; ładowanie i błąd są wewnętrznym stanem wizyty Inertia (pokazane na DataTable, pełny przepływ /admin/users). Przegląd 2026-09-30: OK; propozycja DS: CTA w pustym stanie (patrz raport) |
 | FilterChips | — | `planned` (P1) |
 | Formatery komórek (waluta, data, status, ikona, obraz, kolor) | — | `planned` (P1) |
 
@@ -143,22 +167,27 @@ ColumnPicker, zapisane widoki, wielosort, grupowanie, agregaty, przypinanie/reor
 
 ### ADM-11 — Widok rekordu / infolist — P0 podstawowy widok `implemented`, nie `verified`
 
+Demo: [/admin/design-system#adm-11](../../resources/js/pages/admin/design-system/sections/record-view.tsx) — domyślny, pusta wartość (placeholder), długa treść z polskimi znakami, brak mediów, karta z akcjami i minimalna; light/dark, 360/768/1280 przejrzane 2026-09-30. Status czeka na akceptację człowieka.
+
 | Komponent | Plik | Status |
 | --- | --- | --- |
-| DescriptionList | [description-list.tsx](../../resources/js/design-system/primitives/description-list.tsx) | implemented — placeholder dla pustej wartości |
-| RecordDetails | [record-details.tsx](../../resources/js/design-system/primitives/record-details.tsx) | implemented — kompozycja `Card` + `DescriptionList` + slot na akcje |
+| DescriptionList | [description-list.tsx](../../resources/js/design-system/primitives/description-list.tsx) | implemented — placeholder dla pustej wartości. Demo: /admin/design-system#adm-11 — naprawiono 2026-09-30: układ etykieta | wartość przełącza container query (lista ≥ 28rem), nie breakpoint `sm` viewportu — w wąskiej kolumnie (np. 768 px z sidebarem, boczna karta) wartość łamała się po jednym znaku |
+| RecordDetails | [record-details.tsx](../../resources/js/design-system/primitives/record-details.tsx) | implemented — kompozycja `Card` + `DescriptionList` + slot na akcje. Demo: /admin/design-system#adm-11 — naprawiono 2026-09-30: akcje przy długim tytule wychodziły poza kartę (teraz zawijają się pod tytuł, gdy zostaje mu < 12rem); wielowierszowy `CardTitle` miał `leading-none` (linie stykały się) → `leading-tight` |
 
 TextEntry, IconEntry, ImageEntry, ColorEntry, CodeEntry, KeyValueEntry, RepeatableEntry (typowane warianty wartości) pozostają `planned` (P1) — `DescriptionList` dziś przyjmuje dowolny `ReactNode` jako wartość.
 
 ### ADM-12 — Akcje (P0 podstawy; P1 rozszerzenia) — częściowo `implemented`
 
+Demo: [/admin/design-system#adm-12](../../resources/js/pages/admin/design-system/sections/actions.tsx) — menu akcji (domyślne, `align=start`, zablokowane, długie etykiety), dialogi otwierane przyciskiem ze stanem lokalnym i symulowanym zapytaniem (zwykły, destrukcyjny, pending, długa treść, błąd serwera w FormDialog, konflikt wersji), OrderableList; light/dark, 360/768/1280 i klawiatura (strzałki/Escape/powrót fokusu, focus trap, Escape zablokowany w pending) przejrzane 2026-09-30. Status czeka na akceptację człowieka.
+
 | Komponent | Status | Uwaga |
 | --- | --- | --- |
-| ConfirmDialog | `implemented` — [confirm-dialog.tsx](../../resources/js/design-system/primitives/confirm-dialog.tsx) | focus trap/Escape/return focus przez Radix Dialog; wymaga potwierdzenia (`confirmLabel`) na akcję destrukcyjną |
-| ActionMenu | `implemented` — [action-menu.tsx](../../resources/js/design-system/primitives/action-menu.tsx) | Własny wrapper Radix `@radix-ui/react-dropdown-menu` (już zależność), trigger to `IconButton` |
-| FormDialog | `implemented` — [form-dialog.tsx](../../resources/js/design-system/primitives/form-dialog.tsx) | Kompozycja szkieletu `ConfirmDialog` + `<form>`; blokuje zamknięcie w trakcie `isPending`. Poprawka 2026-09-11: `<form onSubmit>` też odrzuca wywołanie `onSubmit` gdy `isPending`, więc Enter w polu i programowy event `submit` nie wysyłają formularza drugi raz (błąd wykryty w review). |
+| ConfirmDialog | `implemented` — [confirm-dialog.tsx](../../resources/js/design-system/primitives/confirm-dialog.tsx) | focus trap/Escape/return focus przez Radix Dialog; wymaga potwierdzenia (`confirmLabel`) na akcję destrukcyjną. Demo: #adm-12 — naprawiono 2026-09-30 (także FormDialog/ConflictDialog): na 360 px dialog przylegał do krawędzi ekranu (`w-full`) → `w-[calc(100%-2rem)]`, `max-h` z przewijaniem; długi tytuł nie wchodzi pod przycisk zamknięcia (`pr-8`) |
+| ActionMenu | `implemented` — [action-menu.tsx](../../resources/js/design-system/primitives/action-menu.tsx) | Własny wrapper Radix `@radix-ui/react-dropdown-menu` (już zależność), trigger to `IconButton`. Demo: #adm-12 — naprawiono 2026-09-30: fokus klawiatury na pozycji był prawie niewidoczny (tło `surface-subtle` ≈ tło menu w obu motywach) → dodano pierścień `focus-visible` tokenem `ring` jak w innych prymitywach |
+| FormDialog | `implemented` — [form-dialog.tsx](../../resources/js/design-system/primitives/form-dialog.tsx) | Kompozycja szkieletu `ConfirmDialog` + `<form>`; blokuje zamknięcie w trakcie `isPending`. Poprawka 2026-09-11: `<form onSubmit>` też odrzuca wywołanie `onSubmit` gdy `isPending`, więc Enter w polu i programowy event `submit` nie wysyłają formularza drugi raz (błąd wykryty w review). Demo: #adm-12 — OK (Enter wysyła, pending, `error` jako `role=alert`, fokus zostaje w polu) |
+| ConflictDialog | `implemented` (wpis główny: APP-09) — [conflict-dialog.tsx](../../resources/js/design-system/primitives/conflict-dialog.tsx) | Demo: #adm-12 (stan „konflikt wersji”: wczytaj nowszą / nadpisz z pending) — OK; szerokość na 360 px naprawiona jak w ConfirmDialog. Brak przycisku zamknięcia w rogu — Escape zamyka |
 | Drawer/SlideOver | `planned` (P1) | `components/ui/sheet.tsx` istnieje jako baza (już zależność), brak wrappera DS |
-| OrderableList | `implemented` 2026-09-28 (zatwierdzony zakres „kit foundation”) — [orderable-list.tsx](../../resources/js/design-system/primitives/orderable-list.tsx) | Zmiana kolejności przyciskami ↑/↓ (`IconButton` z `aria-label` „Przesuń :label w górę/dół”), bez drag&drop. Props: `items: { id: string \| number; label: string; meta?: string }[]`, `label` (nazwa dostępna `<ol>`), `onReorder(ids, { id, direction: 'up' \| 'down' })` (lista kontrolowana), `disabled?`. Przyciski na krańcach `disabled`, komunikat w `aria-live="polite"` (`common.orderable.moved`), fokus podąża za przesuniętą pozycją. Użycia: sekcje strony głównej (home-sections), menu nawigacji (navigation-menu). Test: [orderable-list.accessibility.test.tsx](../../resources/js/design-system/primitives/orderable-list.accessibility.test.tsx) |
+| OrderableList | `implemented` 2026-09-28 (zatwierdzony zakres „kit foundation”) — [orderable-list.tsx](../../resources/js/design-system/primitives/orderable-list.tsx) | Zmiana kolejności przyciskami ↑/↓ (`IconButton` z `aria-label` „Przesuń :label w górę/dół”), bez drag&drop. Props: `items: { id: string \| number; label: string; meta?: string }[]`, `label` (nazwa dostępna `<ol>`), `onReorder(ids, { id, direction: 'up' \| 'down' })` (lista kontrolowana), `disabled?`. Przyciski na krańcach `disabled`, komunikat w `aria-live="polite"` (`common.orderable.moved`), fokus podąża za przesuniętą pozycją. Użycia: sekcje strony głównej (home-sections), menu nawigacji (navigation-menu). Test: [orderable-list.accessibility.test.tsx](../../resources/js/design-system/primitives/orderable-list.accessibility.test.tsx). Demo: /admin/design-system#adm-12 — OK |
 
 ### ADM-13 — Operacje na zbiorach — `planned` (P1, po zamówieniu importu/eksportu), **wymaga backendu**
 

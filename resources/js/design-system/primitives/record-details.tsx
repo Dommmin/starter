@@ -21,8 +21,9 @@ export function RecordDetails({
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex flex-col gap-1">
+                {/* Actions wrap under the title once it would get < 12rem. */}
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
                         <CardTitle>{title}</CardTitle>
                         {description && (
                             <p className="text-muted-foreground text-sm">

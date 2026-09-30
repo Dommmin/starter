@@ -87,11 +87,11 @@ export function ImagePickerField({
             aria-describedby={describedBy}
             className="focus-visible:ring-ring/50 @container flex flex-col gap-1.5 rounded-md outline-none focus-visible:ring-[3px]"
         >
-            <span id={labelId} className="text-sm leading-none font-medium">
+            <span id={labelId} className="text-sm leading-snug font-medium">
                 {label}
                 {required && (
                     <span
-                        className="text-destructive ml-0.5"
+                        className="text-status-danger ml-0.5"
                         aria-hidden="true"
                     >
                         *
@@ -147,7 +147,7 @@ export function ImagePickerField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

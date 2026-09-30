@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Browser, type Page } from '@playwright/test';
 
 /** Synthetic accounts prepared by `php artisan app:e2e-prepare` (config/e2e.php). */
 export const accounts = {
@@ -21,6 +21,32 @@ export function e2ePassword(): string {
 /** Unique, run-scoped identifier; slugs keep the `e2e-` prefix cleaned up by app:e2e-prepare. */
 export function uniqueId(): string {
     return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Signed-in browser state saved once per run by `auth.setup.ts`, so the suite
+ * stays well below Fortify's 5 logins per minute for an account and IP.
+ * The directory is git-ignored.
+ */
+export function authStatePath(account: keyof typeof accounts): string {
+    return `playwright/.auth/${account}.json`;
+}
+
+/**
+ * Opens the admin panel in a new context restored from the saved session.
+ * Closing the page closes its context.
+ */
+export async function signedInPage(
+    browser: Browser,
+    account: keyof typeof accounts,
+): Promise<Page> {
+    const page = await browser.newPage({
+        storageState: authStatePath(account),
+    });
+    await page.goto('/admin');
+    await expect(page).toHaveURL(/\/admin$/);
+
+    return page;
 }
 
 export async function logIn(

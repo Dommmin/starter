@@ -1,5 +1,5 @@
 import { devices, expect, test, type Page } from '@playwright/test';
-import { logIn, publishPage } from './support';
+import { publishPage, signedInPage } from './support';
 
 /**
  * Lab web vitals of public pages on an emulated mid-range phone (Moto G4
@@ -123,11 +123,9 @@ test.describe('web vitals (mobile, Slow 4G, 4x CPU)', () => {
     let contentPath = '';
 
     test.beforeAll(async ({ browser }) => {
-        const context = await browser.newContext();
-        const page = await context.newPage();
-        await logIn(page, 'admin');
+        const page = await signedInPage(browser, 'admin');
         contentPath = `/${(await publishPage(page)).slug}`;
-        await context.close();
+        await page.close();
     });
 
     for (const target of ['home', 'content page'] as const) {

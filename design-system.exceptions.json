@@ -2026,7 +2026,7 @@
         "alternatives": "Refactor using design system primitives",
         "scope": "className in component/layout markup",
         "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit; 2026-09-30 tekst sr-only linku logo zmieniony na nav.home (review: Claude, do potwierdzenia przez właściciela przy merge)",
+        "reviewRef": "ADR-019 full audit; 2026-09-30 tekst sr-only linku logo zmieniony na nav.home (review: Claude; zatwierdzone przez właściciela 2026-09-30)",
         "expires": "2026-10-31",
         "task": "P0-B Task 09",
         "lineRanges": [

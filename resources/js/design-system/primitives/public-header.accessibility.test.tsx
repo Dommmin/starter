@@ -89,12 +89,17 @@ describe('PublicHeader', () => {
         });
 
         const dialog = document.querySelector('[role="dialog"]');
-        expect(
-            dialog?.querySelector('button[aria-label^="a11y.themeSwitcher"]'),
-        ).not.toBeNull();
-        expect(
-            dialog?.querySelector('button[aria-label="a11y.languageSelector"]'),
-        ).not.toBeNull();
+        const utilityNames = Array.from(
+            dialog?.querySelectorAll('button[aria-haspopup="menu"]') ?? [],
+        ).map((button) => ({
+            ariaLabel: button.getAttribute('aria-label'),
+            text: button.textContent,
+        }));
+        // Visible captions name the switchers; no icon-only aria-label.
+        expect(utilityNames).toEqual([
+            { ariaLabel: null, text: 'theme.label: theme.system' },
+            { ariaLabel: null, text: 'language.label: English' },
+        ]);
         expect(
             document.querySelector('nav[aria-label="nav.menuTitle"]'),
         ).toBeNull();

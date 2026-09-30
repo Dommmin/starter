@@ -212,8 +212,8 @@ export function PublicHeader({
                     closeLabel={t('a11y.closeMenu')}
                     utilities={
                         <>
-                            <ThemeSwitcher />
-                            <LocaleSwitcher />
+                            <ThemeSwitcher variant="labelled" />
+                            <LocaleSwitcher variant="labelled" />
                         </>
                     }
                 />

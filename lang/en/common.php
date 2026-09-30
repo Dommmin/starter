@@ -44,9 +44,13 @@ return [
         'moved' => ':label moved to position :position of :total',
     ],
     'theme' => [
+        'label' => 'Theme',
         'light' => 'Light',
         'dark' => 'Dark',
         'system' => 'System',
+    ],
+    'language' => [
+        'label' => 'Language',
     ],
     'actions' => [
         'save' => 'Save',

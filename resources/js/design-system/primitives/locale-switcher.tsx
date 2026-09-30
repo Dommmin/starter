@@ -11,11 +11,17 @@ import { home } from '@/routes';
 import { home as localizedHome } from '@/routes/localized';
 
 export type LocaleSwitcherProps = {
+    /**
+     * `icon` (default): compact globe button named by `aria-label`.
+     * `labelled`: full-width row with the icon and a visible
+     * „Language: English” caption that is the button's accessible name.
+     */
+    variant?: 'icon' | 'labelled';
     className?: never;
     style?: never;
 };
 
-export function LocaleSwitcher() {
+export function LocaleSwitcher({ variant = 'icon' }: LocaleSwitcherProps) {
     const { t, locale, defaultLocale, availableLocales } = useTranslation();
     const page = usePage();
     const alternateUrls =
@@ -27,22 +33,41 @@ export function LocaleSwitcher() {
     }
 
     const currentLocale = availableLocales.find((l) => l.code === locale);
+    const currentLocaleName = currentLocale?.native ?? locale.toUpperCase();
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button
-                    type="button"
-                    className="hover:bg-surface-subtle focus-visible:ring-ring text-text-subtle hover:text-foreground flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-3 sm:text-sm"
-                    aria-label={t('a11y.languageSelector')}
-                >
-                    <Globe className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-                    <span className="hidden sm:inline">
-                        {currentLocale?.native ?? locale.toUpperCase()}
-                    </span>
-                </button>
+                {variant === 'labelled' ? (
+                    <button
+                        type="button"
+                        className="focus-visible:ring-ring text-foreground hover:bg-surface-subtle inline-flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    >
+                        <Globe
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                        />
+                        <span>{`${t('language.label')}: ${currentLocaleName}`}</span>
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        className="hover:bg-surface-subtle focus-visible:ring-ring text-text-subtle hover:text-foreground flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-3 sm:text-sm"
+                        aria-label={t('a11y.languageSelector')}
+                    >
+                        <Globe
+                            className="h-4 w-4 sm:mr-1.5"
+                            aria-hidden="true"
+                        />
+                        <span className="hidden sm:inline">
+                            {currentLocaleName}
+                        </span>
+                    </button>
+                )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent
+                align={variant === 'labelled' ? 'start' : 'end'}
+            >
                 {availableLocales.map((loc) => {
                     const targetUrl =
                         alternateUrls[loc.code] ??

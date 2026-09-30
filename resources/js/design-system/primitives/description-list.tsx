@@ -34,7 +34,7 @@ export function DescriptionList({
                         <dt className="text-muted-foreground text-sm font-medium">
                             {item.label}
                         </dt>
-                        <dd className="text-foreground text-sm">
+                        <dd className="text-foreground min-w-0 text-sm wrap-anywhere">
                             {isEmpty ? (
                                 <span className="text-muted-foreground">
                                     {emptyValuePlaceholder}

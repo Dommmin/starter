@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Eye } from 'lucide-react';
 import { Link, ResourceTable } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import { index, show } from '@/routes/admin/contact';
 import { ContactStatusBadge } from './status-badge';
@@ -33,6 +34,7 @@ export default function AdminContactIndex() {
                 searchable
                 labels={{
                     caption: t('admin.contact.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.contact.searchLabel'),
                     searchPlaceholder: t('admin.contact.searchPlaceholder'),
                     searchClear: t('admin.contact.searchClear'),
@@ -78,6 +80,7 @@ export default function AdminContactIndex() {
                 columns={[
                     {
                         key: 'name',
+                        priority: 'primary',
                         label: t('admin.contact.fields.name'),
                         render: (row) => (
                             <Link href={show(row.id)} tone="primary">
@@ -87,11 +90,13 @@ export default function AdminContactIndex() {
                     },
                     {
                         key: 'email',
+                        priority: 'optional',
                         label: t('admin.contact.fields.email'),
                         render: (row) => row.email,
                     },
                     {
                         key: 'status',
+                        priority: 'status',
                         label: t('admin.contact.fields.status'),
                         render: (row) => (
                             <ContactStatusBadge status={row.status} />
@@ -99,6 +104,7 @@ export default function AdminContactIndex() {
                     },
                     {
                         key: 'created_at',
+                        priority: 'secondary',
                         label: t('admin.contact.fields.createdAt'),
                         sortable: true,
                         render: (row) =>

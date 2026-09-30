@@ -12,6 +12,7 @@ import {
     type ResourceListPagination,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import {
     create as usersCreate,
@@ -91,6 +92,7 @@ export default function AdminUsersIndex() {
                 searchable
                 labels={{
                     caption: t('admin.users.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.users.searchLabel'),
                     searchPlaceholder: t('admin.users.searchPlaceholder'),
                     searchClear: t('admin.users.searchClear'),
@@ -125,6 +127,7 @@ export default function AdminUsersIndex() {
                 columns={[
                     {
                         key: 'name',
+                        priority: 'primary',
                         label: t('admin.users.columnName'),
                         sortable: true,
                         render: (row) =>
@@ -134,12 +137,14 @@ export default function AdminUsersIndex() {
                     },
                     {
                         key: 'email',
+                        priority: 'optional',
                         label: t('admin.users.columnEmail'),
                         sortable: true,
                         render: (row) => row.email,
                     },
                     {
                         key: 'role',
+                        priority: 'status',
                         label: t('admin.users.columnRole'),
                         render: (row) => (
                             <Badge tone={row.role ? 'primary' : 'outline'}>
@@ -149,6 +154,7 @@ export default function AdminUsersIndex() {
                     },
                     {
                         key: 'status',
+                        priority: 'status',
                         label: t('admin.users.columnStatus'),
                         render: (row) => (
                             <Badge tone={row.verified ? 'success' : 'neutral'}>
@@ -160,6 +166,7 @@ export default function AdminUsersIndex() {
                     },
                     {
                         key: 'created_at',
+                        priority: 'optional',
                         label: t('admin.users.columnCreatedAt'),
                         sortable: true,
                         render: (row) =>

@@ -142,6 +142,7 @@ export default function AdminNavigationIndex() {
                     columns={[
                         {
                             key: 'label',
+                            priority: 'primary',
                             header: t('admin.navigation.columns.label'),
                             render: (row) => (
                                 <Stack gap="none">
@@ -160,12 +161,14 @@ export default function AdminNavigationIndex() {
                         },
                         {
                             key: 'type',
+                            priority: 'secondary',
                             header: t('admin.navigation.columns.type'),
                             render: (row) =>
                                 t(`admin.navigation.types.${row.item.type}`),
                         },
                         {
                             key: 'status',
+                            priority: 'status',
                             header: t('admin.navigation.columns.status'),
                             render: (row) =>
                                 row.item.targetMissing ? (
@@ -184,6 +187,7 @@ export default function AdminNavigationIndex() {
                         },
                         {
                             key: 'actions',
+                            priority: 'actions',
                             header: t('admin.navigation.columns.actions'),
                             align: 'end',
                             render: (row) => (

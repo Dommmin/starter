@@ -75,4 +75,10 @@ return [
         'defaultTitle' => 'Punkt Startowy — Moderne Webanwendungsplattform',
         'defaultDescription' => 'Punkt Startowy ist eine durchdachte Basis für moderne Webanwendungen.',
     ],
+    'home' => [
+        'latestArticlesEmpty' => 'Es wurden noch keine Artikel veröffentlicht.',
+        'allArticles' => 'Alle Artikel',
+        'readMore' => 'Artikel lesen: :title',
+        'faqEmpty' => 'Es wurden noch keine Fragen veröffentlicht.',
+    ],
 ];

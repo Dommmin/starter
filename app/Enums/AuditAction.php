@@ -32,6 +32,9 @@ enum AuditAction: string
     case NavigationItemUpdated = 'navigation.item_updated';
     case NavigationItemDeleted = 'navigation.item_deleted';
     case NavigationReordered = 'navigation.reordered';
+    case HomeSectionUpdated = 'home_section.updated';
+    case HomeSectionToggled = 'home_section.toggled';
+    case HomeSectionsReordered = 'home_section.reordered';
 
     /**
      * @return list<string>

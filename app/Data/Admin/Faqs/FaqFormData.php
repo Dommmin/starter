@@ -8,7 +8,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Form state for creating or editing a faq. `updatedAt` must be
- * sent back on update for optimistic locking.
+ * sent back on update for optimistic locking. `locale` null means the
+ * question is shown in every public language.
  */
 #[TypeScript]
 class FaqFormData extends Data
@@ -18,6 +19,7 @@ class FaqFormData extends Data
         public ?string $updatedAt,
         public ?string $question,
         public ?string $answer,
+        public ?string $locale,
         public ?int $position,
         public bool $published,
     ) {}
@@ -29,6 +31,7 @@ class FaqFormData extends Data
             updatedAt: null,
             question: null,
             answer: null,
+            locale: null,
             position: null,
             published: false,
         );
@@ -41,6 +44,7 @@ class FaqFormData extends Data
             updatedAt: $faq->updated_at?->toIso8601String(),
             question: $faq->question,
             answer: $faq->answer,
+            locale: $faq->locale,
             position: $faq->position,
             published: $faq->published,
         );

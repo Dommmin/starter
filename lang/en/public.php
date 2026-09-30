@@ -75,4 +75,10 @@ return [
         'defaultTitle' => 'Punkt Startowy — Modern Web Application Platform',
         'defaultDescription' => 'Punkt Startowy is a well-engineered foundation for modern web applications. Explore the demonstration landing page.',
     ],
+    'home' => [
+        'latestArticlesEmpty' => 'No articles have been published yet.',
+        'allArticles' => 'All articles',
+        'readMore' => 'Read article: :title',
+        'faqEmpty' => 'No questions have been published yet.',
+    ],
 ];

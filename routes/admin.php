@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
+use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
@@ -16,6 +17,7 @@ use App\Models\Article;
 use App\Models\AuditLog;
 use App\Models\ContactMessage;
 use App\Models\Faq;
+use App\Models\HomeSection;
 use App\Models\MediaAsset;
 use App\Models\MenuItem;
 use App\Models\Page;
@@ -175,4 +177,22 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/navigation/{menuItem}', [MenuItemController::class, 'destroy'])
             ->name('navigation.destroy')
             ->can('delete', 'menuItem');
+        Route::get('/home-sections', [HomeSectionController::class, 'index'])
+            ->name('home-sections.index')
+            ->can('viewAny', HomeSection::class);
+        Route::put('/home-sections/order', [HomeSectionController::class, 'reorder'])
+            ->name('home-sections.reorder')
+            ->can('reorder', HomeSection::class);
+        Route::get('/home-sections/{homeSection}/edit', [HomeSectionController::class, 'edit'])
+            ->whereNumber('homeSection')
+            ->name('home-sections.edit')
+            ->can('update', 'homeSection');
+        Route::put('/home-sections/{homeSection}', [HomeSectionController::class, 'update'])
+            ->whereNumber('homeSection')
+            ->name('home-sections.update')
+            ->can('update', 'homeSection');
+        Route::patch('/home-sections/{homeSection}/visibility', [HomeSectionController::class, 'visibility'])
+            ->whereNumber('homeSection')
+            ->name('home-sections.visibility')
+            ->can('update', 'homeSection');
     });

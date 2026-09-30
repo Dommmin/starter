@@ -129,12 +129,14 @@ declare namespace App {
                 export type FaqEditorData = {
                     faq: App.Data.Admin.Faqs.FaqFormData;
                     can: App.Data.Admin.Faqs.FaqAbilitiesData;
+                    locales: App.Data.Content.ContentLocalesData;
                 };
                 export type FaqFormData = {
                     id: number | null;
                     updatedAt: string | null;
                     question: string | null;
                     answer: string | null;
+                    locale: string | null;
                     position: number | null;
                     published: boolean;
                 };
@@ -156,6 +158,64 @@ declare namespace App {
                     position: number | null;
                     published: boolean;
                     createdAt: string | null;
+                    updatedAt: string | null;
+                };
+            }
+            namespace HomeSections {
+                export type HomePageOptionData = {
+                    id: number;
+                    title: string;
+                };
+                export type HomeSectionAbilitiesData = {
+                    update: boolean;
+                    reorder: boolean;
+                };
+                export type HomeSectionEditorData = {
+                    section: App.Data.Admin.HomeSections.HomeSectionFormData;
+                    locale: App.Data.Content.ContentLocaleData;
+                    linkTargets: App.Enums.HomeLinkTarget[];
+                    pages: App.Data.Admin.HomeSections.HomePageOptionData[];
+                    can: App.Data.Admin.HomeSections.HomeSectionAbilitiesData;
+                };
+                export type HomeSectionFormData = {
+                    id: number;
+                    locale: string;
+                    enabled: boolean;
+                    updatedAt: string | null;
+                } & (
+                    | { type: 'hero'; content: App.Data.Home.HeroContentData }
+                    | {
+                          type: 'features';
+                          content: App.Data.Home.FeaturesContentData;
+                      }
+                    | { type: 'faq'; content: App.Data.Home.FaqContentData }
+                    | {
+                          type: 'testimonials';
+                          content: App.Data.Home.TestimonialsContentData;
+                      }
+                    | {
+                          type: 'latest_articles';
+                          content: App.Data.Home.LatestArticlesContentData;
+                      }
+                    | {
+                          type: 'contact';
+                          content: App.Data.Home.ContactContentData;
+                      }
+                    | { type: 'cta'; content: App.Data.Home.CtaContentData }
+                );
+                export type HomeSectionIndexData = {
+                    items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
+                    locale: string;
+                    locales: App.Data.Content.ContentLocalesData;
+                    can: App.Data.Admin.HomeSections.HomeSectionAbilitiesData;
+                };
+                export type HomeSectionListItemData = {
+                    id: number;
+                    type: App.Enums.HomeSectionType;
+                    anchor: App.Enums.HomeSectionAnchor;
+                    enabled: boolean;
+                    position: number;
+                    title: string | null;
                     updatedAt: string | null;
                 };
             }
@@ -460,11 +520,117 @@ declare namespace App {
             };
             export type WelcomePageData = {
                 contactForm: App.Data.Contact.ContactFormData;
+                sections: App.Data.Home.HomeSectionData[];
             };
         }
         namespace Errors {
             export type ErrorPageData = {
                 status: 403 | 404 | 500 | 503;
+            };
+        }
+        namespace Home {
+            export type ContactContentData = {
+                title: string;
+                description: string | null;
+            };
+            export type CtaContentData = {
+                title: string;
+                description: string | null;
+                primaryAction: App.Data.Home.HomeActionData | null;
+                secondaryAction: App.Data.Home.HomeActionData | null;
+            };
+            export type FaqContentData = {
+                title: string | null;
+                description: string | null;
+                limit: number | null;
+            };
+            export type FeatureItemData = {
+                title: string;
+                description: string;
+                icon: App.Enums.HomeIcon | null;
+            };
+            export type FeaturesContentData = {
+                items: App.Data.Home.FeatureItemData[];
+                title: string | null;
+                description: string | null;
+            };
+            export type HeroContentData = {
+                title: string;
+                eyebrow: string | null;
+                description: string | null;
+                primaryAction: App.Data.Home.HomeActionData | null;
+                secondaryAction: App.Data.Home.HomeActionData | null;
+            };
+            export type HomeActionData = {
+                label: string;
+                target: App.Enums.HomeLinkTarget;
+                pageId: number | null;
+            };
+            export type HomeCtaData = {
+                title: string;
+                description: string | null;
+                primaryAction: App.Data.Home.HomeLinkData | null;
+                secondaryAction: App.Data.Home.HomeLinkData | null;
+            };
+            export type HomeFaqData = {
+                title: string | null;
+                description: string | null;
+                items: App.Data.Home.HomeFaqItemData[];
+            };
+            export type HomeFaqItemData = {
+                id: number;
+                question: string;
+                answer: string;
+            };
+            export type HomeHeroData = {
+                eyebrow: string | null;
+                title: string;
+                description: string | null;
+                primaryAction: App.Data.Home.HomeLinkData | null;
+                secondaryAction: App.Data.Home.HomeLinkData | null;
+            };
+            export type HomeLatestArticlesData = {
+                title: string | null;
+                items: App.Data.Content.ArticleSummaryData[];
+                listUrl: string;
+            };
+            export type HomeLinkData = {
+                label: string;
+                url: string;
+            };
+            export type HomeSectionData = {
+                id: number;
+                anchor: App.Enums.HomeSectionAnchor;
+            } & (
+                | { type: 'hero'; content: App.Data.Home.HomeHeroData }
+                | {
+                      type: 'features';
+                      content: App.Data.Home.FeaturesContentData;
+                  }
+                | { type: 'faq'; content: App.Data.Home.HomeFaqData }
+                | {
+                      type: 'testimonials';
+                      content: App.Data.Home.TestimonialsContentData;
+                  }
+                | {
+                      type: 'latest_articles';
+                      content: App.Data.Home.HomeLatestArticlesData;
+                  }
+                | { type: 'contact'; content: App.Data.Home.ContactContentData }
+                | { type: 'cta'; content: App.Data.Home.HomeCtaData }
+            );
+            export type LatestArticlesContentData = {
+                limit: number;
+                title: string | null;
+            };
+            export type TestimonialItemData = {
+                author: string;
+                quote: string;
+                role: string | null;
+            };
+            export type TestimonialsContentData = {
+                items: App.Data.Home.TestimonialItemData[];
+                title: string | null;
             };
         }
         namespace Listing {
@@ -579,10 +745,44 @@ declare namespace App {
             | 'navigation.item_created'
             | 'navigation.item_updated'
             | 'navigation.item_deleted'
-            | 'navigation.reordered';
+            | 'navigation.reordered'
+            | 'home_section.updated'
+            | 'home_section.toggled'
+            | 'home_section.reordered';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';
+        export type HomeIcon =
+            | 'palette'
+            | 'lock'
+            | 'zap'
+            | 'accessibility'
+            | 'shield-check'
+            | 'rocket'
+            | 'sparkles'
+            | 'globe';
+        export type HomeLinkTarget =
+            | 'contact'
+            | 'articles'
+            | 'login'
+            | 'register'
+            | 'page';
+        export type HomeSectionAnchor =
+            | 'hero'
+            | 'features'
+            | 'faq'
+            | 'testimonials'
+            | 'latest-articles'
+            | 'contact'
+            | 'cta';
+        export type HomeSectionType =
+            | 'hero'
+            | 'features'
+            | 'faq'
+            | 'testimonials'
+            | 'latest_articles'
+            | 'contact'
+            | 'cta';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type MenuItemType =
             | 'page'

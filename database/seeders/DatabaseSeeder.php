@@ -28,5 +28,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(NavigationMenuSeeder::class);
+        $this->call(HomeSectionSeeder::class);
     }
 }

@@ -75,4 +75,10 @@ return [
         'defaultTitle' => 'Punkt Startowy — Nowoczesna platforma aplikacji internetowych',
         'defaultDescription' => 'Punkt Startowy to przemyślana baza dla nowoczesnych aplikacji internetowych. Sprawdź demonstracyjny landing page studia i produktu.',
     ],
+    'home' => [
+        'latestArticlesEmpty' => 'Nie opublikowano jeszcze żadnych artykułów.',
+        'allArticles' => 'Wszystkie artykuły',
+        'readMore' => 'Przeczytaj artykuł: :title',
+        'faqEmpty' => 'Nie opublikowano jeszcze żadnych pytań.',
+    ],
 ];

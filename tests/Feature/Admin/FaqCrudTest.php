@@ -246,3 +246,23 @@ test('an admin deletes a faq', function () {
 
     expect(Faq::query()->count())->toBe(0);
 });
+
+test('a faq is stored for one public language or for all of them', function () {
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->post(route('admin.faqs.store'), faqPayload(['locale' => 'pl']))
+        ->assertSessionHasNoErrors();
+    $this->actingAs($editor)->post(route('admin.faqs.store'), faqPayload(['locale' => '']))
+        ->assertSessionHasNoErrors();
+    $this->actingAs($editor)->post(route('admin.faqs.store'), faqPayload(['locale' => 'xx']))
+        ->assertSessionHasErrors('locale');
+
+    expect(Faq::query()->orderBy('id')->pluck('locale')->all())->toBe(['pl', null]);
+
+    $this->actingAs($editor)->get(route('admin.faqs.edit', Faq::query()->orderBy('id')->firstOrFail()))
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('faq.locale', 'pl')
+            ->where('locales.default', 'en')
+            ->has('locales.available', 3)
+        );
+});

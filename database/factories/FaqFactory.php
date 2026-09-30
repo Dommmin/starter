@@ -20,6 +20,7 @@ class FaqFactory extends Factory
         return [
             'question' => fake()->words(3, true),
             'answer' => fake()->paragraph(),
+            'locale' => null,
             'position' => fake()->numberBetween(1, 1000),
             'published' => fake()->boolean(),
         ];

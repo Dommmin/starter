@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Admin\Faqs;
 
 use App\Models\Faq;
+use App\Services\Localization\LocalizationConfig;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFaqRequest extends FormRequest
 {
@@ -42,13 +44,15 @@ class StoreFaqRequest extends FormRequest
         return [
             'question' => ['required', 'string', 'max:255'],
             'answer' => ['required', 'string', 'max:20000'],
+            'locale' => ['nullable', 'string', Rule::in(app(LocalizationConfig::class)->getPublicLocales())],
             'position' => ['nullable', 'integer', 'min:-2147483648', 'max:2147483647'],
             'published' => ['required', 'boolean'],
         ];
     }
 
     /**
-     * Null for each optional number/date input sent as a blank string.
+     * Null for each optional number/date/locale input sent as a blank string
+     * (a blank locale means "every language").
      *
      * @param  array<string, mixed>  $input
      * @return array<string, null>
@@ -56,7 +60,7 @@ class StoreFaqRequest extends FormRequest
     public static function blankOptionalInputsAsNull(array $input): array
     {
         $blank = [];
-        foreach (['position'] as $name) {
+        foreach (['position', 'locale'] as $name) {
             if (is_string($input[$name] ?? null) && trim($input[$name]) === '') {
                 $blank[$name] = null;
             }

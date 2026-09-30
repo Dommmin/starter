@@ -102,7 +102,7 @@ export function MobileNav({
                         </DialogPrimitive.Close>
                     </div>
                     {utilities && (
-                        <div className="border-border-subtle flex items-center gap-3 border-b pb-4 sm:hidden">
+                        <div className="border-border-subtle flex flex-col gap-1 border-b pb-4 sm:hidden">
                             {utilities}
                         </div>
                     )}

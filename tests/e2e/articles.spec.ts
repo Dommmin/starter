@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { logIn, uniqueId } from './support';
+import { signedInPage, uniqueId } from './support';
 
 type ArticleTranslation = { title: string; slug: string; body: string };
 
@@ -62,16 +62,15 @@ async function saveNewArticle(page: Page): Promise<void> {
     await expect(page.getByText('Article created.')).toBeVisible();
 }
 
-// One admin session per file: Fortify allows 5 logins per minute and
-// account, and the whole suite signs in as the same admin.
+// One admin page per file, restored from the session saved by auth.setup.ts
+// (Fortify allows 5 logins per minute and account).
 test.describe('articles', () => {
     test.describe.configure({ mode: 'serial' });
 
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {
-        page = await browser.newPage();
-        await logIn(page, 'admin');
+        page = await signedInPage(browser, 'admin');
     });
 
     test.afterAll(async () => {

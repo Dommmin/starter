@@ -9,8 +9,9 @@ async function openUserRow(page: Page, email: string, name: string) {
     await page.getByRole('button', { name: `Actions for ${name}` }).click();
 }
 
-// One admin session per file: Fortify allows 5 logins per minute and
-// account, and the whole suite signs in as the same admin.
+// One fresh admin login per file (Fortify allows 5 logins per minute and
+// account): the journey confirms the password, which changes the server-side
+// session, so it must not reuse the shared session saved by auth.setup.ts.
 test.describe('user management', () => {
     test.describe.configure({ mode: 'serial' });
 

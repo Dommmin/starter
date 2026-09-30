@@ -11,6 +11,12 @@ import { useAppearance } from '@/hooks/use-appearance';
 import { useTranslation } from '@/i18n';
 
 export type ThemeSwitcherProps = {
+    /**
+     * `icon` (default): compact icon button named by `aria-label`.
+     * `labelled`: full-width row with the icon and a visible
+     * „Theme: System” caption that is the button's accessible name.
+     */
+    variant?: 'icon' | 'labelled';
     className?: never;
     style?: never;
 };
@@ -21,7 +27,7 @@ const modes: { value: Appearance; icon: typeof Sun; labelKey: string }[] = [
     { value: 'system', icon: Monitor, labelKey: 'theme.system' },
 ];
 
-export function ThemeSwitcher() {
+export function ThemeSwitcher({ variant = 'icon' }: ThemeSwitcherProps) {
     const { appearance, updateAppearance } = useAppearance();
     const { t } = useTranslation();
 
@@ -34,19 +40,35 @@ export function ThemeSwitcher() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button
-                    type="button"
-                    aria-label={triggerLabel}
-                    title={triggerLabel}
-                    className="focus-visible:ring-ring text-text-subtle hover:bg-surface-subtle hover:text-foreground inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                >
-                    <ActiveIcon
-                        className="h-4 w-4 shrink-0"
-                        aria-hidden="true"
-                    />
-                </button>
+                {variant === 'labelled' ? (
+                    <button
+                        type="button"
+                        className="focus-visible:ring-ring text-foreground hover:bg-surface-subtle inline-flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    >
+                        <ActiveIcon
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                        />
+                        <span>{`${t('theme.label')}: ${currentLabel}`}</span>
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        aria-label={triggerLabel}
+                        title={triggerLabel}
+                        className="focus-visible:ring-ring text-text-subtle hover:bg-surface-subtle hover:text-foreground inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    >
+                        <ActiveIcon
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                        />
+                    </button>
+                )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuContent
+                align={variant === 'labelled' ? 'start' : 'end'}
+                className="w-36"
+            >
                 <DropdownMenuRadioGroup
                     value={appearance}
                     onValueChange={(val) => updateAppearance(val as Appearance)}

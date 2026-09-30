@@ -44,9 +44,13 @@ return [
         'moved' => ':label auf Position :position von :total verschoben',
     ],
     'theme' => [
+        'label' => 'Design',
         'light' => 'Hell',
         'dark' => 'Dunkel',
         'system' => 'System',
+    ],
+    'language' => [
+        'label' => 'Sprache',
     ],
     'actions' => [
         'save' => 'Speichern',

@@ -140,7 +140,7 @@ const statusTone: Record<UploadQueueStatus, string> = {
     queued: 'text-muted-foreground',
     uploading: 'text-muted-foreground',
     done: 'text-status-success',
-    error: 'text-destructive',
+    error: 'text-status-danger',
 };
 
 /**

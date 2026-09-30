@@ -22,7 +22,9 @@ export function RetryPanel({
         <Stack gap="tight" align="start">
             <Alert tone="danger" title={title} description={description} />
             <Button variant="outline" onClick={onRetry} isPending={isPending}>
-                <RotateCw className="size-4" aria-hidden="true" />
+                {!isPending && (
+                    <RotateCw className="size-4" aria-hidden="true" />
+                )}
                 {retryLabel}
             </Button>
         </Stack>

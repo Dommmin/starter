@@ -1,6 +1,7 @@
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Alert } from './alert';
 import { ConflictDialog } from './conflict-dialog';
 import { OfflineBanner } from './offline-banner';
 import { RetryPanel } from './retry-panel';
@@ -29,6 +30,36 @@ afterEach(async () => {
     document.body.replaceChildren();
 });
 
+describe('Alert', () => {
+    it('renders a named dismiss control with a 44 px target', async () => {
+        const onDismiss = vi.fn();
+        const container = await render(
+            <Alert
+                title="Saved"
+                dismissLabel="Dismiss"
+                onDismiss={onDismiss}
+            />,
+        );
+
+        const dismiss = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="Dismiss"]',
+        );
+        expect(dismiss?.classList.contains('size-11')).toBe(true);
+        expect(dismiss?.textContent).toBe('');
+
+        await act(async () => dismiss?.click());
+        expect(onDismiss).toHaveBeenCalledTimes(1);
+    });
+
+    it('omits the dismiss control without a label', async () => {
+        const container = await render(
+            <Alert title="Saved" onDismiss={vi.fn()} />,
+        );
+
+        expect(container.querySelector('button')).toBeNull();
+    });
+});
+
 describe('OfflineBanner', () => {
     it('announces the offline message', async () => {
         const container = await render(
@@ -55,6 +86,8 @@ describe('RetryPanel', () => {
         const button = container.querySelector('button');
         expect(button?.getAttribute('aria-busy')).toBe('true');
         expect((button as HTMLButtonElement | null)?.disabled).toBe(true);
+        // Only the pending spinner is shown, not the retry icon next to it.
+        expect(button?.querySelectorAll('svg').length).toBe(1);
     });
 
     it('calls onRetry when activated', async () => {

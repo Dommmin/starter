@@ -190,4 +190,22 @@ describe('Tabs', () => {
 
         expect(container.textContent).toContain('Billing panel');
     });
+
+    it('gives every tab a 44 px touch target', async () => {
+        const container = await render(
+            <Tabs
+                ariaLabel="Settings"
+                items={[
+                    { value: 'general', label: 'General', content: 'G' },
+                    { value: 'billing', label: 'Billing', content: 'B' },
+                ]}
+            />,
+        );
+
+        const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
+        expect(tabs).toHaveLength(2);
+        tabs.forEach((tab) =>
+            expect(tab.classList.contains('min-h-11')).toBe(true),
+        );
+    });
 });

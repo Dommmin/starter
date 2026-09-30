@@ -85,7 +85,7 @@ export function ImagePickerField({
             tabIndex={-1}
             aria-labelledby={labelId}
             aria-describedby={describedBy}
-            className="focus-visible:ring-ring/50 flex flex-col gap-1.5 rounded-md outline-none focus-visible:ring-[3px]"
+            className="focus-visible:ring-ring/50 @container flex flex-col gap-1.5 rounded-md outline-none focus-visible:ring-[3px]"
         >
             <span id={labelId} className="text-sm leading-snug font-medium">
                 {label}
@@ -98,7 +98,7 @@ export function ImagePickerField({
                     </span>
                 )}
             </span>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 @sm:flex-row @sm:items-center">
                 <div
                     className={cn(
                         'bg-surface-subtle text-muted-foreground flex aspect-square w-40 shrink-0 items-center justify-center overflow-hidden rounded-md border',

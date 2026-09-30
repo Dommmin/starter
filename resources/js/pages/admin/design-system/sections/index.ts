@@ -1,7 +1,11 @@
 import { actionsFamily } from './actions';
 import { choiceFieldsFamily } from './choice-fields';
+import { contentMediaFamily } from './content-media';
+import { feedbackFamily } from './feedback';
 import { formsFamily } from './forms';
 import { foundationsFamily } from './foundations';
+import { layoutsFamily } from './layouts';
+import { panelNavigationFamily } from './panel-navigation';
 import { recordViewFamily } from './record-view';
 import type { ShowcaseFamily } from './showcase';
 import { tablesFamily } from './tables';
@@ -14,10 +18,14 @@ import { textFieldsFamily } from './text-fields';
  */
 export const showcaseFamilies: ShowcaseFamily[] = [
     foundationsFamily,
+    layoutsFamily,
     textFieldsFamily,
     choiceFieldsFamily,
+    contentMediaFamily,
     formsFamily,
     tablesFamily,
     recordViewFamily,
     actionsFamily,
+    panelNavigationFamily,
+    feedbackFamily,
 ];

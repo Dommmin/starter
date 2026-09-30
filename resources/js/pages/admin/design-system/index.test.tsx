@@ -66,10 +66,18 @@ afterEach(async () => {
 });
 
 describe('DesignSystemShowcase', () => {
-    it('registers at least the ADM-01 family with unique anchors', () => {
+    it('registers the reviewed families with unique anchors', () => {
         const ids = showcaseFamilies.map((family) => family.id);
 
-        expect(ids).toContain('adm-01');
+        expect(ids).toEqual(
+            expect.arrayContaining([
+                'adm-01',
+                'adm-02',
+                'adm-06',
+                'adm-15',
+                'adm-16',
+            ]),
+        );
         expect(new Set(ids).size).toBe(ids.length);
     });
 
@@ -126,6 +134,49 @@ describe('DesignSystemShowcase', () => {
                 'button[aria-label="admin.designSystem.foundations.dismiss"]',
             ),
         ).not.toBeNull();
+    });
+
+    it('opens the command palette demo on synthetic items', async () => {
+        const container = await render(<DesignSystemShowcase />);
+        const open = Array.from(container.querySelectorAll('button')).find(
+            (button) =>
+                button.textContent ===
+                'admin.designSystem.panelNavigation.openPalette',
+        );
+
+        await act(async () => open?.click());
+
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+        expect(document.querySelectorAll('[role="option"]').length).toBe(3);
+    });
+
+    it('shows the retry panel as pending, then recovered', async () => {
+        vi.useFakeTimers();
+
+        try {
+            const container = await render(<DesignSystemShowcase />);
+            const section = container.querySelector('section#adm-16');
+            const retry = Array.from(
+                section?.querySelectorAll('button') ?? [],
+            ).find(
+                (button) =>
+                    button.textContent ===
+                        'admin.designSystem.feedback.retryLabel' &&
+                    !button.disabled,
+            );
+
+            await act(async () => retry?.click());
+            expect(retry?.getAttribute('aria-busy')).toBe('true');
+
+            await act(async () => {
+                vi.advanceTimersByTime(1500);
+            });
+            expect(section?.textContent).toContain(
+                'admin.designSystem.feedback.recoveredTitle',
+            );
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it('registers the table, record view and action families', () => {

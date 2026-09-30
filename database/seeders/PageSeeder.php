@@ -4,60 +4,111 @@ namespace Database\Seeders;
 
 use App\Enums\PublicationStatus;
 use App\Models\Page;
+use App\Models\PageTranslation;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 
 /**
- * Local sample content: one published page with translations and one draft.
- * Slugs come from the {@see DemoContent} registry used by `--remove-demo`.
+ * Local sample pages: published, scheduled and draft translations, pages in
+ * one to three languages, empty meta descriptions and long rich text. Slugs
+ * come from the {@see DemoContent} registry used by `--remove-demo`.
+ * Idempotent: a page whose first seeded slug already exists is skipped.
  */
 class PageSeeder extends Seeder
 {
+    /**
+     * Per page: long body flag and translations as
+     * `locale => [title, meta description, state, days from now]`, where
+     * state is `published`, `scheduled` or `draft`.
+     *
+     * @var array<string, array{long?: bool, translations: array<string, array{0: string, 1: string|null, 2: string, 3: int}>}>
+     */
+    public const array PAGES = [
+        'privacy' => ['long' => true, 'translations' => [
+            'en' => ['Privacy policy', 'How this website processes personal data.', 'published', 0],
+            'pl' => ['Polityka prywatności', 'Jak ta strona przetwarza dane osobowe.', 'published', 0],
+        ]],
+        'upcoming' => ['translations' => [
+            'en' => ['Upcoming offer', null, 'draft', 0],
+        ]],
+        'about' => ['long' => true, 'translations' => [
+            'de' => ['Über uns', 'Wer wir sind und was wir tun.', 'published', -30],
+            'en' => ['About us', 'Who we are and what we do.', 'published', -30],
+            'pl' => ['O nas', 'Kim jesteśmy i czym się zajmujemy.', 'published', -30],
+        ]],
+        'terms' => ['long' => true, 'translations' => [
+            'en' => ['Terms of service for the website, the newsletter and all online forms available to visitors', 'Rules for using this website.', 'published', -20],
+            'pl' => ['Regulamin korzystania z serwisu internetowego, newslettera oraz wszystkich formularzy dostępnych dla odwiedzających', 'Zasady korzystania z serwisu.', 'published', -20],
+        ]],
+        'cookies' => ['translations' => [
+            'pl' => ['Polityka cookies', null, 'published', -20],
+        ]],
+        'contact-details' => ['translations' => [
+            'en' => ['Contact details', 'Address, phone and opening hours.', 'published', -10],
+            'pl' => ['Dane kontaktowe', 'Adres, telefon i godziny otwarcia.', 'published', -10],
+        ]],
+        'careers' => ['long' => true, 'translations' => [
+            'en' => ['Careers', 'Join our team.', 'scheduled', 5],
+            'pl' => ['Kariera', 'Dołącz do zespołu.', 'scheduled', 5],
+        ]],
+        'accessibility' => ['translations' => [
+            'en' => ['Accessibility statement', null, 'draft', 0],
+            'pl' => ['Deklaracja dostępności', 'Informacje o dostępności serwisu.', 'published', -5],
+        ]],
+        'short' => ['translations' => [
+            'en' => ['Ok', null, 'published', -1],
+            'pl' => ['Ok', null, 'published', -1],
+        ]],
+    ];
+
     public function run(): void
     {
-        $published = Page::query()->create();
-        $published->translations()->createMany([
-            [
-                'locale' => 'en',
-                'title' => 'Privacy policy',
-                'slug' => DemoContent::PAGES['privacy']['en'],
-                'meta_description' => 'How this website processes personal data.',
-                'body' => self::document('This sample page shows how published content is rendered.'),
-                'status' => PublicationStatus::Published,
-                'published_at' => now(),
-            ],
-            [
-                'locale' => 'pl',
-                'title' => 'Polityka prywatności',
-                'slug' => DemoContent::PAGES['privacy']['pl'],
-                'meta_description' => 'Jak ta strona przetwarza dane osobowe.',
-                'body' => self::document('Ta przykładowa strona pokazuje renderowanie opublikowanej treści.'),
-                'status' => PublicationStatus::Published,
-                'published_at' => now(),
-            ],
-        ]);
+        foreach (self::PAGES as $key => $definition) {
+            $slugs = self::slugs($key);
+            $firstLocale = (string) array_key_first($slugs);
 
-        $draft = Page::query()->create();
-        $draft->translations()->create([
-            'locale' => 'en',
-            'title' => 'Upcoming offer',
-            'slug' => DemoContent::PAGES['upcoming']['en'],
-            'meta_description' => null,
-            'body' => self::document('Draft content is never visible to visitors.'),
-            'status' => PublicationStatus::Draft,
-        ]);
+            if (PageTranslation::query()->where('locale', $firstLocale)->where('slug', $slugs[$firstLocale])->exists()) {
+                continue;
+            }
+
+            $page = Page::query()->create();
+
+            foreach ($definition['translations'] as $locale => [$title, $metaDescription, $state, $days]) {
+                $page->translations()->create([
+                    'locale' => $locale,
+                    'title' => $title,
+                    'slug' => $slugs[$locale],
+                    'meta_description' => $metaDescription,
+                    'body' => ($definition['long'] ?? false)
+                        ? DemoDocument::long($locale, $metaDescription ?? $title)
+                        : DemoDocument::short($metaDescription ?? $title),
+                    'status' => $state === 'draft' ? PublicationStatus::Draft : PublicationStatus::Published,
+                    'published_at' => self::publishedAt($state, $days),
+                ]);
+            }
+        }
     }
 
     /**
-     * @return array<string, mixed>
+     * Publication date of a sample translation: none for a draft, the start
+     * of a future day when scheduled, otherwise `$days` from now.
      */
-    private static function document(string $text): array
+    private static function publishedAt(string $state, int $days): ?CarbonInterface
     {
-        return [
-            'type' => 'doc',
-            'content' => [
-                ['type' => 'heading', 'attrs' => ['level' => 2], 'content' => [['type' => 'text', 'text' => 'Overview']]],
-                ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => $text]]],
-            ],
-        ];
+        return match ($state) {
+            'draft' => null,
+            'scheduled' => now()->addDays($days)->startOfDay(),
+            default => now()->addDays($days),
+        };
+    }
+
+    /**
+     * Registered `locale => slug` map of a sample key.
+     *
+     * @return array<string, string>
+     */
+    private static function slugs(string $key): array
+    {
+        return DemoContent::PAGES[$key];
     }
 }

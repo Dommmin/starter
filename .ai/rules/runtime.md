@@ -22,7 +22,7 @@ Glob: `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.testing`, `
 | Build assetów + SSR     | `make assets`                                  |
 
 - `make down` zachowuje wolumeny. Nie ma automatycznego resetu ani kasowania danych.
-- `make setup` nie seeduje kont automatycznie.
+- `make setup` wgrywa idempotentne dane demo (`db:seed`, tylko `APP_ENV=local`); `make seed` powtarza seed, `make fresh` odtwarza lokalną bazę (`migrate:fresh --seed`). Demo poza local nie powstaje; `app:init-project --remove-demo` je usuwa.
 
 ## Usługi
 

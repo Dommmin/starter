@@ -8,9 +8,10 @@ E2E_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.e2e.yaml --profile e2e
 RUN := $(COMPOSE) run --rm --no-deps app
 ARGS ?=
 SERVICE ?=
+CONFIRM ?=
 TEST_PROCESSES ?= 4
 
-.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
+.PHONY: help env local-guard setup seed fresh up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -18,14 +19,26 @@ help: ## Lista komend
 env: ## Utwórz lokalny .env bez nadpisywania istniejącej konfiguracji
 	@test -f .env || (umask 077; cp .env.example .env)
 
-setup: env ## Pierwsza instalacja: obraz, zależności, klucz, migracje, start
-	@grep -qx 'APP_ENV=local' .env || { echo 'Setup wymaga APP_ENV=local w .env'; exit 1; }
-	@grep -qx 'DB_HOST=postgres' .env || { echo 'Setup wymaga lokalnego DB_HOST=postgres'; exit 1; }
+local-guard: env
+	@grep -qx 'APP_ENV=local' .env || { echo 'Ta komenda wymaga APP_ENV=local w .env'; exit 1; }
+	@grep -qx 'DB_HOST=postgres' .env || { echo 'Ta komenda wymaga lokalnego DB_HOST=postgres'; exit 1; }
+
+setup: local-guard ## Pierwsza instalacja: obraz, zależności, klucz, migracje, dane demo, start
 	$(COMPOSE) build app
 	$(MAKE) deps
 	$(COMPOSE) up -d --wait postgres redis mailpit
-	$(RUN) sh -ec 'php artisan config:clear; if ! grep -Eq "^APP_KEY=.+" .env; then php artisan key:generate --no-interaction; fi; php artisan migrate --no-interaction; if [ ! -L public/storage ] && [ ! -e public/storage ]; then php artisan storage:link --no-interaction; fi'
+	$(RUN) sh -ec 'php artisan config:clear; if ! grep -Eq "^APP_KEY=.+" .env; then php artisan key:generate --no-interaction; fi; php artisan migrate --no-interaction; if [ ! -L public/storage ] && [ ! -e public/storage ]; then php artisan storage:link --no-interaction; fi; php artisan db:seed --no-interaction'
 	$(MAKE) up
+
+seed: local-guard ## Dane demo (idempotentnie, tylko APP_ENV=local)
+	$(COMPOSE) up -d --wait postgres redis
+	$(RUN) php artisan db:seed --no-interaction
+
+fresh: local-guard ## Usuń lokalną bazę i odtwórz ją z danymi demo (pyta o potwierdzenie; CONFIRM=1 pomija)
+	@echo "make fresh usunie WSZYSTKIE tabele i dane lokalnej bazy PostgreSQL projektu '$$(grep -E '^COMPOSE_PROJECT_NAME=' .env | cut -d= -f2)' (konta, treści, media w bazie, audit log) i wgra dane demo."
+	@if [ "$(CONFIRM)" != "1" ]; then printf 'Kontynuować? [y/N] '; read answer; case "$$answer" in y|Y|yes|tak) ;; *) echo 'Przerwano, baza bez zmian.'; exit 1;; esac; fi
+	$(COMPOSE) up -d --wait postgres redis
+	$(RUN) php artisan migrate:fresh --seed --no-interaction
 
 deps: env ## Instaluj dokładnie zależności z lockfile (również po git pull)
 	$(COMPOSE) stop vite queue scheduler web app

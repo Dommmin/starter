@@ -7,6 +7,9 @@ import Login from './login';
 
 vi.mock('@/components/passkey-verify', () => ({ default: () => null }));
 
+/** Validation errors the mocked server returns after a submit. */
+const serverErrors: Record<string, string> = {};
+
 vi.mock('@inertiajs/react', () => ({
     Head: () => null,
     setLayoutProps: () => {},
@@ -25,6 +28,18 @@ vi.mock('@inertiajs/react', () => ({
             {children({ processing: false, errors: {}, clearErrors: () => {} })}
         </form>
     ),
+    useForm: <Data extends Record<string, unknown>>(data: Data) => ({
+        data,
+        errors: serverErrors,
+        processing: false,
+        setData: () => {},
+        reset: () => {},
+        submit: (
+            _method: string,
+            _url: string,
+            options: { onError?: (errors: Record<string, string>) => void },
+        ) => options.onError?.(serverErrors),
+    }),
     Link: ({
         href,
         children,
@@ -72,9 +87,19 @@ function accessibleName(input: HTMLInputElement | null): string | undefined {
     return (
         input?.getAttribute('aria-label') ??
         Array.from(input?.labels ?? [])
-            .map((label) => label.textContent)
+            .map(visibleLabelText)
             .join(' ')
     );
+}
+
+/** Label text as exposed to assistive tech: `aria-hidden` parts (the required asterisk) are not part of the name. */
+function visibleLabelText(label: HTMLLabelElement): string {
+    const clone = label.cloneNode(true) as HTMLElement;
+    clone
+        .querySelectorAll('[aria-hidden="true"]')
+        .forEach((node) => node.remove());
+
+    return clone.textContent ?? '';
 }
 
 afterEach(async () => {
@@ -94,5 +119,62 @@ describe('Login', () => {
         expect(
             accessibleName(container.querySelector('input[name="password"]')),
         ).toBe('auth.login.password');
+        expect(
+            container.querySelector<HTMLInputElement>('input[name="email"]')
+                ?.required,
+        ).toBe(true);
+        expect(
+            container.querySelector<HTMLInputElement>('input[name="password"]')
+                ?.required,
+        ).toBe(true);
+    });
+
+    it('moves focus to the first invalid field after a rejected submit', async () => {
+        Object.assign(serverErrors, { password: 'Required.', email: 'Bad.' });
+        const container = await render(<Login canResetPassword />);
+
+        await act(async () => {
+            container
+                .querySelector('form')
+                ?.dispatchEvent(
+                    new Event('submit', { bubbles: true, cancelable: true }),
+                );
+        });
+
+        expect(document.activeElement?.id).toBe('email');
+        expect(
+            container
+                .querySelector('input[name="email"]')
+                ?.getAttribute('aria-invalid'),
+        ).toBe('true');
+
+        for (const key of Object.keys(serverErrors)) {
+            delete serverErrors[key];
+        }
+    });
+
+    it('lets keyboard users reveal the password with a translated control', async () => {
+        const container = await render(<Login canResetPassword />);
+        const toggle = container.querySelector<HTMLButtonElement>(
+            'button[aria-pressed]',
+        );
+
+        expect(toggle?.getAttribute('aria-label')).toBe(
+            'auth.passwordField.show',
+        );
+        expect(toggle?.tabIndex).toBe(0);
+        expect(
+            container.querySelector(
+                '[tabindex]:not([tabindex="0"]):not([tabindex="-1"])',
+            ),
+        ).toBeNull();
+    });
+
+    it('renders its own h1 so the heading is part of the server-rendered HTML', async () => {
+        const container = await render(<Login canResetPassword />);
+
+        expect(container.querySelector('h1')?.textContent).toBe(
+            'auth.login.heading',
+        );
     });
 });

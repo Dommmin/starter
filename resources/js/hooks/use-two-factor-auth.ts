@@ -1,5 +1,6 @@
 import { useHttp } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useTranslation } from '@/i18n';
 import { qrCode, recoveryCodes, secretKey } from '@/routes/two-factor';
 
 export type UseTwoFactorAuthReturn = {
@@ -21,6 +22,10 @@ export const OTP_MAX_LENGTH = 6;
 
 export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     const { submit } = useHttp();
+    const { t } = useTranslation();
+    // Stable callbacks: a changing `t` must not re-trigger the fetch effects.
+    const translate = useRef(t);
+    translate.current = t;
 
     const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
     const [manualSetupKey, setManualSetupKey] = useState<string | null>(null);
@@ -55,7 +60,10 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
 
             setQrCodeSvg(svg);
         } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch QR code']);
+            setErrors((prev) => [
+                ...prev,
+                translate.current('settings.twoFactor.fetchQrFailed'),
+            ]);
             setQrCodeSvg(null);
         }
     }, [submit]);
@@ -68,7 +76,10 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
 
             setManualSetupKey(key);
         } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch a setup key']);
+            setErrors((prev) => [
+                ...prev,
+                translate.current('settings.twoFactor.fetchKeyFailed'),
+            ]);
             setManualSetupKey(null);
         }
     }, [submit]);
@@ -79,7 +90,10 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
             const codes = (await submit(recoveryCodes())) as string[];
             setRecoveryCodesList(codes);
         } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch recovery codes']);
+            setErrors((prev) => [
+                ...prev,
+                translate.current('settings.twoFactor.fetchCodesFailed'),
+            ]);
             setRecoveryCodesList([]);
         }
     }, [submit]);

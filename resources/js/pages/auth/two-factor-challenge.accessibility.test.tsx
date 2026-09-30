@@ -61,8 +61,18 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 /** Visible label text associated through `for`/`id`. */
 function labelText(input: HTMLInputElement | null): string {
     return Array.from(input?.labels ?? [])
-        .map((label) => label.textContent)
+        .map(visibleLabelText)
         .join(' ');
+}
+
+/** Label text as exposed to assistive tech: `aria-hidden` parts (the required asterisk) are not part of the name. */
+function visibleLabelText(label: HTMLLabelElement): string {
+    const clone = label.cloneNode(true) as HTMLElement;
+    clone
+        .querySelectorAll('[aria-hidden="true"]')
+        .forEach((node) => node.remove());
+
+    return clone.textContent ?? '';
 }
 
 afterEach(async () => {
@@ -92,5 +102,20 @@ describe('TwoFactorChallenge', () => {
         expect(
             labelText(container.querySelector('input[name="recovery_code"]')),
         ).toBe('auth.twoFactor.recoveryCode');
+    });
+
+    it('moves focus into the field that replaces the old one when switching modes', async () => {
+        const container = await render(<TwoFactorChallenge />);
+        const toggle = Array.from(container.querySelectorAll('button')).find(
+            (button) => button.type === 'button',
+        );
+
+        await act(async () => {
+            toggle?.click();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        expect(document.activeElement?.id).toBe('recovery_code');
+        expect(toggle?.textContent).toBe('auth.twoFactor.useAuthCode');
     });
 });

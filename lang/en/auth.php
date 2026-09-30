@@ -81,10 +81,13 @@ return [
         'code' => 'Code',
         'recoveryCode' => 'Recovery code',
         'recoveryPlaceholder' => 'Enter recovery code',
-        'useRecoveryCode' => 'login using a recovery code',
-        'useAuthCode' => 'login using an authentication code',
-        'or' => 'or you can ',
+        'useRecoveryCode' => 'Use a recovery code instead',
+        'useAuthCode' => 'Use an authentication code instead',
         'submit' => 'Continue',
+    ],
+    'passwordField' => [
+        'show' => 'Show password',
+        'hide' => 'Hide password',
     ],
     'passkey' => [
         'signIn' => 'Sign in with a passkey',

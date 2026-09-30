@@ -81,10 +81,13 @@ return [
         'code' => 'Kod',
         'recoveryCode' => 'Kod odzyskiwania',
         'recoveryPlaceholder' => 'Wprowadź kod odzyskiwania',
-        'useRecoveryCode' => 'zaloguj się kodem odzyskiwania',
-        'useAuthCode' => 'zaloguj się kodem z aplikacji',
-        'or' => 'lub ',
+        'useRecoveryCode' => 'Użyj kodu odzyskiwania',
+        'useAuthCode' => 'Użyj kodu z aplikacji',
         'submit' => 'Kontynuuj',
+    ],
+    'passwordField' => [
+        'show' => 'Pokaż hasło',
+        'hide' => 'Ukryj hasło',
     ],
     'passkey' => [
         'signIn' => 'Zaloguj się kluczem dostępu',

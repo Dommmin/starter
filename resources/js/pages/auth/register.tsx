@@ -1,4 +1,4 @@
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -10,7 +10,9 @@ import {
     getLocalizedLoginRoute,
     getLocalizedRegisterForm,
 } from '@/lib/localized-routes';
+import AuthPageHeading from '@/components/auth-page-heading';
 import { useTranslation } from '@/i18n';
+import { focusFirstError } from '@/lib/focus-first-error';
 
 type Props = {
     passwordRules: string;
@@ -19,17 +21,25 @@ type Props = {
 export default function Register({ passwordRules }: Props) {
     const { t, locale, defaultLocale } = useTranslation();
 
-    setLayoutProps({
-        title: t('auth.register.heading'),
-        description: t('auth.register.subheading'),
-    });
-
     return (
         <>
             <Head title={t('auth.register.title')} />
+
+            <AuthPageHeading
+                title={t('auth.register.heading')}
+                description={t('auth.register.subheading')}
+            />
             <Form
                 {...getLocalizedRegisterForm(locale, defaultLocale)}
                 resetOnSuccess={['password', 'password_confirmation']}
+                onError={(errors) =>
+                    focusFirstError(errors, [
+                        'name',
+                        'email',
+                        'password',
+                        'password_confirmation',
+                    ])
+                }
                 disableWhileProcessing
                 className="flex flex-col gap-6"
             >
@@ -42,10 +52,15 @@ export default function Register({ passwordRules }: Props) {
                                 </Label>
                                 <Input
                                     id="name"
+                                    aria-invalid={
+                                        errors.name ? true : undefined
+                                    }
+                                    aria-describedby={
+                                        errors.name ? 'name-error' : undefined
+                                    }
                                     type="text"
                                     required
                                     autoFocus
-                                    tabIndex={1}
                                     autoComplete="name"
                                     name="name"
                                     placeholder={t(
@@ -53,6 +68,8 @@ export default function Register({ passwordRules }: Props) {
                                     )}
                                 />
                                 <InputError
+                                    id="name-error"
+                                    role="alert"
                                     message={errors.name}
                                     className="mt-2"
                                 />
@@ -64,16 +81,25 @@ export default function Register({ passwordRules }: Props) {
                                 </Label>
                                 <Input
                                     id="email"
+                                    aria-invalid={
+                                        errors.email ? true : undefined
+                                    }
+                                    aria-describedby={
+                                        errors.email ? 'email-error' : undefined
+                                    }
                                     type="email"
                                     required
-                                    tabIndex={2}
                                     autoComplete="email"
                                     name="email"
                                     placeholder={t(
                                         'auth.register.emailPlaceholder',
                                     )}
                                 />
-                                <InputError message={errors.email} />
+                                <InputError
+                                    id="email-error"
+                                    role="alert"
+                                    message={errors.email}
+                                />
                             </div>
 
                             <div className="grid gap-2">
@@ -82,8 +108,15 @@ export default function Register({ passwordRules }: Props) {
                                 </Label>
                                 <PasswordInput
                                     id="password"
+                                    aria-invalid={
+                                        errors.password ? true : undefined
+                                    }
+                                    aria-describedby={
+                                        errors.password
+                                            ? 'password-error'
+                                            : undefined
+                                    }
                                     required
-                                    tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
                                     placeholder={t(
@@ -91,7 +124,11 @@ export default function Register({ passwordRules }: Props) {
                                     )}
                                     passwordrules={passwordRules}
                                 />
-                                <InputError message={errors.password} />
+                                <InputError
+                                    id="password-error"
+                                    role="alert"
+                                    message={errors.password}
+                                />
                             </div>
 
                             <div className="grid gap-2">
@@ -100,8 +137,17 @@ export default function Register({ passwordRules }: Props) {
                                 </Label>
                                 <PasswordInput
                                     id="password_confirmation"
+                                    aria-invalid={
+                                        errors.password_confirmation
+                                            ? true
+                                            : undefined
+                                    }
+                                    aria-describedby={
+                                        errors.password_confirmation
+                                            ? 'password-confirmation-error'
+                                            : undefined
+                                    }
                                     required
-                                    tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"
                                     placeholder={t(
@@ -110,6 +156,8 @@ export default function Register({ passwordRules }: Props) {
                                     passwordrules={passwordRules}
                                 />
                                 <InputError
+                                    id="password-confirmation-error"
+                                    role="alert"
                                     message={errors.password_confirmation}
                                 />
                             </div>
@@ -117,7 +165,6 @@ export default function Register({ passwordRules }: Props) {
                             <Button
                                 type="submit"
                                 className="mt-2 w-full"
-                                tabIndex={5}
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
@@ -132,7 +179,6 @@ export default function Register({ passwordRules }: Props) {
                                     locale,
                                     defaultLocale,
                                 )}
-                                tabIndex={6}
                             >
                                 {t('auth.register.logIn')}
                             </TextLink>

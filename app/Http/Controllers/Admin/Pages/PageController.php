@@ -20,6 +20,7 @@ use App\Http\Requests\Admin\Pages\UpdatePageRequest;
 use App\Models\Page;
 use App\Models\User;
 use App\Repositories\Content\PageRepository;
+use App\Services\Content\ContentPreviewLinks;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class PageController extends Controller
 {
     public function __construct(
         private readonly PageRepository $pages,
+        private readonly ContentPreviewLinks $previewLinks,
         private readonly LocalizationConfig $localization,
     ) {}
 
@@ -101,6 +103,7 @@ class PageController extends Controller
             page: PageFormData::fromPage($page, $this->localization->getPublicLocales()),
             locales: ContentLocalesData::fromConfig($this->localization),
             can: $this->abilities($request, $page),
+            previewUrls: $this->previewLinks->forPage($page, $this->localization->getPublicLocales()),
         ));
     }
 

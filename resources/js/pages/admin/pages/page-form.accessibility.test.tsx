@@ -104,6 +104,7 @@ function blankTranslation(): App.Data.Admin.Pages.PageTranslationFormData {
 function makeEditor(
     can: Partial<App.Data.Admin.Pages.PageAbilitiesData> = {},
     page: Partial<App.Data.Admin.Pages.PageFormData> = {},
+    previewUrls: Record<string, string> = {},
 ): App.Data.Admin.Pages.PageEditorData {
     return {
         page: {
@@ -114,6 +115,7 @@ function makeEditor(
         },
         locales,
         can: { create: true, publish: true, delete: false, ...can },
+        previewUrls,
     };
 }
 
@@ -195,6 +197,68 @@ afterEach(async () => {
 });
 
 describe('PageForm', () => {
+    it('opens the preview of the saved active translation in a new tab', async () => {
+        editorProps = makeEditor(
+            {},
+            {
+                id: 5,
+                updatedAt: '2026-09-01T10:00:00+00:00',
+                translations: {
+                    en: {
+                        ...blankTranslation(),
+                        title: 'About',
+                        slug: 'about',
+                    },
+                    de: blankTranslation(),
+                },
+            },
+            { en: 'http://localhost/admin/pages/5/preview/en?signature=x' },
+        );
+        const container = await render(<AdminPagesEdit />);
+
+        const link =
+            container.querySelector<HTMLAnchorElement>('a[target="_blank"]');
+        expect(link?.getAttribute('href')).toBe(
+            'http://localhost/admin/pages/5/preview/en?signature=x',
+        );
+        expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+        expect(link?.textContent).toContain('admin.pages.preview');
+        expect(link?.textContent).toContain('a11y.opensInNewTab');
+        expect(container.textContent).toContain('admin.pages.previewHint');
+    });
+
+    it('disables the preview of an unsaved language version with an explanation', async () => {
+        editorProps = makeEditor(
+            {},
+            {
+                id: 5,
+                updatedAt: '2026-09-01T10:00:00+00:00',
+                translations: {
+                    en: blankTranslation(),
+                    de: blankTranslation(),
+                },
+            },
+        );
+        const container = await render(<AdminPagesEdit />);
+
+        expect(container.querySelector('a[target="_blank"]')).toBeNull();
+        const button = [...container.querySelectorAll('button')].find(
+            (element) => element.textContent === 'admin.pages.preview',
+        );
+        expect(button?.disabled).toBe(true);
+        expect(container.textContent).toContain(
+            'admin.pages.previewUnavailable',
+        );
+    });
+
+    it('offers no preview link on the create screen', async () => {
+        editorProps = makeEditor();
+        const container = await render(<AdminPagesCreate />);
+
+        expect(container.querySelector('a[target="_blank"]')).toBeNull();
+        expect(container.textContent).not.toContain('admin.pages.preview');
+    });
+
     it('derives the slug from the title until the slug is edited by hand', async () => {
         editorProps = makeEditor();
         const container = await render(<AdminPagesCreate />);

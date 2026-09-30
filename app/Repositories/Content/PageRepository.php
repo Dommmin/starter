@@ -35,6 +35,17 @@ class PageRepository
     }
 
     /**
+     * Find the saved translation of the page in the given locale regardless
+     * of its publication state (signed admin preview only).
+     */
+    public function findForPreview(Page $page, string $locale): ?PageTranslation
+    {
+        return $page->translations()
+            ->where('locale', $locale)
+            ->first();
+    }
+
+    /**
      * Find the translation visitors may see at the given locale and slug,
      * with its sibling translations for language alternates.
      */

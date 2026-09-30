@@ -50,6 +50,18 @@ return [
     'page' => [
         'publishedOn' => 'Published :date',
     ],
+    'preview' => [
+        'titleUnpublished' => 'Preview — not public',
+        'titlePublished' => 'Preview — published version',
+        'state' => [
+            'draft' => 'Status: draft.',
+            'scheduled' => 'Status: scheduled for :date.',
+            'scheduledUndated' => 'Status: scheduled, no publication date set.',
+            'published' => 'Status: published.',
+        ],
+        'savedVersion' => 'You are viewing the last saved version.',
+        'backToEdit' => 'Back to editing',
+    ],
     'articles' => [
         'title' => 'Articles',
         'description' => 'News and articles from our team.',

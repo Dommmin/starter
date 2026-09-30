@@ -12,9 +12,13 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[TypeScript]
 class ArticleEditorData extends Data
 {
+    /**
+     * @param  array<string, string>  $previewUrls  Locale => signed admin preview URL of each saved translation.
+     */
     public function __construct(
         public ArticleFormData $article,
         public ContentLocalesData $locales,
         public ArticleAbilitiesData $can,
+        public array $previewUrls = [],
     ) {}
 }

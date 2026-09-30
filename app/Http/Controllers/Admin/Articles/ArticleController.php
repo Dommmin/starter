@@ -20,6 +20,7 @@ use App\Http\Requests\Admin\Articles\UpdateArticleRequest;
 use App\Models\Article;
 use App\Models\User;
 use App\Repositories\Content\ArticleRepository;
+use App\Services\Content\ContentPreviewLinks;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class ArticleController extends Controller
 {
     public function __construct(
         private readonly ArticleRepository $articles,
+        private readonly ContentPreviewLinks $previewLinks,
         private readonly LocalizationConfig $localization,
     ) {}
 
@@ -101,6 +103,7 @@ class ArticleController extends Controller
             article: ArticleFormData::fromArticle($article, $this->localization->getPublicLocales()),
             locales: ContentLocalesData::fromConfig($this->localization),
             can: $this->abilities($request, $article),
+            previewUrls: $this->previewLinks->forArticle($article, $this->localization->getPublicLocales()),
         ));
     }
 

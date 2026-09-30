@@ -167,6 +167,26 @@ test.describe('articles', () => {
         await fillTranslation(page, article, '2099-12-31');
         await saveNewArticle(page);
 
+        // The signed preview renders the unpublished version in a new tab.
+        const [preview] = await Promise.all([
+            page.waitForEvent('popup'),
+            page
+                .getByRole('link', {
+                    name: 'Preview the English version (opens in a new tab)',
+                })
+                .click(),
+        ]);
+        await expect(
+            preview.getByRole('heading', { name: article.title, level: 1 }),
+        ).toBeVisible();
+        await expect(
+            preview
+                .getByRole('status')
+                .filter({ hasText: 'Preview — not public' }),
+        ).toContainText('Status: scheduled for');
+        await expect(preview.getByText(article.body)).toBeVisible();
+        await preview.close();
+
         await page.goto(
             `/admin/articles?search=${encodeURIComponent(article.slug)}`,
         );

@@ -1,3 +1,4 @@
+import { ContentPreviewBar } from '@/components/content/content-preview-bar';
 import {
     Heading,
     PublicChrome,
@@ -16,6 +17,7 @@ export default function PageShow({
     locale,
     publishedAt,
     alternates,
+    preview,
 }: App.Data.Content.PublicPageData) {
     const { t, formatDate } = useTranslation();
     const canonical = alternates[locale];
@@ -27,6 +29,7 @@ export default function PageShow({
                 description={metaDescription}
                 canonical={canonical}
                 alternates={alternates}
+                robots={preview ? 'noindex,nofollow' : undefined}
                 type="article"
                 publishedAt={publishedAt}
                 jsonLd={{
@@ -43,6 +46,7 @@ export default function PageShow({
             />
 
             <PublicChrome>
+                {preview && <ContentPreviewBar preview={preview} />}
                 <Section spacing="default" container="reading">
                     <Stack gap="default">
                         <Stack gap="tight">

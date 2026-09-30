@@ -36,6 +36,15 @@ class ArticlePolicy
     }
 
     /**
+     * Determine whether the user can preview saved, also unpublished,
+     * translations of the article (same access as editing).
+     */
+    public function preview(User $user, Article $article): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
      * Determine whether the user can make a translation visible to visitors.
      */
     public function publish(User $user): bool

@@ -399,11 +399,13 @@ class InitProjectCommand extends Command
             $edited = count(array_filter($records, fn (Model $record): bool => $provider->isModifiedSinceSeed($record)));
             $deletable = count($records) - $edited;
 
+            $verb = $provider->resetsInsteadOfDeleting() ? 'reset' : 'delete';
+
             $rows[] = [
                 'demo '.$provider->label(),
                 sprintf('%d seeded, %d edited', count($records), $edited),
-                $deletable > 0 ? 'remove unedited sample '.$provider->label() : 'none',
-                $deletable > 0 ? 'delete '.$deletable : self::SKIP,
+                $deletable > 0 ? ($provider->resetsInsteadOfDeleting() ? 'reset unedited sample ' : 'remove unedited sample ').$provider->label() : 'none',
+                $deletable > 0 ? $verb.' '.$deletable : self::SKIP,
             ];
         }
 
@@ -437,7 +439,7 @@ class InitProjectCommand extends Command
                 $deleted++;
             }
 
-            $this->line(sprintf('Demo %s: %d removed.', $provider->label(), $deleted));
+            $this->line(sprintf('Demo %s: %d %s.', $provider->label(), $deleted, $provider->resetsInsteadOfDeleting() ? 'reset to placeholders and hidden' : 'removed'));
         }
 
         $user = $demo['user'];

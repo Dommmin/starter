@@ -36,7 +36,13 @@ interface DemoContentProvider
     public function describe(Model $record): string;
 
     /**
-     * Delete the record through its audited domain action.
+     * Whether {@see self::delete()} resets the record to neutral content
+     * instead of deleting it (e.g. home sections, one per type and locale).
+     */
+    public function resetsInsteadOfDeleting(): bool;
+
+    /**
+     * Delete (or reset, see above) the record through its audited domain action.
      */
     public function delete(Model $record, User $actor): void;
 }

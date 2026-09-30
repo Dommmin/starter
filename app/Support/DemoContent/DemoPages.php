@@ -25,6 +25,11 @@ class DemoPages implements DemoContentProvider
         return 'pages';
     }
 
+    public function resetsInsteadOfDeleting(): bool
+    {
+        return false;
+    }
+
     public function records(): array
     {
         return $this->matchingRecords(Page::query(), DemoContent::PAGES);

@@ -1,10 +1,17 @@
 <?php
 
+use App\Actions\Home\EnsureHomeSections;
 use App\Contracts\Settings\UpdatesSiteName;
+use App\Data\Home\HeroContentData;
 use App\Enums\AuditAction;
+use App\Enums\HomeSectionType;
+use App\Enums\MenuItemType;
+use App\Enums\MenuLocation;
 use App\Enums\UserRole;
 use App\Models\Article;
 use App\Models\AuditLog;
+use App\Models\HomeSection;
+use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\SiteSetting;
@@ -13,6 +20,8 @@ use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\ArticleSeeder;
 use Database\Seeders\DemoContent;
+use Database\Seeders\HomeSectionSeeder;
+use Database\Seeders\NavigationMenuSeeder;
 use Database\Seeders\PageSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
@@ -389,4 +398,76 @@ test('a user page that shares one sample slug is kept', function () {
     runInit(['--remove-demo' => true]);
 
     expect(Page::query()->whereKey($page->id)->exists())->toBeTrue();
+});
+
+test('sample menu items are removed through the audited menu action', function () {
+    seedDemo();
+    test()->seed(NavigationMenuSeeder::class);
+    $seeded = MenuItem::query()->count();
+
+    [$exitCode, $output] = runInit(['--remove-demo' => true]);
+
+    expect($seeded)->toBeGreaterThan(0)
+        ->and($exitCode)->toBe(0)
+        ->and($output)->toContain(sprintf('Demo menu items: %d removed.', $seeded))
+        ->and(MenuItem::query()->count())->toBe(0)
+        ->and(AuditLog::query()->where('action', AuditAction::NavigationItemDeleted)->count())->toBe($seeded)
+        ->and(Page::query()->count())->toBe(0);
+});
+
+test('an edited or added menu item is kept', function () {
+    test()->seed(NavigationMenuSeeder::class);
+    $edited = MenuItem::query()->where('locale', 'en')->where('type', MenuItemType::ArticleIndex)->sole();
+    $this->travel(1)->minutes();
+    $edited->update(['label' => 'Our news']);
+    $own = MenuItem::factory()->create(['location' => MenuLocation::Header, 'locale' => 'en', 'position' => 3]);
+
+    [$exitCode, $output] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('was edited after seeding — kept')
+        ->and(MenuItem::query()->pluck('id')->sort()->values()->all())->toBe(collect([$edited->id, $own->id])->sort()->values()->all());
+});
+
+test('sample home sections are reset to hidden placeholders, edited ones are kept', function () {
+    test()->seed(HomeSectionSeeder::class);
+    $total = HomeSection::query()->count();
+    $edited = HomeSection::query()->where('locale', 'en')->where('type', HomeSectionType::Hero)->sole();
+    $this->travel(1)->minutes();
+    $edited->update(['content' => new HeroContentData(title: 'Our own hero')]);
+
+    [$exitCode, $output] = runInit(['--remove-demo' => true]);
+
+    $sections = HomeSection::query()->get();
+    $reset = $sections->reject(fn (HomeSection $section): bool => $section->is($edited));
+
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('reset to placeholders and hidden')->toContain('"en/hero" was edited after seeding — kept')
+        ->and($sections)->toHaveCount($total)
+        ->and($edited->refresh()->enabled)->toBeTrue()
+        ->and($edited->content->toArray())->toBe((new HeroContentData(title: 'Our own hero'))->toArray())
+        ->and($reset->every(fn (HomeSection $section): bool => ! $section->enabled
+            && $section->content->toArray() === EnsureHomeSections::placeholder($section->type, $section->locale)->toArray()))->toBeTrue()
+        ->and(AuditLog::query()->where('action', AuditAction::HomeSectionToggled)->exists())->toBeTrue()
+        ->and(AuditLog::query()->where('action', AuditAction::HomeSectionUpdated)->exists())->toBeTrue();
+
+    [, $secondOutput] = runInit(['--remove-demo' => true]);
+
+    expect($secondOutput)->not->toContain('reset unedited');
+});
+
+test('a dry run leaves sample menus and home sections untouched', function () {
+    seedDemo();
+    test()->seed([NavigationMenuSeeder::class, HomeSectionSeeder::class]);
+    $menu = MenuItem::query()->orderBy('id')->get()->toArray();
+    $sections = HomeSection::query()->orderBy('id')->get()->toArray();
+    $audit = AuditLog::query()->count();
+
+    [$exitCode, $output] = runInit(['--dry-run' => true, '--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('remove unedited sample menu items')->toContain('reset unedited sample home sections')
+        ->and(MenuItem::query()->orderBy('id')->get()->toArray())->toBe($menu)
+        ->and(HomeSection::query()->orderBy('id')->get()->toArray())->toBe($sections)
+        ->and(AuditLog::query()->count())->toBe($audit);
 });

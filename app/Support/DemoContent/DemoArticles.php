@@ -25,6 +25,11 @@ class DemoArticles implements DemoContentProvider
         return 'articles';
     }
 
+    public function resetsInsteadOfDeleting(): bool
+    {
+        return false;
+    }
+
     public function records(): array
     {
         return $this->matchingRecords(Article::query(), DemoContent::ARTICLES);

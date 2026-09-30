@@ -275,8 +275,13 @@ function DataTableGrid<Row>({
             column.priority === 'secondary' && 'min-w-32 wrap-anywhere',
         );
 
+    /**
+     * `w-full`: a size container has no intrinsic width, so without it the
+     * table collapses to its border inside a shrink-to-fit parent (e.g. a
+     * `Stack align="start"`).
+     */
     return (
-        <div className="border-border-subtle @container overflow-x-auto rounded-lg border">
+        <div className="border-border-subtle @container w-full overflow-x-auto rounded-lg border">
             <table className="w-full text-left text-sm" aria-busy={isLoading}>
                 <caption className="sr-only">{caption}</caption>
                 <thead className="bg-surface-subtle">

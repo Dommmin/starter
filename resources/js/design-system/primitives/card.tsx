@@ -44,7 +44,7 @@ export type CardTitleProps = {
 
 export function CardTitle({ children, id }: CardTitleProps) {
     return (
-        <h3 id={id} className="leading-none font-semibold">
+        <h3 id={id} className="leading-tight font-semibold">
             {children}
         </h3>
     );

@@ -70,7 +70,7 @@ export function ActionMenu({
                                     pendingAction.current = item.onSelect;
                                 }}
                                 className={cn(
-                                    'focus:bg-surface-subtle relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none',
+                                    'focus:bg-surface-subtle focus-visible:ring-ring relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-inset',
                                     'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                                     item.tone === 'destructive' &&
                                         'text-destructive focus:text-destructive',

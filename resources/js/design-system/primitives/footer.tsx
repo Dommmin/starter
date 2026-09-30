@@ -33,6 +33,8 @@ export type FooterProps = {
     social?: FooterSocialLink[];
     /** Optional logo image passed to `BrandLogo`; the text logo otherwise. */
     logo?: BrandLogoImage;
+    /** One-tone text logo name; the catalog brand otherwise. */
+    brandName?: string;
     /** Translated copyright line, e.g. "© 2026 Acme. All rights reserved." */
     copyright: string;
     /** Rendered after the copyright line, e.g. a LocaleSwitcher. */
@@ -70,6 +72,7 @@ export function Footer({
     contact,
     social = [],
     logo,
+    brandName,
     copyright,
     trailing,
 }: FooterProps) {
@@ -158,7 +161,7 @@ export function Footer({
                         </div>
                     )}
                     <div className="border-border-subtle flex flex-col items-start justify-between gap-4 border-t pt-6 sm:flex-row sm:items-center">
-                        <BrandLogo image={logo} />
+                        <BrandLogo image={logo} name={brandName} />
                         <Text variant="caption" tone="muted">
                             {copyright}
                         </Text>

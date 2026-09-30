@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\MediaAsset;
+use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
@@ -63,6 +65,22 @@ class AppServiceProvider extends ServiceProvider
                 session()->forget('admin_locale');
             }
         });
+
+        $this->forgetSiteSettingsWhenMediaChanges();
+    }
+
+    /**
+     * The cached site settings embed resolved logo and og:image URLs, so a
+     * deleted, rescanned or re-rendered asset must rebuild them.
+     */
+    protected function forgetSiteSettingsWhenMediaChanges(): void
+    {
+        $forget = function (): void {
+            DB::afterCommit(fn () => app(SiteSettingsRepository::class)->forget());
+        };
+
+        MediaAsset::updated($forget);
+        MediaAsset::deleted($forget);
     }
 
     /**

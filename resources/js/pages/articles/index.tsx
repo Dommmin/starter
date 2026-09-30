@@ -43,11 +43,7 @@ export default function ArticlesIndex({
                 }}
             />
 
-            <PublicChrome
-                footer={{
-                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
-                }}
-            >
+            <PublicChrome>
                 <Section spacing="default" container="wide">
                     <Stack gap="relaxed">
                         <Stack gap="tight">

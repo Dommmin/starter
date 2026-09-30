@@ -14,6 +14,8 @@ vi.mock('@inertiajs/react', () => ({
                 siteName: 'Starter',
                 canonical: 'https://example.test/current',
                 defaultImage: 'https://example.test/og.png',
+                defaultTitle: 'Starter — software house',
+                defaultDescription: 'Default site description',
                 organization: {
                     name: 'Starter',
                     url: 'https://example.test',
@@ -100,12 +102,35 @@ describe('Seo', () => {
         expect(html).toContain('name="robots" content="index,follow"');
     });
 
-    it('falls back to the shared canonical URL', () => {
+    it('falls back to the shared canonical URL and default description', () => {
         const { html } = renderHead(<Seo title="Home" />);
 
         expect(html).toContain(
             'rel="canonical" href="https://example.test/current"',
         );
+        expect(html).toContain(
+            'name="description" content="Default site description"',
+        );
+    });
+
+    it('uses the default title and sharing image of the site settings', () => {
+        const { html, title } = renderHead(<Seo />);
+
+        expect(title).toBe('Starter — software house');
+        expect(html).toContain(
+            'property="og:title" content="Starter — software house"',
+        );
+        expect(html).toContain(
+            'property="og:image" content="https://example.test/og.png"',
+        );
+        expect(html).toContain(
+            'name="twitter:card" content="summary_large_image"',
+        );
+    });
+
+    it('omits the description when a page explicitly has none', () => {
+        const { html } = renderHead(<Seo title="Page" description={null} />);
+
         expect(html).not.toContain('name="description"');
     });
 

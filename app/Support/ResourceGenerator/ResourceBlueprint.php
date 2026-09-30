@@ -21,7 +21,7 @@ final readonly class ResourceBlueprint
         'seo', 'setting', 'settings', 'sitemap', 'user', 'content',
         'article', 'articletranslation', 'articleslugredirect', 'pageslugredirect', 'auditlog',
         'contactmessage', 'faq', 'menu', 'menuitem', 'menuitems', 'navigation', 'homesection',
-        'homesections', 'sitesetting', 'sitesettings',
+        'homesections', 'sitesetting', 'sitesettings', 'sitesettingtranslation',
         // PHP and JavaScript keywords that become class, variable or import names.
         'abstract', 'and', 'array', 'as', 'async', 'await', 'bool', 'break', 'callable', 'case', 'catch',
         'class', 'clone', 'const', 'continue', 'debugger', 'declare', 'default', 'delete', 'do', 'echo',

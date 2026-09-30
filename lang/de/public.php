@@ -2,8 +2,6 @@
 
 return [
     'landing' => [
-        'metaTitle' => 'Punkt Startowy — Moderne Webanwendungsplattform',
-        'metaDescription' => 'Punkt Startowy ist eine durchdachte Basis für moderne Webanwendungen.',
         'badge' => 'Skalierbare Architektur',
         'heroTitle' => 'Solides Fundament für moderne digitale Produkte',
         'heroDescription' => 'Umfassender Starter, der Laravel 13, React 19, Inertia v3 und ein striktes Designsystem kombiniert.',
@@ -36,7 +34,6 @@ return [
         'stackValue' => 'Laravel 13 + React 19',
         'ctaBottomTitle' => 'Bereit, Ihrem Projekt den richtigen Rhythmus zu geben?',
         'ctaBottomDescription' => 'Erleben Sie die nahtlose Zusammenarbeit zwischen öffentlicher Website und Administrationsmodul.',
-        'footerCopy' => 'Punkt Startowy. Webanwendungsfundament.',
     ],
     'page' => [
         'publishedOn' => 'Veröffentlicht am :date',
@@ -73,5 +70,9 @@ return [
             'invalidCharacters' => 'Dieses Feld enthält unzulässige Zeichen.',
             'formExpired' => 'Das Formular ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut.',
         ],
+    ],
+    'site' => [
+        'defaultTitle' => 'Punkt Startowy — Moderne Webanwendungsplattform',
+        'defaultDescription' => 'Punkt Startowy ist eine durchdachte Basis für moderne Webanwendungen.',
     ],
 ];

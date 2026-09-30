@@ -31,6 +31,8 @@ export type PublicHeaderProps = {
     navItems?: NavItem[];
     /** Optional image logo; the text logo otherwise. */
     logo?: BrandLogoImage;
+    /** One-tone text logo name; the catalog brand otherwise. */
+    brandName?: string;
     className?: never;
     style?: never;
 };
@@ -109,7 +111,11 @@ function DesktopSubmenu({ item }: { item: NavItem }) {
     );
 }
 
-export function PublicHeader({ navItems = [], logo }: PublicHeaderProps) {
+export function PublicHeader({
+    navItems = [],
+    logo,
+    brandName,
+}: PublicHeaderProps) {
     const { t, locale, defaultLocale } = useTranslation();
     const page = usePage();
     const { auth } = page.props;
@@ -174,7 +180,7 @@ export function PublicHeader({ navItems = [], logo }: PublicHeaderProps) {
     );
 
     return (
-        <HeaderUtility logo={logo}>
+        <HeaderUtility logo={logo} brandName={brandName}>
             {navItems.length > 0 && (
                 <ul className="hidden items-center gap-4 md:flex">
                     {navItems.map((item) => (

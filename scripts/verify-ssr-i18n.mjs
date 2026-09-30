@@ -16,7 +16,29 @@ async function runSsrVerification() {
         siteName: 'Starter',
         canonical: 'http://localhost/',
         defaultImage: null,
+        defaultTitle: 'Starter — domyślny tytuł',
+        defaultDescription: 'Domyślny opis strony z ustawień',
         organization: { name: 'Starter', url: 'http://localhost', logo: null },
+    };
+
+    const site = {
+        name: 'Nazwa z panelu',
+        isCustomized: true,
+        logo: null,
+        tagline: null,
+        footerText: 'Stopka z ustawień',
+        contact: {
+            email: 'kontakt@example.test',
+            phone: null,
+            address: null,
+        },
+        social: [
+            {
+                network: 'github',
+                label: 'GitHub',
+                url: 'https://github.com/example',
+            },
+        ],
     };
 
     const makePage = (locale, heroTitle) => ({
@@ -25,6 +47,7 @@ async function runSsrVerification() {
             name: 'Starter',
             auth: { user: null },
             seo,
+            site,
             contactForm: { token: 'ssr-fixture-token' },
             i18n: {
                 area: 'public',
@@ -69,8 +92,6 @@ async function runSsrVerification() {
                     },
                     landing: {
                         heroTitle,
-                        metaTitle: 'Meta title',
-                        metaDescription: 'Meta description',
                         badge: 'Badge',
                         heroDescription: 'Hero description',
                         ctaPrimaryGuest: 'Start',
@@ -100,7 +121,6 @@ async function runSsrVerification() {
                         stackValue: 'Stack value',
                         ctaBottomTitle: 'Bottom title',
                         ctaBottomDescription: 'Bottom description',
-                        footerCopy: 'Footer',
                     },
                 },
             },
@@ -119,6 +139,23 @@ async function runSsrVerification() {
         !en1.body.includes('landing.heroTitle') &&
             !en1.body.includes('brand.name'),
         'SSR EN nie może przeciekać surowych kluczy i18n zamiast tłumaczeń',
+    );
+    const en1Head = en1.head.join('\n');
+    assert.ok(
+        /<title[^>]*>Starter — domyślny tytuł - Nazwa z panelu<\/title>/.test(
+            en1Head,
+        ) &&
+            en1Head.includes(
+                'name="description" content="Domyślny opis strony z ustawień"',
+            ),
+        'SSR strony głównej musi zawierać tytuł (z sufiksem nazwy z panelu) i opis z ustawień strony',
+    );
+    assert.ok(
+        en1.body.includes('Stopka z ustawień') &&
+            en1.body.includes('>Nazwa z panelu</span>') &&
+            en1.body.includes('kontakt@example.test') &&
+            en1.body.includes('https://github.com/example'),
+        'SSR nagłówka i stopki musi zawierać nazwę, tekst, kontakt i social z ustawień strony',
     );
     assert.ok(
         en1.body.includes('English'),
@@ -217,7 +254,7 @@ async function runSsrVerification() {
     const head = contentPage.head.join('\n');
 
     assert.ok(
-        /<title[^>]*>O nas &amp; zespół/.test(head),
+        /<title[^>]*>O nas &amp; zespół - Nazwa z panelu<\/title>/.test(head),
         'SSR strony treści musi zawierać <title> z escapowanym tytułem',
     );
     assert.ok(

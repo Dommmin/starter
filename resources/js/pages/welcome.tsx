@@ -51,8 +51,6 @@ export default function Welcome() {
     return (
         <>
             <Seo
-                title={t('landing.metaTitle')}
-                description={t('landing.metaDescription')}
                 canonical={canonicalUrl}
                 alternates={alternateUrls}
                 jsonLd={[
@@ -71,7 +69,9 @@ export default function Welcome() {
                         name: seo.siteName,
                         url: canonicalUrl ?? seo.canonical,
                         inLanguage: locale,
-                        description: t('landing.metaDescription'),
+                        ...(seo.defaultDescription
+                            ? { description: seo.defaultDescription }
+                            : {}),
                     },
                 ]}
             />
@@ -94,9 +94,6 @@ export default function Welcome() {
                         ).url,
                     },
                 ]}
-                footer={{
-                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
-                }}
             >
                 <Hero
                     eyebrow={t('landing.badge')}

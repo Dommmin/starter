@@ -52,11 +52,7 @@ export default function ArticleShow({
                 }}
             />
 
-            <PublicChrome
-                footer={{
-                    copyright: `© ${new Date().getFullYear()} ${t('landing.footerCopy')}`,
-                }}
-            >
+            <PublicChrome>
                 <Section spacing="default" container="reading">
                     <article>
                         <Stack gap="default">

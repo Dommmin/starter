@@ -16,6 +16,7 @@ declare module '@inertiajs/core' {
             locale: string;
             i18n: I18nPayload;
             seo: App.Data.Seo.SeoDefaultsData;
+            site: App.Data.Settings.SiteSettingsData;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

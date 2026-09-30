@@ -53,6 +53,13 @@ export default function Admin{{ Plural }}Index() {
                     title: t('admin.{{ camelPlural }}.title'),
 {{ headerDescriptionAndActions }}
                 }}
+                emptyAction={
+                    can.create ? (
+                        <Button href={create()}>
+                            {t('admin.{{ camelPlural }}.create')}
+                        </Button>
+                    ) : undefined
+                }
                 rows={items}
                 rowKey={(row) => row.id}
                 pagination={pagination}

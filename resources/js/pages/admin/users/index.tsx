@@ -85,6 +85,13 @@ export default function AdminUsersIndex() {
                         </Button>
                     ) : undefined,
                 }}
+                emptyAction={
+                    can.create ? (
+                        <Button href={usersCreate()}>
+                            {t('admin.users.create')}
+                        </Button>
+                    ) : undefined
+                }
                 rows={items}
                 rowKey={(row) => row.id}
                 pagination={pagination}

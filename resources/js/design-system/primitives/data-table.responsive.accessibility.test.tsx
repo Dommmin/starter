@@ -1,8 +1,12 @@
-import { act, type ReactNode } from 'react';
+import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ActionMenu } from './action-menu';
-import { DataTable, type DataTableColumn } from './data-table';
+import {
+    DataTable,
+    type DataTableColumn,
+    type DataTableSort,
+} from './data-table';
 import { ResourceTable } from './resource-table';
 
 const getMock = vi.fn();
@@ -208,6 +212,180 @@ describe('DataTable card layout', () => {
                 (cell) => cell.textContent,
             ),
         ).toEqual(['Title', 'Status', 'Email', 'Locales', '']);
+    });
+});
+
+describe('DataTable sort select in the table layout', () => {
+    const sortLabels = {
+        label: 'Sort by',
+        option: (column: string, direction: string) =>
+            `${column} (${direction})`,
+    };
+
+    function sortableColumns(): DataTableColumn<Row>[] {
+        return prioritizedColumns().map((column) =>
+            column.key === 'title' || column.key === 'locales'
+                ? { ...column, sortable: true }
+                : column,
+        );
+    }
+
+    function sortSelect(container: HTMLElement) {
+        return Array.from(
+            container.querySelectorAll<HTMLButtonElement>(
+                'button[role="combobox"]',
+            ),
+        ).find((button) => {
+            const labelId = button.getAttribute('aria-labelledby') ?? '';
+
+            return document.getElementById(labelId)?.textContent === 'Sort by';
+        });
+    }
+
+    it('offers the sort select while sorted by an optional column and changes the sort', async () => {
+        setViewport(false);
+        const onSortChange = vi.fn();
+        const container = await render(
+            <DataTable<Row>
+                caption="Articles"
+                columns={sortableColumns()}
+                rows={rows}
+                rowKey={(row) => row.id}
+                sort={{ key: 'locales', direction: 'desc' }}
+                onSortChange={onSortChange}
+                sortLabels={sortLabels}
+                emptyState="Empty"
+            />,
+        );
+
+        expect(container.querySelector('table')).not.toBeNull();
+        const trigger = sortSelect(container);
+        expect(trigger?.textContent).toContain('Locales (desc)');
+
+        await act(async () => {
+            trigger?.focus();
+            trigger?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+        const titleAscending = Array.from(
+            document.querySelectorAll<HTMLElement>('[role="option"]'),
+        ).find((option) => option.textContent === 'Title (asc)');
+        expect(titleAscending).toBeDefined();
+
+        await act(async () => {
+            titleAscending?.focus();
+            titleAscending?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+
+        expect(onSortChange).toHaveBeenCalledWith('title', 'asc');
+    });
+
+    /** Applies the sort asynchronously, like an Inertia visit with `preserveState`. */
+    function AsyncSortTable({ columns }: { columns: DataTableColumn<Row>[] }) {
+        const [sort, setSort] = useState<DataTableSort>({
+            key: 'locales',
+            direction: 'desc',
+        });
+
+        return (
+            <DataTable<Row>
+                caption="Articles"
+                columns={columns}
+                rows={rows}
+                rowKey={(row) => row.id}
+                sort={sort}
+                onSortChange={(key, direction) => {
+                    setTimeout(() =>
+                        setSort({ key, direction: direction ?? 'asc' }),
+                    );
+                }}
+                sortLabels={sortLabels}
+                emptyState="Empty"
+            />
+        );
+    }
+
+    async function chooseSortOption(container: HTMLElement, label: string) {
+        const trigger = sortSelect(container);
+
+        await act(async () => {
+            trigger?.focus();
+            trigger?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+        const option = Array.from(
+            document.querySelectorAll<HTMLElement>('[role="option"]'),
+        ).find((candidate) => candidate.textContent === label);
+
+        await act(async () => {
+            option?.focus();
+            option?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve));
+        });
+    }
+
+    it('moves focus to the header sort button when the chosen column is visible', async () => {
+        setViewport(false);
+        const container = await render(
+            <AsyncSortTable columns={sortableColumns()} />,
+        );
+
+        await chooseSortOption(container, 'Title (asc)');
+
+        expect(sortSelect(container)).toBeUndefined();
+        const titleHeader = container.querySelector(
+            'th[aria-sort="ascending"]',
+        );
+        expect(titleHeader?.textContent).toBe('Title');
+        expect(document.activeElement).toBe(
+            titleHeader?.querySelector('button'),
+        );
+    });
+
+    it('keeps focus on the sort select when the chosen column is optional too', async () => {
+        setViewport(false);
+        const container = await render(
+            <AsyncSortTable
+                columns={sortableColumns().map((column) =>
+                    column.key === 'email'
+                        ? { ...column, priority: 'optional', sortable: true }
+                        : column,
+                )}
+            />,
+        );
+
+        await chooseSortOption(container, 'Email (asc)');
+
+        const trigger = sortSelect(container);
+        expect(trigger?.textContent).toContain('Email (asc)');
+        expect(document.activeElement).toBe(trigger);
+    });
+
+    it('keeps the table without a sort select while sorted by an always visible column', async () => {
+        setViewport(false);
+        const container = await render(
+            <DataTable<Row>
+                caption="Articles"
+                columns={sortableColumns()}
+                rows={rows}
+                rowKey={(row) => row.id}
+                sort={{ key: 'title', direction: 'asc' }}
+                onSortChange={vi.fn()}
+                sortLabels={sortLabels}
+                emptyState="Empty"
+            />,
+        );
+
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(sortSelect(container)).toBeUndefined();
     });
 });
 

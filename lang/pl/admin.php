@@ -1354,6 +1354,8 @@ return [
             'sortDetail' => 'nagłówki i menu wiersza działają lokalnie',
             'narrowDetail' => 'kolumny optional ukryte, gdy kontener < 42rem; karty zależą od viewportu < 768 px',
             'withoutPriorityDetail' => 'przewijanie poziome we własnym kontenerze',
+            'sortHiddenDetail' => 'sort po ukrytej kolumnie optional: nad tabelą pojawia się select sortowania',
+            'emptyActionDetail' => 'CTA przez emptyAction, bez PageHeader; ukryte przy pustym wyniku filtra',
             'resourceTitle' => 'Artykuły',
             'resourceDescription' => 'Lista z wyszukiwaniem, filtrem, sortowaniem i stronicowaniem w URL.',
             'resourceDetail' => 'zmiana = wizyta Inertia (stan w URL); ładowanie i błąd pochodzą z wizyty, pełny przepływ: /admin/users',

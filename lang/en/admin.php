@@ -1354,6 +1354,8 @@ return [
             'sortDetail' => 'headers and row menu work locally',
             'narrowDetail' => 'optional columns hidden while the container is < 42rem; cards depend on the viewport < 768 px',
             'withoutPriorityDetail' => 'horizontal scroll inside its own container',
+            'sortHiddenDetail' => 'sorted by a hidden optional column: the sort select appears above the table',
+            'emptyActionDetail' => 'CTA through emptyAction, without PageHeader; hidden for an empty filter result',
             'resourceTitle' => 'Articles',
             'resourceDescription' => 'List with search, filter, sorting and pagination in the URL.',
             'resourceDetail' => 'a change is an Inertia visit (state in the URL); loading and error come from the visit, full flow: /admin/users',

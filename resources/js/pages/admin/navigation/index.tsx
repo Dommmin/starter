@@ -137,6 +137,19 @@ export default function AdminNavigationIndex() {
                             icon={ListTree}
                             title={t('admin.navigation.emptyTitle')}
                             description={t('admin.navigation.emptyDescription')}
+                            action={
+                                can.create ? (
+                                    <Button
+                                        variant="primary"
+                                        href={create({ query: menuQuery })}
+                                    >
+                                        <Plus aria-hidden="true" />
+                                        <span>
+                                            {t('admin.navigation.create')}
+                                        </span>
+                                    </Button>
+                                ) : undefined
+                            }
                         />
                     }
                     columns={[

@@ -69,6 +69,13 @@ export default function AdminPagesIndex() {
                         </Button>
                     ) : undefined,
                 }}
+                emptyAction={
+                    can.create ? (
+                        <Button href={pagesCreate()}>
+                            {t('admin.pages.create')}
+                        </Button>
+                    ) : undefined
+                }
                 rows={items}
                 rowKey={(row) => row.id}
                 pagination={pagination}

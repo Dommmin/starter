@@ -9,7 +9,7 @@ make setup
 make doctor
 ```
 
-`setup` tworzy `.env` tylko przy jego braku, buduje obraz, instaluje `composer.lock` i `package-lock.json`, generuje brakujący APP_KEY, wykonuje migracje i uruchamia cały stack. Kolejne wykonanie zachowuje klucz i dane. Pierwsze pobranie obrazów wymaga internetu i może potrwać kilka minut. Setup nie tworzy użytkowników ani nie importuje starego SQLite.
+`setup` tworzy `.env` tylko przy jego braku, buduje obraz, instaluje `composer.lock` i `package-lock.json`, generuje brakujący APP_KEY, wykonuje migracje, wgrywa idempotentne dane demo (`db:seed`: konto `test@example.com` / `password`, konta, media, strony, artykuły, FAQ, wiadomości, menu, sekcje strony głównej) i uruchamia cały stack. Kolejne wykonanie zachowuje klucz i dane, nie duplikując demo. Pierwsze pobranie obrazów wymaga internetu i może potrwać kilka minut. Setup nie importuje starego SQLite.
 
 Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:5173`, skrzynka Mailpit `http://localhost:8025`. Używaj `localhost`, aby origin HMR i cookies były spójne. Lokalny HTTP na localhost obsługuje secure-context APIs przeglądarki; certyfikaty i domeny Herda nie są potrzebne.
 
@@ -28,6 +28,8 @@ make init-project ARGS='--name="Acme" --locales=pl,en --default-locale=pl --admi
 | ---------------------------------------- | --------------------------------------------------------------- |
 | `make help`                              | Wszystkie dostępne komendy                                      |
 | `make up`                                | Start usług, oczekiwanie na healthchecki                        |
+| `make seed`                              | Dane demo ponownie (idempotentnie, tylko `APP_ENV=local`)       |
+| `make fresh`                             | `migrate:fresh --seed` po potwierdzeniu `[y/N]` (`CONFIRM=1` pomija): kasuje lokalną bazę i wgrywa demo |
 | `make stop` / `make down`                | Zatrzymanie / usunięcie kontenerów; dane zostają                |
 | `make restart`                           | Odtworzenie usług po zmianie env lub kodu workera               |
 | `make ps`                                | Status, także zakończone procesy                                |

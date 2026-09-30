@@ -1,5 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { router, useForm } from '@inertiajs/react';
+import { ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
     Alert,
@@ -10,6 +11,7 @@ import {
     ResourceForm,
     Stack,
     Tabs,
+    Text,
     type RichTextDocument,
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
@@ -116,6 +118,10 @@ export function PageForm({ editor }: PageFormProps) {
     });
 
     const [activeLocale, setActiveLocale] = useState(locales.default);
+    const previewUrl: string | undefined = editor.previewUrls[activeLocale];
+    const activeLanguage =
+        locales.available.find((locale) => locale.code === activeLocale)
+            ?.native ?? activeLocale;
     const [manualSlugs, setManualSlugs] = useState<Record<string, boolean>>(
         () =>
             Object.fromEntries(
@@ -338,16 +344,49 @@ export function PageForm({ editor }: PageFormProps) {
                 }
                 description={t('admin.pages.description')}
                 actions={
-                    pageId !== null && can.delete ? (
-                        <Button
-                            variant="destructive"
-                            onClick={() => setIsDeleteOpen(true)}
-                        >
-                            {t('admin.pages.delete')}
-                        </Button>
+                    pageId !== null ? (
+                        <>
+                            {previewUrl ? (
+                                <Button
+                                    variant="outline"
+                                    href={previewUrl}
+                                    external
+                                >
+                                    <ExternalLink aria-hidden="true" />
+                                    {t('admin.pages.preview', {
+                                        language: activeLanguage,
+                                    })}
+                                </Button>
+                            ) : (
+                                <Button variant="outline" disabled>
+                                    <ExternalLink aria-hidden="true" />
+                                    {t('admin.pages.preview', {
+                                        language: activeLanguage,
+                                    })}
+                                </Button>
+                            )}
+                            {can.delete && (
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setIsDeleteOpen(true)}
+                                >
+                                    {t('admin.pages.delete')}
+                                </Button>
+                            )}
+                        </>
                     ) : undefined
                 }
             />
+
+            {pageId !== null && (
+                <Text variant="caption" tone="muted">
+                    {!previewUrl
+                        ? t('admin.pages.previewUnavailable')
+                        : form.isDirty
+                          ? t('admin.pages.previewUnsaved')
+                          : t('admin.pages.previewHint')}
+                </Text>
+            )}
 
             {generalErrors.length > 0 && (
                 <Alert

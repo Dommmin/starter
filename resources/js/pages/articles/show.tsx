@@ -1,3 +1,4 @@
+import { ContentPreviewBar } from '@/components/content/content-preview-bar';
 import {
     Heading,
     Image,
@@ -23,6 +24,7 @@ export default function ArticleShow({
     coverAlt,
     listUrl,
     alternates,
+    preview,
 }: App.Data.Content.PublicArticleData) {
     const { t, formatDate } = useTranslation();
     const canonical = alternates[locale];
@@ -34,6 +36,7 @@ export default function ArticleShow({
                 description={metaDescription}
                 canonical={canonical}
                 alternates={alternates}
+                robots={preview ? 'noindex,nofollow' : undefined}
                 image={cover?.src}
                 type="article"
                 publishedAt={publishedAt}
@@ -53,6 +56,7 @@ export default function ArticleShow({
             />
 
             <PublicChrome>
+                {preview && <ContentPreviewBar preview={preview} />}
                 <Section spacing="default" container="reading">
                     <article>
                         <Stack gap="default">

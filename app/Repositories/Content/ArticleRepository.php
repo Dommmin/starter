@@ -74,6 +74,19 @@ class ArticleRepository
     }
 
     /**
+     * Find the saved translation of the article in the given locale, with
+     * its cover, regardless of its publication state or date (signed admin
+     * preview only).
+     */
+    public function findForPreview(Article $article, string $locale): ?ArticleTranslation
+    {
+        return $article->translations()
+            ->where('locale', $locale)
+            ->with('article.cover')
+            ->first();
+    }
+
+    /**
      * Find the translation visitors may see at the given locale and slug,
      * with its cover and sibling translations for language alternates.
      */

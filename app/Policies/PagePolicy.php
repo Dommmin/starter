@@ -36,6 +36,15 @@ class PagePolicy
     }
 
     /**
+     * Determine whether the user can preview saved, also unpublished,
+     * translations of the page (same access as editing).
+     */
+    public function preview(User $user, Page $page): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
      * Determine whether the user can make a translation visible to visitors.
      */
     public function publish(User $user): bool

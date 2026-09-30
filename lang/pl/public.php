@@ -50,6 +50,18 @@ return [
     'page' => [
         'publishedOn' => 'Opublikowano :date',
     ],
+    'preview' => [
+        'titleUnpublished' => 'Podgląd — niepublikowane',
+        'titlePublished' => 'Podgląd — wersja opublikowana',
+        'state' => [
+            'draft' => 'Status: szkic.',
+            'scheduled' => 'Status: zaplanowane na :date.',
+            'scheduledUndated' => 'Status: zaplanowane, bez daty publikacji.',
+            'published' => 'Status: opublikowane.',
+        ],
+        'savedVersion' => 'Widzisz ostatnio zapisaną wersję.',
+        'backToEdit' => 'Wróć do edycji',
+    ],
     'articles' => [
         'title' => 'Artykuły',
         'description' => 'Aktualności i artykuły naszego zespołu.',

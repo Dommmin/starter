@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 import type { RouteDefinition } from '@/wayfinder';
@@ -14,12 +15,28 @@ type ButtonVariant =
     | 'link';
 type ButtonSize = 'sm' | 'default' | 'lg' | 'icon';
 
-export type ButtonProps = {
+type ButtonHref = string | RouteDefinition<'get'> | { url: string };
+
+/**
+ * `external` opens `href` in a new tab (`<a target="_blank" rel="noopener
+ * noreferrer">`, no Inertia visit or prefetch) and adds a visually hidden
+ * "opens in a new tab" hint; it is only valid together with `href`.
+ */
+type ButtonTarget =
+    | {
+          /** A value starting with `#` renders a plain in-page anchor (no Inertia visit). */
+          href?: ButtonHref;
+          external?: false;
+      }
+    | {
+          href: ButtonHref;
+          external: true;
+      };
+
+export type ButtonProps = ButtonTarget & {
     children: ReactNode;
     variant?: ButtonVariant;
     size?: ButtonSize;
-    /** A value starting with `#` renders a plain in-page anchor (no Inertia visit). */
-    href?: string | RouteDefinition<'get'> | { url: string };
     /**
      * With `href`: render a plain `<a download>` (no Inertia visit) so the
      * browser saves the response. A string suggests the file name.
@@ -62,6 +79,7 @@ export function Button({
     variant = 'primary',
     size = 'default',
     href,
+    external = false,
     download,
     isPending = false,
     disabled = false,
@@ -102,6 +120,22 @@ export function Button({
             typeof href === 'object' && href !== null && 'url' in href
                 ? href.url
                 : href;
+
+        if (external) {
+            return (
+                <a
+                    href={targetHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={ariaLabel}
+                    className={baseClasses}
+                    onClick={onClick}
+                >
+                    {content}
+                    <NewTabHint />
+                </a>
+            );
+        }
 
         // In-page anchor (`#section`): a plain link, no Inertia visit.
         if (download || targetHref.startsWith('#')) {
@@ -149,4 +183,11 @@ export function Button({
             {content}
         </button>
     );
+}
+
+/** Visually hidden suffix of the accessible name of a new-tab link. */
+function NewTabHint() {
+    const { t } = useTranslation();
+
+    return <span className="sr-only"> ({t('a11y.opensInNewTab')})</span>;
 }

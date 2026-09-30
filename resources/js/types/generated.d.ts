@@ -11,6 +11,7 @@ declare namespace App {
                     article: App.Data.Admin.Articles.ArticleFormData;
                     locales: App.Data.Content.ContentLocalesData;
                     can: App.Data.Admin.Articles.ArticleAbilitiesData;
+                    previewUrls: Record<string, string>;
                 };
                 export type ArticleFormData = {
                     id: number | null;
@@ -399,6 +400,7 @@ declare namespace App {
                     page: App.Data.Admin.Pages.PageFormData;
                     locales: App.Data.Content.ContentLocalesData;
                     can: App.Data.Admin.Pages.PageAbilitiesData;
+                    previewUrls: Record<string, string>;
                 };
                 export type PageFormData = {
                     id: number | null;
@@ -521,6 +523,11 @@ declare namespace App {
                 available: App.Data.Content.ContentLocaleData[];
                 default: string;
             };
+            export type ContentPreviewData = {
+                state: App.Enums.ContentPreviewState;
+                publishAt: string | null;
+                editUrl: string;
+            };
             export type PublicArticleData = {
                 title: string;
                 excerpt: string | null;
@@ -533,6 +540,7 @@ declare namespace App {
                 coverAlt: string;
                 listUrl: string;
                 alternates: Record<string, string>;
+                preview: App.Data.Content.ContentPreviewData | null;
             };
             export type PublicArticleListData = {
                 items: App.Data.Content.ArticleSummaryData[];
@@ -546,6 +554,7 @@ declare namespace App {
                 locale: string;
                 publishedAt: string | null;
                 alternates: Record<string, string>;
+                preview: App.Data.Content.ContentPreviewData | null;
             };
             export type WelcomePageData = {
                 contactForm: App.Data.Contact.ContactFormData;
@@ -780,6 +789,7 @@ declare namespace App {
             | 'home_section.toggled'
             | 'home_section.reordered';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
+        export type ContentPreviewState = 'draft' | 'scheduled' | 'published';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';
         export type HomeIcon =

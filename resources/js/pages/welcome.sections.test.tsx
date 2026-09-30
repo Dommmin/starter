@@ -6,8 +6,20 @@ import { HomeSections } from '@/components/home/home-sections';
 import { I18nProvider } from '@/i18n';
 
 vi.mock('@inertiajs/react', () => ({
-    Link: ({ children, href }: { children: ReactNode; href: string }) => (
-        <a href={href}>{children}</a>
+    Link: ({
+        children,
+        href,
+        prefetch: _prefetch,
+        ...props
+    }: {
+        children: ReactNode;
+        href: string;
+        prefetch?: boolean;
+        [key: string]: unknown;
+    }) => (
+        <a href={href} {...props}>
+            {children}
+        </a>
     ),
     router: { on: () => () => {} },
     useForm: (initial: Record<string, string>) => ({
@@ -253,5 +265,39 @@ describe('HomeSections', () => {
             expect(headings).toHaveLength(1);
             expect(headings[0].textContent).toBe('Starter site');
         }
+    });
+
+    it('promotes a lone secondary action to the main action of the section', async () => {
+        const container = await render([
+            {
+                id: 8,
+                type: 'cta',
+                anchor: 'cta',
+                content: {
+                    title: 'Ready?',
+                    description: null,
+                    primaryAction: null,
+                    secondaryAction: {
+                        label: 'Open admin panel',
+                        url: '/admin',
+                    },
+                },
+            },
+        ]);
+
+        const actions = container.querySelectorAll('#cta a');
+        expect(actions).toHaveLength(1);
+        expect(actions[0].textContent).toBe('Open admin panel');
+        expect(actions[0].className).toContain('bg-primary');
+    });
+
+    it('keeps both actions with the secondary one styled apart', async () => {
+        const container = await render([sections[6]]);
+
+        const [main, extra] = Array.from(container.querySelectorAll('#cta a'));
+        expect(main.textContent).toBe('Log in');
+        expect(main.className).toContain('bg-primary');
+        expect(extra.textContent).toBe('Articles');
+        expect(extra.className).not.toContain('bg-primary');
     });
 });

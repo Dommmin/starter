@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -68,9 +68,9 @@ export function Alert({
                     type="button"
                     onClick={onDismiss}
                     aria-label={dismissLabel}
-                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -m-1.5 shrink-0 rounded-full p-1.5 focus-visible:ring-2 focus-visible:outline-none"
+                    className="text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:ring-ring -my-2.5 -mr-2.5 grid size-11 shrink-0 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
                 >
-                    <span aria-hidden="true">&times;</span>
+                    <X className="size-4" aria-hidden="true" />
                 </button>
             )}
         </div>

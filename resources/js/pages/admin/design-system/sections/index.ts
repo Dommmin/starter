@@ -1,4 +1,8 @@
+import { contentMediaFamily } from './content-media';
+import { feedbackFamily } from './feedback';
 import { foundationsFamily } from './foundations';
+import { layoutsFamily } from './layouts';
+import { panelNavigationFamily } from './panel-navigation';
 import type { ShowcaseFamily } from './showcase';
 
 /**
@@ -6,4 +10,10 @@ import type { ShowcaseFamily } from './showcase';
  * (docs/foundation/13-component-registry.md). Add a family: create
  * `sections/<family>.tsx` exporting a `ShowcaseFamily`, then list it here.
  */
-export const showcaseFamilies: ShowcaseFamily[] = [foundationsFamily];
+export const showcaseFamilies: ShowcaseFamily[] = [
+    foundationsFamily,
+    layoutsFamily,
+    contentMediaFamily,
+    panelNavigationFamily,
+    feedbackFamily,
+];

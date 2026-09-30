@@ -32,7 +32,7 @@ export function Collapsible({
         >
             <CollapsiblePrimitive.Trigger
                 className={cn(
-                    'focus-visible:ring-ring flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium',
+                    'focus-visible:ring-ring flex min-h-11 w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium',
                     'focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
                     '[&[data-state=open]>svg]:rotate-180',
                 )}

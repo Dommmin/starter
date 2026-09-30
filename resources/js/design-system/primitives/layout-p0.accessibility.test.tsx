@@ -39,6 +39,7 @@ describe('Collapsible', () => {
 
         const trigger = container.querySelector('button');
         expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(trigger?.classList.contains('min-h-11')).toBe(true);
 
         await act(async () => {
             trigger?.click();

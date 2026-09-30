@@ -1833,33 +1833,6 @@
         ]
     },
     {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SONNER",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/ui/sonner.tsx",
-        "contentHash": "sha256:7187b271a6d6b0765e693f1d5b7b3399777ee0a65f2728febac49edff4bcaa5a",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                13,
-                13
-            ],
-            [
-                17,
-                25
-            ],
-            [
-                30,
-                32
-            ]
-        ]
-    },
-    {
         "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SPINNER",
         "rule": "ds/no-style-escape",
         "file": "resources/js/components/ui/spinner.tsx",

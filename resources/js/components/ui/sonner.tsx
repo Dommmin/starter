@@ -10,26 +10,25 @@ function Toaster({ ...props }: ToasterProps) {
     return (
         <Sonner
             theme={appearance}
-            className="toaster group"
             position="bottom-right"
             toastOptions={{
                 classNames: {
-                    toast: 'group toast border-[#e9e3d8] bg-[#faf8f5] text-[#21201c] shadow-lg rounded-xl dark:border-[#262421] dark:bg-[#1a1917] dark:text-[#edebe8] font-sans text-sm',
-                    description: 'text-[#615c54] dark:text-[#a8a39a]',
+                    toast: 'group toast shadow-lg rounded-xl font-sans text-sm',
+                    description: 'text-muted-foreground',
                     actionButton: 'bg-primary text-primary-foreground font-medium rounded-lg',
-                    cancelButton: 'bg-[#ede5da] text-[#21201c] dark:bg-[#26211c] dark:text-[#edebe8] rounded-lg',
-                    closeButton: 'border-[#e9e3d8] bg-[#faf8f5] text-[#21201c] hover:bg-[#ede5da] dark:border-[#262421] dark:bg-[#1a1917] dark:text-[#edebe8] dark:hover:bg-[#26211c]',
-                    success: '!border-[#de6c2c]/30 dark:!border-[#e77a3c]/30 text-[#21201c] dark:text-[#edebe8] [&_[data-icon]]:text-[#de6c2c] dark:[&_[data-icon]]:text-[#e77a3c]',
-                    info: 'text-[#21201c] dark:text-[#edebe8] [&_[data-icon]]:text-blue-500',
-                    warning: 'text-[#21201c] dark:text-[#edebe8] [&_[data-icon]]:text-amber-500',
-                    error: '!border-destructive/30 text-[#21201c] dark:text-[#edebe8] [&_[data-icon]]:text-destructive',
+                    cancelButton: 'bg-secondary text-secondary-foreground rounded-lg',
+                    closeButton: 'border-border bg-popover text-popover-foreground hover:bg-accent',
+                    success: '!border-status-success/40 [&_[data-icon]]:text-status-success',
+                    info: '[&_[data-icon]]:text-status-info',
+                    warning: '[&_[data-icon]]:text-status-warning',
+                    error: '!border-status-danger/40 [&_[data-icon]]:text-status-danger',
                 },
             }}
             style={
                 {
-                    '--normal-bg': '#faf8f5',
-                    '--normal-text': '#21201c',
-                    '--normal-border': '#e9e3d8',
+                    '--normal-bg': 'var(--popover)',
+                    '--normal-text': 'var(--popover-foreground)',
+                    '--normal-border': 'var(--border)',
                 } as React.CSSProperties
             }
             {...props}

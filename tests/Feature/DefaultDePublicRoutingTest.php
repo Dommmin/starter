@@ -82,16 +82,16 @@ test('public default DE renders reset password screen in German', function () {
     expect(app()->getLocale())->toBe('de');
 });
 
-test('public default DE generates accurate alternate urls for home and the front.php about route', function () {
-    // 'about' is a route actually registered in routes/front.php (not one
-    // registered ad hoc inside this test), so this exercises the real
-    // default+prefix wiring from routes/web.php for every route defined in
-    // front.php, not just 'home'. Route *structure* (which locale is
+test('public default DE generates accurate alternate urls for home and a front.php route', function () {
+    // 'articles.index' is a route actually registered in routes/front.php
+    // (not one registered ad hoc inside this test), so this exercises the
+    // real default+prefix wiring from routes/web.php for every route defined
+    // in front.php, not just 'home'. Route *structure* (which locale is
     // unprefixed) is fixed once at boot from the real .env config, so it
     // still reflects the actual default locale here — only the alternate
     // URLs below are generated from this test's overridden ['de'] default.
-    expect(Route::has('about'))->toBeTrue()
-        ->and(Route::has('localized.about'))->toBeTrue();
+    expect(Route::has('articles.index'))->toBeTrue()
+        ->and(Route::has('localized.articles.index'))->toBeTrue();
 
     /** @var LocalizedUrlGenerator $generator */
     $generator = app(LocalizedUrlGenerator::class);
@@ -106,15 +106,15 @@ test('public default DE generates accurate alternate urls for home and the front
         ->and($homeAlternates)->toHaveKey('pl')
         ->and($homeAlternates['pl'])->toBe(url('/pl'));
 
-    // Test alternate urls for new front route 'about'
-    $aboutAlternates = $generator->getAlternateUrls('about');
-    expect($aboutAlternates)->toHaveKey('de')
-        ->and($aboutAlternates['de'])->toBe(url('/about'))
-        ->and($aboutAlternates['x-default'])->toBe(url('/about'))
-        ->and($aboutAlternates)->toHaveKey('en')
-        ->and($aboutAlternates['en'])->toBe(url('/en/about'))
-        ->and($aboutAlternates)->toHaveKey('pl')
-        ->and($aboutAlternates['pl'])->toBe(url('/pl/about'));
+    // Test alternate urls for the front.php 'articles.index' route
+    $articlesAlternates = $generator->getAlternateUrls('articles.index');
+    expect($articlesAlternates)->toHaveKey('de')
+        ->and($articlesAlternates['de'])->toBe(url('/articles'))
+        ->and($articlesAlternates['x-default'])->toBe(url('/articles'))
+        ->and($articlesAlternates)->toHaveKey('en')
+        ->and($articlesAlternates['en'])->toBe(url('/en/articles'))
+        ->and($articlesAlternates)->toHaveKey('pl')
+        ->and($articlesAlternates['pl'])->toBe(url('/pl/articles'));
 });
 
 test('public default DE generates proper URLs in German context', function () {

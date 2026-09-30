@@ -62,6 +62,16 @@ test('the content catch-all does not shadow system routes', function () {
 
     $this->get('/login')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia->component('auth/login'));
     $this->get('/admin')->assertRedirect(route('login'));
-    $this->get('/about')->assertOk()->assertSee('about');
     $this->get('/pl/admin')->assertNotFound();
+});
+
+test('a published page with the about slug is served at /about', function () {
+    PageTranslation::factory()->published()->create(['slug' => 'about', 'title' => 'About us']);
+
+    $this->get('/about')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('pages/show', false)
+            ->where('title', 'About us')
+        );
 });

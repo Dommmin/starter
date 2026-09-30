@@ -78,7 +78,9 @@ export type ShowcaseStateKey =
     | 'required'
     | 'readonly'
     | 'formError'
-    | 'focusFirstError';
+    | 'focusFirstError'
+    | 'submenu'
+    | 'languages';
 
 export type ShowcaseComponentProps = {
     /** Public API name of the component, e.g. `Button` (not translated). */

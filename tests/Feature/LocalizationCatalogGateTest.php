@@ -248,6 +248,13 @@ test('React translation keys resolve within every catalog scope the module rende
         $scopeKeys[$scope] = flattenTranslationKeys($manager->getMessagesForScope($scope, 'en'));
     }
 
+    // The local public showcase (PublicDesignSystemController) renders in the
+    // public scope plus the `admin.designSystem` group added to its payload.
+    $scopeKeys['design-system'] = [
+        ...$scopeKeys['public'],
+        ...flattenTranslationKeys(['admin' => ['designSystem' => trans('admin.designSystem', [], 'en')]]),
+    ];
+
     $missing = [];
 
     foreach (reactModuleScopes() as $file => $scopes) {
@@ -413,6 +420,7 @@ function reactModuleScopes(): array
         $roots[$path] = match (true) {
             $name === 'welcome', str_starts_with($name, 'pages/'), str_starts_with($name, 'articles/') => ['public'],
             str_starts_with($name, 'errors/') => $allScopes,
+            str_starts_with($name, 'design-system/') => ['design-system'],
             // Unprefixed /user/confirm-password belongs to the admin area.
             $name === 'auth/confirm-password' => ['auth', 'admin'],
             str_starts_with($name, 'auth/') => ['auth'],

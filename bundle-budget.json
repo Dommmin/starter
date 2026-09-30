@@ -1,5 +1,5 @@
 {
-    "description": "Budżet gzip (KB) krytycznej ścieżki stron publicznych. `limits` blokują CI (łączny JS strony publicznej, krytyczny CSS); `warnings` tylko raportują (entry, chunk strony, największy chunk), bo Vite przesuwa wspólny kod między tymi chunkami bez zmiany sumy. Progi = pomiar + ok. 10%; obniżać po realnym zmniejszeniu. Cel docelowy z docs/foundation/05: ≤100 KB JS strony publicznej (do rozstrzygnięcia przez właściciela). Podniesienie progu wymaga uzasadnienia i review.",
+    "description": "Budżet gzip (KB) krytycznej ścieżki stron publicznych. `limits` blokują CI (łączny JS strony publicznej, krytyczny CSS); `warnings` tylko raportują (entry, chunk strony, największy chunk), bo Vite przesuwa wspólny kod między tymi chunkami bez zmiany sumy. Progi = pomiar + ok. 10%; obniżać po realnym zmniejszeniu. Cel ≤100 KB JS strony publicznej porzucony decyzją właściciela 2026-09-30; obowiązuje ta zapadka. Podniesienie progu wymaga uzasadnienia i review.",
     "entry": "resources/js/app.tsx",
     "css": [
         "resources/css/app.css"

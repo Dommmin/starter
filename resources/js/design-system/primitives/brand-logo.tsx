@@ -44,7 +44,7 @@ export function BrandLogo({ href, ariaLabel, image, name }: BrandLogoProps) {
             aria-label={
                 image ? ariaLabel : (ariaLabel ?? name ?? t('brand.name'))
             }
-            className="group focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-2.5 rounded-lg text-base font-semibold tracking-tight transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="group focus-visible:ring-ring inline-flex min-h-[44px] min-w-0 items-center gap-2.5 rounded-lg text-base font-semibold tracking-tight transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
             {image ? (
                 <img
@@ -59,15 +59,21 @@ export function BrandLogo({ href, ariaLabel, image, name }: BrandLogoProps) {
                 />
             ) : (
                 <>
-                    <span className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
+                    <span className="bg-primary text-primary-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105">
                         <Compass className="h-5 w-5" aria-hidden="true" />
                     </span>
                     {name ? (
-                        <span className="text-foreground font-serif text-lg tracking-tight">
+                        <span
+                            title={name}
+                            className="text-foreground min-w-0 truncate font-serif text-base tracking-tight sm:text-lg"
+                        >
                             {name}
                         </span>
                     ) : (
-                        <span className="text-foreground font-serif text-lg tracking-tight">
+                        <span
+                            title={t('brand.name')}
+                            className="text-foreground min-w-0 truncate font-serif text-base tracking-tight sm:text-lg"
+                        >
                             {t('brand.firstPart')}{' '}
                             <span className="text-primary">
                                 {t('brand.secondPart')}

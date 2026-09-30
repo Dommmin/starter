@@ -19,9 +19,11 @@ import {
 import type { BrandLogoImage } from './brand-logo';
 import { Button } from './button';
 import { HeaderUtility } from './header-utility';
+import { LocaleSwitcher } from './locale-switcher';
 import { MobileNav } from './mobile-nav';
 import type { NavItem } from './nav-item';
 import { isNavLink, NavItemLink } from './nav-item-link';
+import { ThemeSwitcher } from './theme-switcher';
 
 export type PublicHeaderProps = {
     /**
@@ -180,7 +182,7 @@ export function PublicHeader({
     );
 
     return (
-        <HeaderUtility logo={logo} brandName={brandName}>
+        <HeaderUtility logo={logo} brandName={brandName} switchersInMobileMenu>
             {navItems.length > 0 && (
                 <ul className="hidden items-center gap-4 md:flex">
                     {navItems.map((item) => (
@@ -200,16 +202,22 @@ export function PublicHeader({
             <div className="flex items-center gap-1.5 sm:gap-3">
                 {authControls}
             </div>
-            {navItems.length > 0 && (
-                <div className="md:hidden">
-                    <MobileNav
-                        title={t('nav.menuTitle')}
-                        items={navItems}
-                        openLabel={t('a11y.openMenu')}
-                        closeLabel={t('a11y.closeMenu')}
-                    />
-                </div>
-            )}
+            {/* Below `sm` the menu also holds the theme and locale switchers,
+                so it is rendered there even without navigation items. */}
+            <div className={navItems.length > 0 ? 'md:hidden' : 'sm:hidden'}>
+                <MobileNav
+                    title={t('nav.menuTitle')}
+                    items={navItems}
+                    openLabel={t('a11y.openMenu')}
+                    closeLabel={t('a11y.closeMenu')}
+                    utilities={
+                        <>
+                            <ThemeSwitcher />
+                            <LocaleSwitcher />
+                        </>
+                    }
+                />
+            </div>
         </HeaderUtility>
     );
 }

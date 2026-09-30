@@ -45,7 +45,10 @@ const initialPage = {
             messages: {},
             fallback: 'en',
             dir: 'ltr',
-            availableLocales: [],
+            availableLocales: [
+                { code: 'en', name: 'English', native: 'English', dir: 'ltr' },
+                { code: 'pl', name: 'Polish', native: 'Polski', dir: 'ltr' },
+            ],
         },
     },
 } as unknown as Page<PageProps & SharedPageProps>;
@@ -73,11 +76,27 @@ afterEach(async () => {
 });
 
 describe('PublicHeader', () => {
-    it('renders no mobile menu trigger when no nav items are supplied', async () => {
+    it('keeps the theme and language switchers reachable in the mobile menu without nav items', async () => {
         const container = await render(<PublicHeader />);
 
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.openMenu"]',
+        );
+        expect(trigger).not.toBeNull();
+
+        await act(async () => {
+            trigger?.click();
+        });
+
+        const dialog = document.querySelector('[role="dialog"]');
         expect(
-            container.querySelector('button[aria-label="a11y.openMenu"]'),
+            dialog?.querySelector('button[aria-label^="a11y.themeSwitcher"]'),
+        ).not.toBeNull();
+        expect(
+            dialog?.querySelector('button[aria-label="a11y.languageSelector"]'),
+        ).not.toBeNull();
+        expect(
+            document.querySelector('nav[aria-label="nav.menuTitle"]'),
         ).toBeNull();
     });
 

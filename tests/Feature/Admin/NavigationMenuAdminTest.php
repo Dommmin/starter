@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Navigation\GuardMenuItemParent;
 use App\Enums\AuditAction;
 use App\Enums\HomeSectionAnchor;
 use App\Enums\HomeSectionType;
@@ -13,6 +14,7 @@ use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -192,6 +194,27 @@ test('an admin creates a child and an external link opening in a new tab', funct
     $child = MenuItem::query()->where('parent_id', $parent->id)->sole();
     expect($child->open_in_new_tab)->toBeTrue()
         ->and($child->position)->toBe(1);
+});
+
+/**
+ * Regression for PostgreSQL, which rejected the former `FOR UPDATE` +
+ * `max()` query; on SQLite it checks that only siblings of the same level
+ * count.
+ */
+test('the next position counts only the siblings of the same menu level', function () {
+    $guard = app(GuardMenuItemParent::class);
+    $parent = MenuItem::factory()->group()->create(['position' => 2]);
+    MenuItem::factory()->childOf($parent)->create(['position' => 7]);
+    MenuItem::factory()->in(MenuLocation::Footer, 'en')->create(['position' => 9]);
+    MenuItem::factory()->in(MenuLocation::Header, 'pl')->create(['position' => 8]);
+
+    $positions = DB::transaction(fn (): array => [
+        $guard->nextPosition(MenuLocation::Header, 'en', null),
+        $guard->nextPosition(MenuLocation::Header, 'en', $parent->id),
+        $guard->nextPosition(MenuLocation::Header, 'de', null),
+    ]);
+
+    expect($positions)->toBe([3, 8, 1]);
 });
 
 test('invalid structures are rejected without saving', function (Closure $payload, string $field) {

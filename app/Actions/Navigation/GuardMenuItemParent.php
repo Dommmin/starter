@@ -50,15 +50,28 @@ final class GuardMenuItemParent
 
     /**
      * Position after the last sibling under the parent (1 for the first).
+     *
+     * PostgreSQL rejects `FOR UPDATE` together with an aggregate, so the
+     * parent row and the existing siblings are locked first and the maximum
+     * is read by a separate statement. Under READ COMMITTED that statement
+     * sees rows committed by a writer the locks waited for, which serializes
+     * concurrent appends. A child list always has its parent locked; the
+     * first top-level item of an empty menu has no row to lock, so two such
+     * concurrent creates may share position 1 (lists order by `id` as well).
      */
     public function nextPosition(MenuLocation $location, string $locale, ?int $parentId): int
     {
-        $last = MenuItem::query()
+        if ($parentId !== null) {
+            MenuItem::query()->whereKey($parentId)->lockForUpdate()->pluck('id');
+        }
+
+        $siblings = fn () => MenuItem::query()
             ->where('location', $location->value)
             ->where('locale', $locale)
-            ->where('parent_id', $parentId)
-            ->lockForUpdate()
-            ->max('position');
+            ->where('parent_id', $parentId);
+
+        $siblings()->lockForUpdate()->pluck('id');
+        $last = $siblings()->max('position');
 
         return (is_numeric($last) ? (int) $last : 0) + 1;
     }

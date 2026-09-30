@@ -1327,7 +1327,7 @@ final class ResourceRenderer
         $columns = [];
 
         if ($titleField === null || in_array('id', $resource->sortable, true)) {
-            $columns[] = $this->column('id', "t('{$keys}.columnId')", in_array('id', $resource->sortable, true), $titleField === null ? $link : 'row.id');
+            $columns[] = $this->column('id', "t('{$keys}.columnId')", in_array('id', $resource->sortable, true), $titleField === null ? $link : 'row.id', $titleField === null ? 'primary' : 'optional');
         }
 
         foreach ($resource->fields as $field) {
@@ -1346,23 +1346,33 @@ final class ResourceRenderer
                 default => "{$property} ?? '—'",
             };
 
-            $columns[] = $this->column($field->name, "t('{$keys}.fields.{$field->name}')", in_array($field->name, $resource->sortable, true), $render);
+            $priority = match (true) {
+                $field === $titleField => 'primary',
+                in_array($field->type, ['boolean', 'enum'], true) => 'status',
+                default => 'secondary',
+            };
+
+            $columns[] = $this->column($field->name, "t('{$keys}.fields.{$field->name}')", in_array($field->name, $resource->sortable, true), $render, $priority);
         }
 
-        $columns[] = $this->column('created_at', "t('{$keys}.columnCreatedAt')", in_array('created_at', $resource->sortable, true), "row.createdAt ? formatDate(row.createdAt) : '—'");
+        $columns[] = $this->column('created_at', "t('{$keys}.columnCreatedAt')", in_array('created_at', $resource->sortable, true), "row.createdAt ? formatDate(row.createdAt) : '—'", 'optional');
 
         if (in_array('updated_at', $resource->sortable, true)) {
-            $columns[] = $this->column('updated_at', "t('{$keys}.columnUpdatedAt')", true, "row.updatedAt ? formatDate(row.updatedAt) : '—'");
+            $columns[] = $this->column('updated_at', "t('{$keys}.columnUpdatedAt')", true, "row.updatedAt ? formatDate(row.updatedAt) : '—'", 'optional');
         }
 
         return implode(PHP_EOL, $columns);
     }
 
-    private function column(string $key, string $label, bool $sortable, string $render): string
+    /**
+     * @param  'primary'|'status'|'secondary'|'optional'  $priority  Responsive role (`DataTableColumnPriority`).
+     */
+    private function column(string $key, string $label, bool $sortable, string $render, string $priority): string
     {
         return implode(PHP_EOL, array_filter([
             '                    {',
             "                        key: '{$key}',",
+            "                        priority: '{$priority}',",
             "                        label: {$label},",
             $sortable ? '                        sortable: true,' : null,
             "                        render: (row) => {$render},",

@@ -11,6 +11,7 @@ import {
     Text,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import {
     create as pagesCreate,
@@ -75,6 +76,7 @@ export default function AdminPagesIndex() {
                 searchable
                 labels={{
                     caption: t('admin.pages.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.pages.searchLabel'),
                     searchPlaceholder: t('admin.pages.searchPlaceholder'),
                     searchClear: t('admin.pages.searchClear'),
@@ -122,6 +124,7 @@ export default function AdminPagesIndex() {
                 columns={[
                     {
                         key: 'title',
+                        priority: 'primary',
                         label: t('admin.pages.columnTitle'),
                         sortable: true,
                         render: (row) => (
@@ -139,6 +142,7 @@ export default function AdminPagesIndex() {
                     },
                     {
                         key: 'slug',
+                        priority: 'secondary',
                         label: t('admin.pages.columnSlug'),
                         render: (row) => (
                             <Text variant="code" as="span">
@@ -148,6 +152,7 @@ export default function AdminPagesIndex() {
                     },
                     {
                         key: 'status',
+                        priority: 'status',
                         label: t('admin.pages.columnStatus'),
                         render: (row) => (
                             <Badge
@@ -163,12 +168,14 @@ export default function AdminPagesIndex() {
                     },
                     {
                         key: 'locales',
+                        priority: 'optional',
                         label: t('admin.pages.columnLocales'),
                         render: (row) =>
                             row.locales.map(localeName).join(', ') || '—',
                     },
                     {
                         key: 'updated_at',
+                        priority: 'optional',
                         label: t('admin.pages.columnUpdatedAt'),
                         sortable: true,
                         render: (row) =>

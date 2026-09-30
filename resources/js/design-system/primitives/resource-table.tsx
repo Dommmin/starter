@@ -2,7 +2,12 @@ import { router } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 import { ActionMenu, type ActionMenuItem } from './action-menu';
 import { Button } from './button';
-import { DataTable, type DataTableColumn } from './data-table';
+import {
+    DataTable,
+    type DataTableColumn,
+    type DataTableColumnPriority,
+    type DataTableSortLabels,
+} from './data-table';
 import { EmptyState } from './empty-state';
 import { FilterBar } from './filter-bar';
 import { PageHeader } from './page-header';
@@ -37,6 +42,11 @@ export type ResourceTableColumn<Row> = {
     /** Must match a key in the server-side sort allowlist. */
     sortable?: boolean;
     align?: 'start' | 'end';
+    /**
+     * Responsive role (see `DataTableColumnPriority`). When any column sets it,
+     * the list renders as cards below `md` and the row menu stays visible.
+     */
+    priority?: DataTableColumnPriority;
     render: (row: Row) => ReactNode;
 };
 
@@ -70,6 +80,8 @@ export type ResourceTableLabels = {
     errorRetry: string;
     previousPage: string;
     nextPage: string;
+    /** Sort select of the card layout; required when columns set `priority`. */
+    sort?: DataTableSortLabels;
     paginationSummary: (range: {
         from: number;
         to: number;
@@ -169,11 +181,15 @@ export function ResourceTable<Row>({
         );
     }
 
-    function handleSortChange(key: string) {
+    function handleSortChange(
+        key: string,
+        explicitDirection?: ResourceListSortDirection,
+    ) {
         const direction: ResourceListSortDirection =
-            filters.sort === key && filters.direction === 'asc'
+            explicitDirection ??
+            (filters.sort === key && filters.direction === 'asc'
                 ? 'desc'
-                : 'asc';
+                : 'asc');
         visit({ sort: key, direction });
     }
 
@@ -197,14 +213,17 @@ export function ResourceTable<Row>({
         header: column.label,
         sortable: column.sortable,
         align: column.align,
+        priority: column.priority,
         render: column.render,
     }));
+    const isResponsive = columns.some((column) => column.priority);
 
     if (rowActions) {
         tableColumns.push({
             key: '__actions',
             header: '',
             align: 'end',
+            priority: isResponsive ? 'actions' : undefined,
             render: (row) => (
                 <ActionMenu
                     triggerLabel={rowActions.label(row)}
@@ -292,6 +311,7 @@ export function ResourceTable<Row>({
                             direction: filters.direction,
                         }}
                         onSortChange={handleSortChange}
+                        sortLabels={labels.sort}
                         columns={tableColumns}
                         emptyState={
                             showNoResults ? (

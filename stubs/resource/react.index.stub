@@ -5,6 +5,7 @@ import {
 {{ primitives }}
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import {
     create,
@@ -59,6 +60,7 @@ export default function Admin{{ Plural }}Index() {
 {{ searchableProp }}
                 labels={{
                     caption: t('admin.{{ camelPlural }}.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.{{ camelPlural }}.searchLabel'),
                     searchPlaceholder: t('admin.{{ camelPlural }}.searchPlaceholder'),
                     searchClear: t('admin.{{ camelPlural }}.searchClear'),

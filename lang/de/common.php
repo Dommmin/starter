@@ -69,4 +69,9 @@ return [
         'removed' => ':label entfernt',
         'limit' => ':count von :max Einträgen',
     ],
+    'table' => [
+        'sortBy' => 'Sortieren nach',
+        'sortAscending' => ':column (aufsteigend)',
+        'sortDescending' => ':column (absteigend)',
+    ],
 ];

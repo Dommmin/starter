@@ -297,6 +297,7 @@ export default function AdminMediaEdit() {
                             columns={[
                                 {
                                     key: 'format',
+                                    priority: 'primary',
                                     header: t('admin.media.variantFormat'),
                                     render: (variant) => (
                                         <Link
@@ -310,6 +311,7 @@ export default function AdminMediaEdit() {
                                 },
                                 {
                                     key: 'dimensions',
+                                    priority: 'secondary',
                                     header: t('admin.media.variantDimensions'),
                                     render: (variant) =>
                                         t(
@@ -322,6 +324,7 @@ export default function AdminMediaEdit() {
                                 },
                                 {
                                     key: 'size',
+                                    priority: 'secondary',
                                     header: t('admin.media.variantSize'),
                                     align: 'end',
                                     render: (variant) =>

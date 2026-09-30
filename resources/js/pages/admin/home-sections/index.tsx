@@ -129,6 +129,7 @@ export default function AdminHomeSectionsIndex() {
                                 columns={[
                                     {
                                         key: 'section',
+                                        priority: 'primary',
                                         header: t(
                                             'admin.homeSections.columnSection',
                                         ),
@@ -153,6 +154,7 @@ export default function AdminHomeSectionsIndex() {
                                     },
                                     {
                                         key: 'title',
+                                        priority: 'secondary',
                                         header: t(
                                             'admin.homeSections.columnTitle',
                                         ),
@@ -162,6 +164,7 @@ export default function AdminHomeSectionsIndex() {
                                     },
                                     {
                                         key: 'visible',
+                                        priority: 'status',
                                         header: t(
                                             'admin.homeSections.columnVisible',
                                         ),
@@ -204,6 +207,7 @@ export default function AdminHomeSectionsIndex() {
                                     },
                                     {
                                         key: 'updatedAt',
+                                        priority: 'optional',
                                         header: t(
                                             'admin.homeSections.columnUpdatedAt',
                                         ),

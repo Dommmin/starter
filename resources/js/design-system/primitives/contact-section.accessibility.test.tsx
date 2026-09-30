@@ -159,6 +159,65 @@ describe('ContactSection', () => {
         expect(container.textContent).toContain('Thanks, we will reply soon.');
     });
 
+    it('moves focus to the announced success message after a submission', async () => {
+        function SendingForm() {
+            const [isSent, setSent] = useState(false);
+
+            return (
+                <ContactSection
+                    title="Get in touch"
+                    labels={{
+                        name: 'Name',
+                        email: 'Email',
+                        message: 'Message',
+                    }}
+                    errorSummaryTitle="Please fix the following"
+                    values={{
+                        name: 'Ada',
+                        email: 'ada@example.com',
+                        message: 'Hello there',
+                    }}
+                    onChange={vi.fn()}
+                    onSubmit={() => setSent(true)}
+                    submitLabel="Send"
+                    success={
+                        isSent ? <p>Thanks, we will reply soon.</p> : undefined
+                    }
+                />
+            );
+        }
+
+        const container = await render(<SendingForm />);
+        const submit = container.querySelector<HTMLButtonElement>(
+            'button[type="submit"]',
+        );
+        submit?.focus();
+
+        await act(async () => submit?.click());
+
+        const message = container.querySelector('[role="status"]');
+        expect(message?.textContent).toBe('Thanks, we will reply soon.');
+        expect(message?.getAttribute('tabindex')).toBe('-1');
+        expect(document.activeElement).toBe(message);
+    });
+
+    it('does not take focus for a success message present on first render', async () => {
+        await render(
+            <ContactSection
+                title="Get in touch"
+                labels={{ name: 'Name', email: 'Email', message: 'Message' }}
+                errorSummaryTitle="Please fix the following"
+                values={{ name: '', email: '', message: '' }}
+                onChange={vi.fn()}
+                onSubmit={vi.fn()}
+                submitLabel="Send"
+                success={<p>Thanks, we will reply soon.</p>}
+            />,
+        );
+
+        expect(document.activeElement).toBe(document.body);
+    });
+
     it('renders a form-level error as an alert', async () => {
         const container = await render(
             <ContactSection

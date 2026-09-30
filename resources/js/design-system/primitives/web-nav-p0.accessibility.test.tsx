@@ -22,16 +22,17 @@ const initialPage = {
     },
 } as unknown as Page<PageProps & SharedPageProps>;
 
-async function render(node: ReactNode): Promise<HTMLElement> {
+async function render(
+    node: ReactNode,
+    page: Page<PageProps & SharedPageProps> = initialPage,
+): Promise<HTMLElement> {
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
     mountedRoots.push(root);
 
     await act(async () => {
-        root.render(
-            <I18nProvider initialPage={initialPage}>{node}</I18nProvider>,
-        );
+        root.render(<I18nProvider initialPage={page}>{node}</I18nProvider>);
     });
 
     return container;
@@ -249,5 +250,26 @@ describe('BrandLogo', () => {
             'brand.name',
         );
         expect(container.textContent).toContain('brand.firstPart');
+    });
+
+    it('links to the root in the configured default locale, not only in English', async () => {
+        const publicPage = (locale: string) =>
+            ({
+                props: {
+                    i18n: {
+                        locale,
+                        defaultLocale: 'de',
+                        messages: {},
+                        fallback: 'en',
+                        dir: 'ltr',
+                    },
+                },
+            }) as unknown as Page<PageProps & SharedPageProps>;
+
+        const german = await render(<BrandLogo />, publicPage('de'));
+        const polish = await render(<BrandLogo />, publicPage('pl'));
+
+        expect(german.querySelector('a')?.getAttribute('href')).toBe('/');
+        expect(polish.querySelector('a')?.getAttribute('href')).toBe('/pl');
     });
 });

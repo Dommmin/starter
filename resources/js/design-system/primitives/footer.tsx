@@ -54,7 +54,7 @@ function FooterColumn({
     children: ReactNode;
 }) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3 wrap-anywhere">
             <Text variant="label" as="p">
                 {title}
             </Text>

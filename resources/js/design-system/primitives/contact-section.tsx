@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { Alert } from './alert';
 import { Button } from './button';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
@@ -100,6 +100,20 @@ export function ContactSection({
         });
     }
 
+    const hasSuccess = success !== undefined && success !== null;
+    const successRef = useRef<HTMLDivElement>(null);
+    const hadSuccessRef = useRef(hasSuccess);
+
+    // After a successful submission the form (and its focused submit button)
+    // disappears; move focus to the announced message instead of the body.
+    // A message present on first render (e.g. a static demo) takes no focus.
+    useEffect(() => {
+        if (hasSuccess && !hadSuccessRef.current) {
+            successRef.current?.focus();
+        }
+        hadSuccessRef.current = hasSuccess;
+    }, [hasSuccess]);
+
     const markSubmitted = useSubmitErrorFocus(
         summaryItems.map((item) => item.fieldId),
         errors,
@@ -119,7 +133,16 @@ export function ContactSection({
                         </Text>
                     )}
                 </Stack>
-                {success ?? (
+                {hasSuccess ? (
+                    <div
+                        ref={successRef}
+                        role="status"
+                        tabIndex={-1}
+                        className="focus-visible:ring-ring rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    >
+                        {success}
+                    </div>
+                ) : (
                     <form
                         onSubmit={(event) => {
                             event.preventDefault();

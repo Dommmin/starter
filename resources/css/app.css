@@ -359,6 +359,11 @@
         @apply text-foreground;
     }
 
+    /* Anchor jumps and keyboard focus stay clear of the sticky top bar. */
+    html[data-surface='admin'] {
+        scroll-padding-top: var(--admin-topbar-height);
+    }
+
     [data-surface='admin'] body {
         font-size: var(--admin-text-base);
         line-height: 1.45;

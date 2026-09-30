@@ -82,7 +82,24 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'site' => fn () => $this->siteSettings->current(),
             ...$this->publicNavigation($i18n['area'], $i18n['locale']),
+            ...$this->designSystemShowcase($i18n['area']),
         ];
+    }
+
+    /**
+     * URL of the local-only design-system showcase for the panel sidebar.
+     * The route exists only in the `local` environment, so the link (and
+     * this prop) is absent everywhere else.
+     *
+     * @return array{designSystemUrl?: string}
+     */
+    protected function designSystemShowcase(string $area): array
+    {
+        if ($area !== 'admin' || ! Route::has('admin.design-system')) {
+            return [];
+        }
+
+        return ['designSystemUrl' => route('admin.design-system', absolute: false)];
     }
 
     /**

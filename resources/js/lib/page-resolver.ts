@@ -7,11 +7,13 @@ type LayoutGroup = 'none' | 'auth' | 'settings' | 'admin' | 'app';
 
 /**
  * Page modules, lazy-loaded per visit. Tests colocated with pages
- * (`*.test.tsx`) are excluded so they never reach the client or SSR bundle.
+ * (`*.test.tsx`) are excluded so they never reach the client or SSR bundle;
+ * design-system showcase sections are modules of their page, not pages.
  */
 const pages = import.meta.glob<PageModule>([
     '../pages/**/*.tsx',
     '!../pages/**/*.test.tsx',
+    '!../pages/admin/design-system/sections/**',
 ]);
 
 /**

@@ -91,6 +91,8 @@ export function Button({
 }: ButtonProps) {
     const baseClasses = cn(
         'group inline-flex items-center justify-center font-medium transition-all duration-150',
+        // Child icons (raw Lucide SVGs default to 24px) follow the label size.
+        "[&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
         'disabled:pointer-events-none disabled:opacity-50',
         variantMap[variant],

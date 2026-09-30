@@ -36,6 +36,11 @@ if (! empty($extraLocales)) {
 require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';
 
+// Design-system showcase: registered in the local environment only.
+if (app()->environment('local')) {
+    require __DIR__.'/design-system.php';
+}
+
 // Content catch-all routes must stay last: default locale without prefix,
 // extra public locales under /{locale}.
 require __DIR__.'/content.php';

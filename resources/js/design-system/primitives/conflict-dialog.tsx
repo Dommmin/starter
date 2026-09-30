@@ -1,6 +1,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { useReturnFocus } from './return-focus';
 
 export type ConflictDialogProps = {
     open: boolean;
@@ -27,6 +28,7 @@ export function ConflictDialog({
     onOverwrite,
     isPending = false,
 }: ConflictDialogProps) {
+    const returnFocus = useReturnFocus();
     return (
         <DialogPrimitive.Root
             open={open}
@@ -44,6 +46,8 @@ export function ConflictDialog({
                     )}
                 />
                 <DialogPrimitive.Content
+                    onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                    onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                     onEscapeKeyDown={(event) => {
                         if (isPending) {
                             event.preventDefault();

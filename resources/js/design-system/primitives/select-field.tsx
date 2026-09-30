@@ -46,6 +46,7 @@ export function SelectField({
 }: SelectFieldProps) {
     const reactId = useId();
     const triggerId = id ?? `${reactId}-trigger`;
+    const labelId = `${reactId}-label`;
     const descriptionId = description ? `${reactId}-description` : undefined;
     const errorId = error ? `${reactId}-error` : undefined;
     const describedBy =
@@ -54,6 +55,7 @@ export function SelectField({
     return (
         <div className="flex flex-col gap-1.5">
             <label
+                id={labelId}
                 htmlFor={triggerId}
                 className="text-sm leading-none font-medium"
             >
@@ -77,6 +79,7 @@ export function SelectField({
                 <SelectPrimitive.Trigger
                     ref={ref}
                     id={triggerId}
+                    aria-labelledby={labelId}
                     aria-describedby={describedBy}
                     aria-invalid={error ? true : undefined}
                     className={cn(

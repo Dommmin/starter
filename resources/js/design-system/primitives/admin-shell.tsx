@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { useAdminLocaleChange } from './admin-locale-select';
 import { CommandPalette } from './command-palette';
 import type { CommandPaletteItem } from './command-palette';
+import { useReturnFocus } from './return-focus';
 
 type Href = NonNullable<InertiaLinkProps['href']>;
 
@@ -448,6 +449,7 @@ export function AdminShell({
     logoutHref,
     children,
 }: AdminShellProps) {
+    const returnFocus = useReturnFocus();
     const { t } = useTranslation();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isCommandOpen, setIsCommandOpen] = useState(false);
@@ -518,6 +520,8 @@ export function AdminShell({
                 <DialogPrimitive.Portal>
                     <DialogPrimitive.Overlay className="bg-overlay data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-50 motion-reduce:animate-none md:hidden" />
                     <DialogPrimitive.Content
+                        onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                        onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                         aria-describedby={undefined}
                         className="bg-sidebar text-sidebar-foreground data-[state=open]:animate-in data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col shadow-(--admin-shadow-overlay) motion-reduce:animate-none md:hidden"
                     >

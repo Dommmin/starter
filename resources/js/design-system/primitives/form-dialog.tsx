@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { useReturnFocus } from './return-focus';
 
 export type FormDialogProps = {
     open: boolean;
@@ -33,6 +34,7 @@ export function FormDialog({
     isPending = false,
     error,
 }: FormDialogProps) {
+    const returnFocus = useReturnFocus();
     return (
         <DialogPrimitive.Root
             open={open}
@@ -50,6 +52,8 @@ export function FormDialog({
                     )}
                 />
                 <DialogPrimitive.Content
+                    onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                    onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                     onEscapeKeyDown={(event) => {
                         if (isPending) {
                             event.preventDefault();

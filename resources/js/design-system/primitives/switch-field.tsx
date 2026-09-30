@@ -33,6 +33,7 @@ export function SwitchField({
 }: SwitchFieldProps) {
     const reactId = useId();
     const inputId = id ?? `${reactId}-input`;
+    const labelId = `${reactId}-label`;
     const descriptionId = description ? `${reactId}-description` : undefined;
     const errorId = error ? `${reactId}-error` : undefined;
     const describedBy =
@@ -42,6 +43,7 @@ export function SwitchField({
         <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-3">
                 <label
+                    id={labelId}
                     htmlFor={inputId}
                     className="text-sm leading-tight font-medium"
                 >
@@ -54,6 +56,7 @@ export function SwitchField({
                     checked={checked}
                     onCheckedChange={onChange}
                     disabled={disabled}
+                    aria-labelledby={labelId}
                     aria-describedby={describedBy}
                     aria-invalid={error ? true : undefined}
                     className={cn(

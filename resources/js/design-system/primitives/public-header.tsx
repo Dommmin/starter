@@ -184,7 +184,7 @@ export function PublicHeader({
     return (
         <HeaderUtility logo={logo} brandName={brandName} switchersInMobileMenu>
             {navItems.length > 0 && (
-                <ul className="hidden items-center gap-4 md:flex">
+                <ul className="hidden items-center gap-4 lg:flex">
                     {navItems.map((item) => (
                         <li key={item.id}>
                             {(item.children ?? []).length > 0 ? (
@@ -204,7 +204,7 @@ export function PublicHeader({
             </div>
             {/* Below `sm` the menu also holds the theme and locale switchers,
                 so it is rendered there even without navigation items. */}
-            <div className={navItems.length > 0 ? 'md:hidden' : 'sm:hidden'}>
+            <div className={navItems.length > 0 ? 'lg:hidden' : 'sm:hidden'}>
                 <MobileNav
                     title={t('nav.menuTitle')}
                     items={navItems}

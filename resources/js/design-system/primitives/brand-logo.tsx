@@ -33,9 +33,10 @@ export type BrandLogoProps = {
 };
 
 export function BrandLogo({ href, ariaLabel, image, name }: BrandLogoProps) {
-    const { t, locale } = useTranslation();
+    const { t, locale, defaultLocale } = useTranslation();
     const targetHref =
-        href ?? (locale === 'en' ? home.url() : localizedHome.url({ locale }));
+        href ??
+        (locale === defaultLocale ? home.url() : localizedHome.url({ locale }));
 
     return (
         <Link
@@ -44,7 +45,7 @@ export function BrandLogo({ href, ariaLabel, image, name }: BrandLogoProps) {
             aria-label={
                 image ? ariaLabel : (ariaLabel ?? name ?? t('brand.name'))
             }
-            className="group focus-visible:ring-ring inline-flex min-h-[44px] min-w-0 items-center gap-2.5 rounded-lg text-base font-semibold tracking-tight transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="group focus-visible:ring-ring inline-flex min-h-[44px] max-w-full min-w-0 items-center gap-2.5 rounded-lg text-base font-semibold tracking-tight transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
             {image ? (
                 <img

@@ -25,6 +25,7 @@
         "2026-09-28: blokują tylko łączny JS strony publicznej i krytyczny CSS; entry, chunk strony i największy chunk przeniesione do `warnings` (trzy wcześniejsze podniesienia wynikały z atrybucji, nie ze wzrostu). Zapas ~10% nad pomiarem (czysty build, bez skompilowanych widoków w storage): łączny JS welcome 216,02 KB → limit 238 (było 225), CSS 19,92 KB → 22 (bez zmian); ostrzeżenia: entry 152,04 → 167, chunk welcome 63,98 → 70, największy chunk 104,24 → 115. Tailwind nie skanuje już storage/ (skompilowane widoki błędów zawyżały lokalny CSS o ~2,6 KB). Zatwierdził właściciel."
     ],
     "lazyModules": [
-        "resources/js/components/password-confirmation-dialog.tsx"
+        "resources/js/components/password-confirmation-dialog.tsx",
+        "resources/js/pages/design-system/index.tsx"
     ]
 }

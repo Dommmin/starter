@@ -14,6 +14,7 @@ const pages = import.meta.glob<PageModule>([
     '../pages/**/*.tsx',
     '!../pages/**/*.test.tsx',
     '!../pages/admin/design-system/sections/**',
+    '!../pages/design-system/sections/**',
 ]);
 
 /**
@@ -46,6 +47,7 @@ function layoutGroup(name: string): LayoutGroup {
         case name.startsWith('pages/'):
         case name.startsWith('articles/'):
         case name.startsWith('errors/'):
+        case name.startsWith('design-system/'):
             return 'none';
         case name.startsWith('auth/'):
             return 'auth';

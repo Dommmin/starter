@@ -53,12 +53,12 @@ export function RadioGroupField({
         <div className="flex flex-col gap-1.5">
             <span
                 id={groupLabelId}
-                className="text-sm leading-none font-medium"
+                className="text-sm leading-snug font-medium"
             >
                 {label}
                 {required && (
                     <span
-                        className="text-destructive ml-0.5"
+                        className="text-status-danger ml-0.5"
                         aria-hidden="true"
                     >
                         *
@@ -123,7 +123,7 @@ export function RadioGroupField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

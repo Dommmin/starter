@@ -1,4 +1,4 @@
-import { act, type ReactNode } from 'react';
+import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -231,5 +231,50 @@ describe('ResourceForm', () => {
         });
 
         expect(onChange).toHaveBeenCalledWith('price', '12.50');
+    });
+
+    it('focuses the first invalid field after every failed submit, not only the first one', async () => {
+        let resolveRequest: (errors: Record<string, string>) => void = () => {};
+
+        function Page() {
+            const [errors, setErrors] = useState<Record<string, string>>({});
+            const [isPending, setPending] = useState(false);
+            resolveRequest = (next) => {
+                setErrors(next);
+                setPending(false);
+            };
+
+            return (
+                <ResourceForm<Values>
+                    {...props({
+                        errors,
+                        isPending,
+                        onSubmit: () => setPending(true),
+                    })}
+                />
+            );
+        }
+
+        const container = await render(<Page />);
+        const form = container.querySelector('form')!;
+        const submit = container.querySelector<HTMLButtonElement>(
+            'button[type="submit"]',
+        )!;
+        const name =
+            container.querySelector<HTMLInputElement>('input[name="name"]')!;
+
+        for (const message of ['Name is required.', 'Name is taken.']) {
+            submit.focus();
+            await act(async () => {
+                form.dispatchEvent(
+                    new Event('submit', { bubbles: true, cancelable: true }),
+                );
+            });
+            expect(document.activeElement).toBe(submit);
+
+            await act(async () => resolveRequest({ name: message }));
+
+            expect(document.activeElement).toBe(name);
+        }
     });
 });

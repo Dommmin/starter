@@ -66,7 +66,13 @@ export type ShowcaseStateKey =
     | 'narrowContainer'
     | 'withoutPriority'
     | 'destructive'
-    | 'conflict';
+    | 'conflict'
+    | 'withValue'
+    | 'placeholder'
+    | 'required'
+    | 'readonly'
+    | 'formError'
+    | 'focusFirstError';
 
 export type ShowcaseComponentProps = {
     /** Public API name of the component, e.g. `Button` (not translated). */

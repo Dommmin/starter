@@ -53,6 +53,14 @@ Import: `import { Button, IconButton, ... } from '@/design-system/primitives'`.
 
 ### ADM-03 — Pola tekstowe (P0 podstawy; P1 specjalizacje) — częściowo `implemented`
 
+Demo: [/admin/design-system#adm-03](../../resources/js/pages/admin/design-system/sections/text-fields.tsx), przegląd 2026-09-30 (light/dark, 360/768/1280, klawiatura, axe). Dotyczy wszystkich pól: naprawiono 2026-09-30 (zgoda koordynatora, istniejące tokeny): tekst błędu i gwiazdka `required` pól używają `status-danger` (wcześniej `text-destructive` miał 3,86:1 w ciemnym motywie; axe bez naruszeń w obu motywach, także formularz kontaktowy); etykiety pól `leading-snug` zamiast `leading-none` (wielowierszowe etykiety miały zbyt ciasne linie). Stan „tylko do odczytu” nie istnieje w API (propozycja `readOnly` w raporcie przeglądu), `pending` pokazuje ADM-08.
+
+- TextField — default/wartość/placeholder/opis/błąd/disabled/required/długa treść/typy url·tel·search; `aria-describedby` opis+błąd, focus ring — OK.
+- TextareaField — jw. — OK.
+- PasswordField — jw. bez placeholder; przełącznik pokazywania: Tab, Enter, `aria-pressed`, nazwa — OK.
+- NumberField — jw. + min/max/step — OK.
+- DateField — jw. bez placeholder, min/max — OK.
+
 | Komponent | Plik | Status |
 | --- | --- | --- |
 | TextField (label/help/error, text/email/url/tel/search) | [text-field.tsx](../../resources/js/design-system/primitives/text-field.tsx) | implemented |
@@ -66,6 +74,13 @@ Import: `import { Button, IconButton, ... } from '@/design-system/primitives'`.
 Kontrakt: pola są samodzielnymi „field” (label+control+description+error+`aria-describedby`), sterowane (`value`/`onChange`), z `ref` do fokusowania po 422 przez przyszły `ErrorSummary`/`FormSection` (ADM-08, patrz niżej — jeszcze nie zbudowany).
 
 ### ADM-04 — Wybór wartości (P0 podstawy; P1 reszta) — częściowo `implemented`
+
+Demo: [/admin/design-system#adm-04](../../resources/js/pages/admin/design-system/sections/choice-fields.tsx), przegląd 2026-09-30 (light/dark, 360/768/1280, klawiatura, axe). Wspólna poprawka: naprawiono 2026-09-30 (zgoda koordynatora, istniejące tokeny): tekst błędu i gwiazdka `required` pól używają `status-danger` (wcześniej `text-destructive` miał 3,86:1 w ciemnym motywie; axe bez naruszeń w obu motywach, także formularz kontaktowy).
+
+- CheckboxField — default/zaznaczony/opis/błąd/disabled/required/długa etykieta; Spacja, klik etykiety — OK.
+- SelectField — naprawiono 2026-09-30: długa wybrana wartość wychodziła poza wyzwalacz (wiele linii, wyśrodkowana); teraz jedna linia z wielokropkiem (weryfikacja wizualna, zachowanie bez zmian). Enter/strzałki (pomija opcję disabled)/Escape z powrotem fokusu — OK. Naprawiono też słabo widoczny fokus klawiatury opcji: pierścień `focus-visible` z tokena `ring` (spójnie z ActionMenu).
+- RadioGroupField — default/wartość/opisy opcji/błąd grupy/disabled/required/długa treść; strzałki pomijają opcję disabled — OK.
+- SwitchField — default/włączony/opis/błąd/disabled/długa etykieta; Spacja, nazwa z etykiety; brak `required` w API (nie dotyczy) — OK.
 
 | Komponent | Status | Uwaga |
 | --- | --- | --- |
@@ -103,6 +118,13 @@ DatePicker/TimePicker/DateTimePicker/DateRangePicker/Slider budujemy jako własn
 Repeater, KeyValueEditor, pola warunkowe — brak blokera zależności, nie realizowano w tej partii (priorytet niższy niż ADM-08/09).
 
 ### ADM-08 — Formularz jako całość (P0/P1) — P0 `implemented`, nie `verified`
+
+Demo: [/admin/design-system#adm-08](../../resources/js/pages/admin/design-system/sections/forms.tsx), przegląd 2026-09-30 (light/dark, 360/768/1280, klawiatura, axe). Interaktywny `ResourceForm` bez backendu: pusty „Wyślij” → błędy przy polach, `ErrorSummary`, fokus na pierwszym błędzie; poprawny → pending (`aria-busy`, pola i przycisk zablokowane) → sukces.
+
+- ResourceForm — interaktywne demo, pending, sukces — OK; naprawiono 2026-09-30: fokus na pierwszym błędnym polu po każdym nieudanym wysłaniu (wcześniej tylko przy przejściu 0→N błędów); wewnętrzny hook `use-submit-error-focus.ts` (poza barrelem), użyty też w `ContactSection`. Testy: resource-form i contact-section accessibility.
+- ErrorSummary — błąd formularza z linkami (link przenosi fokus), długa treść, pusty (nic nie renderuje), błąd ogólny przez `Alert` — naprawiono 2026-09-30: kontrast linków w jasnym motywie 4,23:1 → `text-foreground` z podkreśleniem.
+- FormSection — default/opis/długa treść/pusta — OK.
+- FormActions — align end/start/between, pending, disabled, długa etykieta (kolumna odwrócona na mobile) — OK.
 
 | Komponent | Plik | Status |
 | --- | --- | --- |

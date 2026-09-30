@@ -76,7 +76,7 @@ export function SwitchField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

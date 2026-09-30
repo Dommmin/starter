@@ -72,7 +72,7 @@ export function CheckboxField({
                     {label}
                     {required && (
                         <span
-                            className="text-destructive ml-0.5"
+                            className="text-status-danger ml-0.5"
                             aria-hidden="true"
                         >
                             *
@@ -92,7 +92,7 @@ export function CheckboxField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive pl-7.5 text-xs"
+                    className="text-status-danger pl-7.5 text-xs"
                 >
                     {error}
                 </p>

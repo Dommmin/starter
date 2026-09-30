@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     InputOTP,
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { Stack } from '@/design-system/primitives';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import { getLocalizedTwoFactorLoginForm } from '@/lib/localized-routes';
 import { useTranslation } from '@/i18n';
@@ -63,8 +65,12 @@ export default function TwoFactorChallenge() {
                     {({ errors, processing, clearErrors }) => (
                         <>
                             {showRecoveryInput ? (
-                                <>
+                                <Stack gap="tight">
+                                    <Label htmlFor="recovery_code">
+                                        {t('auth.twoFactor.recoveryCode')}
+                                    </Label>
                                     <Input
+                                        id="recovery_code"
                                         name="recovery_code"
                                         type="text"
                                         placeholder={t(
@@ -76,11 +82,15 @@ export default function TwoFactorChallenge() {
                                     <InputError
                                         message={errors.recovery_code}
                                     />
-                                </>
+                                </Stack>
                             ) : (
                                 <div className="flex flex-col items-center justify-center space-y-3 text-center">
+                                    <Label htmlFor="code">
+                                        {t('auth.twoFactor.code')}
+                                    </Label>
                                     <div className="flex w-full items-center justify-center">
                                         <InputOTP
+                                            id="code"
                                             name="code"
                                             maxLength={OTP_MAX_LENGTH}
                                             value={code}

@@ -218,38 +218,42 @@
         "id": "DS-EXC-UPSTREAM-AUTH-2FA",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/auth/two-factor-challenge.tsx",
-        "contentHash": "sha256:f7b16f01055431841d849b4212709faab87f2688194b0035b725a0f317401a0e",
+        "contentHash": "sha256:7d0fc2f464e1a49fe1f8ba636bfc64c4247ff23b2e795736ab21480a9517883d",
         "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
         "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
         "scope": "className in form layout",
         "owner": "starter-foundation",
-        "reviewRef": "ADR-019 initial audit",
+        "reviewRef": "ADR-019 initial audit; zmiana zatwierdzona przez właściciela 2026-09-30: etykiety pól kodu",
         "expires": "2026-10-31",
         "task": "P0-B Task 09",
         "lineRanges": [
             [
-                56,
-                56
+                58,
+                58
             ],
             [
-                59,
-                59
+                61,
+                61
             ],
             [
-                81,
-                82
+                87,
+                87
             ],
             [
-                111,
-                111
-            ],
-            [
-                117,
-                117
+                91,
+                91
             ],
             [
                 121,
                 121
+            ],
+            [
+                127,
+                127
+            ],
+            [
+                131,
+                131
             ]
         ]
     },
@@ -2044,12 +2048,12 @@
         "id": "DS-EXC-UPSTREAM-LAYOUTS-AUTH-AUTH-SIMPLE-LAYOUT",
         "rule": "ds/no-style-escape",
         "file": "resources/js/layouts/auth/auth-simple-layout.tsx",
-        "contentHash": "sha256:0026ab32efd1edd0f08191e10c0317eb0d0b209ec7d3d27e03ef0b34072d6ec3",
+        "contentHash": "sha256:b2a5b84d460c3b4ecc4f8ab24f0f1239e760ee5a2827b86b3cad8941575a98ad",
         "reason": "Upstream scaffold pending design system primitives refactoring",
         "alternatives": "Refactor using design system primitives",
         "scope": "className in component/layout markup",
         "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
+        "reviewRef": "ADR-019 full audit; 2026-09-30 tekst sr-only linku logo zmieniony na nav.home (review: Claude, do potwierdzenia przez właściciela przy merge)",
         "expires": "2026-10-31",
         "task": "P0-B Task 09",
         "lineRanges": [

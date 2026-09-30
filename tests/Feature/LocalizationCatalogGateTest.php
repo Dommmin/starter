@@ -411,7 +411,7 @@ function reactModuleScopes(): array
         $name = substr(str_replace("{$base}/pages/", '', $path), 0, -4);
 
         $roots[$path] = match (true) {
-            $name === 'welcome', str_starts_with($name, 'pages/') => ['public'],
+            $name === 'welcome', str_starts_with($name, 'pages/'), str_starts_with($name, 'articles/') => ['public'],
             str_starts_with($name, 'errors/') => $allScopes,
             // Unprefixed /user/confirm-password belongs to the admin area.
             $name === 'auth/confirm-password' => ['auth', 'admin'],

@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Local sample content: one published page with translations and one draft.
+ * Slugs come from the {@see DemoContent} registry used by `--remove-demo`.
  */
 class PageSeeder extends Seeder
 {
@@ -18,7 +19,7 @@ class PageSeeder extends Seeder
             [
                 'locale' => 'en',
                 'title' => 'Privacy policy',
-                'slug' => 'privacy-policy',
+                'slug' => DemoContent::PAGES['privacy']['en'],
                 'meta_description' => 'How this website processes personal data.',
                 'body' => self::document('This sample page shows how published content is rendered.'),
                 'status' => PublicationStatus::Published,
@@ -27,7 +28,7 @@ class PageSeeder extends Seeder
             [
                 'locale' => 'pl',
                 'title' => 'Polityka prywatności',
-                'slug' => 'polityka-prywatnosci',
+                'slug' => DemoContent::PAGES['privacy']['pl'],
                 'meta_description' => 'Jak ta strona przetwarza dane osobowe.',
                 'body' => self::document('Ta przykładowa strona pokazuje renderowanie opublikowanej treści.'),
                 'status' => PublicationStatus::Published,
@@ -39,7 +40,7 @@ class PageSeeder extends Seeder
         $draft->translations()->create([
             'locale' => 'en',
             'title' => 'Upcoming offer',
-            'slug' => 'upcoming-offer',
+            'slug' => DemoContent::PAGES['upcoming']['en'],
             'meta_description' => null,
             'body' => self::document('Draft content is never visible to visitors.'),
             'status' => PublicationStatus::Draft,

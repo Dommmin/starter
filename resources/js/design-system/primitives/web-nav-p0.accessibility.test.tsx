@@ -3,6 +3,7 @@ import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { I18nProvider } from '@/i18n';
+import { BrandLogo } from './brand-logo';
 import { Footer } from './footer';
 import { MobileNav } from './mobile-nav';
 
@@ -51,8 +52,18 @@ describe('MobileNav', () => {
                 openLabel="Open menu"
                 closeLabel="Close menu"
                 items={[
-                    { id: 'pricing', label: 'Pricing', href: '/pricing' },
-                    { id: 'about', label: 'About', href: '/about' },
+                    {
+                        id: 'pricing',
+                        kind: 'internal',
+                        label: 'Pricing',
+                        href: '/pricing',
+                    },
+                    {
+                        id: 'about',
+                        kind: 'internal',
+                        label: 'About',
+                        href: '/about',
+                    },
                 ]}
             />,
         );
@@ -74,20 +85,31 @@ describe('MobileNav', () => {
     });
 });
 
-describe('Footer', () => {
-    it('renders link groups and the copyright line', async () => {
+describe('MobileNav nesting', () => {
+    it('renders groups as headings with nested links and external links as plain anchors', async () => {
         const container = await render(
-            <Footer
-                copyright="© 2026 Acme"
-                groups={[
+            <MobileNav
+                title="Menu"
+                openLabel="Open menu"
+                closeLabel="Close menu"
+                items={[
                     {
-                        id: 'product',
-                        title: 'Product',
-                        links: [
+                        id: 'company',
+                        kind: 'group',
+                        label: 'Company',
+                        children: [
                             {
-                                id: 'pricing',
-                                label: 'Pricing',
-                                href: '/pricing',
+                                id: 'team',
+                                kind: 'anchor',
+                                label: 'Team',
+                                href: '#team',
+                            },
+                            {
+                                id: 'jobs',
+                                kind: 'external',
+                                label: 'Jobs',
+                                href: 'https://jobs.example.test',
+                                newTab: true,
                             },
                         ],
                     },
@@ -95,8 +117,137 @@ describe('Footer', () => {
             />,
         );
 
+        await act(async () => {
+            container
+                .querySelector<HTMLButtonElement>(
+                    'button[aria-label="Open menu"]',
+                )
+                ?.click();
+        });
+
+        const nav = document.querySelector('nav[aria-label="Menu"]');
+        const heading = nav?.querySelector('li > p');
+        expect(heading?.textContent).toBe('Company');
+        expect(
+            nav?.querySelector('a[href="#team"]')?.closest('ul ul'),
+        ).not.toBeNull();
+
+        const external = nav?.querySelector<HTMLAnchorElement>(
+            'a[href="https://jobs.example.test"]',
+        );
+        expect(external?.rel).toBe('noopener noreferrer');
+        expect(external?.target).toBe('_blank');
+        expect(external?.querySelector('.sr-only')?.textContent).toContain(
+            'a11y.opensInNewTab',
+        );
+
+        // Activating an in-page anchor closes the panel (no visit replaces it).
+        await act(async () => {
+            nav?.querySelector<HTMLAnchorElement>('a[href="#team"]')?.click();
+        });
+
+        expect(document.querySelector('nav[aria-label="Menu"]')).toBeNull();
+    });
+});
+
+describe('Footer', () => {
+    it('renders nav groups as columns, contact details, social links and the copyright line', async () => {
+        const container = await render(
+            <Footer
+                copyright="© 2026 Acme"
+                groups={[
+                    {
+                        id: 'product',
+                        kind: 'group',
+                        label: 'Product',
+                        children: [
+                            {
+                                id: 'pricing',
+                                kind: 'internal',
+                                label: 'Pricing',
+                                href: '/pricing',
+                            },
+                        ],
+                    },
+                ]}
+                contact={{
+                    email: 'hello@example.test',
+                    phone: '+48 600 100 200',
+                    address: 'Main St 1\n00-001 City',
+                }}
+                social={[
+                    {
+                        network: 'linkedin',
+                        label: 'LinkedIn',
+                        url: 'https://linkedin.example.test/acme',
+                    },
+                ]}
+            />,
+        );
+
         expect(container.textContent).toContain('Product');
-        expect(container.textContent).toContain('Pricing');
+        expect(container.querySelector('a[href="/pricing"]')?.textContent).toBe(
+            'Pricing',
+        );
+        expect(container.textContent).toContain('footer.contact');
+        expect(
+            container.querySelector('a[href="mailto:hello@example.test"]'),
+        ).not.toBeNull();
+        expect(
+            container.querySelector('a[href="tel:+48600100200"]'),
+        ).not.toBeNull();
+        expect(container.querySelector('address')?.textContent).toBe(
+            'Main St 1\n00-001 City',
+        );
+
+        expect(container.textContent).toContain('footer.social');
+        const social = container.querySelector<HTMLAnchorElement>(
+            'a[href="https://linkedin.example.test/acme"]',
+        );
+        expect(social?.rel).toBe('noopener noreferrer');
+        expect(social?.target).toBe('_blank');
+        expect(social?.textContent).toContain('LinkedIn');
+
         expect(container.textContent).toContain('© 2026 Acme');
+    });
+
+    it('omits the columns row when there are no groups, contact or social links', async () => {
+        const container = await render(<Footer copyright="© 2026 Acme" />);
+
+        expect(container.querySelector('ul')).toBeNull();
+        expect(container.textContent).not.toContain('footer.contact');
+    });
+});
+
+describe('BrandLogo', () => {
+    it('renders the uploaded image as the link content', async () => {
+        const container = await render(
+            <BrandLogo
+                image={{
+                    src: '/media/logo.png',
+                    alt: 'Acme',
+                    width: 160,
+                    height: 40,
+                }}
+            />,
+        );
+
+        const image = container.querySelector('a img');
+        expect(image?.getAttribute('src')).toBe('/media/logo.png');
+        expect(image?.getAttribute('alt')).toBe('Acme');
+        expect(image?.getAttribute('width')).toBe('160');
+        expect(container.querySelector('a')?.hasAttribute('aria-label')).toBe(
+            false,
+        );
+    });
+
+    it('falls back to the text logo without an image', async () => {
+        const container = await render(<BrandLogo />);
+
+        expect(container.querySelector('img')).toBeNull();
+        expect(container.querySelector('a')?.getAttribute('aria-label')).toBe(
+            'brand.name',
+        );
+        expect(container.textContent).toContain('brand.firstPart');
     });
 });

@@ -42,4 +42,5 @@ class {{ Model }}Policy
     {
         return $user->isAdmin();
     }
+{{ exportMethod }}
 }

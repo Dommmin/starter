@@ -1,20 +1,16 @@
-import { Link as InertiaLink } from '@inertiajs/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Menu, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { IconButton } from './icon-button';
-
-export type MobileNavItem = {
-    id: string;
-    label: string;
-    href: string;
-};
+import type { NavItem } from './nav-item';
+import { isNavLink, NavItemLink } from './nav-item-link';
 
 export type MobileNavProps = {
     /** Visible panel heading, e.g. "Menu". */
     title: string;
-    items: MobileNavItem[];
+    /** Entries with one level of `children`; `group` renders as a heading. */
+    items: NavItem[];
     /** Translated accessible label for the trigger control. */
     openLabel: string;
     /** Translated accessible label for the close control. */
@@ -25,6 +21,27 @@ export type MobileNavProps = {
     onOpenChange?: (open: boolean) => void;
 };
 
+const itemClasses =
+    'text-foreground hover:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none';
+const childClasses =
+    'text-muted-foreground hover:text-foreground hover:bg-surface-subtle focus-visible:ring-ring block rounded-md py-2.5 pr-3 pl-6 text-sm focus-visible:ring-2 focus-visible:outline-none';
+
+type MobileNavLinkProps = {
+    item: NavItem;
+    classes: string;
+    onNavigate: () => void;
+};
+
+function MobileNavLink({ item, classes, onNavigate }: MobileNavLinkProps) {
+    if (!isNavLink(item)) {
+        return null;
+    }
+
+    return (
+        <NavItemLink item={item} classes={classes} onNavigate={onNavigate} />
+    );
+}
+
 export function MobileNav({
     title,
     items,
@@ -34,8 +51,22 @@ export function MobileNav({
     open,
     onOpenChange,
 }: MobileNavProps) {
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+    const isOpen = open ?? uncontrolledOpen;
+
+    function setOpen(nextOpen: boolean) {
+        if (open === undefined) {
+            setUncontrolledOpen(nextOpen);
+        }
+        onOpenChange?.(nextOpen);
+    }
+
+    // Closing on activation matters for in-page anchors, where no Inertia
+    // visit replaces the page (and with it the open dialog).
+    const close = () => setOpen(false);
+
     return (
-        <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+        <DialogPrimitive.Root open={isOpen} onOpenChange={setOpen}>
             <DialogPrimitive.Trigger asChild>
                 <IconButton icon={Menu} ariaLabel={openLabel} variant="ghost" />
             </DialogPrimitive.Trigger>
@@ -48,7 +79,7 @@ export function MobileNav({
                 />
                 <DialogPrimitive.Content
                     className={cn(
-                        'bg-background fixed inset-y-0 right-0 z-50 flex w-full max-w-xs flex-col gap-6 p-6 shadow-lg',
+                        'bg-background fixed inset-y-0 right-0 z-50 flex w-full max-w-xs flex-col gap-6 overflow-y-auto p-6 shadow-lg',
                         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right',
                     )}
                 >
@@ -64,19 +95,43 @@ export function MobileNav({
                             />
                         </DialogPrimitive.Close>
                     </div>
-                    <nav
-                        aria-label={title}
-                        className="flex flex-1 flex-col gap-1"
-                    >
-                        {items.map((item) => (
-                            <InertiaLink
-                                key={item.id}
-                                href={item.href}
-                                className="text-foreground hover:bg-surface-subtle focus-visible:ring-ring rounded-md px-3 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
-                            >
-                                {item.label}
-                            </InertiaLink>
-                        ))}
+                    <nav aria-label={title} className="flex-1">
+                        <ul className="flex flex-col gap-1">
+                            {items.map((item) => {
+                                const children = item.children ?? [];
+
+                                return (
+                                    <li key={item.id}>
+                                        {isNavLink(item) ? (
+                                            <MobileNavLink
+                                                item={item}
+                                                classes={itemClasses}
+                                                onNavigate={close}
+                                            />
+                                        ) : (
+                                            <p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase">
+                                                {item.label}
+                                            </p>
+                                        )}
+                                        {children.length > 0 && (
+                                            <ul className="flex flex-col gap-1">
+                                                {children.map((child) => (
+                                                    <li key={child.id}>
+                                                        <MobileNavLink
+                                                            item={child}
+                                                            classes={
+                                                                childClasses
+                                                            }
+                                                            onNavigate={close}
+                                                        />
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </nav>
                     {footer && (
                         <div className="border-border-subtle flex flex-col gap-2 border-t pt-4">

@@ -41,7 +41,7 @@ test('the list exposes the typed list payload with defaults', function () {
             ->where('filters', [
 {{ defaultFilters }}
             ])
-            ->where('can', ['create' => true, 'delete' => false])
+            ->where('can', [{{ editorAbilities }}])
         );
 });
 {{ searchTest }}
@@ -99,7 +99,7 @@ test('store validates required fields and creates nothing', function () {
 
     expect({{ Model }}::query()->count())->toBe(0);
 });
-
+{{ referenceTests }}
 test('the edit screen exposes the stored values and the version for locking', function () {
     $admin = User::factory()->admin()->create();
     ${{ variable }} = {{ Model }}::factory()->create();
@@ -163,7 +163,7 @@ test('users without a panel role can neither open nor mutate {{ pluralLower }}',
         'updated_at' => ${{ variable }}->updated_at?->toIso8601String(),
     ]))->assertForbidden();
     $this->actingAs($user)->delete(route('admin.{{ kebabPlural }}.destroy', ${{ variable }}))->assertForbidden();
-
+{{ forbiddenExport }}
     expect({{ Model }}::query()->count())->toBe(1)
         ->and(${{ variable }}->fresh()?->toArray())->toBe($original);
 });
@@ -187,3 +187,4 @@ test('an admin deletes a {{ singularLower }}', function () {
 
     expect({{ Model }}::query()->count())->toBe(0);
 });
+{{ exportTests }}

@@ -36,7 +36,7 @@ test('admin area profile preference overrides session preference', function () {
 
 test('admin area ignores inactive locale and falls back to en', function () {
     $user = User::factory()->create([
-        'admin_locale' => 'invalid_locale',
+        'admin_locale' => 'xx-invalid',
     ]);
 
     $response = $this->actingAs($user)->get('/settings/appearance');

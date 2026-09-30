@@ -2,8 +2,6 @@
 
 return [
     'landing' => [
-        'metaTitle' => 'Punkt Startowy — Modern Web Application Platform',
-        'metaDescription' => 'Punkt Startowy is a well-engineered foundation for modern web applications. Explore the demonstration landing page.',
         'badge' => 'Scale-ready architecture',
         'heroTitle' => 'Solid foundation for modern digital products',
         'heroDescription' => 'Comprehensive starter combining Laravel 13, React 19, Inertia v3, and a strict design system. Built for accessibility, performance, and uncompromised engineering quality.',
@@ -36,10 +34,21 @@ return [
         'stackValue' => 'Laravel 13 + React 19',
         'ctaBottomTitle' => 'Ready to give your project the right rhythm?',
         'ctaBottomDescription' => 'Experience how seamlessly the public website and administration module work together. Log in to the panel to see it in action.',
-        'footerCopy' => 'Punkt Startowy. Web application foundation.',
     ],
     'page' => [
         'publishedOn' => 'Published :date',
+    ],
+    'articles' => [
+        'title' => 'Articles',
+        'description' => 'News and articles from our team.',
+        'listLabel' => 'Article list',
+        'empty' => 'No articles have been published yet.',
+        'readMore' => 'Read article: :title',
+        'publishedOn' => 'Published :date',
+        'backToList' => 'All articles',
+        'previousPage' => 'Previous page',
+        'nextPage' => 'Next page',
+        'paginationSummary' => 'Page :page of :total',
     ],
     'contact' => [
         'title' => 'Contact us',
@@ -61,5 +70,15 @@ return [
             'invalidCharacters' => 'This field contains characters that are not allowed.',
             'formExpired' => 'This form has expired. Please reload the page and try again.',
         ],
+    ],
+    'site' => [
+        'defaultTitle' => 'Punkt Startowy — Modern Web Application Platform',
+        'defaultDescription' => 'Punkt Startowy is a well-engineered foundation for modern web applications. Explore the demonstration landing page.',
+    ],
+    'home' => [
+        'latestArticlesEmpty' => 'No articles have been published yet.',
+        'allArticles' => 'All articles',
+        'readMore' => 'Read article: :title',
+        'faqEmpty' => 'No questions have been published yet.',
     ],
 ];

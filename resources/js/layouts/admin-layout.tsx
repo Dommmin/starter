@@ -1,12 +1,16 @@
 import { usePage } from '@inertiajs/react';
 import {
     CircleHelp,
+    Newspaper,
     FileText,
     History,
     Images,
     LayoutGrid,
+    LayoutTemplate,
+    ListTree,
     Mail,
     Settings,
+    SlidersHorizontal,
     Users,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -20,11 +24,15 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useTranslation } from '@/i18n';
 import { logout } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
+import { index as articlesIndex } from '@/routes/admin/articles';
 import { index as auditIndex } from '@/routes/admin/audit';
 import { index as contactIndex } from '@/routes/admin/contact';
 import { index as faqsIndex } from '@/routes/admin/faqs';
+import { index as homeSectionsIndex } from '@/routes/admin/home-sections';
 import { index as mediaIndex } from '@/routes/admin/media';
+import { index as navigationIndex } from '@/routes/admin/navigation';
 import { index as pagesIndex } from '@/routes/admin/pages';
+import { edit as siteSettingsEdit } from '@/routes/admin/site-settings';
 import { index as usersIndex } from '@/routes/admin/users';
 import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem } from '@/types';
@@ -39,7 +47,7 @@ export default function AdminLayout({
     children: ReactNode;
 }) {
     const { t } = useTranslation();
-    const { auth } = usePage().props;
+    const { auth, site } = usePage().props;
     const { currentUrl, isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
     const section = (
@@ -79,6 +87,12 @@ export default function AdminLayout({
                     FileText,
                 ),
                 section(
+                    'articles',
+                    t('admin.articles.navLabel'),
+                    articlesIndex(),
+                    Newspaper,
+                ),
+                section(
                     'media',
                     t('admin.media.navLabel'),
                     mediaIndex(),
@@ -89,6 +103,18 @@ export default function AdminLayout({
                     t('admin.faqs.navLabel'),
                     faqsIndex(),
                     CircleHelp,
+                ),
+                section(
+                    'navigation',
+                    t('admin.navigation.navLabel'),
+                    navigationIndex(),
+                    ListTree,
+                ),
+                section(
+                    'home-sections',
+                    t('admin.homeSections.navLabel'),
+                    homeSectionsIndex(),
+                    LayoutTemplate,
                 ),
             ],
         },
@@ -128,6 +154,16 @@ export default function AdminLayout({
                           ),
                       ]
                     : []),
+                ...(auth.can.manageSiteSettings
+                    ? [
+                          section(
+                              'site-settings',
+                              t('admin.nav.siteSettings'),
+                              siteSettingsEdit(),
+                              SlidersHorizontal,
+                          ),
+                      ]
+                    : []),
             ],
         },
     ].filter((group) => group.items.length > 0);
@@ -158,7 +194,7 @@ export default function AdminLayout({
 
     return (
         <AdminShell
-            brandName={appName}
+            brandName={site?.name ?? appName}
             brandSubtitle={t('admin.nav.subtitle')}
             homeHref={adminIndex()}
             navGroups={navGroups}

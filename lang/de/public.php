@@ -2,8 +2,6 @@
 
 return [
     'landing' => [
-        'metaTitle' => 'Punkt Startowy — Moderne Webanwendungsplattform',
-        'metaDescription' => 'Punkt Startowy ist eine durchdachte Basis für moderne Webanwendungen.',
         'badge' => 'Skalierbare Architektur',
         'heroTitle' => 'Solides Fundament für moderne digitale Produkte',
         'heroDescription' => 'Umfassender Starter, der Laravel 13, React 19, Inertia v3 und ein striktes Designsystem kombiniert.',
@@ -36,10 +34,21 @@ return [
         'stackValue' => 'Laravel 13 + React 19',
         'ctaBottomTitle' => 'Bereit, Ihrem Projekt den richtigen Rhythmus zu geben?',
         'ctaBottomDescription' => 'Erleben Sie die nahtlose Zusammenarbeit zwischen öffentlicher Website und Administrationsmodul.',
-        'footerCopy' => 'Punkt Startowy. Webanwendungsfundament.',
     ],
     'page' => [
         'publishedOn' => 'Veröffentlicht am :date',
+    ],
+    'articles' => [
+        'title' => 'Artikel',
+        'description' => 'Neuigkeiten und Artikel unseres Teams.',
+        'listLabel' => 'Artikelliste',
+        'empty' => 'Es wurden noch keine Artikel veröffentlicht.',
+        'readMore' => 'Artikel lesen: :title',
+        'publishedOn' => 'Veröffentlicht am :date',
+        'backToList' => 'Alle Artikel',
+        'previousPage' => 'Vorherige Seite',
+        'nextPage' => 'Nächste Seite',
+        'paginationSummary' => 'Seite :page von :total',
     ],
     'contact' => [
         'title' => 'Kontakt',
@@ -61,5 +70,15 @@ return [
             'invalidCharacters' => 'Dieses Feld enthält unzulässige Zeichen.',
             'formExpired' => 'Das Formular ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut.',
         ],
+    ],
+    'site' => [
+        'defaultTitle' => 'Punkt Startowy — Moderne Webanwendungsplattform',
+        'defaultDescription' => 'Punkt Startowy ist eine durchdachte Basis für moderne Webanwendungen.',
+    ],
+    'home' => [
+        'latestArticlesEmpty' => 'Es wurden noch keine Artikel veröffentlicht.',
+        'allArticles' => 'Alle Artikel',
+        'readMore' => 'Artikel lesen: :title',
+        'faqEmpty' => 'Es wurden noch keine Fragen veröffentlicht.',
     ],
 ];

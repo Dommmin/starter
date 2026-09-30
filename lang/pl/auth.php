@@ -120,6 +120,13 @@ return [
             'action' => 'Zweryfikuj adres e-mail',
             'line_2' => 'Jeśli to nie Ty zakładałeś konto, zignoruj tę wiadomość.',
         ],
+        'invitation' => [
+            'subject' => 'Twoje konto w :app',
+            'line_1' => 'Administrator utworzył dla Ciebie konto w :app. Ustaw hasło, aby się zalogować.',
+            'action' => 'Ustaw hasło',
+            'line_2' => 'Link wygaśnie za :count minut. Później użyj opcji „Nie pamiętasz hasła?” na stronie logowania.',
+            'line_3' => 'Jeśli nie spodziewasz się tego zaproszenia, zignoruj tę wiadomość.',
+        ],
         'reset_password' => [
             'subject' => 'Zresetuj swoje hasło',
             'line_1' => 'Otrzymujesz tę wiadomość, ponieważ zarejestrowaliśmy prośbę o zresetowanie hasła do Twojego konta.',

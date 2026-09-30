@@ -16,7 +16,10 @@ declare module '@inertiajs/core' {
             locale: string;
             i18n: I18nPayload;
             seo: App.Data.Seo.SeoDefaultsData;
+            site: App.Data.Settings.SiteSettingsData;
             sidebarOpen: boolean;
+            /** Public area only (lazy shared prop). */
+            navigation?: App.Data.Navigation.NavigationData;
             [key: string]: unknown;
         };
     }

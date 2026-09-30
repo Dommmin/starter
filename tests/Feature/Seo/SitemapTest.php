@@ -1,9 +1,10 @@
 <?php
 
+use App\Models\ArticleTranslation;
 use App\Models\Page;
 use App\Models\PageTranslation;
 
-test('the sitemap lists the home page in every public locale with reciprocal alternates', function () {
+test('the sitemap lists the home page and article list in every public locale with reciprocal alternates', function () {
     $response = $this->get('/sitemap.xml');
 
     $response->assertOk()
@@ -18,7 +19,10 @@ test('the sitemap lists the home page in every public locale with reciprocal alt
     $xml->registerXPathNamespace('xhtml', 'http://www.w3.org/1999/xhtml');
 
     $locs = array_map('strval', $xml->xpath('//s:url/s:loc'));
-    expect($locs)->toBe([url('/'), url('/pl'), url('/de')]);
+    expect($locs)->toBe([
+        url('/'), url('/pl'), url('/de'),
+        url('/articles'), url('/pl/articles'), url('/de/articles'),
+    ]);
 
     $homeAlternates = $xml->xpath('//s:url[s:loc="'.url('/pl').'"]/xhtml:link');
     $hreflangs = [];
@@ -86,4 +90,17 @@ test('the sitemap and robots routes are not shadowed by the content catch-all', 
     $this->get('/sitemap.xml')->assertOk()->assertHeader('Content-Type', 'application/xml; charset=UTF-8');
     $this->get('/robots.txt')->assertOk()->assertHeader('Content-Type', 'text/plain; charset=UTF-8');
     $this->get('/sitemap')->assertOk()->assertInertia(fn ($inertia) => $inertia->component('pages/show', false));
+});
+
+test('the sitemap contains visible article translations but never drafts or scheduled ones', function () {
+    ArticleTranslation::factory()->published()->create(['slug' => 'company-news']);
+    ArticleTranslation::factory()->draft()->create(['slug' => 'article-draft']);
+    ArticleTranslation::factory()->scheduled()->create(['slug' => 'article-scheduled']);
+
+    $content = $this->get('/sitemap.xml')->assertOk()->getContent();
+
+    expect($content)
+        ->toContain('<loc>'.url('/articles/company-news').'</loc>')
+        ->not->toContain('article-draft')
+        ->not->toContain('article-scheduled');
 });

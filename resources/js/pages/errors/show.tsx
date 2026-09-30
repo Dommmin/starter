@@ -3,12 +3,11 @@ import type { ReactNode } from 'react';
 import {
     Button,
     EmptyState,
-    Footer,
     Heading,
     Maintenance,
     NotFound,
     PermissionDenied,
-    PublicHeader,
+    PublicChrome,
     Section,
     Seo,
     Stack,
@@ -56,11 +55,13 @@ export default function ErrorShow({ status }: App.Data.Errors.ErrorPageData) {
 
     return (
         <>
-            <Seo title={t(`errors.${key}.title`)} robots="noindex,nofollow" />
+            <Seo
+                title={t(`errors.${key}.title`)}
+                description={null}
+                robots="noindex,nofollow"
+            />
 
-            <PublicHeader />
-
-            <main id="main-content">
+            <PublicChrome>
                 <Section spacing="relaxed" container="reading">
                     <Stack gap="tight" align="center">
                         <Heading level={1} variant="page" align="center">
@@ -69,11 +70,7 @@ export default function ErrorShow({ status }: App.Data.Errors.ErrorPageData) {
                         {states[key]}
                     </Stack>
                 </Section>
-            </main>
-
-            <Footer
-                copyright={`© ${new Date().getFullYear()} ${t('brand.name')}`}
-            />
+            </PublicChrome>
         </>
     );
 }

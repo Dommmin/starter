@@ -6,7 +6,17 @@ import { DateField } from './date-field';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { FormActions } from './form-actions';
 import { FormSection } from './form-section';
+import {
+    ImagePickerField,
+    type ImagePickerFieldLabels,
+} from './image-picker-field';
 import { NumberField } from './number-field';
+import {
+    RepeaterField,
+    type RepeaterFieldLabels,
+    type RepeaterItem,
+    type RepeaterItemField,
+} from './repeater-field';
 import {
     RichTextField,
     type RichTextDocument,
@@ -21,12 +31,18 @@ import { TextareaField } from './textarea-field';
 
 /**
  * Form values handled by `ResourceForm`: flat string/boolean fields (number
- * and date inputs keep their raw string) and rich text documents.
+ * and date inputs keep their raw string), rich text documents and repeated
+ * items (lists of flat string records).
  */
 export type ResourceFormValues = Record<
     string,
-    string | boolean | RichTextDocument
+    string | boolean | RichTextDocument | ResourceFormRepeaterItem[]
 >;
+
+/** One item of a `repeater` field. */
+export type ResourceFormRepeaterItem = RepeaterItem;
+export type ResourceFormRepeaterItemField = RepeaterItemField;
+export type ResourceFormRepeaterLabels = RepeaterFieldLabels;
 
 type KeysOfType<Values, Type> = {
     [Key in keyof Values & string]: Values[Key] extends Type ? Key : never;
@@ -95,6 +111,27 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   labels: RichTextFieldLabels;
                   /** Enables inserting images from the DAM picker. */
                   imagePicker?: RichTextImagePicker;
+              }
+            | {
+                  /** One DAM image; the value is the asset id as a string (`''` = none). */
+                  type: 'image';
+                  name: KeysOfType<Values, string>;
+                  picker: RichTextImagePicker;
+                  /** Translated choose/change/remove/empty/preview labels. */
+                  labels: ImagePickerFieldLabels;
+              }
+            | {
+                  /**
+                   * List of structured items (add/remove/move up/down, at
+                   * most `maxItems`). Item errors are read from
+                   * `errors['<name>.<index>.<field>']`.
+                   */
+                  type: 'repeater';
+                  name: KeysOfType<Values, ResourceFormRepeaterItem[]>;
+                  itemFields: ResourceFormRepeaterItemField[];
+                  newItem: () => ResourceFormRepeaterItem;
+                  maxItems: number;
+                  labels: ResourceFormRepeaterLabels;
               }
         );
 
@@ -168,8 +205,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
     const summaryItems: ErrorSummaryItem[] = sections.flatMap((section) =>
         section.fields.flatMap((field) => {
             const message = errors[field.name];
-
-            return message
+            const own = message
                 ? [
                       {
                           fieldId: fieldId(field.name),
@@ -178,6 +214,31 @@ export function ResourceForm<Values extends ResourceFormValues>({
                       },
                   ]
                 : [];
+
+            if (field.type !== 'repeater') {
+                return own;
+            }
+
+            const items = values[field.name];
+            const nested = (Array.isArray(items) ? items : []).flatMap(
+                (_, index) =>
+                    field.itemFields.flatMap((itemField) => {
+                        const itemMessage =
+                            errors[`${field.name}.${index}.${itemField.name}`];
+
+                        return itemMessage
+                            ? [
+                                  {
+                                      fieldId: `${fieldId(field.name)}-${index}-${itemField.name}`,
+                                      label: `${field.labels.item(index + 1)}: ${itemField.label}`,
+                                      message: itemMessage,
+                                  },
+                              ]
+                            : [];
+                    }),
+            );
+
+            return [...own, ...nested];
         }),
     );
 
@@ -309,6 +370,62 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         }
                     />
                 );
+            case 'image':
+                return (
+                    <ImagePickerField
+                        key={field.name}
+                        id={common.id}
+                        name={common.name}
+                        label={common.label}
+                        hint={common.description}
+                        error={common.error}
+                        disabled={common.disabled}
+                        required={field.required}
+                        picker={field.picker}
+                        labels={field.labels}
+                        value={stringValue(values[field.name])}
+                        onChange={(value) =>
+                            onChange(
+                                field.name,
+                                value as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            case 'repeater': {
+                const prefix = `${field.name}.`;
+                const itemErrors: Partial<Record<string, string>> = {};
+                for (const [key, message] of Object.entries(errors)) {
+                    if (key.startsWith(prefix)) {
+                        itemErrors[key.slice(prefix.length)] = message;
+                    }
+                }
+                const items = values[field.name];
+
+                return (
+                    <RepeaterField
+                        key={field.name}
+                        id={common.id}
+                        name={common.name}
+                        label={common.label}
+                        hint={common.description}
+                        error={common.error}
+                        itemErrors={itemErrors}
+                        disabled={common.disabled}
+                        items={Array.isArray(items) ? items : []}
+                        itemFields={field.itemFields}
+                        newItem={field.newItem}
+                        maxItems={field.maxItems}
+                        labels={field.labels}
+                        onChange={(next) =>
+                            onChange(
+                                field.name,
+                                next as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            }
             case 'richText':
                 return (
                     <RichTextField

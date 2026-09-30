@@ -4,6 +4,7 @@ namespace App\Data\Admin\{{ Plural }};
 
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+{{ imports }}
 
 /**
  * Props of the `admin/{{ kebabPlural }}/create` and `admin/{{ kebabPlural }}/edit` screens.
@@ -11,8 +12,10 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[TypeScript]
 class {{ Model }}EditorData extends Data
 {
+{{ constructorDoc }}
     public function __construct(
         public {{ Model }}FormData ${{ variable }},
         public {{ Model }}AbilitiesData $can,
+{{ properties }}
     ) {}
 }

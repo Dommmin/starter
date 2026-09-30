@@ -10,6 +10,10 @@
  *     the self-hosted font stylesheet from fonts-manifest.json),
  *   - each public page: the JS it adds on top of the entry closure,
  *   - the largest single JS chunk loaded by any public page.
+ * Only `limits` block (total JS of each public page, critical CSS): they
+ * describe what a visitor actually downloads. `warnings` (entry, page chunk,
+ * largest chunk) are reported but do not fail, because Vite moves shared
+ * code between those chunks without changing the total.
  * It also fails when a test module (*.test.*) leaked into the client build
  * and when a module listed in `lazyModules` is not a separate dynamic chunk
  * or is statically reachable from the entry (it would load on every page).
@@ -195,31 +199,46 @@ function main() {
     });
 
     const limits = budget.limits;
+    const warningLimits = budget.warnings ?? {};
     const failures = [];
-    const check = (label, value, limit) => {
-        if (value > limit) {
-            failures.push(`${label}: ${value} KB > limit ${limit} KB`);
+    const warnings = [];
+    const check = (target, label, value, limit) => {
+        if (limit !== undefined && value > limit) {
+            target.push(`${label}: ${value} KB > ${limit} KB`);
         }
     };
 
-    check('entry JS (gzip)', measurements.entryJsGzipKb, limits.entryJsGzipKb);
-    check('krytyczny CSS (gzip)', measurements.cssGzipKb, limits.cssGzipKb);
     check(
+        failures,
+        'krytyczny CSS (gzip)',
+        measurements.cssGzipKb,
+        limits.cssGzipKb,
+    );
+    check(
+        warnings,
+        'entry JS (gzip)',
+        measurements.entryJsGzipKb,
+        warningLimits.entryJsGzipKb,
+    );
+    check(
+        warnings,
         `największy chunk strony publicznej ${largest.file} (gzip)`,
         measurements.largestPublicChunk.gzipKb,
-        limits.largestChunkGzipKb,
+        warningLimits.largestChunkGzipKb,
     );
 
     for (const [page, sizes] of Object.entries(measurements.pages)) {
         check(
-            `${page} — chunk strony (gzip)`,
-            sizes.pageJsGzipKb,
-            limits.pageJsGzipKb,
-        );
-        check(
+            failures,
             `${page} — łączny JS strony publicznej (gzip)`,
             sizes.totalJsGzipKb,
             limits.publicPageTotalJsGzipKb,
+        );
+        check(
+            warnings,
+            `${page} — chunk strony (gzip)`,
+            sizes.pageJsGzipKb,
+            warningLimits.pageJsGzipKb,
         );
     }
 
@@ -231,12 +250,16 @@ function main() {
 
     if (options.json) {
         console.log(
-            JSON.stringify({ measurements, limits, failures }, null, 2),
+            JSON.stringify(
+                { measurements, limits, warningLimits, failures, warnings },
+                null,
+                2,
+            ),
         );
     } else {
         console.log('Budżet bundla (gzip, poziom 9, tylko importy statyczne):');
         console.log(
-            `  entry JS                  ${measurements.entryJsGzipKb} KB / ${limits.entryJsGzipKb} KB`,
+            `  entry JS                  ${measurements.entryJsGzipKb} KB / ostrzeżenie ${warningLimits.entryJsGzipKb ?? '—'} KB`,
         );
         console.log(
             `  krytyczny CSS (+fonty)    ${measurements.cssGzipKb} KB / ${limits.cssGzipKb} KB`,
@@ -244,17 +267,25 @@ function main() {
 
         for (const [page, sizes] of Object.entries(measurements.pages)) {
             console.log(
-                `  ${page}\n    chunk strony            ${sizes.pageJsGzipKb} KB / ${limits.pageJsGzipKb} KB\n    łączny JS               ${sizes.totalJsGzipKb} KB / ${limits.publicPageTotalJsGzipKb} KB`,
+                `  ${page}\n    chunk strony            ${sizes.pageJsGzipKb} KB / ostrzeżenie ${warningLimits.pageJsGzipKb ?? '—'} KB\n    łączny JS               ${sizes.totalJsGzipKb} KB / ${limits.publicPageTotalJsGzipKb} KB`,
             );
         }
 
         console.log(
-            `  największy chunk          ${measurements.largestPublicChunk.gzipKb} KB / ${limits.largestChunkGzipKb} KB (${largest.file})`,
+            `  największy chunk          ${measurements.largestPublicChunk.gzipKb} KB / ostrzeżenie ${warningLimits.largestChunkGzipKb ?? '—'} KB (${largest.file})`,
         );
         console.log(`  liczba chunków JS         ${measurements.chunkCount}`);
         console.log(
             `  moduły leniwe poza entry  ${(budget.lazyModules ?? []).length - lazyViolations.length}/${(budget.lazyModules ?? []).length}`,
         );
+    }
+
+    if (warnings.length > 0) {
+        console.warn('\nWARN bundle-budget (nie blokuje; sprawdź przyczynę):');
+
+        for (const warning of warnings) {
+            console.warn(`  - ${warning}`);
+        }
     }
 
     if (failures.length > 0) {

@@ -2,12 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Navigation\NavigationData;
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
 use App\Models\AuditLog;
+use App\Models\SiteSetting;
 use App\Models\User;
+use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
+use App\Services\Navigation\PublicNavigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -28,11 +32,13 @@ class HandleInertiaRequests extends Middleware
      *
      * @var list<string>
      */
-    private const TRANSLATED_PARAMETER_ROUTES = ['pages.show'];
+    private const TRANSLATED_PARAMETER_ROUTES = ['pages.show', 'articles.show'];
 
     public function __construct(
         protected LocalizationManager $localization,
         protected LocalizedUrlGenerator $urlGenerator,
+        protected SiteSettingsRepository $siteSettings,
+        protected PublicNavigation $navigation,
     ) {}
 
     /**
@@ -67,13 +73,30 @@ class HandleInertiaRequests extends Middleware
                 'can' => [
                     'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,
                     'viewAudit' => $request->user()?->can('viewAny', AuditLog::class) ?? false,
+                    'manageSiteSettings' => $request->user()?->can('update', SiteSetting::class) ?? false,
                 ],
             ],
             'locale' => app()->getLocale(),
             'i18n' => $i18n,
             'seo' => $this->seoDefaults($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'site' => fn () => $this->siteSettings->current(),
+            ...$this->publicNavigation($i18n['area'], $i18n['locale']),
         ];
+    }
+
+    /**
+     * Lazily resolved header and footer menus, shared only with public pages.
+     *
+     * @return array<string, \Closure(): NavigationData>
+     */
+    protected function publicNavigation(string $area, string $locale): array
+    {
+        if ($area !== 'public') {
+            return [];
+        }
+
+        return ['navigation' => fn () => $this->navigation->shared($locale)];
     }
 
     /**
@@ -122,16 +145,22 @@ class HandleInertiaRequests extends Middleware
         $appUrl = url('/');
         $organizationUrl = config('seo.organization.url');
         $organizationLogo = config('seo.organization.logo');
-        $defaultImage = config('seo.default_image');
+        $siteLogo = $this->siteSettings->current()->logo;
 
         return new SeoDefaultsData(
-            siteName: (string) config('seo.site_name'),
+            siteName: $this->siteSettings->siteName(),
             canonical: $request->url(),
-            defaultImage: is_string($defaultImage) && $defaultImage !== '' ? url($defaultImage) : null,
+            defaultImage: $this->siteSettings->defaultImageUrl(),
+            defaultTitle: $this->siteSettings->defaultTitle(),
+            defaultDescription: $this->siteSettings->defaultDescription(),
             organization: new SeoOrganizationData(
-                name: (string) config('seo.organization.name'),
+                name: $this->siteSettings->exists()
+                    ? $this->siteSettings->siteName()
+                    : (string) config('seo.organization.name'),
                 url: is_string($organizationUrl) && $organizationUrl !== '' ? url($organizationUrl) : $appUrl,
-                logo: is_string($organizationLogo) && $organizationLogo !== '' ? url($organizationLogo) : null,
+                logo: $siteLogo !== null
+                    ? $siteLogo->src
+                    : (is_string($organizationLogo) && $organizationLogo !== '' ? url($organizationLogo) : null),
             ),
         );
     }

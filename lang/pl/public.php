@@ -2,8 +2,6 @@
 
 return [
     'landing' => [
-        'metaTitle' => 'Punkt Startowy — Nowoczesna platforma aplikacji internetowych',
-        'metaDescription' => 'Punkt Startowy to przemyślana baza dla nowoczesnych aplikacji internetowych. Sprawdź demonstracyjny landing page studia i produktu.',
         'badge' => 'Architektura gotowa na skalę',
         'heroTitle' => 'Solidny fundament dla nowoczesnych produktów cyfrowych',
         'heroDescription' => 'Kompleksowy starter łączący Laravel 13, React 19, Inertia v3 i rygorystyczny design system. Zbudowany z myślą o dostępności, wydajności i bezkompromisowej jakości inżynierskiej.',
@@ -36,10 +34,21 @@ return [
         'stackValue' => 'Laravel 13 + React 19',
         'ctaBottomTitle' => 'Gotowy, by nadać swojemu projektowi właściwy rytm?',
         'ctaBottomDescription' => 'Przekonaj się, jak płynnie współpracuje część publiczna z modułem administracyjnym. Zaloguj się do panelu i zobacz to w działaniu.',
-        'footerCopy' => 'Punkt Startowy. Baza aplikacji internetowych.',
     ],
     'page' => [
         'publishedOn' => 'Opublikowano :date',
+    ],
+    'articles' => [
+        'title' => 'Artykuły',
+        'description' => 'Aktualności i artykuły naszego zespołu.',
+        'listLabel' => 'Lista artykułów',
+        'empty' => 'Nie opublikowano jeszcze żadnych artykułów.',
+        'readMore' => 'Czytaj artykuł: :title',
+        'publishedOn' => 'Opublikowano :date',
+        'backToList' => 'Wszystkie artykuły',
+        'previousPage' => 'Poprzednia strona',
+        'nextPage' => 'Następna strona',
+        'paginationSummary' => 'Strona :page z :total',
     ],
     'contact' => [
         'title' => 'Skontaktuj się z nami',
@@ -61,5 +70,15 @@ return [
             'invalidCharacters' => 'To pole zawiera niedozwolone znaki.',
             'formExpired' => 'Formularz wygasł. Odśwież stronę i spróbuj ponownie.',
         ],
+    ],
+    'site' => [
+        'defaultTitle' => 'Punkt Startowy — Nowoczesna platforma aplikacji internetowych',
+        'defaultDescription' => 'Punkt Startowy to przemyślana baza dla nowoczesnych aplikacji internetowych. Sprawdź demonstracyjny landing page studia i produktu.',
+    ],
+    'home' => [
+        'latestArticlesEmpty' => 'Nie opublikowano jeszcze żadnych artykułów.',
+        'allArticles' => 'Wszystkie artykuły',
+        'readMore' => 'Przeczytaj artykuł: :title',
+        'faqEmpty' => 'Nie opublikowano jeszcze żadnych pytań.',
     ],
 ];

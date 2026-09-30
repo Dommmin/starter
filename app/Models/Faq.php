@@ -14,12 +14,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $question
  * @property string $answer
+ * @property string|null $locale Null: shown in every public locale.
  * @property int|null $position
  * @property bool $published
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
-#[Fillable(['question', 'answer', 'position', 'published'])]
+#[Fillable(['question', 'answer', 'locale', 'position', 'published'])]
 class Faq extends Model
 {
     /** @use HasFactory<FaqFactory> */

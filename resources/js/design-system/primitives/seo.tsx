@@ -14,8 +14,12 @@ export type SeoType = 'website' | 'article';
 export type SeoJsonLd = Record<string, unknown>;
 
 export type SeoProps = {
-    /** Page title without the site suffix; `createInertiaApp({ title })` appends it. */
-    title: string;
+    /**
+     * Page title without the site suffix; `createInertiaApp({ title })`
+     * appends it. Defaults to the shared `seo.defaultTitle` (home page).
+     */
+    title?: string;
+    /** Defaults to the shared `seo.defaultDescription`; `null` omits it. */
     description?: string | null;
     /** Absolute canonical URL. Defaults to the shared `seo.canonical` (current URL without query). */
     canonical?: string;
@@ -74,6 +78,9 @@ export function Seo({
     const isIndexable = robots.startsWith('index');
     const canonicalUrl = canonical ?? defaults.canonical;
     const imageUrl = image ?? defaults.defaultImage;
+    const pageTitle = title ?? defaults.defaultTitle;
+    const pageDescription =
+        description === undefined ? defaults.defaultDescription : description;
 
     const tags: ReactElement[] = [
         <meta key="robots" head-key="robots" name="robots" content={robots} />,
@@ -87,7 +94,7 @@ export function Seo({
             key="og:title"
             head-key="og:title"
             property="og:title"
-            content={title}
+            content={pageTitle}
         />,
         <meta
             key="og:type"
@@ -109,19 +116,19 @@ export function Seo({
         />,
     ];
 
-    if (description) {
+    if (pageDescription) {
         tags.push(
             <meta
                 key="description"
                 head-key="description"
                 name="description"
-                content={description}
+                content={pageDescription}
             />,
             <meta
                 key="og:description"
                 head-key="og:description"
                 property="og:description"
-                content={description}
+                content={pageDescription}
             />,
         );
     }
@@ -185,5 +192,5 @@ export function Seo({
         );
     }
 
-    return <Head title={title}>{tags}</Head>;
+    return <Head title={pageTitle}>{tags}</Head>;
 }

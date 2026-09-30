@@ -16,7 +16,29 @@ async function runSsrVerification() {
         siteName: 'Starter',
         canonical: 'http://localhost/',
         defaultImage: null,
+        defaultTitle: 'Starter — domyślny tytuł',
+        defaultDescription: 'Domyślny opis strony z ustawień',
         organization: { name: 'Starter', url: 'http://localhost', logo: null },
+    };
+
+    const site = {
+        name: 'Nazwa z panelu',
+        isCustomized: true,
+        logo: null,
+        tagline: null,
+        footerText: 'Stopka z ustawień',
+        contact: {
+            email: 'kontakt@example.test',
+            phone: null,
+            address: null,
+        },
+        social: [
+            {
+                network: 'github',
+                label: 'GitHub',
+                url: 'https://github.com/example',
+            },
+        ],
     };
 
     const makePage = (locale, heroTitle) => ({
@@ -25,7 +47,68 @@ async function runSsrVerification() {
             name: 'Starter',
             auth: { user: null },
             seo,
+            site,
             contactForm: { token: 'ssr-fixture-token' },
+            navigation: {
+                header: [
+                    {
+                        id: 1,
+                        label: `Menu ${locale}`,
+                        href: `/${locale}/articles`,
+                        kind: 'internal',
+                        newTab: false,
+                        children: [],
+                    },
+                ],
+                footer: [
+                    {
+                        id: 2,
+                        label: `Footer menu ${locale}`,
+                        href: `/${locale}/privacy`,
+                        kind: 'internal',
+                        newTab: false,
+                        children: [],
+                    },
+                ],
+            },
+            // Home page content comes from the enabled sections of the
+            // locale (HomeSectionData); the hero title must be in the HTML.
+            sections: [
+                {
+                    id: 1,
+                    type: 'hero',
+                    anchor: 'hero',
+                    content: {
+                        eyebrow: null,
+                        title: heroTitle,
+                        description: 'Hero description',
+                        primaryAction: { label: 'Contact', url: '#contact' },
+                        secondaryAction: null,
+                    },
+                },
+                {
+                    id: 3,
+                    type: 'faq',
+                    anchor: 'faq',
+                    content: {
+                        title: 'FAQ',
+                        description: null,
+                        items: [
+                            {
+                                id: 1,
+                                question: 'SSR question',
+                                answer: 'SSR answer in first HTML',
+                            },
+                        ],
+                    },
+                },
+                {
+                    id: 2,
+                    type: 'contact',
+                    anchor: 'contact',
+                    content: { title: 'Contact', description: null },
+                },
+            ],
             i18n: {
                 area: 'public',
                 locale,
@@ -69,8 +152,6 @@ async function runSsrVerification() {
                     },
                     landing: {
                         heroTitle,
-                        metaTitle: 'Meta title',
-                        metaDescription: 'Meta description',
                         badge: 'Badge',
                         heroDescription: 'Hero description',
                         ctaPrimaryGuest: 'Start',
@@ -100,7 +181,6 @@ async function runSsrVerification() {
                         stackValue: 'Stack value',
                         ctaBottomTitle: 'Bottom title',
                         ctaBottomDescription: 'Bottom description',
-                        footerCopy: 'Footer',
                     },
                 },
             },
@@ -116,13 +196,48 @@ async function runSsrVerification() {
         'SSR EN musi zawierać angielski tytuł',
     );
     assert.ok(
+        en1.body.includes('id="hero"') && en1.body.includes('id="contact"'),
+        'SSR strony głównej musi zawierać stałe kotwice sekcji (HomeSectionAnchor)',
+    );
+    assert.ok(
+        en1.body.includes('SSR answer in first HTML') &&
+            en1.body.includes('<details'),
+        'SSR musi zawierać treść odpowiedzi FAQ (zwinięty <details>) w pierwszym HTML',
+    );
+    assert.ok(
+        /<a[^>]*href="#contact"/.test(en1.body),
+        'Przycisk z celem #contact musi być zwykłym linkiem do kotwicy',
+    );
+    assert.ok(
         !en1.body.includes('landing.heroTitle') &&
             !en1.body.includes('brand.name'),
         'SSR EN nie może przeciekać surowych kluczy i18n zamiast tłumaczeń',
     );
+    const en1Head = en1.head.join('\n');
+    assert.ok(
+        /<title[^>]*>Starter — domyślny tytuł - Nazwa z panelu<\/title>/.test(
+            en1Head,
+        ) &&
+            en1Head.includes(
+                'name="description" content="Domyślny opis strony z ustawień"',
+            ),
+        'SSR strony głównej musi zawierać tytuł (z sufiksem nazwy z panelu) i opis z ustawień strony',
+    );
+    assert.ok(
+        en1.body.includes('Stopka z ustawień') &&
+            en1.body.includes('>Nazwa z panelu</span>') &&
+            en1.body.includes('kontakt@example.test') &&
+            en1.body.includes('https://github.com/example'),
+        'SSR nagłówka i stopki musi zawierać nazwę, tekst, kontakt i social z ustawień strony',
+    );
     assert.ok(
         en1.body.includes('English'),
         'Przełącznik języka (trigger) musi być widoczny i pokazywać aktywny język, gdy availableLocales > 1',
+    );
+
+    assert.ok(
+        en1.body.includes('Menu en') && en1.body.includes('Footer menu en'),
+        'SSR EN musi zawierać etykiety menu nawigacji (nagłówek i stopka) w pierwszym HTML',
     );
 
     // 2. Render PL
@@ -138,6 +253,10 @@ async function runSsrVerification() {
     assert.ok(
         !pl.body.includes('landing.heroTitle'),
         'SSR PL nie może przeciekać surowych kluczy i18n',
+    );
+    assert.ok(
+        pl.body.includes('Menu pl') && !pl.body.includes('Menu en'),
+        'SSR PL musi zawierać menu nawigacji PL bez wycieku z EN',
     );
     assert.ok(
         pl.body.includes('Polski'),
@@ -217,7 +336,7 @@ async function runSsrVerification() {
     const head = contentPage.head.join('\n');
 
     assert.ok(
-        /<title[^>]*>O nas &amp; zespół/.test(head),
+        /<title[^>]*>O nas &amp; zespół - Nazwa z panelu<\/title>/.test(head),
         'SSR strony treści musi zawierać <title> z escapowanym tytułem',
     );
     assert.ok(

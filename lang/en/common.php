@@ -16,6 +16,7 @@ return [
         'themeSwitcherNext' => 'Switch theme to :mode',
         'openMenu' => 'Open menu',
         'closeMenu' => 'Close menu',
+        'opensInNewTab' => 'opens in a new tab',
     ],
     'nav' => [
         'home' => 'Home',
@@ -28,8 +29,19 @@ return [
         'appearance' => 'Appearance',
         'settings' => 'Settings',
         'openAdmin' => 'Open admin panel',
+        'articles' => 'Articles',
         'features' => 'Features',
         'menuTitle' => 'Menu',
+        'submenu' => ':label submenu',
+    ],
+    'footer' => [
+        'contact' => 'Contact',
+        'social' => 'Social media',
+    ],
+    'orderable' => [
+        'moveUp' => 'Move :label up',
+        'moveDown' => 'Move :label down',
+        'moved' => ':label moved to position :position of :total',
     ],
     'theme' => [
         'light' => 'Light',
@@ -50,5 +62,11 @@ return [
             'one' => ':count item',
             'other' => ':count items',
         ],
+    ],
+    'repeater' => [
+        'remove' => 'Remove :label',
+        'added' => ':label added',
+        'removed' => ':label removed',
+        'limit' => ':count of :max items',
     ],
 ];

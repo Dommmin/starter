@@ -18,7 +18,13 @@ export type ButtonProps = {
     children: ReactNode;
     variant?: ButtonVariant;
     size?: ButtonSize;
+    /** A value starting with `#` renders a plain in-page anchor (no Inertia visit). */
     href?: string | RouteDefinition<'get'> | { url: string };
+    /**
+     * With `href`: render a plain `<a download>` (no Inertia visit) so the
+     * browser saves the response. A string suggests the file name.
+     */
+    download?: boolean | string;
     isPending?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
@@ -56,6 +62,7 @@ export function Button({
     variant = 'primary',
     size = 'default',
     href,
+    download,
     isPending = false,
     disabled = false,
     type = 'button',
@@ -95,6 +102,28 @@ export function Button({
             typeof href === 'object' && href !== null && 'url' in href
                 ? href.url
                 : href;
+
+        // In-page anchor (`#section`): a plain link, no Inertia visit.
+        if (download || targetHref.startsWith('#')) {
+            return (
+                <a
+                    href={targetHref}
+                    download={
+                        download === undefined || download === false
+                            ? undefined
+                            : download === true
+                              ? ''
+                              : download
+                    }
+                    aria-label={ariaLabel}
+                    className={baseClasses}
+                    onClick={onClick}
+                >
+                    {content}
+                </a>
+            );
+        }
+
         return (
             <Link
                 href={targetHref}

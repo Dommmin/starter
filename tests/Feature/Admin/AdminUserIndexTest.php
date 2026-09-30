@@ -39,7 +39,7 @@ test('admins can list users with default filters', function () {
 });
 
 test('search filters users by name or email', function () {
-    $admin = User::factory()->admin()->withTwoFactor()->create();
+    $admin = User::factory()->admin()->withTwoFactor()->create(['name' => 'Panel Owner', 'email' => 'owner@example.com']);
     User::factory()->create(['name' => 'Ada Lovelace', 'email' => 'ada@example.com']);
     User::factory()->create(['name' => 'Grace Hopper', 'email' => 'grace@example.com']);
 

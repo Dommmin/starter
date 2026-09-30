@@ -1,5 +1,5 @@
 {
-    "description": "Regresyjny budżet gzip (KB) krytycznej ścieżki stron publicznych; progi = pomiar z 2026-09-27 + ok. 10%. Cel docelowy z docs/foundation/05: ≤100 KB JS strony publicznej. Podniesienie progu wymaga uzasadnienia i review.",
+    "description": "Budżet gzip (KB) krytycznej ścieżki stron publicznych. `limits` blokują CI (łączny JS strony publicznej, krytyczny CSS); `warnings` tylko raportują (entry, chunk strony, największy chunk), bo Vite przesuwa wspólny kod między tymi chunkami bez zmiany sumy. Progi = pomiar + ok. 10%; obniżać po realnym zmniejszeniu. Cel docelowy z docs/foundation/05: ≤100 KB JS strony publicznej (do rozstrzygnięcia przez właściciela). Podniesienie progu wymaga uzasadnienia i review.",
     "entry": "resources/js/app.tsx",
     "css": [
         "resources/css/app.css"
@@ -10,16 +10,19 @@
     ],
     "forbiddenSourcePattern": "\\.test\\.[jt]sx?$",
     "limits": {
-        "entryJsGzipKb": 159,
         "cssGzipKb": 22,
-        "pageJsGzipKb": 64,
-        "publicPageTotalJsGzipKb": 225,
-        "largestChunkGzipKb": 125
+        "publicPageTotalJsGzipKb": 238
+    },
+    "warnings": {
+        "entryJsGzipKb": 167,
+        "pageJsGzipKb": 70,
+        "largestChunkGzipKb": 115
     },
     "changelog": [
         "2026-09-27: pageJsGzipKb 35→40 — welcome zawiera działający formularz kontaktowy (~4 KB gzip: ContactSection, ErrorSummary, TextareaField, Alert, useForm). Limit łączny JS strony publicznej bez zmian (236 KB); zatwierdził właściciel („wszystko po kolei”).",
         "2026-09-27: okno potwierdzania hasła (Radix Dialog, passkeys) ładowane leniwie przy pierwszej odpowiedzi 423 (lazyModules). Pomiar: entry 184,55→165,81 KB, łączny JS welcome 222,74→213,96 KB, pages/show 214,54→205,74 KB. Zapadka w dół: entryJsGzipKb 202→174 i publicPageTotalJsGzipKb 236→225 (pomiar +~5%). pageJsGzipKb 40→51 wyłącznie z powodu atrybucji: prymitywy Radix współdzielone z nagłówkiem publicznym (Combination, dropdown ~16 KB) nie są już w entry, więc liczą się do chunku strony (welcome 38,19→48,14 KB); suma entry+strona maleje. Podniesienie pageJsGzipKb wymaga review człowieka.",
-        "2026-09-27: shell panelu admina (AdminShell, CommandPalette) zastąpił shadcn sidebar w admin-layout. Wyłącznie atrybucja: clsx/tailwind-merge nie są już doklejane do chunku Reacta w entry, więc liczą się do chunku strony. Pomiar (czysty build): entry 165,84→151,37 KB, chunk welcome 48,33→61,06 KB, pages/show 40,12→52,73 KB, łączny JS welcome 214,17→212,43 KB, pages/show 205,95→204,1 KB. Zapadka w dół: entryJsGzipKb 174→159; pageJsGzipKb 51→64 (pomiar +~5%). Zatwierdził właściciel (review progów w sesji fali 1)."
+        "2026-09-27: shell panelu admina (AdminShell, CommandPalette) zastąpił shadcn sidebar w admin-layout. Wyłącznie atrybucja: clsx/tailwind-merge nie są już doklejane do chunku Reacta w entry, więc liczą się do chunku strony. Pomiar (czysty build): entry 165,84→151,37 KB, chunk welcome 48,33→61,06 KB, pages/show 40,12→52,73 KB, łączny JS welcome 214,17→212,43 KB, pages/show 205,95→204,1 KB. Zapadka w dół: entryJsGzipKb 174→159; pageJsGzipKb 51→64 (pomiar +~5%). Zatwierdził właściciel (review progów w sesji fali 1).",
+        "2026-09-28: blokują tylko łączny JS strony publicznej i krytyczny CSS; entry, chunk strony i największy chunk przeniesione do `warnings` (trzy wcześniejsze podniesienia wynikały z atrybucji, nie ze wzrostu). Zapas ~10% nad pomiarem (czysty build, bez skompilowanych widoków w storage): łączny JS welcome 216,02 KB → limit 238 (było 225), CSS 19,92 KB → 22 (bez zmian); ostrzeżenia: entry 152,04 → 167, chunk welcome 63,98 → 70, największy chunk 104,24 → 115. Tailwind nie skanuje już storage/ (skompilowane widoki błędów zawyżały lokalny CSS o ~2,6 KB). Zatwierdził właściciel."
     ],
     "lazyModules": [
         "resources/js/components/password-confirmation-dialog.tsx"

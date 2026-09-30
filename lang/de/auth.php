@@ -120,6 +120,13 @@ return [
             'action' => 'E-Mail-Adresse bestätigen',
             'line_2' => 'Wenn Sie kein Konto erstellt haben, ist keine weitere Aktion erforderlich.',
         ],
+        'invitation' => [
+            'subject' => 'Ihr Konto bei :app',
+            'line_1' => 'Ein Administrator hat für Sie ein Konto bei :app erstellt. Legen Sie Ihr Passwort fest, um sich anzumelden.',
+            'action' => 'Passwort festlegen',
+            'line_2' => 'Dieser Link läuft in :count Minuten ab. Danach nutzen Sie „Passwort vergessen“ auf der Anmeldeseite.',
+            'line_3' => 'Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.',
+        ],
         'reset_password' => [
             'subject' => 'Setzen Sie Ihr Passwort zurück',
             'line_1' => 'Sie erhalten diese E-Mail, weil wir eine Anfrage zum Zurücksetzen des Passworts für Ihr Konto erhalten haben.',

@@ -2,6 +2,7 @@
 
 namespace App\Data\Admin\Faqs;
 
+use App\Data\Content\ContentLocalesData;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -14,5 +15,6 @@ class FaqEditorData extends Data
     public function __construct(
         public FaqFormData $faq,
         public FaqAbilitiesData $can,
+        public ContentLocalesData $locales,
     ) {}
 }

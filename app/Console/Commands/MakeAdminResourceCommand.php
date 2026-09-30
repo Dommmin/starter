@@ -14,10 +14,11 @@ use RuntimeException;
 
 #[Signature('app:make-resource
     {name : Singular StudlyCase model name, e.g. Product}
-    {--fields= : Comma separated name:type[:required]; types: string, text, integer, decimal, boolean, date, enum(a|b)}
+    {--fields= : Comma separated name:type[:required]; types: string, text, integer, decimal, boolean, date, enum(a|b:success), belongsTo(Model.label_column), image, richtext}
     {--searchable= : Comma separated string/text fields matched by the list search}
-    {--sortable= : Comma separated sortable columns (fields, id, created_at, updated_at); default created_at}
-    {--filters= : Comma separated boolean/enum fields offered as list filters}
+    {--sortable= : Comma separated sortable columns (non-text, non-relation fields, id, created_at, updated_at); default created_at}
+    {--filters= : Comma separated boolean/enum/belongsTo fields offered as list filters}
+    {--export : Add a CSV export of the filtered list (administrators only, audited)}
     {--dry-run : List the files that would be created or changed without writing anything}
     {--no-format : Skip Pint and the frontend formatter on the generated files}', aliases: ['make:admin-resource'])]
 #[Description('Generate a plain admin CRUD resource (migration, model, factory, seeder, policy, controller, requests, Data, React pages, i18n, routes and tests)')]
@@ -35,9 +36,19 @@ class MakeAdminResourceCommand extends Command
                 (string) $this->option('searchable'),
                 (string) $this->option('sortable'),
                 (string) $this->option('filters'),
+                (bool) $this->option('export'),
             );
         } catch (InvalidArgumentException $exception) {
             foreach (explode(PHP_EOL, $exception->getMessage()) as $message) {
+                $this->error($message);
+            }
+
+            return self::INVALID;
+        }
+
+        $relationErrors = $generator->relationErrors($resource);
+        if ($relationErrors !== []) {
+            foreach ($relationErrors as $message) {
                 $this->error($message);
             }
 

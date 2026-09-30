@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
-import { LogIn, UserPlus } from 'lucide-react';
-import type { ReactNode } from 'react';
+import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
+import { ChevronDown, LogIn, UserPlus } from 'lucide-react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -15,20 +16,106 @@ import {
     login as localizedLogin,
     register as localizedRegister,
 } from '@/routes/localized';
+import type { BrandLogoImage } from './brand-logo';
 import { Button } from './button';
 import { HeaderUtility } from './header-utility';
-import { Link } from './link';
-import { MobileNav, type MobileNavItem } from './mobile-nav';
-
-export type PublicHeaderNavItem = MobileNavItem;
+import { MobileNav } from './mobile-nav';
+import type { NavItem } from './nav-item';
+import { isNavLink, NavItemLink } from './nav-item-link';
 
 export type PublicHeaderProps = {
-    navItems?: PublicHeaderNavItem[];
+    /**
+     * Main navigation. Entries with `children` (one level) open a disclosure
+     * submenu on desktop and render nested in the mobile panel.
+     */
+    navItems?: NavItem[];
+    /** Optional image logo; the text logo otherwise. */
+    logo?: BrandLogoImage;
+    /** One-tone text logo name; the catalog brand otherwise. */
+    brandName?: string;
     className?: never;
     style?: never;
 };
 
-export function PublicHeader({ navItems = [] }: PublicHeaderProps) {
+const topLinkClasses =
+    'text-foreground decoration-border rounded-sm underline underline-offset-4 transition-colors duration-150 hover:decoration-current focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
+const submenuLinkClasses =
+    'text-foreground hover:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2 text-sm whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none';
+
+/**
+ * Disclosure submenu (button + list of links), deliberately not an ARIA
+ * `menu`: links stay in the Tab order, Escape closes and returns focus to the
+ * trigger, and focus leaving the item closes it.
+ */
+function DesktopSubmenu({ item }: { item: NavItem }) {
+    const { t } = useTranslation();
+    const [open, setOpen] = useState(false);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const links = [
+        ...(isNavLink(item) ? [{ ...item, children: undefined }] : []),
+        ...(item.children ?? []),
+    ].filter(isNavLink);
+
+    return (
+        <CollapsiblePrimitive.Root
+            open={open}
+            onOpenChange={setOpen}
+            className="relative"
+            onKeyDown={(event) => {
+                if (event.key === 'Escape' && open) {
+                    event.stopPropagation();
+                    setOpen(false);
+                    triggerRef.current?.focus();
+                }
+            }}
+            onBlur={(event) => {
+                if (
+                    !event.currentTarget.contains(
+                        event.relatedTarget as Node | null,
+                    )
+                ) {
+                    setOpen(false);
+                }
+            }}
+        >
+            <CollapsiblePrimitive.Trigger
+                ref={triggerRef}
+                className="text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
+            >
+                {item.label}
+                <ChevronDown
+                    className="text-muted-foreground size-4 shrink-0 transition-transform"
+                    aria-hidden="true"
+                />
+            </CollapsiblePrimitive.Trigger>
+            <CollapsiblePrimitive.Content className="bg-background border-border-subtle absolute top-full left-0 z-20 mt-2 min-w-48 rounded-lg border p-2 shadow-lg">
+                <ul aria-label={t('nav.submenu', { label: item.label })}>
+                    {links.map((link, index) => (
+                        <li
+                            key={
+                                index === 0 && isNavLink(item)
+                                    ? 'self'
+                                    : link.id
+                            }
+                        >
+                            <NavItemLink
+                                item={link}
+                                classes={submenuLinkClasses}
+                                onNavigate={() => setOpen(false)}
+                            />
+                        </li>
+                    ))}
+                </ul>
+            </CollapsiblePrimitive.Content>
+        </CollapsiblePrimitive.Root>
+    );
+}
+
+export function PublicHeader({
+    navItems = [],
+    logo,
+    brandName,
+}: PublicHeaderProps) {
     const { t, locale, defaultLocale } = useTranslation();
     const page = usePage();
     const { auth } = page.props;
@@ -93,15 +180,22 @@ export function PublicHeader({ navItems = [] }: PublicHeaderProps) {
     );
 
     return (
-        <HeaderUtility>
+        <HeaderUtility logo={logo} brandName={brandName}>
             {navItems.length > 0 && (
-                <div className="hidden items-center gap-4 md:flex">
+                <ul className="hidden items-center gap-4 md:flex">
                     {navItems.map((item) => (
-                        <Link key={item.id} href={item.href}>
-                            {item.label}
-                        </Link>
+                        <li key={item.id}>
+                            {(item.children ?? []).length > 0 ? (
+                                <DesktopSubmenu item={item} />
+                            ) : isNavLink(item) ? (
+                                <NavItemLink
+                                    item={item}
+                                    classes={topLinkClasses}
+                                />
+                            ) : null}
+                        </li>
                     ))}
-                </div>
+                </ul>
             )}
             <div className="flex items-center gap-1.5 sm:gap-3">
                 {authControls}

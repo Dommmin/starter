@@ -19,14 +19,19 @@ export type RichTextImageDialogProps = {
     name: string;
     picker: RichTextImagePicker;
     onInsert: (image: { mediaId: number; alt: string }) => void;
+    /**
+     * Ask for alternative text (rich text images). Covers and other images
+     * whose text comes from the asset pass `false`; `alt` is then the asset's.
+     */
+    withAlt?: boolean;
 };
 
 type LoadState = 'loading' | 'ready' | 'error';
 
 /**
- * Internal DAM picker of the rich text editor (not public DS API): search,
- * single-choice grid of clean images, alternative text prefilled from the
- * asset. Loaded lazily together with the editor.
+ * Internal DAM picker of the rich text editor and `ImagePickerField` (not
+ * public DS API): search, single-choice grid of clean images, alternative
+ * text prefilled from the asset. Loaded lazily by its callers.
  */
 export function RichTextImageDialog({
     open,
@@ -34,6 +39,7 @@ export function RichTextImageDialog({
     name,
     picker,
     onInsert,
+    withAlt = true,
 }: RichTextImageDialogProps) {
     const { labels } = picker;
     const [search, setSearch] = useState('');
@@ -150,14 +156,16 @@ export function RichTextImageDialog({
                         />
                     )}
                 </div>
-                <TextField
-                    name={`${name}-image-alt`}
-                    label={labels.altLabel}
-                    description={labels.altHint}
-                    value={alt}
-                    onChange={setAlt}
-                    disabled={selectedId === null}
-                />
+                {withAlt && (
+                    <TextField
+                        name={`${name}-image-alt`}
+                        label={labels.altLabel}
+                        description={labels.altHint}
+                        value={alt}
+                        onChange={setAlt}
+                        disabled={selectedId === null}
+                    />
+                )}
             </Stack>
         </FormDialog>
     );

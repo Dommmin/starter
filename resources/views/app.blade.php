@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-{{-- Panel pages (admin/*, settings/*) share the admin surface; keep in sync with surfaceFor() in resources/js/lib/page-resolver.ts --}}
-@php($surface = str_starts_with($page['component'], 'admin/') || str_starts_with($page['component'], 'settings/') ? 'admin' : null)
+{{-- Admin panel pages (admin/*) use the admin surface; keep in sync with surfaceFor() in resources/js/lib/page-resolver.ts --}}
+@php($surface = str_starts_with($page['component'], 'admin/') ? 'admin' : null)
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) @if($surface) data-surface="{{ $surface }}" @endif>
     <head>
         <meta charset="utf-8">

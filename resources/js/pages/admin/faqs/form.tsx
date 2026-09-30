@@ -19,16 +19,28 @@ type RecordData = App.Data.Admin.Faqs.FaqFormData;
 type FormValues = {
     question: string;
     answer: string;
+    /** A public locale code or ALL_LOCALES (sent as blank = every language). */
+    locale: string;
     position: string;
     published: boolean;
 };
 
-const FIELD_NAMES: string[] = ['question', 'answer', 'position', 'published'];
+/** Select sentinel for "every language" (a select option cannot be empty). */
+const ALL_LOCALES = 'all';
+
+const FIELD_NAMES: string[] = [
+    'question',
+    'answer',
+    'locale',
+    'position',
+    'published',
+];
 
 function toValues(record: RecordData): FormValues {
     return {
         question: record.question ?? '',
         answer: record.answer ?? '',
+        locale: record.locale ?? ALL_LOCALES,
         position: record.position === null ? '' : String(record.position),
         published: record.published,
     };
@@ -84,6 +96,7 @@ export function FaqForm({ editor }: FaqFormProps) {
     function submit() {
         form.transform((data) => ({
             ...data,
+            locale: data.locale === ALL_LOCALES ? '' : data.locale,
             ...(recordId !== null
                 ? { updated_at: record.updatedAt ?? '' }
                 : {}),
@@ -188,6 +201,23 @@ export function FaqForm({ editor }: FaqFormProps) {
                                 label: t('admin.faqs.fields.answer'),
                                 rows: 5,
                                 required: true,
+                            },
+                            {
+                                type: 'select',
+                                name: 'locale',
+                                label: t('admin.faqs.fields.locale'),
+                                options: [
+                                    {
+                                        value: ALL_LOCALES,
+                                        label: t('admin.faqs.fields.localeAll'),
+                                    },
+                                    ...editor.locales.available.map(
+                                        (locale) => ({
+                                            value: locale.code,
+                                            label: locale.native,
+                                        }),
+                                    ),
+                                ],
                             },
                             {
                                 type: 'number',

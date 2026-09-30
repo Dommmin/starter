@@ -154,4 +154,5 @@ Zależność krytyczna: dostawca/plan GitHub → realny approval → tożsamośc
 - [08 — roadmapa](08-implementation-roadmap.md)
 - [09 — agenci, skille i proporcjonalne przepływy Claude/Codex](09-agents-skills-and-workflows.md)
 - [10 — lokalne środowisko, zero-downtime, automatyczny rollback i logi](10-local-environment-deployment-and-logs.md)
+- [14 — routing i lokalizacja: przewodnik](14-routing-and-localization.md)
 - [Instrukcja Claude Code](../../CLAUDE.md)

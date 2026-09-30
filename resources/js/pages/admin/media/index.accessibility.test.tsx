@@ -16,6 +16,13 @@ type VisitOptions = {
 };
 
 const postMock = vi.fn();
+const pollStart = vi.fn();
+const pollStop = vi.fn();
+const usePollMock = vi.fn((..._args: unknown[]) => ({
+    start: pollStart,
+    stop: pollStop,
+    polling: false,
+}));
 
 let pageProps: IndexProps;
 
@@ -66,6 +73,7 @@ function makeProps(can: IndexProps['can']): IndexProps {
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({ props: pageProps }),
+    usePoll: (...args: unknown[]) => usePollMock(...args),
     router: {
         get: vi.fn(),
         post: (...args: unknown[]) => postMock(...args),
@@ -144,6 +152,9 @@ function queueMessages(container: HTMLElement): string[] {
 
 afterEach(async () => {
     postMock.mockReset();
+    pollStart.mockReset();
+    pollStop.mockReset();
+    usePollMock.mockClear();
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -176,6 +187,30 @@ describe('AdminMediaIndex', () => {
                 'button[aria-label="admin.media.rowActionsLabel"]',
             ),
         ).toHaveLength(2);
+    });
+
+    it('polls the list while a file waits for its virus scan', async () => {
+        pageProps = makeProps({ create: true, update: true, delete: true });
+        await render();
+
+        expect(usePollMock).toHaveBeenCalledWith(
+            expect.any(Number),
+            { only: ['items'] },
+            { autoStart: false },
+        );
+        expect(pollStart).toHaveBeenCalled();
+    });
+
+    it('does not poll once every file has a scan result', async () => {
+        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps.items = pageProps.items.map((item) => ({
+            ...item,
+            status: 'clean',
+        }));
+        await render();
+
+        expect(pollStart).not.toHaveBeenCalled();
+        expect(pollStop).toHaveBeenCalled();
     });
 
     it('hides the upload area without the create ability', async () => {

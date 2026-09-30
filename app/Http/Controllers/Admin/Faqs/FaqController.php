@@ -9,12 +9,14 @@ use App\Data\Admin\Faqs\FaqFormData;
 use App\Data\Admin\Faqs\FaqIndexData;
 use App\Data\Admin\Faqs\FaqListFiltersData;
 use App\Data\Admin\Faqs\FaqListItemData;
+use App\Data\Content\ContentLocalesData;
 use App\Data\Listing\ListPaginationData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Faqs\ListFaqsRequest;
 use App\Http\Requests\Admin\Faqs\StoreFaqRequest;
 use App\Http\Requests\Admin\Faqs\UpdateFaqRequest;
 use App\Models\Faq;
+use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,6 +28,10 @@ use Inertia\Response;
  */
 class FaqController extends Controller
 {
+    public function __construct(
+        private readonly LocalizationConfig $localization,
+    ) {}
+
     /**
      * Display the searchable, filterable, paginated list.
      */
@@ -57,6 +63,7 @@ class FaqController extends Controller
         return Inertia::render('admin/faqs/create', new FaqEditorData(
             faq: FaqFormData::blank(),
             can: $this->abilities($request, null),
+            locales: ContentLocalesData::fromConfig($this->localization),
         ));
     }
 
@@ -80,6 +87,7 @@ class FaqController extends Controller
         return Inertia::render('admin/faqs/edit', new FaqEditorData(
             faq: FaqFormData::fromModel($faq),
             can: $this->abilities($request, $faq),
+            locales: ContentLocalesData::fromConfig($this->localization),
         ));
     }
 

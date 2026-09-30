@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\ContactMessageStatus;
 use App\Mail\ContactMessageMail;
 use App\Models\ContactMessage;
+use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,8 +15,9 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Deliver one contact message to the configured recipient. Idempotent: a
- * message already marked `sent` is skipped, and only one job per message
+ * Deliver one contact message to the recipient from the site settings,
+ * read at send time (fallback: `contact.recipient` from the environment).
+ * Idempotent: a message already marked `sent` is skipped, and only one job per message
  * may be queued at a time (ShouldBeUnique). A crash after the mailer
  * accepted the mail but before the status is saved can still produce a
  * duplicate (documented P0 limitation, document 01).
@@ -53,7 +55,7 @@ class SendContactMessage implements ShouldBeUnique, ShouldQueue
         return [60, 300, 900];
     }
 
-    public function handle(LocalizationConfig $localization): void
+    public function handle(LocalizationConfig $localization, SiteSettingsRepository $siteSettings): void
     {
         $contactMessage = ContactMessage::query()->find($this->contactMessageId);
 
@@ -67,7 +69,7 @@ class SendContactMessage implements ShouldBeUnique, ShouldQueue
         ])->save();
 
         try {
-            Mail::to((string) config('contact.recipient'))
+            Mail::to($siteSettings->contactRecipient())
                 ->locale($localization->getAdminDefault())
                 ->send(new ContactMessageMail($contactMessage));
         } catch (Throwable $exception) {

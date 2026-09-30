@@ -13,6 +13,15 @@ make doctor
 
 Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:5173`, skrzynka Mailpit `http://localhost:8025`. Używaj `localhost`, aby origin HMR i cookies były spójne. Lokalny HTTP na localhost obsługuje secure-context APIs przeglądarki; certyfikaty i domeny Herda nie są potrzebne.
 
+## Start nowego projektu
+
+```sh
+make init-project ARGS='--dry-run'
+make init-project ARGS='--name="Acme" --locales=pl,en --default-locale=pl --admin-email=owner@example.test --admin-name="Owner" --remove-demo --write-env'
+```
+
+`app:init-project` (tylko `local`/`testing`) pyta o brakujące wartości, a z `--no-interaction` kończy się błędem bez zmian. Kolejno: nazwa strony trafia do ustawień aplikacji (bez zapisu `APP_NAME`), `APP_PUBLIC_LOCALES/DEFAULT/FALLBACK` są wypisywane do wklejenia albo — z `--write-env` i potwierdzeniem (`--force` je pomija) — zapisywane w `.env` po kopii `.env.backup-*` (0600); następnie `make restart`. Pierwszy administrator dostaje zaproszenie mailem (kolejka), `--remove-demo` usuwa nieedytowane treści przykładowe i konto `test@example.com`. `--dry-run` pokazuje plan bez żadnych zapisów; ponowne uruchomienie pomija wykonane kroki.
+
 ## Codzienna praca
 
 | Komenda                                  | Działanie                                                       |

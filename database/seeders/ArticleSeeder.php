@@ -8,7 +8,8 @@ use Illuminate\Database\Seeder;
 
 /**
  * Local sample content: a published article with translations, a scheduled
- * one and a draft.
+ * one and a draft. Slugs come from the {@see DemoContent} registry used by
+ * `--remove-demo`.
  */
 class ArticleSeeder extends Seeder
 {
@@ -19,7 +20,7 @@ class ArticleSeeder extends Seeder
             [
                 'locale' => 'en',
                 'title' => 'Welcome to our news',
-                'slug' => 'welcome-to-our-news',
+                'slug' => DemoContent::ARTICLES['welcome']['en'],
                 'excerpt' => 'This sample article shows how news is listed and rendered.',
                 'body' => self::document('Published articles appear in the list, the sitemap and search results.'),
                 'status' => PublicationStatus::Published,
@@ -28,7 +29,7 @@ class ArticleSeeder extends Seeder
             [
                 'locale' => 'pl',
                 'title' => 'Witamy w aktualnościach',
-                'slug' => 'witamy-w-aktualnosciach',
+                'slug' => DemoContent::ARTICLES['welcome']['pl'],
                 'excerpt' => 'Ten przykładowy artykuł pokazuje listę i widok aktualności.',
                 'body' => self::document('Opublikowane artykuły trafiają na listę, do mapy strony i wyników wyszukiwania.'),
                 'status' => PublicationStatus::Published,
@@ -39,7 +40,7 @@ class ArticleSeeder extends Seeder
         Article::query()->create()->translations()->create([
             'locale' => 'en',
             'title' => 'Coming next week',
-            'slug' => 'coming-next-week',
+            'slug' => DemoContent::ARTICLES['scheduled']['en'],
             'excerpt' => 'Scheduled articles stay hidden until their publication date.',
             'body' => self::document('This text becomes visible next week.'),
             'status' => PublicationStatus::Published,
@@ -49,7 +50,7 @@ class ArticleSeeder extends Seeder
         Article::query()->create()->translations()->create([
             'locale' => 'en',
             'title' => 'Draft ideas',
-            'slug' => 'draft-ideas',
+            'slug' => DemoContent::ARTICLES['draft']['en'],
             'body' => self::document('Draft content is never visible to visitors.'),
             'status' => PublicationStatus::Draft,
         ]);

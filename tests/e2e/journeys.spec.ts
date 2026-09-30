@@ -142,7 +142,7 @@ test.describe('administration', () => {
         );
     });
 
-    test('editor has no audit or user management and gets 403 on the audit log', async ({
+    test('editor has no audit or user management and gets 403 on both screens', async ({
         page,
     }) => {
         await logIn(page, 'editor');
@@ -157,11 +157,13 @@ test.describe('administration', () => {
         await expect(page.getByRole('link', { name: 'Users' })).toHaveCount(0);
         await expect(navigation).toBeVisible();
 
-        const response = await page.goto('/admin/audit');
-        expect(response?.status()).toBe(403);
-        await expect(page.getByRole('heading', { level: 1 })).toContainText(
-            '403',
-        );
+        for (const path of ['/admin/audit', '/admin/users']) {
+            const response = await page.goto(path);
+            expect(response?.status()).toBe(403);
+            await expect(page.getByRole('heading', { level: 1 })).toContainText(
+                '403',
+            );
+        }
     });
 
     test('password confirmation dialog loads on the first 423 and resumes the visit', async ({

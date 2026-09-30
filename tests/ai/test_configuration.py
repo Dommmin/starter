@@ -747,6 +747,24 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn("app:make-resource", script)
         self.assertIn("check-ui-contract.mjs --files", script)
 
+    def test_pest_also_runs_on_postgresql_in_ci_and_locally(self):
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("\n  tests-pgsql:\n    name: tests-pgsql\n", ci)
+        job = ci[ci.index("\n  tests-pgsql:\n"):ci.index("\n  generator-smoke:\n")]
+        compose = (ROOT / "compose.yaml").read_text()
+        self.assertIn("image: postgres:18-bookworm", compose)
+        self.assertIn("image: postgres:18-bookworm", job)
+        self.assertIn("DB_CONNECTION: pgsql", job)
+        self.assertIn("run: php artisan test --compact", job)
+        self.assertNotIn("continue-on-error", job)
+        self.assertNotIn("secrets.", job)
+
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("test-pgsql: local-guard ##", makefile)
+        self.assertIn("PGSQL_TEST_DATABASE ?= starter_testing", makefile)
+        self.assertIn('"$$TEST_DB" = "$$POSTGRES_DB"', makefile)
+        self.assertIn("-e DB_DATABASE=$(PGSQL_TEST_DATABASE)", makefile)
+
     def test_ci_runs_browser_e2e_against_the_docker_stack(self):
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("\n  e2e:\n    name: e2e\n", ci)

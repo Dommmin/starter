@@ -39,6 +39,7 @@ make init-project ARGS='--name="Acme" --locales=pl,en --default-locale=pl --admi
 | `make build`                             | Przebudowa runtime z aktualizacją obrazów bazowych              |
 | `make test`                              | Pest, SQLite w pamięci zgodnie z `.env.testing`                 |
 | `make test-parallel`                     | Pest w 4 procesach; zmień przez `TEST_PROCESSES=8`              |
+| `make test-pgsql`                        | Pest na PostgreSQL z compose w osobnej bazie `starter_testing`  |
 | `make test ARGS='--filter=registration'` | Wybrane testy                                                   |
 | `make check`                             | Istniejący zestaw format/lint, TypeScript, Pint, PHPStan i Pest |
 | `make test-setup`                        | Regresje bootstrappingu Makefile                                |
@@ -115,7 +116,7 @@ Wolumeny Compose przechowują PostgreSQL, Redis, storage, bootstrap/cache, vendo
 
 Drugi checkout: przed setup uruchom `make env`, ustaw w `.env` unikalne `COMPOSE_PROJECT_NAME`, `APP_PORT`, `VITE_PORT`, `MAILPIT_PORT` oraz zgodne `APP_URL`. Potem `make setup`. Nazwa projektu izoluje sieć i wolumeny; porty muszą być wolne. Nie zmieniaj nazwy istniejącego projektu bez wcześniejszego `make down`, bo stare kontenery pozostaną uruchomione.
 
-Nie ma komendy automatycznie kasującej wolumeny. `down` nie usuwa DB, uploadów ani zależności. Migracja danych SQLite i reset bazy są osobnymi świadomymi operacjami. Testy Pest używają SQLite w pamięci i nie potwierdzają wszystkich zachowań PostgreSQL; `doctor` i setup sprawdzają rzeczywiste połączenie i migracje PostgreSQL.
+Nie ma komendy automatycznie kasującej wolumeny. `down` nie usuwa DB, uploadów ani zależności. Migracja danych SQLite i reset bazy są osobnymi świadomymi operacjami. `make test` używa SQLite w pamięci i nie potwierdza wszystkich zachowań PostgreSQL — do tego służy `make test-pgsql` (i job CI `tests-pgsql`); `doctor` i setup sprawdzają rzeczywiste połączenie i migracje PostgreSQL.
 
 ## Problemy
 

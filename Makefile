@@ -10,8 +10,9 @@ ARGS ?=
 SERVICE ?=
 CONFIRM ?=
 TEST_PROCESSES ?= 4
+PGSQL_TEST_DATABASE ?= starter_testing
 
-.PHONY: help env local-guard setup seed fresh up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
+.PHONY: help env local-guard setup seed fresh up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-pgsql test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -87,6 +88,19 @@ test: ## Testy Pest; opcjonalnie ARGS='--filter=nazwa'
 
 test-parallel: ## Równoległe testy Pest; TEST_PROCESSES=4 domyślnie
 	$(RUN) php artisan test --compact --parallel --processes=$(TEST_PROCESSES) $(ARGS)
+
+test-pgsql: local-guard ## Pest na PostgreSQL z compose w osobnej bazie PGSQL_TEST_DATABASE (starter_testing); opcjonalnie ARGS
+	@case "$(PGSQL_TEST_DATABASE)" in *[!a-z0-9_]*|'') echo 'PGSQL_TEST_DATABASE: dozwolone tylko [a-z0-9_]'; exit 1;; esac
+	$(COMPOSE) up -d --wait postgres
+	@$(COMPOSE) exec -T -e TEST_DB=$(PGSQL_TEST_DATABASE) postgres sh -ec '\
+		if [ "$$TEST_DB" = "$$POSTGRES_DB" ]; then echo "Baza testowa nie może być bazą aplikacji ($$POSTGRES_DB)"; exit 1; fi; \
+		psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT 1 FROM pg_database WHERE datname = '"'"'$$TEST_DB'"'"'" | grep -qx 1 \
+		|| createdb -U "$$POSTGRES_USER" "$$TEST_DB"'
+	@DB_USERNAME="$$($(COMPOSE) exec -T postgres printenv POSTGRES_USER)" \
+	DB_PASSWORD="$$($(COMPOSE) exec -T postgres printenv POSTGRES_PASSWORD)"; export DB_USERNAME DB_PASSWORD; \
+	$(COMPOSE) run --rm --no-deps -e DB_CONNECTION=pgsql -e DB_HOST=postgres -e DB_PORT=5432 \
+		-e DB_DATABASE=$(PGSQL_TEST_DATABASE) -e DB_URL= -e DB_USERNAME -e DB_PASSWORD \
+		app php artisan test --compact $(ARGS)
 
 test-setup: ## Testy bootstrappingu i ochrony konfiguracji
 	$(RUN) node --test scripts/dev-environment.test.mjs

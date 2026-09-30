@@ -28,6 +28,7 @@ import { Stack } from './stack';
 import { SwitchField } from './switch-field';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
+import { useSubmitErrorFocus } from './use-submit-error-focus';
 
 /**
  * Form values handled by `ResourceForm`: flat string/boolean fields (number
@@ -240,6 +241,12 @@ export function ResourceForm<Values extends ResourceFormValues>({
 
             return [...own, ...nested];
         }),
+    );
+
+    const markSubmitted = useSubmitErrorFocus(
+        summaryItems.map((item) => item.fieldId),
+        errors,
+        isPending,
     );
 
     function renderField(field: ResourceFormField<Values>) {
@@ -463,6 +470,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                 }
 
                 submitLockRef.current = true;
+                markSubmitted();
                 onSubmit();
             }}
         >

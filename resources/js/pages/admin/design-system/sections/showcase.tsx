@@ -58,7 +58,13 @@ export type ShowcaseStateKey =
     | 'withDescription'
     | 'withAction'
     | 'minimal'
-    | 'withIcon';
+    | 'withIcon'
+    | 'withValue'
+    | 'placeholder'
+    | 'required'
+    | 'readonly'
+    | 'formError'
+    | 'focusFirstError';
 
 export type ShowcaseComponentProps = {
     /** Public API name of the component, e.g. `Button` (not translated). */

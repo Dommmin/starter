@@ -57,12 +57,12 @@ export function SelectField({
             <label
                 id={labelId}
                 htmlFor={triggerId}
-                className="text-sm leading-none font-medium"
+                className="text-sm leading-snug font-medium"
             >
                 {label}
                 {required && (
                     <span
-                        className="text-destructive ml-0.5"
+                        className="text-status-danger ml-0.5"
                         aria-hidden="true"
                     >
                         *
@@ -90,7 +90,9 @@ export function SelectField({
                             'border-destructive focus-visible:ring-destructive/20',
                     )}
                 >
-                    <SelectPrimitive.Value placeholder={placeholder} />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                        <SelectPrimitive.Value placeholder={placeholder} />
+                    </span>
                     <SelectPrimitive.Icon asChild>
                         <ChevronDown
                             className="text-muted-foreground size-4 shrink-0"
@@ -111,7 +113,7 @@ export function SelectField({
                                     value={option.value}
                                     disabled={option.disabled}
                                     className={cn(
-                                        'focus:bg-surface-subtle relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none',
+                                        'focus:bg-surface-subtle focus-visible:ring-ring relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-inset',
                                         'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                                     )}
                                 >
@@ -139,7 +141,7 @@ export function SelectField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

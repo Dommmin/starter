@@ -170,11 +170,7 @@ test.describe('articles', () => {
         // The signed preview renders the unpublished version in a new tab.
         const [preview] = await Promise.all([
             page.waitForEvent('popup'),
-            page
-                .getByRole('link', {
-                    name: 'Preview the English version (opens in a new tab)',
-                })
-                .click(),
+            page.getByRole('link', { name: /^Preview: English/ }).click(),
         ]);
         await expect(
             preview.getByRole('heading', { name: article.title, level: 1 }),

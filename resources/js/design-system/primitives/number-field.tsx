@@ -1,12 +1,12 @@
 import type { Ref } from 'react';
 import { NativeInputField } from './native-input-field';
+import type { FieldValueProps } from './field-value';
 
-export type NumberFieldProps = {
+export type NumberFieldProps = FieldValueProps & {
     name: string;
     label: string;
     /** Controlled raw input; `''` means no value. Parse it on the server. */
     value: string;
-    onChange: (value: string) => void;
     onBlur?: () => void;
     description?: string;
     /** Server or client validation message; presence marks the field invalid. */
@@ -41,6 +41,7 @@ export function NumberField({
     error,
     required,
     disabled,
+    readOnly,
     placeholder,
     min,
     max,
@@ -63,6 +64,7 @@ export function NumberField({
             error={error}
             required={required}
             disabled={disabled}
+            readOnly={readOnly}
             placeholder={placeholder}
             min={min}
             max={max}

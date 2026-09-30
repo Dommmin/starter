@@ -1,7 +1,15 @@
 import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { notify, type NotifyTone } from '@/design-system/primitives';
 import type { FlashToast } from '@/types/ui';
+
+/** Backend flash types without a DS tone (info, warning) show as neutral. */
+const toneByFlashType: Record<FlashToast['type'], NotifyTone> = {
+    success: 'success',
+    error: 'danger',
+    info: 'neutral',
+    warning: 'neutral',
+};
 
 export function useFlashToast(): void {
     useEffect(() => {
@@ -13,7 +21,7 @@ export function useFlashToast(): void {
                 return;
             }
 
-            toast[data.type](data.message);
+            notify({ tone: toneByFlashType[data.type], message: data.message });
         });
     }, []);
 }

@@ -20,6 +20,7 @@ import {
     Surface,
     Text,
     TextareaField,
+    TextField,
 } from '@/design-system/primitives';
 import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
@@ -190,16 +191,15 @@ export default function AdminMediaEdit() {
                                         ? formatDate(asset.createdAt)
                                         : null,
                                 },
-                                {
-                                    id: 'checksum',
-                                    label: t('admin.media.fields.checksum'),
-                                    value: (
-                                        <Text variant="code" as="span">
-                                            {asset.checksum}
-                                        </Text>
-                                    ),
-                                },
                             ]}
+                        />
+
+                        <TextField
+                            name="checksum"
+                            label={t('admin.media.fields.checksum')}
+                            description={t('admin.media.fields.checksumHelp')}
+                            value={asset.checksum}
+                            readOnly
                         />
 
                         {asset.downloadUrl && (

@@ -16,12 +16,14 @@ import {
     EmptyState,
     Icon,
     IconButton,
+    Inline,
     Link,
     Progress,
     Separator,
     Skeleton,
     Spinner,
     Stack,
+    Text,
     Tooltip,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
@@ -372,6 +374,7 @@ function FoundationsSection() {
 
             <ShowcaseComponent
                 name="Separator"
+                layout="wide"
                 notApplicable={[
                     'disabled',
                     'pending',
@@ -385,8 +388,14 @@ function FoundationsSection() {
                 <ShowcaseState state="horizontal" fill>
                     <Separator />
                 </ShowcaseState>
-                <ShowcaseState state="vertical" fill>
-                    <Separator orientation="vertical" />
+                <ShowcaseState state="vertical" detail="Inline" fill>
+                    <Inline gap="default" align="stretch" wrap>
+                        <Text as="span">{demo('separatorMetaStatus')}</Text>
+                        <Separator orientation="vertical" />
+                        <Text as="span">{demo('separatorMetaAuthor')}</Text>
+                        <Separator orientation="vertical" />
+                        <Text as="span">{demo('separatorMetaDate')}</Text>
+                    </Inline>
                 </ShowcaseState>
             </ShowcaseComponent>
 

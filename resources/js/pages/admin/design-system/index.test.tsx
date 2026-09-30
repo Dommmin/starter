@@ -6,6 +6,25 @@ import { I18nProvider } from '@/i18n';
 import DesignSystemShowcase from './index';
 import { showcaseFamilies } from './sections';
 
+/**
+ * The page test checks the page frame (sections, headings, table of
+ * contents), so it gets lightweight stand-ins for the demos; behaviour
+ * tests render one real family each (`renderFamily`).
+ */
+vi.mock('./sections', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('./sections')>();
+
+    return {
+        showcaseFamilies: actual.showcaseFamilies.map((family) => ({
+            ...family,
+            Component: () => <p>{`${family.id} demo`}</p>,
+        })),
+    };
+});
+
+const { showcaseFamilies: realFamilies } =
+    await vi.importActual<typeof import('./sections')>('./sections');
+
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({ props: {} }),
     router: { on: () => () => {} },
@@ -58,6 +77,20 @@ async function render(node: ReactNode): Promise<HTMLElement> {
     return container;
 }
 
+/**
+ * Renders only one family's demo (not the whole page with every family),
+ * so behaviour tests stay fast; the full page is rendered once, below.
+ */
+async function renderFamily(id: string): Promise<HTMLElement> {
+    const family = realFamilies.find((candidate) => candidate.id === id);
+
+    if (!family) {
+        throw new Error(`Unknown showcase family ${id}`);
+    }
+
+    return render(<family.Component />);
+}
+
 afterEach(async () => {
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
@@ -97,12 +130,21 @@ describe('DesignSystemShowcase', () => {
 
             const tocLink = container.querySelector(`a[href="#${family.id}"]`);
             expect(tocLink?.textContent).toBe(family.titleKey);
+            expect(section?.textContent).toContain(`${family.id} demo`);
         }
     });
 
+    it.each(realFamilies.map((family) => family.id))(
+        '%s does not move focus into a static error demo on load',
+        async (id) => {
+            await renderFamily(id);
+
+            expect(document.activeElement).toBe(document.body);
+        },
+    );
+
     it('lists the states that do not apply to a component', async () => {
-        const container = await render(<DesignSystemShowcase />);
-        const section = container.querySelector('section#adm-01');
+        const section = await renderFamily('adm-01');
 
         expect(section?.textContent).toContain(
             'admin.designSystem.notApplicable',
@@ -113,7 +155,7 @@ describe('DesignSystemShowcase', () => {
     });
 
     it('dismisses and restores the dismissible alert demo', async () => {
-        const container = await render(<DesignSystemShowcase />);
+        const container = await renderFamily('adm-01');
         const dismiss = container.querySelector<HTMLButtonElement>(
             'button[aria-label="admin.designSystem.foundations.dismiss"]',
         );
@@ -137,7 +179,7 @@ describe('DesignSystemShowcase', () => {
     });
 
     it('opens the command palette demo on synthetic items', async () => {
-        const container = await render(<DesignSystemShowcase />);
+        const container = await renderFamily('adm-15');
         const open = Array.from(container.querySelectorAll('button')).find(
             (button) =>
                 button.textContent ===
@@ -154,8 +196,7 @@ describe('DesignSystemShowcase', () => {
         vi.useFakeTimers();
 
         try {
-            const container = await render(<DesignSystemShowcase />);
-            const section = container.querySelector('section#adm-16');
+            const section = await renderFamily('adm-16');
             const retry = Array.from(
                 section?.querySelectorAll('button') ?? [],
             ).find(
@@ -188,8 +229,7 @@ describe('DesignSystemShowcase', () => {
     });
 
     it('clears the filters of the no-results table demo', async () => {
-        const container = await render(<DesignSystemShowcase />);
-        const section = container.querySelector('section#adm-09');
+        const section = await renderFamily('adm-09');
         const noResults = () =>
             section?.textContent?.split(
                 'admin.designSystem.tables.noResultsTitle',
@@ -217,15 +257,8 @@ describe('DesignSystemShowcase', () => {
         );
     });
 
-    it('does not move focus into any static error demo on load', async () => {
-        await render(<DesignSystemShowcase />);
-
-        expect(document.activeElement).toBe(document.body);
-    });
-
     it('shows field errors and focuses the first invalid field when the demo form is sent empty', async () => {
-        const container = await render(<DesignSystemShowcase />);
-        const section = container.querySelector('section#adm-08');
+        const section = await renderFamily('adm-08');
         const submit = Array.from(
             section?.querySelectorAll<HTMLButtonElement>(
                 'button[type="submit"]',

@@ -1,12 +1,12 @@
 import type { Ref } from 'react';
 import { NativeInputField } from './native-input-field';
+import type { FieldValueProps } from './field-value';
 
-export type DateFieldProps = {
+export type DateFieldProps = FieldValueProps & {
     name: string;
     label: string;
     /** Controlled `YYYY-MM-DD` value; `''` means no date. */
     value: string;
-    onChange: (value: string) => void;
     onBlur?: () => void;
     description?: string;
     /** Server or client validation message; presence marks the field invalid. */
@@ -38,6 +38,7 @@ export function DateField({
     error,
     required,
     disabled,
+    readOnly,
     min,
     max,
     id,
@@ -55,6 +56,7 @@ export function DateField({
             error={error}
             required={required}
             disabled={disabled}
+            readOnly={readOnly}
             min={min}
             max={max}
             id={id}

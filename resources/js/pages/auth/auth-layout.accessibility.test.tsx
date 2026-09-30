@@ -49,7 +49,7 @@ afterEach(async () => {
 });
 
 describe('AuthSimpleLayout', () => {
-    it('names the logo link after its destination, not the page title', async () => {
+    it('is the skip-link target and adds no second brand link next to the header logo', async () => {
         const container = document.createElement('div');
         document.body.append(container);
         const root = createRoot(container);
@@ -58,15 +58,14 @@ describe('AuthSimpleLayout', () => {
         await act(async () => {
             root.render(
                 <I18nProvider initialPage={initialPage}>
-                    <AuthSimpleLayout title="Log in" description="Welcome">
+                    <AuthSimpleLayout>
                         <p>form</p>
                     </AuthSimpleLayout>
                 </I18nProvider>,
             );
         });
 
-        const logoLink = container.querySelector('a');
-
-        expect(logoLink?.textContent).toBe('nav.home');
+        expect(container.querySelector('main')?.id).toBe('main-content');
+        expect(container.querySelector('a')).toBeNull();
     });
 });

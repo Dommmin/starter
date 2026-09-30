@@ -9,10 +9,14 @@ import {
     CardTitle,
     EmptyState,
     Inline,
+    Maintenance,
+    NotFound,
     notify,
     OfflineBanner,
+    PermissionDenied,
     Progress,
     RetryPanel,
+    SessionExpired,
     Spinner,
     Stack,
     Text,
@@ -26,6 +30,7 @@ import {
 } from './showcase';
 
 type RetryDemoStatus = 'failed' | 'retrying' | 'recovered';
+type ConnectionDemoStatus = 'online' | 'offline' | 'restored';
 
 /** ADM-16 — feedback: messages, retry, offline and progress in context. */
 function FeedbackSection() {
@@ -33,6 +38,8 @@ function FeedbackSection() {
     const demo = (key: string) => t(`admin.designSystem.feedback.${key}`);
     const [retryStatus, setRetryStatus] = useState<RetryDemoStatus>('failed');
     const [isAlertVisible, setAlertVisible] = useState(true);
+    const [connection, setConnection] =
+        useState<ConnectionDemoStatus>('online');
     const retryTimer = useRef<number | null>(null);
 
     useEffect(
@@ -164,12 +171,43 @@ function FeedbackSection() {
                     'loading',
                     'empty',
                     'error',
-                    'success',
                     'noMedia',
                 ]}
             >
-                <ShowcaseState state="default" fill>
-                    <OfflineBanner message={demo('offline')} />
+                <ShowcaseState
+                    state="default"
+                    detail={demo('interactive')}
+                    fill
+                >
+                    <Stack gap="tight" align="start">
+                        {connection === 'offline' && (
+                            <OfflineBanner message={demo('offline')} />
+                        )}
+                        {connection === 'restored' && (
+                            <Alert
+                                tone="success"
+                                title={demo('offlineRestored')}
+                            />
+                        )}
+                        {connection === 'online' && (
+                            <Text variant="caption">{demo('onlineState')}</Text>
+                        )}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setConnection(
+                                    connection === 'offline'
+                                        ? 'restored'
+                                        : 'offline',
+                                )
+                            }
+                        >
+                            {connection === 'offline'
+                                ? demo('simulateOnline')
+                                : demo('simulateOffline')}
+                        </Button>
+                    </Stack>
                 </ShowcaseState>
                 <ShowcaseState state="longContent" fill>
                     <OfflineBanner message={demo('offlineLong')} />
@@ -220,6 +258,54 @@ function FeedbackSection() {
                         description={demo('retryLongDescription')}
                         retryLabel={demo('retryLabel')}
                         onRetry={() => {}}
+                    />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="APP-09 · SessionExpired · PermissionDenied · NotFound · Maintenance"
+                layout="wide"
+                notApplicable={[
+                    'disabled',
+                    'pending',
+                    'loading',
+                    'empty',
+                    'success',
+                    'noMedia',
+                ]}
+            >
+                <ShowcaseState state="error" detail="SessionExpired" fill>
+                    <SessionExpired
+                        title={demo('sessionExpiredTitle')}
+                        description={demo('sessionExpiredDescription')}
+                        action={
+                            <Button variant="primary" href="#adm-16">
+                                {demo('sessionExpiredAction')}
+                            </Button>
+                        }
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="error" detail="PermissionDenied" fill>
+                    <PermissionDenied
+                        title={demo('permissionDeniedTitle')}
+                        description={demo('permissionDeniedDescription')}
+                        action={
+                            <Button variant="outline" href={adminIndex()}>
+                                {demo('backToDashboard')}
+                            </Button>
+                        }
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="default" detail="NotFound" fill>
+                    <NotFound
+                        title={demo('notFoundTitle')}
+                        description={demo('notFoundDescription')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="longContent" detail="Maintenance" fill>
+                    <Maintenance
+                        title={demo('maintenanceTitle')}
+                        description={demo('maintenanceDescription')}
                     />
                 </ShowcaseState>
             </ShowcaseComponent>

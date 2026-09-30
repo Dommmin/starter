@@ -81,10 +81,13 @@ return [
         'code' => 'Code',
         'recoveryCode' => 'Wiederherstellungscode',
         'recoveryPlaceholder' => 'Wiederherstellungscode eingeben',
-        'useRecoveryCode' => 'mit einem Wiederherstellungscode anmelden',
-        'useAuthCode' => 'mit einem Authentifizierungscode anmelden',
-        'or' => 'oder ',
+        'useRecoveryCode' => 'Stattdessen Wiederherstellungscode verwenden',
+        'useAuthCode' => 'Stattdessen Authentifizierungscode verwenden',
         'submit' => 'Fortfahren',
+    ],
+    'passwordField' => [
+        'show' => 'Passwort anzeigen',
+        'hide' => 'Passwort verbergen',
     ],
     'passkey' => [
         'signIn' => 'Mit einem Passkey anmelden',

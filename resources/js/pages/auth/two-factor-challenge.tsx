@@ -1,145 +1,146 @@
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     InputOTP,
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { Stack } from '@/design-system/primitives';
+import { Button, Stack, TextField } from '@/design-system/primitives';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
-import { getLocalizedTwoFactorLoginForm } from '@/lib/localized-routes';
+import AuthPageHeading from '@/components/auth-page-heading';
 import { useTranslation } from '@/i18n';
+import { focusFirstError } from '@/lib/focus-first-error';
+import { getLocalizedTwoFactorLoginForm } from '@/lib/localized-routes';
+
+const FIELD_ORDER = ['code', 'recovery_code'] as const;
 
 export default function TwoFactorChallenge() {
     const { t, locale, defaultLocale } = useTranslation();
     const [showRecoveryInput, setShowRecoveryInput] = useState<boolean>(false);
     const [code, setCode] = useState<string>('');
-
-    const authConfigContent = useMemo<{
-        title: string;
-        description: string;
-        toggleText: string;
-    }>(() => {
-        if (showRecoveryInput) {
-            return {
-                title: t('auth.twoFactor.recoveryTitle'),
-                description: t('auth.twoFactor.recoveryDescription'),
-                toggleText: t('auth.twoFactor.useAuthCode'),
-            };
-        }
-
-        return {
-            title: t('auth.twoFactor.heading'),
-            description: t('auth.twoFactor.subheading'),
-            toggleText: t('auth.twoFactor.useRecoveryCode'),
-        };
-    }, [showRecoveryInput, t]);
-
-    setLayoutProps({
-        title: authConfigContent.title,
-        description: authConfigContent.description,
-    });
+    const [recoveryCode, setRecoveryCode] = useState<string>('');
 
     const toggleRecoveryMode = (clearErrors: () => void): void => {
+        const nextFieldId = showRecoveryInput ? 'code' : 'recovery_code';
+
         setShowRecoveryInput(!showRecoveryInput);
         clearErrors();
         setCode('');
+        setRecoveryCode('');
+        // Keyboard users continue in the field that replaced the old one.
+        window.setTimeout(() => document.getElementById(nextFieldId)?.focus());
     };
 
     return (
         <>
             <Head title={t('auth.twoFactor.title')} />
 
-            <div className="space-y-6">
-                <Form
-                    {...getLocalizedTwoFactorLoginForm(locale, defaultLocale)}
-                    className="space-y-4"
-                    resetOnError
-                    resetOnSuccess={!showRecoveryInput}
-                >
-                    {({ errors, processing, clearErrors }) => (
-                        <>
-                            {showRecoveryInput ? (
-                                <Stack gap="tight">
-                                    <Label htmlFor="recovery_code">
-                                        {t('auth.twoFactor.recoveryCode')}
-                                    </Label>
-                                    <Input
-                                        id="recovery_code"
-                                        name="recovery_code"
-                                        type="text"
-                                        placeholder={t(
-                                            'auth.twoFactor.recoveryPlaceholder',
-                                        )}
-                                        autoFocus={showRecoveryInput}
-                                        required
-                                    />
-                                    <InputError
-                                        message={errors.recovery_code}
-                                    />
-                                </Stack>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center space-y-3 text-center">
-                                    <Label htmlFor="code">
-                                        {t('auth.twoFactor.code')}
-                                    </Label>
-                                    <div className="flex w-full items-center justify-center">
-                                        <InputOTP
-                                            id="code"
-                                            name="code"
-                                            maxLength={OTP_MAX_LENGTH}
-                                            value={code}
-                                            onChange={(value) => setCode(value)}
-                                            disabled={processing}
-                                            pattern={REGEXP_ONLY_DIGITS}
-                                            autoFocus
-                                        >
-                                            <InputOTPGroup>
-                                                {Array.from(
-                                                    { length: OTP_MAX_LENGTH },
-                                                    (_, index) => (
-                                                        <InputOTPSlot
-                                                            key={index}
-                                                            index={index}
-                                                        />
-                                                    ),
-                                                )}
-                                            </InputOTPGroup>
-                                        </InputOTP>
-                                    </div>
-                                    <InputError message={errors.code} />
+            {showRecoveryInput ? (
+                <AuthPageHeading
+                    title={t('auth.twoFactor.recoveryTitle')}
+                    description={t('auth.twoFactor.recoveryDescription')}
+                />
+            ) : (
+                <AuthPageHeading
+                    title={t('auth.twoFactor.heading')}
+                    description={t('auth.twoFactor.subheading')}
+                />
+            )}
+
+            <Form
+                {...getLocalizedTwoFactorLoginForm(locale, defaultLocale)}
+                resetOnError
+                resetOnSuccess={!showRecoveryInput}
+                onError={(errors) => {
+                    setCode('');
+                    setRecoveryCode('');
+                    // The OTP input is disabled while the request runs, so
+                    // focus waits for the re-enabled control.
+                    window.setTimeout(() =>
+                        focusFirstError(errors, FIELD_ORDER),
+                    );
+                }}
+            >
+                {({ errors, processing, clearErrors }) => (
+                    <Stack gap="default">
+                        {showRecoveryInput ? (
+                            <TextField
+                                id="recovery_code"
+                                name="recovery_code"
+                                label={t('auth.twoFactor.recoveryCode')}
+                                value={recoveryCode}
+                                onChange={setRecoveryCode}
+                                error={errors.recovery_code}
+                                placeholder={t(
+                                    'auth.twoFactor.recoveryPlaceholder',
+                                )}
+                                autoComplete="one-time-code"
+                                required
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center space-y-3 text-center">
+                                <Label htmlFor="code">
+                                    {t('auth.twoFactor.code')}
+                                </Label>
+                                <div className="flex w-full items-center justify-center">
+                                    <InputOTP
+                                        id="code"
+                                        name="code"
+                                        maxLength={OTP_MAX_LENGTH}
+                                        value={code}
+                                        onChange={(value) => setCode(value)}
+                                        disabled={processing}
+                                        pattern={REGEXP_ONLY_DIGITS}
+                                        autoComplete="one-time-code"
+                                        aria-invalid={
+                                            errors.code ? true : undefined
+                                        }
+                                        aria-describedby={
+                                            errors.code
+                                                ? 'code-error'
+                                                : undefined
+                                        }
+                                        autoFocus
+                                    >
+                                        <InputOTPGroup>
+                                            {Array.from(
+                                                { length: OTP_MAX_LENGTH },
+                                                (_, index) => (
+                                                    <InputOTPSlot
+                                                        key={index}
+                                                        index={index}
+                                                    />
+                                                ),
+                                            )}
+                                        </InputOTPGroup>
+                                    </InputOTP>
                                 </div>
-                            )}
-
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={processing}
-                            >
-                                {t('auth.twoFactor.submit')}
-                            </Button>
-
-                            <div className="text-muted-foreground text-center text-sm">
-                                <span>{t('auth.twoFactor.or')}</span>
-                                <button
-                                    type="button"
-                                    className="text-foreground cursor-pointer underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                                    onClick={() =>
-                                        toggleRecoveryMode(clearErrors)
-                                    }
-                                >
-                                    {authConfigContent.toggleText}
-                                </button>
+                                <InputError
+                                    id="code-error"
+                                    role="alert"
+                                    message={errors.code}
+                                />
                             </div>
-                        </>
-                    )}
-                </Form>
-            </div>
+                        )}
+
+                        <Button type="submit" isPending={processing}>
+                            {t('auth.twoFactor.submit')}
+                        </Button>
+
+                        <Button
+                            variant="link"
+                            onClick={() => toggleRecoveryMode(clearErrors)}
+                        >
+                            {showRecoveryInput
+                                ? t('auth.twoFactor.useAuthCode')
+                                : t('auth.twoFactor.useRecoveryCode')}
+                        </Button>
+                    </Stack>
+                )}
+            </Form>
         </>
     );
 }

@@ -1,141 +1,133 @@
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { Head, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import PasskeyVerify from '@/components/passkey-verify';
+import {
+    Alert,
+    Button,
+    CheckboxField,
+    Link,
+    PasswordField,
+    Stack,
+    Text,
+    TextField,
+} from '@/design-system/primitives';
+import AuthPageHeading from '@/components/auth-page-heading';
+import { useTranslation } from '@/i18n';
+import { focusFirstError } from '@/lib/focus-first-error';
 import {
     getLocalizedForgotPasswordRoute,
     getLocalizedLoginForm,
     getLocalizedRegisterRoute,
 } from '@/lib/localized-routes';
-import PasskeyVerify from '@/components/passkey-verify';
-import { useTranslation } from '@/i18n';
 
 type Props = {
     status?: string;
     canResetPassword: boolean;
 };
 
+const FIELD_ORDER = ['email', 'password'] as const;
+
 export default function Login({ status, canResetPassword }: Props) {
     const { t, locale, defaultLocale } = useTranslation();
+    const form = useForm({ email: '', password: '', remember: false });
 
-    setLayoutProps({
-        title: t('auth.login.heading'),
-        description: t('auth.login.subheading'),
-    });
+    function submit(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault();
+
+        if (form.processing) {
+            return;
+        }
+
+        const { method, action } = getLocalizedLoginForm(locale, defaultLocale);
+
+        form.submit(method, action, {
+            onError: (errors) => focusFirstError(errors, FIELD_ORDER),
+            onFinish: () => form.reset('password'),
+        });
+    }
 
     return (
         <>
             <Head title={t('auth.login.title')} />
 
-            <PasskeyVerify />
+            <AuthPageHeading
+                title={t('auth.login.heading')}
+                description={t('auth.login.subheading')}
+            />
 
-            <Form
-                {...getLocalizedLoginForm(locale, defaultLocale)}
-                resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
-            >
-                {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">
-                                    {t('auth.login.email')}
-                                </Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="email"
-                                    placeholder={t(
-                                        'auth.login.emailPlaceholder',
+            <Stack gap="default">
+                {status && <Alert tone="success" title={status} />}
+
+                <PasskeyVerify />
+
+                <form onSubmit={submit} noValidate>
+                    <Stack gap="default">
+                        <TextField
+                            id="email"
+                            name="email"
+                            type="email"
+                            label={t('auth.login.email')}
+                            value={form.data.email}
+                            onChange={(value) => form.setData('email', value)}
+                            error={form.errors.email}
+                            autoComplete="email"
+                            placeholder={t('auth.login.emailPlaceholder')}
+                            required
+                        />
+
+                        <PasswordField
+                            id="password"
+                            name="password"
+                            label={t('auth.login.password')}
+                            value={form.data.password}
+                            onChange={(value) =>
+                                form.setData('password', value)
+                            }
+                            error={form.errors.password}
+                            autoComplete="current-password"
+                            showPasswordLabel={t('auth.passwordField.show')}
+                            hidePasswordLabel={t('auth.passwordField.hide')}
+                            required
+                        />
+
+                        {canResetPassword && (
+                            <Text variant="caption" align="end">
+                                <Link
+                                    href={getLocalizedForgotPasswordRoute(
+                                        locale,
+                                        defaultLocale,
                                     )}
-                                />
-                                <InputError message={errors.email} />
-                            </div>
+                                    tone="muted"
+                                >
+                                    {t('auth.login.forgotPassword')}
+                                </Link>
+                            </Text>
+                        )}
 
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">
-                                        {t('auth.login.password')}
-                                    </Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={getLocalizedForgotPasswordRoute(
-                                                locale,
-                                                defaultLocale,
-                                            )}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
-                                        >
-                                            {t('auth.login.forgotPassword')}
-                                        </TextLink>
-                                    )}
-                                </div>
-                                <PasswordInput
-                                    id="password"
-                                    name="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    placeholder={t(
-                                        'auth.login.passwordPlaceholder',
-                                    )}
-                                />
-                                <InputError message={errors.password} />
-                            </div>
+                        <CheckboxField
+                            name="remember"
+                            label={t('auth.login.remember')}
+                            checked={form.data.remember}
+                            onChange={(checked) =>
+                                form.setData('remember', checked)
+                            }
+                        />
 
-                            <div className="flex items-center space-x-3">
-                                <Checkbox
-                                    id="remember"
-                                    name="remember"
-                                    tabIndex={3}
-                                />
-                                <Label htmlFor="remember">
-                                    {t('auth.login.remember')}
-                                </Label>
-                            </div>
+                        <Button type="submit" isPending={form.processing}>
+                            {t('auth.login.submit')}
+                        </Button>
+                    </Stack>
+                </form>
 
-                            <Button
-                                type="submit"
-                                className="mt-4 w-full"
-                                tabIndex={4}
-                                disabled={processing}
-                                data-test="login-button"
-                            >
-                                {processing && <Spinner />}
-                                {t('auth.login.submit')}
-                            </Button>
-                        </div>
-
-                        <div className="text-muted-foreground text-center text-sm">
-                            {t('auth.login.noAccount')}{' '}
-                            <TextLink
-                                href={getLocalizedRegisterRoute(
-                                    locale,
-                                    defaultLocale,
-                                )}
-                                tabIndex={5}
-                            >
-                                {t('auth.login.signUp')}
-                            </TextLink>
-                        </div>
-                    </>
-                )}
-            </Form>
-
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+                <Text variant="caption" align="center">
+                    {t('auth.login.noAccount')}{' '}
+                    <Link
+                        href={getLocalizedRegisterRoute(locale, defaultLocale)}
+                    >
+                        {t('auth.login.signUp')}
+                    </Link>
+                </Text>
+            </Stack>
         </>
     );
 }

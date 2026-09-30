@@ -41,7 +41,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
             />
 
             <div className="mt-8 flex flex-col lg:flex-row lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-56">
+                <div className="w-full max-w-xl lg:w-56">
                     <nav
                         className="flex flex-col space-y-1.5 space-x-0"
                         aria-label={t('a11y.accountSettings')}
@@ -57,11 +57,16 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                     className={cn(
                                         'min-h-[44px] w-full justify-start rounded-lg px-3.5 py-2 font-medium transition-colors',
                                         active
-                                            ? 'bg-surface-subtle text-primary font-semibold'
+                                            ? 'bg-surface-subtle text-foreground font-semibold'
                                             : 'text-text-subtle hover:bg-surface-subtle/50 hover:text-foreground',
                                     )}
                                 >
-                                    <Link href={item.href}>
+                                    <Link
+                                        href={item.href}
+                                        aria-current={
+                                            active ? 'page' : undefined
+                                        }
+                                    >
                                         {item.icon && (
                                             <item.icon className="h-4 w-4" />
                                         )}
@@ -71,7 +76,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                             );
                         })}
                     </nav>
-                </aside>
+                </div>
 
                 <Separator className="border-border-subtle my-6 lg:hidden" />
 

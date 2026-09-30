@@ -15,7 +15,6 @@ import {
     Heading,
     Icon,
     Link,
-    PageHeader,
     Stack,
     Surface,
     Text,
@@ -23,6 +22,7 @@ import {
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index as pagesIndex } from '@/routes/admin/pages';
+import { DashboardOverview } from './dashboard-overview';
 
 type SystemProps = {
     appName: string;
@@ -53,6 +53,7 @@ type AdminSettingsProps = {
 };
 
 type AdminPageProps = {
+    overview: App.Data.Admin.Dashboard.DashboardOverviewData;
     system: SystemProps;
     security: SecurityProps;
     modules: ModuleItem[];
@@ -60,7 +61,7 @@ type AdminPageProps = {
 };
 
 export default function AdminIndex() {
-    const { system, security, modules, adminSettings } =
+    const { overview, system, security, modules, adminSettings } =
         usePage<AdminPageProps>().props;
     const { t } = useTranslation();
 
@@ -75,31 +76,21 @@ export default function AdminIndex() {
         <>
             <Head title={t('admin.dashboard')} />
 
-            <Stack gap="default">
-                <PageHeader
-                    badge={
-                        <Badge tone="neutral">{t('admin.platformBadge')}</Badge>
-                    }
-                    title={system.appName}
-                    description={t('admin.platformDescription')}
-                    actions={
-                        <>
-                            <Badge
-                                tone={
-                                    system.environment === 'production'
-                                        ? 'success'
-                                        : 'primary'
-                                }
-                            >
-                                {system.environment.toUpperCase()}
-                            </Badge>
-                            <Badge tone="outline">
-                                PHP {system.phpVersion} / Laravel{' '}
-                                {system.laravelVersion}
-                            </Badge>
-                        </>
-                    }
-                />
+            <Stack gap="relaxed">
+                <DashboardOverview overview={overview} />
+
+                <Stack gap="tight">
+                    <Heading level={2} variant="subsection">
+                        {t('admin.platformBadge')}
+                    </Heading>
+                    <Text variant="caption" tone="muted">
+                        {t('admin.platformDescription')}
+                    </Text>
+                    <Text variant="caption" tone="muted">
+                        {system.environment.toUpperCase()} · PHP{' '}
+                        {system.phpVersion} / Laravel {system.laravelVersion}
+                    </Text>
+                </Stack>
 
                 <Surface
                     tone="default"
@@ -109,7 +100,7 @@ export default function AdminIndex() {
                 >
                     <Stack gap="default">
                         <Stack gap="tight">
-                            <Heading level={2} variant="subsection">
+                            <Heading level={3} variant="group">
                                 {t('admin.systemStatus.title')}
                             </Heading>
                             <Text variant="caption" tone="muted">
@@ -214,7 +205,7 @@ export default function AdminIndex() {
                 >
                     <Stack gap="default">
                         <Stack gap="tight">
-                            <Heading level={2} variant="subsection">
+                            <Heading level={3} variant="group">
                                 {t('admin.security.title')}
                             </Heading>
                             <Text variant="caption" tone="muted">
@@ -309,7 +300,7 @@ export default function AdminIndex() {
                 >
                     <Stack gap="default">
                         <Stack gap="tight">
-                            <Heading level={2} variant="subsection">
+                            <Heading level={3} variant="group">
                                 {t('admin.platformSettings.title')}
                             </Heading>
                             <Text variant="caption" tone="muted">
@@ -337,7 +328,7 @@ export default function AdminIndex() {
                 </Surface>
 
                 <Stack gap="tight">
-                    <Heading level={2} variant="subsection">
+                    <Heading level={3} variant="group">
                         {t('admin.modules.title')}
                     </Heading>
                     <Text variant="caption" tone="muted">
@@ -368,7 +359,7 @@ export default function AdminIndex() {
                                             size="lg"
                                             tone="primary"
                                         />
-                                        <Heading level={3} variant="group">
+                                        <Heading level={4} variant="group">
                                             {t(
                                                 `admin.modules.${item.key}.title`,
                                             )}

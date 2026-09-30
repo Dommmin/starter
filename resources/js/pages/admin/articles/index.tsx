@@ -113,6 +113,10 @@ export default function AdminArticlesIndex() {
                                 value: 'published',
                                 label: t('admin.articles.status.published'),
                             },
+                            {
+                                value: 'scheduled',
+                                label: t('admin.articles.status.scheduled'),
+                            },
                         ],
                     },
                     {

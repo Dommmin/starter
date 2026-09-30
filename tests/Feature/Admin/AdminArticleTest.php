@@ -86,6 +86,25 @@ test('the list describes rows in the content locale and flags scheduled articles
         );
 });
 
+test('the status filter separates visible, scheduled and draft articles', function () {
+    $editor = User::factory()->editor()->create();
+    ArticleTranslation::factory()->published(now()->subDay())->create(['title' => 'Live now']);
+    ArticleTranslation::factory()->scheduled()->create(['title' => 'Coming soon']);
+    ArticleTranslation::factory()->draft()->create(['title' => 'Work in progress']);
+
+    $titles = fn (string $status): array => $this->actingAs($editor)
+        ->get(route('admin.articles.index', ['status' => $status]))
+        ->assertOk()
+        ->viewData('page')['props']['items'];
+
+    expect(array_column($titles('published'), 'title'))->toBe(['Live now'])
+        ->and(array_column($titles('scheduled'), 'title'))->toBe(['Coming soon'])
+        ->and(array_column($titles('draft'), 'title'))->toBe(['Work in progress']);
+
+    $this->actingAs($editor)->get(route('admin.articles.index', ['status' => 'archived']))
+        ->assertSessionHasErrors('status');
+});
+
 test('an editor creates a published article with a cover, excerpt and audit entries', function () {
     $this->freezeSecond();
     $editor = User::factory()->editor()->create();

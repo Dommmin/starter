@@ -422,9 +422,11 @@ export function PageForm({ editor }: PageFormProps) {
                                                 label: t(
                                                     'admin.pages.fields.title',
                                                 ),
-                                                hint: t(
-                                                    'admin.pages.fields.titleHelp',
-                                                ),
+                                                hint: isDefault
+                                                    ? undefined
+                                                    : t(
+                                                          'admin.pages.fields.titleHelp',
+                                                      ),
                                                 required: isDefault,
                                             },
                                             {

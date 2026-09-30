@@ -457,9 +457,11 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                 label: t(
                                                     'admin.articles.fields.title',
                                                 ),
-                                                hint: t(
-                                                    'admin.articles.fields.titleHelp',
-                                                ),
+                                                hint: isDefault
+                                                    ? undefined
+                                                    : t(
+                                                          'admin.articles.fields.titleHelp',
+                                                      ),
                                                 required: isDefault,
                                             },
                                             {

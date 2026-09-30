@@ -32,7 +32,7 @@ declare namespace App {
                     search: string;
                     sort: 'title' | 'updated_at';
                     direction: 'asc' | 'desc';
-                    status: 'all' | 'draft' | 'published';
+                    status: 'all' | 'draft' | 'published' | 'scheduled';
                     locale: string;
                 };
                 export type ArticleListItemData = {
@@ -119,6 +119,29 @@ declare namespace App {
                 export type ContactMessageShowData = {
                     contactMessage: App.Data.Admin.Contact.ContactMessageDetailData;
                     can: App.Data.Admin.Contact.ContactMessageAbilitiesData;
+                };
+            }
+            namespace Dashboard {
+                export type ContactCountsData = {
+                    recent: number;
+                    failed: number;
+                    recentDays: number;
+                };
+                export type ContentStatusCountsData = {
+                    published: number;
+                    drafts: number;
+                    scheduled: number;
+                };
+                export type DashboardOverviewData = {
+                    siteName: string;
+                    contentLocale: string;
+                    articles: App.Data.Admin.Dashboard.ContentStatusCountsData | null;
+                    pages: App.Data.Admin.Dashboard.ContentStatusCountsData | null;
+                    contact: App.Data.Admin.Dashboard.ContactCountsData | null;
+                    quarantinedMedia: number | null;
+                    recentActivity:
+                        | App.Data.Admin.Audit.AuditLogListItemData[]
+                        | null;
                 };
             }
             namespace Faqs {

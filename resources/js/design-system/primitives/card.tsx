@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { Inline } from './inline';
 
 type CardPadding = 'default' | 'compact' | 'none';
 
@@ -71,5 +72,11 @@ export type CardFooterProps = {
 };
 
 export function CardFooter({ children }: CardFooterProps) {
-    return <div className="flex items-center gap-2 px-6">{children}</div>;
+    return (
+        <div className="px-6">
+            <Inline gap="tight" align="center">
+                {children}
+            </Inline>
+        </div>
+    );
 }

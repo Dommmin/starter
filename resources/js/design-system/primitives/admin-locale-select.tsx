@@ -1,6 +1,5 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import AdminLocaleController from '@/actions/App/Http/Controllers/Settings/AdminLocaleController';
 import {
     Select,
@@ -10,6 +9,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useTranslation } from '@/i18n';
+import { notify } from './notify';
 
 export type AdminLocaleSelectProps = {
     className?: never;
@@ -39,10 +39,16 @@ export function useAdminLocaleChange(): {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success(t('admin.languageUpdated'));
+                    notify({
+                        tone: 'success',
+                        message: t('admin.languageUpdated'),
+                    });
                 },
                 onError: () => {
-                    toast.error(t('errors.serverError.description'));
+                    notify({
+                        tone: 'danger',
+                        message: t('errors.serverError.description'),
+                    });
                 },
                 onFinish: () => {
                     setIsPending(false);

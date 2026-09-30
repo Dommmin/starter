@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
     Accordion,
     Badge,
@@ -14,8 +14,10 @@ import {
     Container,
     Fieldset,
     Grid,
+    Inline,
     PageHeader,
     Section,
+    Separator,
     SplitLayout,
     Stack,
     Surface,
@@ -31,6 +33,7 @@ import {
 } from './showcase';
 
 const stackGaps = ['none', 'tight', 'default', 'relaxed'] as const;
+const inlineAligns = ['start', 'center', 'end', 'baseline', 'stretch'] as const;
 const gridLayouts = ['single', 'split', 'cards', 'features'] as const;
 const containerWidths = ['reading', 'content', 'wide', 'full'] as const;
 const sectionTones = ['default', 'subtle', 'raised', 'inverted'] as const;
@@ -152,6 +155,71 @@ function LayoutsSection() {
                         {tile(demo('longTile'))}
                         {tile(demo('longTile'))}
                     </Grid>
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="Inline"
+                layout="wide"
+                notApplicable={[
+                    'disabled',
+                    'pending',
+                    'loading',
+                    'empty',
+                    'error',
+                    'success',
+                    'noMedia',
+                ]}
+            >
+                <ShowcaseState state="variants" detail="Inline gap" fill>
+                    <Stack gap="tight">
+                        {stackGaps.map((gap) => (
+                            <Inline key={gap} gap={gap}>
+                                {tile(`gap=${gap}`)}
+                                {tile(`gap=${gap}`)}
+                            </Inline>
+                        ))}
+                    </Stack>
+                </ShowcaseState>
+                <ShowcaseState state="variants" detail="Inline align" fill>
+                    <Stack gap="tight">
+                        {inlineAligns.map((align) => (
+                            <Inline key={align} align={align}>
+                                <Button size="sm" variant="outline">
+                                    {`align=${align}`}
+                                </Button>
+                                <Separator orientation="vertical" />
+                                <Badge tone="primary">{demo('badge')}</Badge>
+                            </Inline>
+                        ))}
+                    </Stack>
+                </ShowcaseState>
+                <ShowcaseState state="withAction" detail="justify=between" fill>
+                    <Surface tone="subtle" padding="compact" radius="sm" border>
+                        <Inline justify="between">
+                            <Text as="span">{demo('pageTitle')}</Text>
+                            <Inline justify="end">
+                                <Button size="sm" variant="outline">
+                                    {demo('export')}
+                                </Button>
+                                <Button size="sm">
+                                    <Plus aria-hidden="true" />
+                                    {demo('add')}
+                                </Button>
+                            </Inline>
+                        </Inline>
+                    </Surface>
+                </ShowcaseState>
+                <ShowcaseState state="longContent" detail="wrap" fill>
+                    <Inline gap="tight" wrap>
+                        {[
+                            ...gridLayouts,
+                            ...containerWidths,
+                            ...sectionTones,
+                        ].map((label) => (
+                            <Fragment key={label}>{tile(label)}</Fragment>
+                        ))}
+                    </Inline>
                 </ShowcaseState>
             </ShowcaseComponent>
 

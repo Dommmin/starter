@@ -8,6 +8,8 @@ import {
     CardHeader,
     CardTitle,
     EmptyState,
+    Inline,
+    notify,
     OfflineBanner,
     Progress,
     RetryPanel,
@@ -53,7 +55,7 @@ function FeedbackSection() {
     return (
         <Stack gap="default">
             <ShowcaseComponent
-                name="Toast"
+                name="Toast · notify"
                 layout="wide"
                 notApplicable={[
                     'disabled',
@@ -63,6 +65,52 @@ function FeedbackSection() {
                     'noMedia',
                 ]}
             >
+                <ShowcaseState state="tones" detail="notify()" fill>
+                    <Stack gap="tight" align="start">
+                        <Text>{demo('notifyHowTo')}</Text>
+                        <Inline gap="tight" wrap>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    notify({
+                                        tone: 'success',
+                                        message: demo('notifySuccess'),
+                                        description: demo(
+                                            'notifySuccessDescription',
+                                        ),
+                                    })
+                                }
+                            >
+                                {demo('notifySuccessButton')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    notify({
+                                        tone: 'danger',
+                                        message: demo('notifyDanger'),
+                                    })
+                                }
+                            >
+                                {demo('notifyDangerButton')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    notify({
+                                        tone: 'neutral',
+                                        message: demo('notifyNeutral'),
+                                    })
+                                }
+                            >
+                                {demo('notifyNeutralButton')}
+                            </Button>
+                        </Inline>
+                    </Stack>
+                </ShowcaseState>
                 <ShowcaseState state="default" detail={demo('liveDemo')} fill>
                     <Stack gap="tight" align="start">
                         <Text>{demo('toastHowTo')}</Text>

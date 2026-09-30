@@ -127,4 +127,34 @@ describe('DesignSystemShowcase', () => {
             ),
         ).not.toBeNull();
     });
+
+    it('registers the table, record view and action families', () => {
+        const ids = showcaseFamilies.map((family) => family.id);
+
+        expect(ids).toEqual(
+            expect.arrayContaining(['adm-09', 'adm-11', 'adm-12']),
+        );
+    });
+
+    it('clears the filters of the no-results table demo', async () => {
+        const container = await render(<DesignSystemShowcase />);
+        const section = container.querySelector('section#adm-09');
+        const noResults = () =>
+            section?.textContent?.split(
+                'admin.designSystem.tables.noResultsTitle',
+            ).length ?? 0;
+        const before = noResults();
+        const clear = Array.from(
+            section?.querySelectorAll('button') ?? [],
+        ).find(
+            (button) =>
+                button.textContent === 'admin.designSystem.tables.clearFilters',
+        );
+
+        expect(before).toBeGreaterThan(1);
+
+        await act(async () => clear?.click());
+
+        expect(noResults()).toBeLessThan(before);
+    });
 });

@@ -1,10 +1,15 @@
 <?php
 
+use App\Enums\HomeSectionType;
 use App\Enums\UserRole;
+use App\Models\Article;
+use App\Models\ArticleTranslation;
 use App\Models\ContactMessage;
+use App\Models\HomeSection;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\User;
+use Database\Seeders\HomeSectionSeeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -50,6 +55,46 @@ test('the command removes only pages and contact messages of previous E2E runs',
     expect(Page::query()->whereKey($e2ePage->id)->exists())->toBeFalse()
         ->and(Page::query()->whereKey($contentPage->id)->exists())->toBeTrue()
         ->and(ContactMessage::query()->pluck('id')->all())->toBe([$visitorMessage->id]);
+});
+
+test('the command removes only articles and invited users of previous E2E runs', function () {
+    $e2eArticle = Article::factory()
+        ->has(ArticleTranslation::factory()->state(['slug' => 'e2e-article-previous-run']), 'translations')
+        ->create();
+    $contentArticle = Article::factory()
+        ->has(ArticleTranslation::factory()->state(['slug' => 'company-news']), 'translations')
+        ->create();
+    User::factory()->editor()->create(['email' => 'e2e-user-previous-run@example.test']);
+    $realUser = User::factory()->create(['email' => 'e2e-user@example.com']);
+
+    $this->artisan('app:e2e-prepare')->assertSuccessful();
+
+    expect(Article::query()->pluck('id')->all())->toBe([$contentArticle->id])
+        ->and(Article::query()->whereKey($e2eArticle->id)->exists())->toBeFalse()
+        ->and(User::query()->where('email', 'like', 'e2e-user-%')->exists())->toBeFalse()
+        ->and(User::query()->whereKey($realUser->id)->exists())->toBeTrue()
+        ->and(User::query()->where('email', 'e2e-admin@example.test')->exists())->toBeTrue();
+});
+
+test('the command creates the demo home sections on an empty database once', function () {
+    $this->artisan('app:e2e-prepare')->assertSuccessful();
+
+    $enabled = HomeSection::query()->where('locale', 'en')->where('enabled', true)->get();
+    $contact = $enabled->firstWhere('type', HomeSectionType::Contact);
+    $count = HomeSection::query()->count();
+
+    expect($enabled->pluck('type')->all())->toEqualCanonicalizing([
+        HomeSectionType::Hero,
+        HomeSectionType::Features,
+        HomeSectionType::Contact,
+        HomeSectionType::Cta,
+    ])
+        ->and($contact?->content->toArray())->toBe(HomeSectionSeeder::landingContent(HomeSectionType::Contact, 'en')->toArray())
+        ->and($count)->toBeGreaterThan(0);
+
+    $this->artisan('app:e2e-prepare')->assertSuccessful();
+
+    expect(HomeSection::query()->count())->toBe($count);
 });
 
 test('the command resets the contact rate limit of the browser host', function () {

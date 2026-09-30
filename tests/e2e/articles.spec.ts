@@ -47,7 +47,9 @@ async function fillTranslation(
 
 async function openNewArticleForm(page: Page): Promise<void> {
     await page.goto('/admin/articles');
-    await page.getByRole('link', { name: 'New article' }).click();
+    // An empty list also shows "New article" in its empty state; the page
+    // header action comes first in the document.
+    await page.getByRole('link', { name: 'New article' }).first().click();
     await expect(
         page.getByRole('heading', { name: 'New article', level: 1 }),
     ).toBeVisible();

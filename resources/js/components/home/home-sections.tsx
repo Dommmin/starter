@@ -3,6 +3,7 @@ import {
     Accordion,
     Button,
     Card,
+    CardContent,
     CTA,
     EmptyState,
     FeatureGrid,
@@ -119,24 +120,35 @@ function assertNever(value: never): never {
 function Actions({
     primary,
     secondary,
+    secondaryVariant = 'outline',
 }: {
     primary: HomeLink | null;
     secondary: HomeLink | null;
+    /**
+     * `outline` takes the page colours, so on an inverted surface (CTA) it
+     * would disappear; `secondary` keeps its own fill there.
+     */
+    secondaryVariant?: 'outline' | 'secondary';
 }) {
     if (!primary && !secondary) {
         return null;
     }
 
+    // A lone secondary action (e.g. the primary one was dropped for a
+    // signed-in viewer) becomes the main action of the section.
+    const main = primary ?? secondary;
+    const extra = primary ? secondary : null;
+
     return (
         <>
-            {primary && (
-                <Button variant="primary" size="lg" href={primary.url}>
-                    {primary.label}
+            {main && (
+                <Button variant="primary" size="lg" href={main.url}>
+                    {main.label}
                 </Button>
             )}
-            {secondary && (
-                <Button variant="outline" size="lg" href={secondary.url}>
-                    {secondary.label}
+            {extra && (
+                <Button variant={secondaryVariant} size="lg" href={extra.url}>
+                    {extra.label}
                 </Button>
             )}
         </>
@@ -307,41 +319,49 @@ function LatestArticlesSection({
                     <Grid layout="cards">
                         {content.items.map((article) => (
                             <Card key={article.url}>
-                                <Stack gap="tight">
-                                    {article.cover && (
-                                        <Image
-                                            src={article.cover.src}
-                                            srcset={article.cover.srcset}
-                                            sources={article.cover.sources}
-                                            width={article.cover.width}
-                                            height={article.cover.height}
-                                            alt=""
-                                            sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
-                                        />
-                                    )}
-                                    <Heading level={3} variant="group">
-                                        <Link
-                                            href={article.url}
-                                            ariaLabel={t('home.readMore', {
-                                                title: article.title,
-                                            })}
-                                        >
-                                            {article.title}
-                                        </Link>
-                                    </Heading>
-                                    {article.publishedAt && (
-                                        <Text variant="caption" tone="muted">
-                                            {formatDate(article.publishedAt, {
-                                                dateStyle: 'long',
-                                            })}
-                                        </Text>
-                                    )}
-                                    {article.excerpt && (
-                                        <Text tone="muted">
-                                            {article.excerpt}
-                                        </Text>
-                                    )}
-                                </Stack>
+                                <CardContent>
+                                    <Stack gap="tight">
+                                        {article.cover && (
+                                            <Image
+                                                src={article.cover.src}
+                                                srcset={article.cover.srcset}
+                                                sources={article.cover.sources}
+                                                width={article.cover.width}
+                                                height={article.cover.height}
+                                                alt=""
+                                                sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
+                                            />
+                                        )}
+                                        <Heading level={3} variant="group">
+                                            <Link
+                                                href={article.url}
+                                                ariaLabel={t('home.readMore', {
+                                                    title: article.title,
+                                                })}
+                                            >
+                                                {article.title}
+                                            </Link>
+                                        </Heading>
+                                        {article.publishedAt && (
+                                            <Text
+                                                variant="caption"
+                                                tone="muted"
+                                            >
+                                                {formatDate(
+                                                    article.publishedAt,
+                                                    {
+                                                        dateStyle: 'long',
+                                                    },
+                                                )}
+                                            </Text>
+                                        )}
+                                        {article.excerpt && (
+                                            <Text tone="muted">
+                                                {article.excerpt}
+                                            </Text>
+                                        )}
+                                    </Stack>
+                                </CardContent>
                             </Card>
                         ))}
                     </Grid>
@@ -366,6 +386,7 @@ function CtaSection({ content }: { content: App.Data.Home.HomeCtaData }) {
                 <Actions
                     primary={content.primaryAction}
                     secondary={content.secondaryAction}
+                    secondaryVariant="secondary"
                 />
             }
         />

@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import {
     Card,
+    CardContent,
     EmptyState,
     Grid,
     Heading,
@@ -61,59 +62,70 @@ export default function ArticlesIndex({
                             <Grid layout="cards">
                                 {items.map((article) => (
                                     <Card key={article.url}>
-                                        <Stack gap="tight">
-                                            {article.cover && (
-                                                <Image
-                                                    src={article.cover.src}
-                                                    srcset={
-                                                        article.cover.srcset
-                                                    }
-                                                    sources={
-                                                        article.cover.sources
-                                                    }
-                                                    width={article.cover.width}
-                                                    height={
-                                                        article.cover.height
-                                                    }
-                                                    alt=""
-                                                    sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
-                                                />
-                                            )}
-                                            <Heading level={2} variant="group">
-                                                <Link
-                                                    href={article.url}
-                                                    ariaLabel={t(
-                                                        'articles.readMore',
-                                                        {
-                                                            title: article.title,
-                                                        },
-                                                    )}
+                                        <CardContent>
+                                            <Stack gap="tight">
+                                                {article.cover && (
+                                                    <Image
+                                                        src={article.cover.src}
+                                                        srcset={
+                                                            article.cover.srcset
+                                                        }
+                                                        sources={
+                                                            article.cover
+                                                                .sources
+                                                        }
+                                                        width={
+                                                            article.cover.width
+                                                        }
+                                                        height={
+                                                            article.cover.height
+                                                        }
+                                                        alt=""
+                                                        sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
+                                                    />
+                                                )}
+                                                <Heading
+                                                    level={2}
+                                                    variant="group"
                                                 >
-                                                    {article.title}
-                                                </Link>
-                                            </Heading>
-                                            {article.publishedAt && (
-                                                <Text
-                                                    variant="caption"
-                                                    tone="muted"
-                                                >
-                                                    {t('articles.publishedOn', {
-                                                        date: formatDate(
-                                                            article.publishedAt,
+                                                    <Link
+                                                        href={article.url}
+                                                        ariaLabel={t(
+                                                            'articles.readMore',
                                                             {
-                                                                dateStyle:
-                                                                    'long',
+                                                                title: article.title,
                                                             },
-                                                        ),
-                                                    })}
-                                                </Text>
-                                            )}
-                                            {article.excerpt && (
-                                                <Text tone="muted">
-                                                    {article.excerpt}
-                                                </Text>
-                                            )}
-                                        </Stack>
+                                                        )}
+                                                    >
+                                                        {article.title}
+                                                    </Link>
+                                                </Heading>
+                                                {article.publishedAt && (
+                                                    <Text
+                                                        variant="caption"
+                                                        tone="muted"
+                                                    >
+                                                        {t(
+                                                            'articles.publishedOn',
+                                                            {
+                                                                date: formatDate(
+                                                                    article.publishedAt,
+                                                                    {
+                                                                        dateStyle:
+                                                                            'long',
+                                                                    },
+                                                                ),
+                                                            },
+                                                        )}
+                                                    </Text>
+                                                )}
+                                                {article.excerpt && (
+                                                    <Text tone="muted">
+                                                        {article.excerpt}
+                                                    </Text>
+                                                )}
+                                            </Stack>
+                                        </CardContent>
                                     </Card>
                                 ))}
                             </Grid>

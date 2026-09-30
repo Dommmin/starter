@@ -33,7 +33,7 @@ export function LocaleSwitcher() {
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className="hover:bg-surface-subtle focus-visible:ring-ring text-text-subtle hover:text-foreground flex min-h-[44px] cursor-pointer items-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-3 sm:text-sm"
+                    className="hover:bg-surface-subtle focus-visible:ring-ring text-text-subtle hover:text-foreground flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-3 sm:text-sm"
                     aria-label={t('a11y.languageSelector')}
                 >
                     <Globe className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />

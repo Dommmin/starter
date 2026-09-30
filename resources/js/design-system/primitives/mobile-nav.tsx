@@ -17,6 +17,11 @@ export type MobileNavProps = {
     closeLabel: string;
     /** Rendered at the bottom of the panel, e.g. login/register actions. */
     footer?: ReactNode;
+    /**
+     * Controls shown in the panel only below `sm` (e.g. theme and locale
+     * switchers that the header shows inline from `sm` up).
+     */
+    utilities?: ReactNode;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 };
@@ -48,6 +53,7 @@ export function MobileNav({
     openLabel,
     closeLabel,
     footer,
+    utilities,
     open,
     onOpenChange,
 }: MobileNavProps) {
@@ -95,44 +101,53 @@ export function MobileNav({
                             />
                         </DialogPrimitive.Close>
                     </div>
-                    <nav aria-label={title} className="flex-1">
-                        <ul className="flex flex-col gap-1">
-                            {items.map((item) => {
-                                const children = item.children ?? [];
+                    {utilities && (
+                        <div className="border-border-subtle flex items-center gap-3 border-b pb-4 sm:hidden">
+                            {utilities}
+                        </div>
+                    )}
+                    {items.length > 0 && (
+                        <nav aria-label={title} className="flex-1">
+                            <ul className="flex flex-col gap-1">
+                                {items.map((item) => {
+                                    const children = item.children ?? [];
 
-                                return (
-                                    <li key={item.id}>
-                                        {isNavLink(item) ? (
-                                            <MobileNavLink
-                                                item={item}
-                                                classes={itemClasses}
-                                                onNavigate={close}
-                                            />
-                                        ) : (
-                                            <p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase">
-                                                {item.label}
-                                            </p>
-                                        )}
-                                        {children.length > 0 && (
-                                            <ul className="flex flex-col gap-1">
-                                                {children.map((child) => (
-                                                    <li key={child.id}>
-                                                        <MobileNavLink
-                                                            item={child}
-                                                            classes={
-                                                                childClasses
-                                                            }
-                                                            onNavigate={close}
-                                                        />
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </nav>
+                                    return (
+                                        <li key={item.id}>
+                                            {isNavLink(item) ? (
+                                                <MobileNavLink
+                                                    item={item}
+                                                    classes={itemClasses}
+                                                    onNavigate={close}
+                                                />
+                                            ) : (
+                                                <p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase">
+                                                    {item.label}
+                                                </p>
+                                            )}
+                                            {children.length > 0 && (
+                                                <ul className="flex flex-col gap-1">
+                                                    {children.map((child) => (
+                                                        <li key={child.id}>
+                                                            <MobileNavLink
+                                                                item={child}
+                                                                classes={
+                                                                    childClasses
+                                                                }
+                                                                onNavigate={
+                                                                    close
+                                                                }
+                                                            />
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </nav>
+                    )}
                     {footer && (
                         <div className="border-border-subtle flex flex-col gap-2 border-t pt-4">
                             {footer}

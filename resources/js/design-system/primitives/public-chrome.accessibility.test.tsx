@@ -321,6 +321,17 @@ describe('BrandLogo', () => {
         expect(link?.querySelectorAll('span span')).toHaveLength(0);
     });
 
+    it('keeps the full name of a truncated long brand available', async () => {
+        const longName = 'Studio Test Kowalski & Partnerzy Sp. z o.o.';
+        const container = await render(<BrandLogo name={longName} />);
+
+        const link = container.querySelector('a');
+        expect(link?.getAttribute('aria-label')).toBe(longName);
+        expect(
+            link?.querySelector(`span[title="${longName}"]`)?.textContent,
+        ).toBe(longName);
+    });
+
     it('renders the two-tone catalog brand without a name', async () => {
         const container = await render(<BrandLogo />);
 

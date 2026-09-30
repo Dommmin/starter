@@ -238,7 +238,7 @@ export function RepeaterField({
             aria-invalid={error ? true : undefined}
             className="flex min-w-0 flex-col gap-3 outline-none"
         >
-            <legend className="text-sm leading-none font-medium">
+            <legend className="text-sm leading-snug font-medium">
                 {label}
             </legend>
             {hint && (
@@ -250,7 +250,7 @@ export function RepeaterField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

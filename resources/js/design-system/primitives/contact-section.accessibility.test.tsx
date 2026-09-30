@@ -1,4 +1,4 @@
-import { act, type ReactNode } from 'react';
+import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ContactSection } from './contact-section';
@@ -215,5 +215,61 @@ describe('ContactSection', () => {
                 .querySelector('input[name="name"]')
                 ?.getAttribute('autocomplete'),
         ).toBe('name');
+    });
+
+    it('focuses the first invalid field after every failed submit', async () => {
+        let resolveRequest: (errors: Record<string, string>) => void = () => {};
+
+        function Page() {
+            const [errors, setErrors] = useState<Record<string, string>>({});
+            const [isPending, setPending] = useState(false);
+            resolveRequest = (next) => {
+                setErrors(next);
+                setPending(false);
+            };
+
+            return (
+                <ContactSection
+                    title="Get in touch"
+                    labels={{
+                        name: 'Name',
+                        email: 'Email',
+                        message: 'Message',
+                    }}
+                    errorSummaryTitle="Please fix the following"
+                    values={{ name: '', email: 'ada', message: '' }}
+                    onChange={vi.fn()}
+                    onSubmit={() => setPending(true)}
+                    errors={errors}
+                    isPending={isPending}
+                    submitLabel="Send"
+                />
+            );
+        }
+
+        const container = await render(<Page />);
+        const form = container.querySelector('form')!;
+        const submit = container.querySelector<HTMLButtonElement>(
+            'button[type="submit"]',
+        )!;
+
+        const failedResponses: Record<string, string>[] = [
+            { email: 'Email is invalid.', message: 'Message is required.' },
+            { email: 'Email is invalid.' },
+        ];
+
+        for (const errors of failedResponses) {
+            submit.focus();
+            await act(async () => {
+                form.dispatchEvent(
+                    new Event('submit', { bubbles: true, cancelable: true }),
+                );
+            });
+            await act(async () => resolveRequest(errors));
+
+            expect(
+                (document.activeElement as HTMLInputElement | null)?.name,
+            ).toBe('email');
+        }
     });
 });

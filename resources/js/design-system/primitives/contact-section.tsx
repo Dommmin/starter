@@ -8,6 +8,7 @@ import { Stack } from './stack';
 import { Text } from './text';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
+import { useSubmitErrorFocus } from './use-submit-error-focus';
 
 export type ContactSectionValues = {
     name: string;
@@ -99,6 +100,12 @@ export function ContactSection({
         });
     }
 
+    const markSubmitted = useSubmitErrorFocus(
+        summaryItems.map((item) => item.fieldId),
+        errors,
+        isPending,
+    );
+
     return (
         <Section spacing="default" container="reading">
             <Stack gap="default">
@@ -119,6 +126,7 @@ export function ContactSection({
                             if (isPending) {
                                 return;
                             }
+                            markSubmitted();
                             onSubmit();
                         }}
                         className="flex flex-col gap-4"

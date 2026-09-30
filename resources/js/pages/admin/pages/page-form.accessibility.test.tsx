@@ -295,6 +295,51 @@ describe('PageForm', () => {
         expect(document.activeElement).toBe(slug);
     });
 
+    it('requires the title only in the default language and explains skipping elsewhere', async () => {
+        editorProps = makeEditor();
+        const container = await render(<AdminPagesCreate />);
+
+        const describedBy = (element: Element | null) =>
+            (element?.getAttribute('aria-describedby') ?? '')
+                .split(' ')
+                .filter(Boolean)
+                .map((id) => document.getElementById(id)?.textContent)
+                .join(' ');
+
+        const defaultTitle = input(container, 'title');
+        expect(defaultTitle.required).toBe(true);
+        expect(describedBy(defaultTitle)).not.toContain(
+            'admin.pages.fields.titleHelp',
+        );
+
+        const germanTab = container.querySelector<HTMLButtonElement>(
+            '[role="tab"][id$="-trigger-de"]',
+        );
+        await act(async () => {
+            germanTab?.focus();
+        });
+        expect(activeTab(container)).toBe('de');
+
+        const germanTitle = input(container, 'title');
+        expect(germanTitle.required).toBe(false);
+        expect(describedBy(germanTitle)).toContain(
+            'admin.pages.fields.titleHelp',
+        );
+    });
+
+    it('names the status select after its label', async () => {
+        editorProps = makeEditor();
+        const container = await render(<AdminPagesCreate />);
+
+        const status = container.querySelector(
+            '[role="tabpanel"] button[role="combobox"]',
+        );
+        const labelIds = status?.getAttribute('aria-labelledby') ?? '';
+        expect(document.getElementById(labelIds)?.textContent).toBe(
+            'admin.pages.fields.status',
+        );
+    });
+
     it('blocks the published status without the publish ability', async () => {
         editorProps = makeEditor({ publish: false });
         const container = await render(<AdminPagesCreate />);

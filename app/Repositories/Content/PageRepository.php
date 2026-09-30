@@ -2,9 +2,12 @@
 
 namespace App\Repositories\Content;
 
+use App\Data\Admin\Dashboard\ContentStatusCountsData;
+use App\Enums\PublicationStatus;
 use App\Models\Page;
 use App\Models\PageSlugRedirect;
 use App\Models\PageTranslation;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -103,5 +106,29 @@ class PageRepository
             ->with(['translations' => fn ($query) => $query->published()->orderBy('locale')])
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Publication state counts of the page translations in one language,
+     * computed in a single aggregate query.
+     */
+    public function statusCounts(string $locale, CarbonInterface $now): ContentStatusCountsData
+    {
+        $published = PublicationStatus::Published->value;
+
+        /** @var object{published: int|string, drafts: int|string, scheduled: int|string}|null $row */
+        $row = PageTranslation::query()
+            ->where('locale', $locale)
+            ->toBase()
+            ->selectRaw('count(case when status = ? and published_at <= ? then 1 end) as published', [$published, $now])
+            ->selectRaw('count(case when status = ? then 1 end) as drafts', [PublicationStatus::Draft->value])
+            ->selectRaw('count(case when status = ? and (published_at is null or published_at > ?) then 1 end) as scheduled', [$published, $now])
+            ->first();
+
+        return new ContentStatusCountsData(
+            published: (int) ($row->published ?? 0),
+            drafts: (int) ($row->drafts ?? 0),
+            scheduled: (int) ($row->scheduled ?? 0),
+        );
     }
 }

@@ -7,18 +7,20 @@ use App\Data\Settings\SiteSettingsInputData;
 use App\Data\Settings\SiteSettingTranslationInputData;
 use App\Models\SiteSetting;
 use App\Models\User;
-use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Database\Seeder;
 
 /**
  * Local sample site settings: contact details, social links, logo and the
  * translated tagline, footer and SEO texts, stored through the audited
- * settings action. The site name is kept. Idempotent: skipped once a
- * contact e-mail is set (by this seeder or by an editor).
+ * settings action. A site name already saved is kept; otherwise the demo
+ * studio name is used instead of the technical APP_NAME. Idempotent: skipped
+ * once a contact e-mail is set (by this seeder or by an editor).
  */
 class SiteSettingsSeeder extends Seeder
 {
+    public const string SITE_NAME = 'Pracownia Nowak';
+
     /**
      * @var array<string, array{tagline: string, footer: string, seoTitle: string, seoDescription: string}>
      */
@@ -28,7 +30,7 @@ class SiteSettingsSeeder extends Seeder
         'de' => ['tagline' => 'Kleine Websites, große Möglichkeiten', 'footer' => 'Ein Studio aus Łódź. Alle Rechte vorbehalten.', 'seoTitle' => 'Websites für kleine Unternehmen', 'seoDescription' => 'Wir gestalten und betreuen schnelle, barrierefreie Websites für kleine Unternehmen.'],
     ];
 
-    public function run(UpdateSiteSettings $updateSiteSettings, SiteSettingsRepository $siteSettings, LocalizationConfig $localization): void
+    public function run(UpdateSiteSettings $updateSiteSettings, LocalizationConfig $localization): void
     {
         $current = SiteSetting::query()->find(SiteSetting::SINGLETON_ID);
 
@@ -49,7 +51,7 @@ class SiteSettingsSeeder extends Seeder
 
         $updateSiteSettings->handle(
             new SiteSettingsInputData(
-                siteName: $current->site_name ?? $siteSettings->siteName(),
+                siteName: $current->site_name ?? self::SITE_NAME,
                 logoMediaId: DemoMediaSeeder::assetId('square'),
                 ogImageMediaId: DemoMediaSeeder::assetId('landscape'),
                 contactEmail: 'kontakt@example.com',

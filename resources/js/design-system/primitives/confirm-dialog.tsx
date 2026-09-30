@@ -2,6 +2,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { useReturnFocus } from './return-focus';
 
 type ConfirmDialogTone = 'default' | 'destructive';
 
@@ -31,6 +32,7 @@ export function ConfirmDialog({
     tone = 'default',
     isPending = false,
 }: ConfirmDialogProps) {
+    const returnFocus = useReturnFocus();
     return (
         <DialogPrimitive.Root
             open={open}
@@ -48,6 +50,8 @@ export function ConfirmDialog({
                     )}
                 />
                 <DialogPrimitive.Content
+                    onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                    onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                     onEscapeKeyDown={(event) => {
                         if (isPending) {
                             event.preventDefault();

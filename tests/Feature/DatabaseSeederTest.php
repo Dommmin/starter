@@ -12,6 +12,7 @@ use App\Models\Page;
 use App\Models\SiteSetting;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\SiteSettingsSeeder;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -54,7 +55,18 @@ test('the local seed fills every module and a second run adds nothing', function
         ->and(seededCounts())->toBe($first)
         ->and(Storage::disk('media')->allFiles())->toBe($mediaFiles)
         ->and(SiteSetting::query()->value('contact_email'))->not->toBeNull()
+        ->and(SiteSetting::query()->value('site_name'))->toBe(SiteSettingsSeeder::SITE_NAME)
         ->and(HomeSection::query()->where('enabled', false)->exists())->toBeFalse();
+});
+
+test('the local seed keeps a site name that is already saved', function () {
+    $this->app['env'] = 'local';
+    SiteSetting::factory()->create(['site_name' => 'Owner site', 'contact_email' => null]);
+
+    $this->seed(DatabaseSeeder::class);
+
+    expect(SiteSetting::query()->value('site_name'))->toBe('Owner site')
+        ->and(SiteSetting::query()->value('contact_email'))->not->toBeNull();
 });
 
 test('outside the local environment only menus and home sections are seeded', function (string $environment) {

@@ -7,6 +7,7 @@ import { useId, useMemo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from '@/i18n';
 import { cn, toUrl } from '@/lib/utils';
+import { useReturnFocus } from './return-focus';
 
 export type CommandPaletteItem = {
     id: string;
@@ -49,6 +50,7 @@ export function CommandPalette({
     onOpenChange,
     items,
 }: CommandPaletteProps) {
+    const returnFocus = useReturnFocus();
     const { t } = useTranslation();
     const [query, setQuery] = useState('');
     const [activeIndex, setActiveIndex] = useState(0);
@@ -129,6 +131,8 @@ export function CommandPalette({
             <DialogPrimitive.Portal>
                 <DialogPrimitive.Overlay className="bg-overlay data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-50 motion-reduce:animate-none" />
                 <DialogPrimitive.Content
+                    onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                    onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                     aria-describedby={undefined}
                     className="border-border bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 fixed top-3 left-1/2 z-50 w-[min(600px,calc(100%-24px))] -translate-x-1/2 overflow-hidden rounded-[calc(var(--radius)+4px)] border shadow-(--admin-shadow-overlay) motion-reduce:animate-none md:top-[88px]"
                 >

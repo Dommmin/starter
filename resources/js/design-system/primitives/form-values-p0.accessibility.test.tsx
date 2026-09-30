@@ -83,6 +83,51 @@ describe('SwitchField', () => {
     });
 });
 
+/** Text of the elements an `aria-labelledby` attribute points to. */
+function labelledByText(element: Element | null): string | undefined {
+    return element
+        ?.getAttribute('aria-labelledby')
+        ?.split(' ')
+        .map((id) => document.getElementById(id)?.textContent ?? '')
+        .join(' ');
+}
+
+describe('Accessible names of custom controls', () => {
+    it('names the switch after its visible label', async () => {
+        const container = await render(
+            <SwitchField
+                name="enabled-3"
+                label="Show “FAQ” on the home page"
+                checked
+                onChange={vi.fn()}
+            />,
+        );
+
+        expect(
+            labelledByText(container.querySelector('button[role="switch"]')),
+        ).toBe('Show “FAQ” on the home page');
+    });
+
+    it('names the select trigger after its visible label, not its value', async () => {
+        const container = await render(
+            <SelectField
+                name="role"
+                label="Role"
+                required
+                value="editor"
+                onChange={vi.fn()}
+                options={[
+                    { value: 'editor', label: 'Editor' },
+                    { value: 'admin', label: 'Administrator' },
+                ]}
+            />,
+        );
+
+        const trigger = container.querySelector('button[role="combobox"]');
+        expect(labelledByText(trigger)?.replace('*', '')).toBe('Role');
+    });
+});
+
 describe('SelectField', () => {
     it('wires the label, description and error to the trigger', async () => {
         const container = await render(

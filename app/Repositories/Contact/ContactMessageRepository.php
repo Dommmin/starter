@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contact;
 
+use App\Data\Admin\Dashboard\ContactCountsData;
 use App\Enums\ContactMessageStatus;
 use App\Models\ContactMessage;
 use Carbon\CarbonInterface;
@@ -44,5 +45,25 @@ class ContactMessageRepository
             })
             ->orderBy('id')
             ->lazyById(200);
+    }
+
+    /**
+     * Messages received in the last `$days` days and failed deliveries,
+     * computed in a single aggregate query.
+     */
+    public function dashboardCounts(CarbonInterface $now, int $days): ContactCountsData
+    {
+        /** @var object{recent: int|string, failed: int|string}|null $row */
+        $row = ContactMessage::query()
+            ->toBase()
+            ->selectRaw('count(case when created_at >= ? then 1 end) as recent', [$now->toImmutable()->subDays($days)])
+            ->selectRaw('count(case when status = ? then 1 end) as failed', [ContactMessageStatus::Failed->value])
+            ->first();
+
+        return new ContactCountsData(
+            recent: (int) ($row->recent ?? 0),
+            failed: (int) ($row->failed ?? 0),
+            recentDays: $days,
+        );
     }
 }

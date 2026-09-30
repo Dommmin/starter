@@ -40,9 +40,12 @@ export async function signedInPage(
     browser: Browser,
     account: keyof typeof accounts,
 ): Promise<Page> {
-    const page = await browser.newPage({
+    // A dedicated context (not browser.newPage) so a journey can open more
+    // tabs in the same signed-in session through page.context().newPage().
+    const context = await browser.newContext({
         storageState: authStatePath(account),
     });
+    const page = await context.newPage();
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin$/);
 

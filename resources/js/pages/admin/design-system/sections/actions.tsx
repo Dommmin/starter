@@ -7,6 +7,7 @@ import {
     ConflictDialog,
     FormDialog,
     OrderableList,
+    PasswordField,
     Stack,
     Text,
     TextField,
@@ -181,6 +182,68 @@ function FormDialogDemo({ failFirst = false }: { failFirst?: boolean }) {
                     value={name}
                     onChange={setName}
                     placeholder={demo('folderPlaceholder')}
+                />
+            </FormDialog>
+        </Stack>
+    );
+}
+
+function DestructiveFormDialogDemo() {
+    const { t } = useTranslation();
+    const demo = useDemoText();
+    const dialog = useDialogDemo();
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState<string | undefined>(undefined);
+    const [deleted, setDeleted] = useState<string | null>(null);
+
+    return (
+        <Stack gap="tight" align="start">
+            <Button
+                variant="destructive"
+                onClick={() => {
+                    setError(undefined);
+                    setPassword('');
+                    dialog.setOpen(true);
+                }}
+            >
+                {demo('deleteAccount')}
+            </Button>
+            <LastAction value={deleted} />
+            <FormDialog
+                open={dialog.isOpen}
+                onOpenChange={dialog.setOpen}
+                tone="destructive"
+                title={demo('deleteAccountTitle')}
+                description={demo('deleteAccountDescription')}
+                submitLabel={demo('deleteAccount')}
+                cancelLabel={demo('cancel')}
+                closeLabel={demo('close')}
+                isPending={dialog.isPending}
+                onSubmit={() => {
+                    setError(undefined);
+                    dialog.run(() => {
+                        if (password !== 'demo-password') {
+                            setError(demo('wrongPassword'));
+
+                            return;
+                        }
+
+                        setDeleted(demo('deleteAccount'));
+                        dialog.setOpen(false);
+                    });
+                }}
+            >
+                <PasswordField
+                    name="demo-delete-password"
+                    label={demo('deletePassword')}
+                    description={demo('deletePasswordHint')}
+                    value={password}
+                    onChange={setPassword}
+                    error={error}
+                    autoComplete="current-password"
+                    showPasswordLabel={t('auth.passwordField.show')}
+                    hidePasswordLabel={t('auth.passwordField.hide')}
+                    required
                 />
             </FormDialog>
         </Stack>
@@ -389,6 +452,12 @@ function ActionsSection() {
                 </ShowcaseState>
                 <ShowcaseState state="error" detail={demo('formErrorDetail')}>
                     <FormDialogDemo failFirst />
+                </ShowcaseState>
+                <ShowcaseState
+                    state="destructive"
+                    detail={demo('destructiveFormDetail')}
+                >
+                    <DestructiveFormDialogDemo />
                 </ShowcaseState>
             </ShowcaseComponent>
 

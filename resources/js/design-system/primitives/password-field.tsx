@@ -14,6 +14,13 @@ export type PasswordFieldProps = {
     required?: boolean;
     disabled?: boolean;
     autoComplete?: string;
+    /**
+     * Server-generated password requirements in the `passwordrules` syntax
+     * (e.g. `Password::defaults()->toPasswordRulesString()`), passed to the
+     * input so password managers generate a password the backend accepts.
+     * A human-readable hint belongs in `description`.
+     */
+    passwordRules?: string;
     /** Translated label for the reveal-toggle when the password is hidden. */
     showPasswordLabel: string;
     /** Translated label for the reveal-toggle when the password is shown. */
@@ -39,6 +46,7 @@ export function PasswordField({
     required = false,
     disabled = false,
     autoComplete = 'current-password',
+    passwordRules,
     showPasswordLabel,
     hidePasswordLabel,
     id,
@@ -78,6 +86,7 @@ export function PasswordField({
                     onChange={(event) => onChange(event.target.value)}
                     onBlur={onBlur}
                     autoComplete={autoComplete}
+                    passwordrules={passwordRules}
                     disabled={disabled}
                     required={required}
                     aria-describedby={describedBy}

@@ -502,13 +502,16 @@ function DemoResourceTable({
     page = 1,
     total,
     withHeader = false,
+    withEmptyAction = false,
 }: {
     rows: DemoArticle[];
     search?: string;
     page?: number;
     total: number;
-    /** PageHeader renders an `h1`; shown once, where it carries the CTA. */
+    /** PageHeader renders an `h1`; shown once in the section. */
     withHeader?: boolean;
+    /** Empty-list CTA (`emptyAction`), independent of the header. */
+    withEmptyAction?: boolean;
 }) {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
@@ -529,6 +532,14 @@ function DemoResourceTable({
         <ResourceTable<DemoArticle>
             url={showcaseUrl}
             header={withHeader ? header : undefined}
+            emptyAction={
+                withEmptyAction ? (
+                    <Button href="#adm-09">
+                        <Plus aria-hidden="true" />
+                        {demo('createArticle')}
+                    </Button>
+                ) : undefined
+            }
             rows={rows}
             rowKey={(row) => row.id}
             pagination={{
@@ -689,6 +700,15 @@ function TablesSection() {
                 >
                     <StaticArticleTable rows={articles} withPriority={false} />
                 </ShowcaseState>
+                <ShowcaseState
+                    state="sortDescending"
+                    detail={demo('sortHiddenDetail')}
+                    fill
+                >
+                    <InteractiveArticleTable
+                        initialSort={{ key: 'views', direction: 'desc' }}
+                    />
+                </ShowcaseState>
             </ShowcaseComponent>
 
             <ShowcaseComponent
@@ -760,16 +780,26 @@ function TablesSection() {
                     detail={demo('resourceDetail')}
                     fill
                 >
-                    <DemoResourceTable rows={articles} page={2} total={14} />
+                    <DemoResourceTable
+                        rows={articles}
+                        page={2}
+                        total={14}
+                        withHeader
+                    />
                 </ShowcaseState>
-                <ShowcaseState state="empty" fill>
-                    <DemoResourceTable rows={[]} total={0} withHeader />
+                <ShowcaseState
+                    state="empty"
+                    detail={demo('emptyActionDetail')}
+                    fill
+                >
+                    <DemoResourceTable rows={[]} total={0} withEmptyAction />
                 </ShowcaseState>
                 <ShowcaseState state="emptyFiltered" fill>
                     <DemoResourceTable
                         rows={[]}
                         total={0}
                         search={demo('noMatchSearch')}
+                        withEmptyAction
                     />
                 </ShowcaseState>
             </ShowcaseComponent>

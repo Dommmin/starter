@@ -1,5 +1,11 @@
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import { useId, useSyncExternalStore, type ReactNode } from 'react';
+import {
+    useEffect,
+    useId,
+    useRef,
+    useSyncExternalStore,
+    type ReactNode,
+} from 'react';
 import { cn } from '@/lib/utils';
 import { SelectField } from './select-field';
 import { Skeleton } from './skeleton';
@@ -17,6 +23,9 @@ import { Skeleton } from './skeleton';
  * - `optional`  — hidden in the card; in the table hidden while the table
  *                 container is narrower than 42rem (e.g. 768 px with the
  *                 expanded sidebar), so the title does not wrap word by word.
+ *                 While the active sort column is such a hidden column, the
+ *                 table shows the sort select (`sortLabels`) above itself, so
+ *                 the sort stays visible and changeable.
  *
  * Without any `priority` the table renders exactly as before (a plain table
  * with horizontal scroll inside its own container).
@@ -45,7 +54,10 @@ export type DataTableSort = {
     direction: DataTableSortDirection;
 };
 
-/** Translated labels of the sort select shown in the card layout. */
+/**
+ * Translated labels of the sort select shown in the card layout (and in the
+ * table while it is sorted by a hidden `optional` column).
+ */
 export type DataTableSortLabels = {
     /** Select label, e.g. "Sort by". */
     label: string;
@@ -66,7 +78,10 @@ export type DataTableProps<Row> = {
      * card-layout sort select also passes the explicitly chosen direction.
      */
     onSortChange?: (key: string, direction?: DataTableSortDirection) => void;
-    /** Required for the sort select of the card layout (columns with `priority`). */
+    /**
+     * Required for the sort select of the card layout (columns with
+     * `priority`) and of a narrow table sorted by an `optional` column.
+     */
     sortLabels?: DataTableSortLabels;
     isLoading?: boolean;
     /** Translated error message; when set, an error row replaces the body. */
@@ -175,6 +190,38 @@ function ErrorMessage({
     );
 }
 
+function SortSelect<Row>({
+    columns,
+    sort,
+    onSortChange,
+    sortLabels,
+}: {
+    columns: DataTableColumn<Row>[];
+    sort: DataTableSort | null;
+    onSortChange: (key: string, direction?: DataTableSortDirection) => void;
+    sortLabels: DataTableSortLabels;
+}) {
+    return (
+        <SelectField
+            name="sort"
+            label={sortLabels.label}
+            value={sort ? `${sort.key}:${sort.direction}` : ''}
+            onChange={(value) => {
+                const [key, direction] = value.split(':');
+                onSortChange(key, direction === 'desc' ? 'desc' : 'asc');
+            }}
+            options={columns
+                .filter((column) => column.sortable)
+                .flatMap((column) =>
+                    (['asc', 'desc'] as const).map((direction) => ({
+                        value: `${column.key}:${direction}`,
+                        label: sortLabels.option(column.header, direction),
+                    })),
+                )}
+        />
+    );
+}
+
 export function DataTable<Row>({
     caption,
     columns,
@@ -201,6 +248,7 @@ export function DataTable<Row>({
             rowKey={rowKey}
             sort={sort}
             onSortChange={onSortChange}
+            sortLabels={sortLabels}
             isLoading={isLoading}
             error={error}
             retryLabel={retryLabel}
@@ -256,6 +304,7 @@ function DataTableGrid<Row>({
     rowKey,
     sort,
     onSortChange,
+    sortLabels,
     isLoading = false,
     error,
     retryLabel,
@@ -263,6 +312,65 @@ function DataTableGrid<Row>({
     emptyState,
     showEmpty,
 }: LayoutProps<Row>) {
+    /**
+     * Sorting by an `optional` column hides its header (and sort indicator)
+     * in a narrow container, so the sort select takes over there. The same
+     * container query that hides the column hides the select again, so no
+     * JS measurement is needed and SSR output is identical.
+     */
+    const isSortedByOptionalColumn = columns.some(
+        (column) =>
+            column.key === sort?.key &&
+            column.sortable &&
+            column.priority === 'optional',
+    );
+    const showSortSelect =
+        isSortedByOptionalColumn &&
+        onSortChange !== undefined &&
+        sortLabels !== undefined;
+
+    /**
+     * A choice in the select that sorts by a visible column removes the
+     * select, so focus moves to that column's header sort button instead of
+     * falling to `body`. The sort arrives later (an Inertia visit keeps this
+     * component mounted via `preserveState`), so the key waits in a ref
+     * until `sort` reports it. When the new column is `optional` too, the
+     * select stays and keeps focus.
+     */
+    const rootRef = useRef<HTMLDivElement>(null);
+    const pendingHeaderFocus = useRef<string | null>(null);
+    const sortKey = sort?.key;
+
+    useEffect(() => {
+        const key = pendingHeaderFocus.current;
+
+        if (key === null || key !== sortKey) {
+            return;
+        }
+
+        pendingHeaderFocus.current = null;
+
+        if (showSortSelect) {
+            return;
+        }
+
+        Array.from(
+            rootRef.current?.querySelectorAll<HTMLButtonElement>(
+                'th button[data-sort-key]',
+            ) ?? [],
+        )
+            .find((button) => button.dataset.sortKey === key)
+            ?.focus();
+    }, [sortKey, showSortSelect]);
+
+    function handleSelectSortChange(
+        key: string,
+        direction?: DataTableSortDirection,
+    ) {
+        pendingHeaderFocus.current = key === sortKey ? null : key;
+        onSortChange?.(key, direction);
+    }
+
     /**
      * Optional columns yield to the title when the table container is narrow;
      * titles and secondary values (e.g. long e-mails) wrap instead of forcing
@@ -281,121 +389,141 @@ function DataTableGrid<Row>({
      * `Stack align="start"`).
      */
     return (
-        <div className="border-border-subtle @container w-full overflow-x-auto rounded-lg border">
-            <table className="w-full text-left text-sm" aria-busy={isLoading}>
-                <caption className="sr-only">{caption}</caption>
-                <thead className="bg-surface-subtle">
-                    <tr>
-                        {columns.map((column) => {
-                            const isSorted = sort?.key === column.key;
-                            const ariaSort = isSorted
-                                ? sort?.direction === 'asc'
-                                    ? 'ascending'
-                                    : 'descending'
-                                : column.sortable
-                                  ? 'none'
-                                  : undefined;
+        <div ref={rootRef} className="@container flex w-full flex-col gap-3">
+            {showSortSelect && (
+                <div className="@2xl:hidden">
+                    <SortSelect
+                        columns={columns}
+                        sort={sort}
+                        onSortChange={handleSelectSortChange}
+                        sortLabels={sortLabels}
+                    />
+                </div>
+            )}
+            <div className="border-border-subtle w-full overflow-x-auto rounded-lg border">
+                <table
+                    className="w-full text-left text-sm"
+                    aria-busy={isLoading}
+                >
+                    <caption className="sr-only">{caption}</caption>
+                    <thead className="bg-surface-subtle">
+                        <tr>
+                            {columns.map((column) => {
+                                const isSorted = sort?.key === column.key;
+                                const ariaSort = isSorted
+                                    ? sort?.direction === 'asc'
+                                        ? 'ascending'
+                                        : 'descending'
+                                    : column.sortable
+                                      ? 'none'
+                                      : undefined;
 
-                            return (
-                                <th
-                                    key={column.key}
-                                    scope="col"
-                                    aria-sort={ariaSort}
-                                    className={cn(
-                                        'text-muted-foreground px-4 py-3 font-medium whitespace-nowrap',
-                                        column.align === 'end' && 'text-right',
-                                        column.priority === 'optional' &&
-                                            'hidden @2xl:table-cell',
-                                    )}
-                                >
-                                    {column.sortable && onSortChange ? (
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                onSortChange(column.key)
-                                            }
-                                            className={cn(
-                                                'focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm focus-visible:ring-2 focus-visible:outline-none',
-                                                column.align === 'end' &&
-                                                    'flex-row-reverse',
-                                            )}
-                                        >
-                                            {column.header}
-                                            <SortIcon
-                                                isSorted={isSorted}
-                                                direction={sort?.direction}
-                                            />
-                                        </button>
-                                    ) : (
-                                        column.header
-                                    )}
-                                </th>
-                            );
-                        })}
-                    </tr>
-                </thead>
-                <tbody className="divide-border-subtle divide-y">
-                    {isLoading &&
-                        Array.from({ length: 5 }, (_, rowIndex) => (
-                            <tr key={`skeleton-${rowIndex}`}>
-                                {columns.map((column) => (
-                                    <td
+                                return (
+                                    <th
                                         key={column.key}
+                                        scope="col"
+                                        aria-sort={ariaSort}
                                         className={cn(
-                                            'px-4 py-3',
-                                            cellVisibility(column),
-                                        )}
-                                    >
-                                        <Skeleton />
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    {!isLoading && error && (
-                        <tr>
-                            <td
-                                colSpan={columns.length}
-                                className="px-4 py-6 text-center"
-                            >
-                                <ErrorMessage
-                                    error={error}
-                                    retryLabel={retryLabel}
-                                    onRetry={onRetry}
-                                />
-                            </td>
-                        </tr>
-                    )}
-                    {showEmpty && (
-                        <tr>
-                            <td colSpan={columns.length} className="px-4 py-6">
-                                {emptyState}
-                            </td>
-                        </tr>
-                    )}
-                    {!isLoading &&
-                        !error &&
-                        rows.map((row) => (
-                            <tr
-                                key={rowKey(row)}
-                                className="hover:bg-surface-subtle/60"
-                            >
-                                {columns.map((column) => (
-                                    <td
-                                        key={column.key}
-                                        className={cn(
-                                            'text-foreground px-4 py-3',
+                                            'text-muted-foreground px-4 py-3 font-medium whitespace-nowrap',
                                             column.align === 'end' &&
                                                 'text-right',
-                                            cellVisibility(column),
+                                            column.priority === 'optional' &&
+                                                'hidden @2xl:table-cell',
                                         )}
                                     >
-                                        {column.render(row)}
-                                    </td>
-                                ))}
+                                        {column.sortable && onSortChange ? (
+                                            <button
+                                                type="button"
+                                                data-sort-key={column.key}
+                                                onClick={() =>
+                                                    onSortChange(column.key)
+                                                }
+                                                className={cn(
+                                                    'focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm focus-visible:ring-2 focus-visible:outline-none',
+                                                    column.align === 'end' &&
+                                                        'flex-row-reverse',
+                                                )}
+                                            >
+                                                {column.header}
+                                                <SortIcon
+                                                    isSorted={isSorted}
+                                                    direction={sort?.direction}
+                                                />
+                                            </button>
+                                        ) : (
+                                            column.header
+                                        )}
+                                    </th>
+                                );
+                            })}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-border-subtle divide-y">
+                        {isLoading &&
+                            Array.from({ length: 5 }, (_, rowIndex) => (
+                                <tr key={`skeleton-${rowIndex}`}>
+                                    {columns.map((column) => (
+                                        <td
+                                            key={column.key}
+                                            className={cn(
+                                                'px-4 py-3',
+                                                cellVisibility(column),
+                                            )}
+                                        >
+                                            <Skeleton />
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        {!isLoading && error && (
+                            <tr>
+                                <td
+                                    colSpan={columns.length}
+                                    className="px-4 py-6 text-center"
+                                >
+                                    <ErrorMessage
+                                        error={error}
+                                        retryLabel={retryLabel}
+                                        onRetry={onRetry}
+                                    />
+                                </td>
                             </tr>
-                        ))}
-                </tbody>
-            </table>
+                        )}
+                        {showEmpty && (
+                            <tr>
+                                <td
+                                    colSpan={columns.length}
+                                    className="px-4 py-6"
+                                >
+                                    {emptyState}
+                                </td>
+                            </tr>
+                        )}
+                        {!isLoading &&
+                            !error &&
+                            rows.map((row) => (
+                                <tr
+                                    key={rowKey(row)}
+                                    className="hover:bg-surface-subtle/60"
+                                >
+                                    {columns.map((column) => (
+                                        <td
+                                            key={column.key}
+                                            className={cn(
+                                                'text-foreground px-4 py-3',
+                                                column.align === 'end' &&
+                                                    'text-right',
+                                                cellVisibility(column),
+                                            )}
+                                        >
+                                            {column.render(row)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
@@ -434,23 +562,11 @@ function DataTableCards<Row>({
     return (
         <div className="flex flex-col gap-3">
             {showSort && (
-                <SelectField
-                    name="sort"
-                    label={sortLabels.label}
-                    value={sort ? `${sort.key}:${sort.direction}` : ''}
-                    onChange={(value) => {
-                        const [key, direction] = value.split(':');
-                        onSortChange(
-                            key,
-                            direction === 'desc' ? 'desc' : 'asc',
-                        );
-                    }}
-                    options={sortableColumns.flatMap((column) =>
-                        (['asc', 'desc'] as const).map((direction) => ({
-                            value: `${column.key}:${direction}`,
-                            label: sortLabels.option(column.header, direction),
-                        })),
-                    )}
+                <SortSelect
+                    columns={columns}
+                    sort={sort}
+                    onSortChange={onSortChange}
+                    sortLabels={sortLabels}
                 />
             )}
 

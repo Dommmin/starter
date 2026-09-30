@@ -1341,6 +1341,8 @@ return [
             'sortDetail' => 'Spaltenköpfe und Zeilenmenü funktionieren lokal',
             'narrowDetail' => 'optionale Spalten ausgeblendet, solange der Container < 42rem ist; Karten hängen vom Viewport < 768 px ab',
             'withoutPriorityDetail' => 'horizontales Scrollen im eigenen Container',
+            'sortHiddenDetail' => 'sortiert nach einer ausgeblendeten optionalen Spalte: über der Tabelle erscheint die Sortierauswahl',
+            'emptyActionDetail' => 'CTA über emptyAction, ohne PageHeader; bei leerem Filterergebnis ausgeblendet',
             'resourceTitle' => 'Artikel',
             'resourceDescription' => 'Liste mit Suche, Filter, Sortierung und Seitennavigation in der URL.',
             'resourceDetail' => 'eine Änderung ist ein Inertia-Besuch (Zustand in der URL); Laden und Fehler stammen vom Besuch, vollständiger Ablauf: /admin/users',

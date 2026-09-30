@@ -56,6 +56,13 @@ export default function AdminFaqsIndex() {
                         </Button>
                     ) : undefined,
                 }}
+                emptyAction={
+                    can.create ? (
+                        <Button href={create()}>
+                            {t('admin.faqs.create')}
+                        </Button>
+                    ) : undefined
+                }
                 rows={items}
                 rowKey={(row) => row.id}
                 pagination={pagination}

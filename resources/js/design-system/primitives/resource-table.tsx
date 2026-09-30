@@ -107,6 +107,14 @@ export type ResourceTableProps<Row> = {
         description?: string;
         actions?: ReactNode;
     };
+    /**
+     * Call to action of the empty list (e.g. a "Create" `Button`), shown only
+     * when there are no records at all — never for an empty search/filter
+     * result, which offers "clear filters" instead. The caller decides
+     * whether the user may perform it (e.g. `can.create`). Works without
+     * `header`, so a page with its own `PageHeader` still gets the CTA.
+     */
+    emptyAction?: ReactNode;
     className?: never;
     style?: never;
 };
@@ -140,6 +148,7 @@ export function ResourceTable<Row>({
     filterFields = [],
     rowActions,
     header,
+    emptyAction,
 }: ResourceTableProps<Row>) {
     const [isLoading, setIsLoading] = useState(false);
     const [hasError, setHasError] = useState(false);
@@ -332,6 +341,11 @@ export function ResourceTable<Row>({
                                 <EmptyState
                                     title={labels.emptyTitle}
                                     description={labels.emptyDescription}
+                                    action={
+                                        hasActiveFilters
+                                            ? undefined
+                                            : emptyAction
+                                    }
                                 />
                             )
                         }

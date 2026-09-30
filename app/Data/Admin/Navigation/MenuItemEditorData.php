@@ -8,8 +8,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Props of the `admin/navigation/create` and `admin/navigation/edit`
- * screens: the item, and the pages, articles and parents selectable in its
- * menu locale.
+ * screens: the item, and the pages, articles, parents and home page
+ * section anchors selectable in its menu locale.
  */
 #[TypeScript]
 class MenuItemEditorData extends Data
@@ -18,6 +18,7 @@ class MenuItemEditorData extends Data
      * @param  list<MenuTargetOptionData>  $pages
      * @param  list<MenuTargetOptionData>  $articles
      * @param  list<MenuParentOptionData>  $parents
+     * @param  list<MenuAnchorOptionData>  $homeAnchors
      */
     public function __construct(
         public MenuItemFormData $item,
@@ -25,6 +26,7 @@ class MenuItemEditorData extends Data
         public array $pages,
         public array $articles,
         public array $parents,
+        public array $homeAnchors,
         public MenuAbilitiesData $can,
     ) {}
 }

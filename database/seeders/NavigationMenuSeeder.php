@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\HomeSectionAnchor;
 use App\Enums\MenuItemType;
 use App\Enums\MenuLocation;
 use App\Models\MenuItem;
@@ -24,7 +25,7 @@ class NavigationMenuSeeder extends Seeder
 {
     public const string PRIVACY_POLICY_SLUG = 'privacy-policy';
 
-    public const string FEATURES_ANCHOR = 'features';
+    public const string FEATURES_ANCHOR = HomeSectionAnchor::Features->value;
 
     public function run(LocalizationConfig $config, PublicNavigation $navigation): void
     {

@@ -1,11 +1,14 @@
 <?php
 
 use App\Enums\AuditAction;
+use App\Enums\HomeSectionAnchor;
+use App\Enums\HomeSectionType;
 use App\Enums\MenuItemType;
 use App\Enums\MenuLocation;
 use App\Models\Article;
 use App\Models\ArticleTranslation;
 use App\Models\AuditLog;
+use App\Models\HomeSection;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
@@ -218,6 +221,7 @@ test('invalid structures are rejected without saving', function (Closure $payloa
     'protocol-relative url' => [fn (array $items) => ['url' => '//evil.com'], 'url'],
     'other scheme' => [fn (array $items) => ['url' => 'ftp://example.com/file'], 'url'],
     'invalid anchor' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'Bad Anchor!'], 'anchor'],
+    'home anchor outside the home sections' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'team'], 'anchor'],
     'anchor without label' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'features', 'label' => ''], 'label'],
     'page without page' => [fn (array $items) => ['type' => 'page', 'url' => null], 'page_id'],
     'url on a group' => [fn (array $items) => ['type' => 'group'], 'url'],
@@ -386,5 +390,36 @@ test('the edit form marks a deleted target', function () {
             ->where('item.type', MenuItemType::Article->value)
             ->where('item.articleId', null)
             ->where('item.targetMissing', true)
+        );
+});
+
+test('an anchor without a page targets a home section, an anchor on a page any valid id', function () {
+    $editor = User::factory()->editor()->create();
+    $page = Page::factory()->published()->create();
+
+    $this->actingAs($editor)->post(route('admin.navigation.store'), navigationItemPayload([
+        'type' => 'anchor', 'url' => null, 'anchor' => HomeSectionAnchor::LatestArticles->value, 'label' => 'News',
+    ]))->assertSessionHasNoErrors();
+    $this->actingAs($editor)->post(route('admin.navigation.store'), navigationItemPayload([
+        'type' => 'anchor', 'url' => null, 'page_id' => $page->id, 'anchor' => 'team', 'label' => 'Team',
+    ]))->assertSessionHasNoErrors();
+
+    expect(MenuItem::query()->where('type', 'anchor')->orderBy('position')->get(['page_id', 'anchor'])->toArray())->toBe([
+        ['page_id' => null, 'anchor' => 'latest-articles'],
+        ['page_id' => $page->id, 'anchor' => 'team'],
+    ]);
+});
+
+test('the form lists every home section anchor and marks the ones hidden in the menu locale', function () {
+    $editor = User::factory()->editor()->create();
+    HomeSection::factory()->create(['locale' => 'pl', 'type' => HomeSectionType::Hero, 'enabled' => true]);
+    HomeSection::factory()->create(['locale' => 'en', 'type' => HomeSectionType::Faq, 'enabled' => true]);
+
+    $this->actingAs($editor)->get(route('admin.navigation.create', ['location' => 'header', 'locale' => 'pl']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->has('homeAnchors', count(HomeSectionType::cases()))
+            ->where('homeAnchors.0', ['anchor' => 'hero', 'sectionType' => 'hero', 'enabled' => true])
+            ->where('homeAnchors.2', ['anchor' => 'faq', 'sectionType' => 'faq', 'enabled' => false])
         );
 });

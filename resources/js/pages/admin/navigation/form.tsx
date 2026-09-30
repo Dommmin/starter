@@ -220,6 +220,19 @@ export function MenuItemForm({ editor }: MenuItemFormProps) {
             : target.title,
     });
 
+    const homeAnchorOption = (
+        option: App.Data.Admin.Navigation.MenuAnchorOptionData,
+    ) => {
+        const section = t(`admin.homeSections.types.${option.sectionType}`);
+
+        return {
+            value: option.anchor,
+            label: option.enabled
+                ? section
+                : t('admin.navigation.hiddenSectionOption', { section }),
+        };
+    };
+
     const fields: ResourceFormField<FormValues>[] = [
         {
             type: 'select',
@@ -288,13 +301,22 @@ export function MenuItemForm({ editor }: MenuItemFormProps) {
                     ...editor.pages.map(targetOption),
                 ],
             },
-            {
-                type: 'text',
-                name: 'anchor',
-                label: t('admin.navigation.fields.anchor'),
-                hint: t('admin.navigation.fields.anchorHint'),
-                required: true,
-            },
+            form.data.page_id === NONE
+                ? {
+                      type: 'select',
+                      name: 'anchor',
+                      label: t('admin.navigation.fields.homeAnchor'),
+                      hint: t('admin.navigation.fields.homeAnchorHint'),
+                      required: true,
+                      options: editor.homeAnchors.map(homeAnchorOption),
+                  }
+                : {
+                      type: 'text',
+                      name: 'anchor',
+                      label: t('admin.navigation.fields.anchor'),
+                      hint: t('admin.navigation.fields.anchorHint'),
+                      required: true,
+                  },
         );
     }
 

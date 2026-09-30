@@ -233,6 +233,10 @@ function editor(item: Partial<EditorProps['item']> = {}): EditorProps {
         pages: [{ id: 4, title: 'About', draft: true }],
         articles: [],
         parents: [],
+        homeAnchors: [
+            { anchor: 'hero', sectionType: 'hero', enabled: true },
+            { anchor: 'faq', sectionType: 'faq', enabled: false },
+        ],
         can: { create: true, reorder: true, delete: true },
     };
 }
@@ -283,6 +287,43 @@ describe('MenuItemForm', () => {
             />,
         );
         expect(fieldNames(group)).not.toContain('parent_id');
+    });
+
+    it('offers home page sections for an anchor without a page and free text on a page', async () => {
+        const home = await render(
+            <MenuItemForm
+                editor={editor({
+                    type: 'anchor',
+                    anchor: 'hero',
+                    label: 'Top',
+                })}
+            />,
+        );
+        const homeAnchor = home.querySelector('[name="anchor"]');
+        expect(homeAnchor?.tagName).toBe('SELECT');
+        expect(
+            Array.from(home.querySelectorAll('select[name="anchor"] option'))
+                .map((option) => option.getAttribute('value'))
+                .filter(Boolean),
+        ).toEqual(['hero', 'faq']);
+        expect(home.textContent).toContain(
+            'admin.navigation.fields.homeAnchor',
+        );
+
+        const onPage = await render(
+            <MenuItemForm
+                editor={editor({
+                    type: 'anchor',
+                    pageId: 4,
+                    anchor: 'team',
+                    label: 'Team',
+                })}
+            />,
+        );
+        expect(onPage.querySelector('[name="anchor"]')?.tagName).toBe('INPUT');
+        expect(onPage.textContent).toContain(
+            'admin.navigation.fields.anchorHint',
+        );
     });
 
     it('marks a deleted target', async () => {

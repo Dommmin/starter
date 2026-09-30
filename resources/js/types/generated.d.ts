@@ -306,6 +306,11 @@ declare namespace App {
                     reorder: boolean;
                     delete: boolean;
                 };
+                export type MenuAnchorOptionData = {
+                    anchor: string;
+                    sectionType: App.Enums.HomeSectionType;
+                    enabled: boolean;
+                };
                 export type MenuIndexData = {
                     location: App.Enums.MenuLocation;
                     locale: string;
@@ -319,6 +324,7 @@ declare namespace App {
                     pages: App.Data.Admin.Navigation.MenuTargetOptionData[];
                     articles: App.Data.Admin.Navigation.MenuTargetOptionData[];
                     parents: App.Data.Admin.Navigation.MenuParentOptionData[];
+                    homeAnchors: App.Data.Admin.Navigation.MenuAnchorOptionData[];
                     can: App.Data.Admin.Navigation.MenuAbilitiesData;
                 };
                 export type MenuItemFormData = {
@@ -720,6 +726,7 @@ declare namespace App {
         }
     }
     namespace Enums {
+        export type AccentColor = 'default';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

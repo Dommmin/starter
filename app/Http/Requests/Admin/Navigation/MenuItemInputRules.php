@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Navigation;
 
 use App\Data\Navigation\MenuItemInputData;
+use App\Enums\HomeSectionAnchor;
 use App\Enums\MenuItemType;
 use App\Services\Navigation\PublicNavigation;
 use Closure;
@@ -74,7 +75,10 @@ final class MenuItemInputRules
                 Rule::prohibitedIf(! $is(MenuItemType::Anchor)),
                 'string',
                 'max:64',
-                'regex:'.self::ANCHOR_PATTERN,
+                // Without a page the anchor targets a home page section.
+                $request->filled('page_id')
+                    ? 'regex:'.self::ANCHOR_PATTERN
+                    : Rule::enum(HomeSectionAnchor::class),
             ],
             'url' => [
                 'nullable',

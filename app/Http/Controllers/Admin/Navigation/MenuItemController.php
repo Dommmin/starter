@@ -7,6 +7,7 @@ use App\Actions\Navigation\DeleteMenuItem;
 use App\Actions\Navigation\ReorderMenuItems;
 use App\Actions\Navigation\UpdateMenuItem;
 use App\Data\Admin\Navigation\MenuAbilitiesData;
+use App\Data\Admin\Navigation\MenuAnchorOptionData;
 use App\Data\Admin\Navigation\MenuIndexData;
 use App\Data\Admin\Navigation\MenuItemEditorData;
 use App\Data\Admin\Navigation\MenuItemFormData;
@@ -14,12 +15,14 @@ use App\Data\Admin\Navigation\MenuParentOptionData;
 use App\Data\Admin\Navigation\MenuTargetOptionData;
 use App\Data\Admin\Navigation\MenuTreeItemData;
 use App\Data\Content\ContentLocalesData;
+use App\Enums\HomeSectionType;
 use App\Enums\PublicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Navigation\ListMenuItemsRequest;
 use App\Http\Requests\Admin\Navigation\ReorderMenuItemsRequest;
 use App\Http\Requests\Admin\Navigation\StoreMenuItemRequest;
 use App\Http\Requests\Admin\Navigation\UpdateMenuItemRequest;
+use App\Models\HomeSection;
 use App\Models\MenuItem;
 use App\Models\User;
 use App\Repositories\Navigation\MenuItemRepository;
@@ -193,12 +196,29 @@ class MenuItemController extends Controller
             $parents[] = MenuParentOptionData::fromModel($parent);
         }
 
+        $enabledSections = HomeSection::query()
+            ->where('locale', $item->locale)
+            ->where('enabled', true)
+            ->pluck('type')
+            ->map(fn (HomeSectionType $type): string => $type->value)
+            ->all();
+
+        $homeAnchors = [];
+        foreach (HomeSectionType::cases() as $sectionType) {
+            $homeAnchors[] = new MenuAnchorOptionData(
+                anchor: $sectionType->anchor()->value,
+                sectionType: $sectionType,
+                enabled: in_array($sectionType->value, $enabledSections, true),
+            );
+        }
+
         return new MenuItemEditorData(
             item: $item,
             locales: ContentLocalesData::fromConfig($this->localization),
             pages: $pages,
             articles: $articles,
             parents: $parents,
+            homeAnchors: $homeAnchors,
             can: $this->abilities($request),
         );
     }

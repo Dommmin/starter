@@ -1,11 +1,13 @@
 <?php
 
 use App\Contracts\Settings\UpdatesSiteName;
+use App\Enums\AuditAction;
 use App\Enums\UserRole;
 use App\Models\Article;
 use App\Models\AuditLog;
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
@@ -331,13 +333,42 @@ test('--remove-demo removes only unedited registry records and then the sample a
         ->and(User::query()->where('email', 'owner@example.test')->value('role'))->toBe(UserRole::Admin);
 });
 
-test('without the settings module the brand step is skipped', function () {
+test('the site name is stored in the site settings with an audit entry and APP_NAME is kept', function () {
     $this->app->forgetInstance(UpdatesSiteName::class);
+    $this->app['env'] = 'local';
+
+    [$exitCode, $output] = runInit(['--write-env' => true, '--force' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('Brand: site name updated.')
+        ->and(SiteSetting::query()->sole()->site_name)->toBe('Acme')
+        ->and(AuditLog::query()->where('action', AuditAction::SiteSettingsUpdated)->sole()->actor_id)->toBeNull()
+        ->and(file_get_contents($this->envPath))->toContain("APP_NAME=Laravel\n");
+});
+
+test('a dry run does not store the site name', function () {
+    $this->app->forgetInstance(UpdatesSiteName::class);
+
+    [$exitCode, $output] = runInit(['--dry-run' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and($output)->toContain('site name → Acme')
+        ->and(SiteSetting::query()->exists())->toBeFalse()
+        ->and(AuditLog::query()->where('action', AuditAction::SiteSettingsUpdated)->exists())->toBeFalse();
+});
+
+test('a second run keeps the stored site name without another audit entry', function () {
+    $this->app->forgetInstance(UpdatesSiteName::class);
+    runInit();
+    $version = SiteSetting::query()->sole()->updated_at;
+    $this->travel(1)->minutes();
 
     [$exitCode, $output] = runInit();
 
     expect($exitCode)->toBe(0)
-        ->and($output)->toContain('settings module not available');
+        ->and($output)->toContain('Brand: site name unchanged — skipped.')
+        ->and(SiteSetting::query()->sole()->updated_at?->equalTo($version))->toBeTrue()
+        ->and(AuditLog::query()->where('action', AuditAction::SiteSettingsUpdated)->count())->toBe(1);
 });
 
 test('missing values are asked for interactively', function () {

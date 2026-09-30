@@ -2,16 +2,15 @@
 
 namespace App\Contracts\Settings;
 
-use App\Support\Settings\SkipSiteNameUpdate;
+use App\Support\Settings\SiteSettingsSiteName;
 use Illuminate\Container\Attributes\Bind;
 
 /**
  * Write access to the site name kept in the application settings, used by
- * `app:init-project`. The settings module owns the data; until it binds its
- * own implementation, the no-op {@see SkipSiteNameUpdate} reports the step
- * as unavailable. `APP_NAME` is intentionally never written.
+ * `app:init-project`. The settings module owns the data and is bound by
+ * {@see SiteSettingsSiteName}. `APP_NAME` is intentionally never written.
  */
-#[Bind(SkipSiteNameUpdate::class)]
+#[Bind(SiteSettingsSiteName::class)]
 interface UpdatesSiteName
 {
     /**

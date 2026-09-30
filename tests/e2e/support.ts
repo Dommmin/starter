@@ -58,7 +58,9 @@ export async function logIn(
 ): Promise<void> {
     await page.goto('/login');
     await page.getByLabel('Email address').fill(accounts[account]);
-    await page.getByLabel('Password', { exact: true }).fill(e2ePassword());
+    // The required mark (*) is aria-hidden but still part of the label text
+    // Playwright matches; anchor the name so "Show password" never matches.
+    await page.getByLabel(/^Password\*?$/).fill(e2ePassword());
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
     await expect(page).toHaveURL(/\/admin$/);
 }

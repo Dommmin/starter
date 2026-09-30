@@ -49,6 +49,28 @@ async function runSsrVerification() {
             seo,
             site,
             contactForm: { token: 'ssr-fixture-token' },
+            navigation: {
+                header: [
+                    {
+                        id: 1,
+                        label: `Menu ${locale}`,
+                        href: `/${locale}/articles`,
+                        kind: 'internal',
+                        newTab: false,
+                        children: [],
+                    },
+                ],
+                footer: [
+                    {
+                        id: 2,
+                        label: `Footer menu ${locale}`,
+                        href: `/${locale}/privacy`,
+                        kind: 'internal',
+                        newTab: false,
+                        children: [],
+                    },
+                ],
+            },
             i18n: {
                 area: 'public',
                 locale,
@@ -162,6 +184,11 @@ async function runSsrVerification() {
         'Przełącznik języka (trigger) musi być widoczny i pokazywać aktywny język, gdy availableLocales > 1',
     );
 
+    assert.ok(
+        en1.body.includes('Menu en') && en1.body.includes('Footer menu en'),
+        'SSR EN musi zawierać etykiety menu nawigacji (nagłówek i stopka) w pierwszym HTML',
+    );
+
     // 2. Render PL
     const pl = await render(makePage('pl', 'Hero PL Zlokalizowany'));
     assert.ok(
@@ -175,6 +202,10 @@ async function runSsrVerification() {
     assert.ok(
         !pl.body.includes('landing.heroTitle'),
         'SSR PL nie może przeciekać surowych kluczy i18n',
+    );
+    assert.ok(
+        pl.body.includes('Menu pl') && !pl.body.includes('Menu en'),
+        'SSR PL musi zawierać menu nawigacji PL bez wycieku z EN',
     );
     assert.ok(
         pl.body.includes('Polski'),

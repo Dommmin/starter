@@ -7,11 +7,17 @@ import { BrandLogo } from './brand-logo';
 import { Button, type ButtonProps } from './button';
 import { PublicChrome } from './public-chrome';
 
-let site: App.Data.Settings.SiteSettingsData | undefined;
+const sharedProps = vi.hoisted(() => ({
+    current: {} as Record<string, unknown>,
+}));
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
-        props: { auth: { user: null }, i18n: { alternateUrls: {} }, site },
+        props: {
+            auth: { user: null },
+            i18n: { alternateUrls: {} },
+            ...sharedProps.current,
+        },
     }),
     router: {
         on: () => () => {},
@@ -101,7 +107,7 @@ function makeSite(
 }
 
 afterEach(async () => {
-    site = undefined;
+    sharedProps.current = {};
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -146,6 +152,72 @@ describe('PublicChrome', () => {
         expect(main?.nextElementSibling).toBe(footer);
     });
 
+    it('renders the shared navigation menus unless the page passes its own', async () => {
+        sharedProps.current = {
+            navigation: {
+                header: [
+                    {
+                        id: 1,
+                        label: 'Shared blog',
+                        href: '/articles',
+                        kind: 'internal',
+                        newTab: false,
+                        children: [],
+                    },
+                ],
+                footer: [
+                    {
+                        id: 2,
+                        label: 'Legal',
+                        kind: 'group',
+                        newTab: false,
+                        children: [
+                            {
+                                id: 3,
+                                label: 'Privacy',
+                                href: '/privacy-policy',
+                                kind: 'internal',
+                                newTab: false,
+                                children: [],
+                            },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        const shared = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        expect(
+            shared.querySelector('header a[href="/articles"]')?.textContent,
+        ).toContain('Shared blog');
+        expect(shared.querySelector('footer')?.textContent).toContain('Legal');
+        expect(
+            shared.querySelector('footer a[href="/privacy-policy"]'),
+        ).not.toBeNull();
+
+        const own = await render(
+            <PublicChrome
+                navItems={[
+                    { id: 'own', kind: 'anchor', label: 'Own', href: '#own' },
+                ]}
+                footer={{ groups: [] }}
+            >
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        expect(own.querySelector('header a[href="#own"]')).not.toBeNull();
+        expect(own.querySelector('header a[href="/articles"]')).toBeNull();
+        expect(
+            own.querySelector('footer a[href="/privacy-policy"]'),
+        ).toBeNull();
+    });
+
     it('uses the copyright line the page passes', async () => {
         const container = await render(
             <PublicChrome footer={{ copyright: '© 2026 Custom' }}>
@@ -161,7 +233,7 @@ describe('PublicChrome', () => {
 
 describe('PublicChrome site settings defaults', () => {
     it('fills the brand, copyright, contact and social links from the shared site prop', async () => {
-        site = makeSite();
+        sharedProps.current.site = makeSite();
         const container = await render(
             <PublicChrome>
                 <p>Body</p>
@@ -184,7 +256,10 @@ describe('PublicChrome site settings defaults', () => {
     });
 
     it('lets the page override the defaults and keeps the catalog brand before the first save', async () => {
-        site = makeSite({ isCustomized: false, footerText: null });
+        sharedProps.current.site = makeSite({
+            isCustomized: false,
+            footerText: null,
+        });
         const container = await render(
             <PublicChrome
                 footer={{
@@ -214,7 +289,7 @@ describe('PublicChrome site settings defaults', () => {
     });
 
     it('uses the site logo with the site name as its accessible name', async () => {
-        site = makeSite({
+        sharedProps.current.site = makeSite({
             logo: {
                 sources: [],
                 src: '/storage/logo-640.png',

@@ -18,6 +18,8 @@ declare module '@inertiajs/core' {
             seo: App.Data.Seo.SeoDefaultsData;
             site: App.Data.Settings.SiteSettingsData;
             sidebarOpen: boolean;
+            /** Public area only (lazy shared prop). */
+            navigation?: App.Data.Navigation.NavigationData;
             [key: string]: unknown;
         };
     }

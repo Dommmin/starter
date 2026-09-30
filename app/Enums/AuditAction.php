@@ -28,6 +28,10 @@ enum AuditAction: string
     case MediaDeleted = 'media.deleted';
     case ResourceExported = 'resource.exported';
     case SiteSettingsUpdated = 'site_settings.updated';
+    case NavigationItemCreated = 'navigation.item_created';
+    case NavigationItemUpdated = 'navigation.item_updated';
+    case NavigationItemDeleted = 'navigation.item_deleted';
+    case NavigationReordered = 'navigation.reordered';
 
     /**
      * @return list<string>

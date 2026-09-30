@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
+use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\Settings\SiteSettingsController;
 use App\Http\Controllers\Admin\UserIndexController;
@@ -16,6 +17,7 @@ use App\Models\AuditLog;
 use App\Models\ContactMessage;
 use App\Models\Faq;
 use App\Models\MediaAsset;
+use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\SiteSetting;
 use App\Models\User;
@@ -152,4 +154,25 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::put('/site-settings', [SiteSettingsController::class, 'update'])
             ->name('site-settings.update')
             ->can('update', SiteSetting::class);
+        Route::get('/navigation', [MenuItemController::class, 'index'])
+            ->name('navigation.index')
+            ->can('viewAny', MenuItem::class);
+        Route::get('/navigation/create', [MenuItemController::class, 'create'])
+            ->name('navigation.create')
+            ->can('create', MenuItem::class);
+        Route::post('/navigation', [MenuItemController::class, 'store'])
+            ->name('navigation.store')
+            ->can('create', MenuItem::class);
+        Route::put('/navigation/order', [MenuItemController::class, 'reorder'])
+            ->name('navigation.reorder')
+            ->can('reorder', MenuItem::class);
+        Route::get('/navigation/{menuItem}/edit', [MenuItemController::class, 'edit'])
+            ->name('navigation.edit')
+            ->can('update', 'menuItem');
+        Route::put('/navigation/{menuItem}', [MenuItemController::class, 'update'])
+            ->name('navigation.update')
+            ->can('update', 'menuItem');
+        Route::delete('/navigation/{menuItem}', [MenuItemController::class, 'destroy'])
+            ->name('navigation.destroy')
+            ->can('delete', 'menuItem');
     });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Navigation\NavigationData;
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
 use App\Models\AuditLog;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
+use App\Services\Navigation\PublicNavigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -36,6 +38,7 @@ class HandleInertiaRequests extends Middleware
         protected LocalizationManager $localization,
         protected LocalizedUrlGenerator $urlGenerator,
         protected SiteSettingsRepository $siteSettings,
+        protected PublicNavigation $navigation,
     ) {}
 
     /**
@@ -78,7 +81,22 @@ class HandleInertiaRequests extends Middleware
             'seo' => $this->seoDefaults($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'site' => fn () => $this->siteSettings->current(),
+            ...$this->publicNavigation($i18n['area'], $i18n['locale']),
         ];
+    }
+
+    /**
+     * Lazily resolved header and footer menus, shared only with public pages.
+     *
+     * @return array<string, \Closure(): NavigationData>
+     */
+    protected function publicNavigation(string $area, string $locale): array
+    {
+        if ($area !== 'public') {
+            return [];
+        }
+
+        return ['navigation' => fn () => $this->navigation->shared($locale)];
     }
 
     /**

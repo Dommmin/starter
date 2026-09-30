@@ -12,6 +12,7 @@ export type PublicChromeFooter = {
      * settings, then "© {year} {brand.name}" (common catalog).
      */
     copyright?: string;
+    /** Defaults to the shared `navigation.footer` menu of public pages. */
     groups?: NavItem[];
     /** Defaults to the contact details of the shared `site` settings. */
     contact?: FooterContact;
@@ -20,6 +21,7 @@ export type PublicChromeFooter = {
 };
 
 export type PublicChromeProps = {
+    /** Defaults to the shared `navigation.header` menu of public pages. */
     navItems?: NavItem[];
     footer?: PublicChromeFooter;
     /**
@@ -42,7 +44,8 @@ function withoutNull<Value>(
 /**
  * Frame of every public page: header (brand, theme and locale switchers,
  * auth controls, navigation), the `main` landmark targeted by the skip link,
- * and the footer.
+ * and the footer. Menus come from the shared `navigation` prop (managed in
+ * the admin panel) unless the page passes its own items.
  *
  * Brand, logo, copyright, contact details and social links default to the
  * shared `site` prop (site settings); a page may override each of them. The
@@ -56,9 +59,8 @@ export function PublicChrome({
     children,
 }: PublicChromeProps) {
     const { t } = useTranslation();
-    const site = usePage().props.site as
-        | App.Data.Settings.SiteSettingsData
-        | undefined;
+    const { navigation, site: sharedSite } = usePage().props;
+    const site = sharedSite as App.Data.Settings.SiteSettingsData | undefined;
 
     const siteLogo: BrandLogoImage | undefined = site?.logo
         ? { ...site.logo, alt: site.name }
@@ -90,7 +92,7 @@ export function PublicChrome({
     return (
         <>
             <PublicHeader
-                navItems={navItems}
+                navItems={navItems ?? navigation?.header}
                 logo={resolvedLogo}
                 brandName={brandName}
             />
@@ -99,7 +101,7 @@ export function PublicChrome({
 
             <Footer
                 copyright={copyright}
-                groups={footer?.groups}
+                groups={footer?.groups ?? navigation?.footer}
                 contact={contact}
                 social={social}
                 logo={resolvedLogo}

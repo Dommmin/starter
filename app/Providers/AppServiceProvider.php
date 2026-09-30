@@ -2,7 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Article;
+use App\Models\ArticleTranslation;
 use App\Models\MediaAsset;
+use App\Models\MenuItem;
+use App\Models\Page;
+use App\Models\PageTranslation;
+use App\Observers\NavigationCacheObserver;
+use App\Observers\PageMenuAnchorObserver;
 use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizationManager;
@@ -67,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->forgetSiteSettingsWhenMediaChanges();
+        $this->configureNavigationCache();
     }
 
     /**
@@ -81,6 +89,20 @@ class AppServiceProvider extends ServiceProvider
 
         MediaAsset::updated($forget);
         MediaAsset::deleted($forget);
+    }
+
+    /**
+     * Cached public menus depend on menu items and on the titles, slugs
+     * and publication of their page/article targets. Anchors on a page are
+     * deleted with that page.
+     */
+    protected function configureNavigationCache(): void
+    {
+        foreach ([MenuItem::class, Page::class, PageTranslation::class, Article::class, ArticleTranslation::class] as $model) {
+            $model::observe(NavigationCacheObserver::class);
+        }
+
+        Page::observe(PageMenuAnchorObserver::class);
     }
 
     /**

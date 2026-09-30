@@ -17,13 +17,11 @@ import {
 import { useTranslation } from '@/i18n';
 import { login, register } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
-import { index as articlesIndex } from '@/routes/articles';
-import { index as localizedArticlesIndex } from '@/routes/localized/articles';
 
 type WelcomeProps = App.Data.Content.WelcomePageData;
 
 export default function Welcome() {
-    const { t, locale, defaultLocale } = useTranslation();
+    const { t, locale } = useTranslation();
     const page = usePage<WelcomeProps>();
     const { auth, seo, contactForm } = page.props;
     const alternateUrls =
@@ -76,25 +74,7 @@ export default function Welcome() {
                 ]}
             />
 
-            <PublicChrome
-                navItems={[
-                    {
-                        id: 'features',
-                        kind: 'anchor',
-                        label: t('nav.features'),
-                        href: '#features',
-                    },
-                    {
-                        id: 'articles',
-                        kind: 'internal',
-                        label: t('nav.articles'),
-                        href: (locale === defaultLocale
-                            ? articlesIndex()
-                            : localizedArticlesIndex({ locale })
-                        ).url,
-                    },
-                ]}
-            >
+            <PublicChrome>
                 <Hero
                     eyebrow={t('landing.badge')}
                     title={t('landing.heroTitle')}

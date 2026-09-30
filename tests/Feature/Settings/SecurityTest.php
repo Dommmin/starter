@@ -45,7 +45,9 @@ test('security page requires password confirmation without redirecting an Inerti
         ->withHeader('X-Inertia', 'true')
         ->withHeader(
             'X-Inertia-Version',
-            app(HandleInertiaRequests::class)->version(request()),
+            // Inertia compares the header with the string-cast version, which is
+            // an empty string when no Vite manifest has been built.
+            (string) app(HandleInertiaRequests::class)->version(request()),
         )
         ->get(route('security.edit'));
 

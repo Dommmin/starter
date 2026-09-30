@@ -28,6 +28,7 @@ return [
         'password' => 'Hasło',
         'submit' => 'Usuń konto',
         'cancel' => 'Anuluj',
+        'close' => 'Zamknij',
     ],
     'security' => [
         'pageTitle' => 'Ustawienia bezpieczeństwa',

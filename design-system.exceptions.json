@@ -1,126 +1,5 @@
 [
     {
-        "id": "DS-EXC-UPSTREAM-AUTH-REGISTER",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/pages/auth/register.tsx",
-        "contentHash": "sha256:d033f17b45a4d26bbae3825e5d106ac530aa2b065a80462cf775f4ce2bcaddfa",
-        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
-        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
-        "scope": "className in form layout",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 initial audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                44,
-                44
-            ],
-            [
-                48,
-                49
-            ],
-            [
-                74,
-                74
-            ],
-            [
-                78,
-                78
-            ],
-            [
-                105,
-                105
-            ],
-            [
-                134,
-                134
-            ],
-            [
-                167,
-                167
-            ],
-            [
-                175,
-                175
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-AUTH-RESET",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/pages/auth/reset-password.tsx",
-        "contentHash": "sha256:1e859e5e9d159064f8e68fc23d93ddc94c81865f79e9f0ff29e8777f7470699b",
-        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
-        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
-        "scope": "className in form layout",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 initial audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                44,
-                45
-            ],
-            [
-                59,
-                59
-            ],
-            [
-                66,
-                66
-            ],
-            [
-                70,
-                70
-            ],
-            [
-                86,
-                86
-            ],
-            [
-                100,
-                100
-            ],
-            [
-                118,
-                118
-            ],
-            [
-                128,
-                128
-            ],
-            [
-                134,
-                134
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-AUTH-2FA",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/pages/auth/two-factor-challenge.tsx",
-        "contentHash": "sha256:2d53e223c77db15532e6a4c92aeea5984abca37af0856230b9cd1d85a68261c3",
-        "reason": "Upstream Fortify scaffold page pending Task 09 design system primitives refactoring",
-        "alternatives": "Refactor using Stack, Heading, Text, Form primitives",
-        "scope": "className in form layout",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 initial audit; zmiana zatwierdzona przez właściciela 2026-09-30: etykiety pól kodu",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                84,
-                84
-            ],
-            [
-                88,
-                88
-            ]
-        ]
-    },
-    {
         "id": "DS-EXC-UPSTREAM-SETTINGS-APP",
         "rule": "ds/no-style-escape",
         "file": "resources/js/pages/settings/appearance.tsx",
@@ -695,106 +574,86 @@
         "id": "DS-EXC-UPSTREAM-COMPONENTS-TWO-FACTOR-SETUP-MODAL",
         "rule": "ds/no-style-escape",
         "file": "resources/js/components/two-factor-setup-modal.tsx",
-        "contentHash": "sha256:812b60075a043971a2ce44a1d2032d9ae31431cbcef2e25b7e76b4b375ca652f",
+        "contentHash": "sha256:a01b07b645f38564531eb7ff5920e3eabeace49c3d0ada57184b5d120f63140b",
         "reason": "Upstream scaffold pending design system primitives refactoring",
         "alternatives": "Refactor using design system primitives",
         "scope": "className in component/layout markup",
         "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
+        "reviewRef": "ADR-019 full audit; zawężony 2026-10-01: krok weryfikacji na OtpField/Button/Inline/Stack (rozszerzenie zatwierdzone przez właściciela DS)",
         "expires": "2026-10-31",
         "task": "P0-B Task 09",
         "lineRanges": [
             [
-                29,
-                31
+                28,
+                30
             ],
             [
-                35,
-                35
+                34,
+                34
             ],
             [
-                39,
-                39
+                38,
+                38
             ],
             [
-                43,
-                43
+                42,
+                42
             ],
             [
-                48,
-                48
+                47,
+                47
             ],
             [
-                83,
-                85
+                82,
+                84
             ],
             [
-                92,
-                92
+                91,
+                91
             ],
             [
-                96,
-                96
+                95,
+                95
             ],
             [
-                110,
-                111
+                109,
+                110
             ],
             [
-                116,
-                118
+                115,
+                117
             ],
             [
-                123,
-                124
+                122,
+                123
             ],
             [
-                126,
-                126
+                125,
+                125
             ],
             [
-                138,
-                138
+                137,
+                137
             ],
             [
-                146,
-                146
+                145,
+                145
             ],
             [
-                149,
-                149
+                148,
+                148
             ],
             [
-                197,
-                197
+                323,
+                324
             ],
             [
-                199,
-                199
+                327,
+                327
             ],
             [
-                230,
-                230
-            ],
-            [
-                234,
-                234
-            ],
-            [
-                242,
-                242
-            ],
-            [
-                350,
-                351
-            ],
-            [
-                354,
-                354
-            ],
-            [
-                359,
-                359
+                332,
+                332
             ]
         ]
     },
@@ -1133,37 +992,6 @@
             [
                 13,
                 13
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-INPUT-OTP",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/ui/input-otp.tsx",
-        "contentHash": "sha256:59dc19f93bd031e8320c7df571cd9509e8c1ceb6337506ef380d11b2e10e2550",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                17,
-                17
-            ],
-            [
-                27,
-                27
-            ],
-            [
-                41,
-                41
-            ],
-            [
-                50,
-                51
             ]
         ]
     },

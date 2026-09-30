@@ -5,8 +5,12 @@ import {
     store as confirmStore,
 } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyConfirmationController';
 import PasskeyVerify from '@/components/passkey-verify';
-import { Button, PasswordField, Stack } from '@/design-system/primitives';
-import AuthPageHeading from '@/components/auth-page-heading';
+import {
+    AuthHeading,
+    Button,
+    PasswordField,
+    Stack,
+} from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { focusFirstError } from '@/lib/focus-first-error';
 import { getLocalizedPasswordConfirmForm } from '@/lib/localized-routes';
@@ -39,7 +43,7 @@ export default function ConfirmPassword() {
         <>
             <Head title={t('auth.confirmPassword.title')} />
 
-            <AuthPageHeading
+            <AuthHeading
                 title={t('auth.confirmPassword.heading')}
                 description={t('auth.confirmPassword.subheading')}
             />

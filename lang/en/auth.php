@@ -89,6 +89,15 @@ return [
         'show' => 'Show password',
         'hide' => 'Hide password',
     ],
+    'passwordRules' => [
+        'hint' => 'Requirements: :rules.',
+        'minLength' => 'at least :length characters',
+        'maxLength' => 'at most :length characters',
+        'lower' => 'a lowercase letter',
+        'upper' => 'an uppercase letter',
+        'digit' => 'a digit',
+        'special' => 'a special character',
+    ],
     'passkey' => [
         'signIn' => 'Sign in with a passkey',
         'authenticating' => 'Authenticating...',

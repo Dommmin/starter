@@ -53,7 +53,7 @@ class DemoHomeSections implements DemoContentProvider
         $section = $this->section($record);
 
         return ! HomeSectionSeeder::isDemo($section)
-            || $section->enabled !== in_array($section->type, HomeSectionSeeder::ENABLED_TYPES, true);
+            || $section->enabled !== in_array($section->type, HomeSectionSeeder::enabledTypes(), true);
     }
 
     public function describe(Model $record): string

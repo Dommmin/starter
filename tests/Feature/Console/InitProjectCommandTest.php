@@ -10,7 +10,10 @@ use App\Enums\MenuLocation;
 use App\Enums\UserRole;
 use App\Models\Article;
 use App\Models\AuditLog;
+use App\Models\ContactMessage;
+use App\Models\Faq;
 use App\Models\HomeSection;
+use App\Models\MediaAsset;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
@@ -19,7 +22,9 @@ use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\ArticleSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoContent;
+use Database\Seeders\DemoMediaSeeder;
 use Database\Seeders\HomeSectionSeeder;
 use Database\Seeders\NavigationMenuSeeder;
 use Database\Seeders\PageSeeder;
@@ -28,6 +33,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
 const INIT_ENV = "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=en,pl,de\nAPP_ENV=local\n";
 
@@ -470,4 +476,49 @@ test('a dry run leaves sample menus and home sections untouched', function () {
         ->and(MenuItem::query()->orderBy('id')->get()->toArray())->toBe($menu)
         ->and(HomeSection::query()->orderBy('id')->get()->toArray())->toBe($sections)
         ->and(AuditLog::query()->count())->toBe($audit);
+});
+
+test('--remove-demo removes the whole local sample data set', function () {
+    $this->app['env'] = 'local';
+    Queue::fake();
+    Storage::fake('media');
+    Storage::fake((string) config('media.public_disk'));
+    test()->seed(DatabaseSeeder::class);
+
+    [$exitCode, $output] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(substr_count($output, 'kept'))->toBe(2)
+        ->and(substr_count($output, 'Demo media: "'))->toBe(2)
+        ->and(User::query()->pluck('email')->all())->toBe(['owner@example.test'])
+        ->and(Page::query()->exists())->toBeFalse()
+        ->and(Article::query()->exists())->toBeFalse()
+        ->and(MediaAsset::query()->pluck('id')->sort()->values()->all())->toBe(collect([SiteSetting::query()->value('logo_media_id'), SiteSetting::query()->value('og_image_media_id')])->sort()->values()->all())
+        ->and(Faq::query()->exists())->toBeFalse()
+        ->and(ContactMessage::query()->exists())->toBeFalse()
+        ->and(MenuItem::query()->exists())->toBeFalse()
+        ->and(HomeSection::query()->where('enabled', true)->exists())->toBeFalse();
+});
+
+test('--remove-demo keeps sample media still used by kept content or the site settings', function () {
+    Queue::fake();
+    Storage::fake('media');
+    Storage::fake((string) config('media.public_disk'));
+    test()->seed(DemoMediaSeeder::class);
+    $cover = DemoMediaSeeder::assetId('landscape');
+    $logo = DemoMediaSeeder::assetId('square');
+    $inBody = DemoMediaSeeder::assetId('portrait');
+    Article::factory()->published()->create(['cover_media_id' => $cover]);
+    PageTranslation::factory()->published()->create(['body' => [
+        'type' => 'doc',
+        'content' => [['type' => 'image', 'attrs' => ['mediaId' => $inBody, 'alt' => '']]],
+    ]]);
+    SiteSetting::query()->insert(['id' => SiteSetting::SINGLETON_ID, 'site_name' => 'Owner site', 'logo_media_id' => $logo]);
+
+    [$exitCode] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(MediaAsset::query()->pluck('id')->sort()->values()->all())->toBe(collect([$cover, $logo, $inBody])->sort()->values()->all())
+        ->and(Article::query()->value('cover_media_id'))->toBe($cover)
+        ->and(SiteSetting::query()->value('logo_media_id'))->toBe($logo);
 });

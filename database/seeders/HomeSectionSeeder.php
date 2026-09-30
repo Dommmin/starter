@@ -11,6 +11,7 @@ use App\Data\Home\FeaturesContentData;
 use App\Data\Home\HeroContentData;
 use App\Data\Home\HomeActionData;
 use App\Data\Home\LatestArticlesContentData;
+use App\Data\Home\TestimonialItemData;
 use App\Data\Home\TestimonialsContentData;
 use App\Enums\HomeIcon;
 use App\Enums\HomeLinkTarget;
@@ -23,7 +24,9 @@ use Spatie\LaravelData\Data;
  * Demo content of the home page: the former static landing page rebuilt from
  * `lang/{locale}/public.php` (`landing.*`) for every public locale. Hero,
  * features, contact and CTA start enabled; FAQ, testimonials and latest
- * articles start disabled. Idempotent: existing sections are kept as edited.
+ * articles start disabled, except in the local environment, where the sample
+ * FAQs and articles exist and every section starts enabled (see
+ * self::enabledTypes()). Idempotent: existing sections are kept as edited.
  */
 class HomeSectionSeeder extends Seeder
 {
@@ -43,8 +46,20 @@ class HomeSectionSeeder extends Seeder
     {
         $ensureHomeSections->handle(
             fn (HomeSectionType $type, string $locale): Data => self::landingContent($type, $locale),
-            self::ENABLED_TYPES,
+            self::enabledTypes(),
         );
+    }
+
+    /**
+     * Types whose demo section starts enabled in the current environment:
+     * all of them locally (sample FAQs and articles are seeded there),
+     * otherwise self::ENABLED_TYPES.
+     *
+     * @return list<HomeSectionType>
+     */
+    public static function enabledTypes(): array
+    {
+        return app()->environment('local') ? HomeSectionType::cases() : self::ENABLED_TYPES;
     }
 
     /**
@@ -59,7 +74,7 @@ class HomeSectionSeeder extends Seeder
         $defaults = [];
         foreach (HomeSectionType::cases() as $type) {
             $defaults[$type->value] = [
-                'enabled' => in_array($type, self::ENABLED_TYPES, true),
+                'enabled' => in_array($type, self::enabledTypes(), true),
                 'position' => $type->defaultPosition(),
                 'content' => self::landingContent($type, $locale),
             ];
@@ -99,9 +114,22 @@ class HomeSectionSeeder extends Seeder
                 title: $t('public.landing.featuresHeading'),
                 description: $t('public.landing.featuresSubheading'),
             ),
-            HomeSectionType::Faq => new FaqContentData,
-            HomeSectionType::Testimonials => new TestimonialsContentData,
-            HomeSectionType::LatestArticles => new LatestArticlesContentData,
+            HomeSectionType::Faq => new FaqContentData(
+                title: $t('public.landing.faqTitle'),
+                description: $t('public.landing.faqDescription'),
+            ),
+            HomeSectionType::Testimonials => new TestimonialsContentData(
+                items: [
+                    new TestimonialItemData(author: $t('public.landing.testimonial1Author'), quote: $t('public.landing.testimonial1Quote'), role: $t('public.landing.testimonial1Role')),
+                    new TestimonialItemData(author: $t('public.landing.testimonial2Author'), quote: $t('public.landing.testimonial2Quote'), role: $t('public.landing.testimonial2Role')),
+                    new TestimonialItemData(author: $t('public.landing.testimonial3Author'), quote: $t('public.landing.testimonial3Quote')),
+                ],
+                title: $t('public.landing.testimonialsTitle'),
+            ),
+            HomeSectionType::LatestArticles => new LatestArticlesContentData(
+                limit: 3,
+                title: $t('public.landing.latestArticlesTitle'),
+            ),
             HomeSectionType::Contact => new ContactContentData(
                 title: $t('public.contact.title'),
                 description: $t('public.contact.description'),

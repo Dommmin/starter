@@ -579,7 +579,7 @@
         "alternatives": "Refactor using design system primitives",
         "scope": "className in component/layout markup",
         "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit; zawężone 2026-09-30 (przegląd ekranów konta, PR #24), zatwierdzone przez właściciela 2026-10-01; zawężone ponownie 2026-10-01 (feat/ds-auth-extensions) — do zatwierdzenia",
+        "reviewRef": "ADR-019 full audit; zawężone 2026-09-30 (przegląd ekranów konta, PR #24), zatwierdzone przez właściciela 2026-10-01; zawężone ponownie 2026-10-01 (PR #27), zatwierdzone przez właściciela 2026-10-01",
         "expires": "2026-10-31",
         "task": "P0-B Task 09",
         "lineRanges": [

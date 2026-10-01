@@ -28,6 +28,7 @@ return [
         'password' => 'Password',
         'submit' => 'Delete account',
         'cancel' => 'Cancel',
+        'close' => 'Close',
     ],
     'security' => [
         'pageTitle' => 'Security settings',

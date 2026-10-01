@@ -89,6 +89,15 @@ return [
         'show' => 'Passwort anzeigen',
         'hide' => 'Passwort verbergen',
     ],
+    'passwordRules' => [
+        'hint' => 'Anforderungen: :rules.',
+        'minLength' => 'mindestens :length Zeichen',
+        'maxLength' => 'höchstens :length Zeichen',
+        'lower' => 'ein Kleinbuchstabe',
+        'upper' => 'ein Großbuchstabe',
+        'digit' => 'eine Ziffer',
+        'special' => 'ein Sonderzeichen',
+    ],
     'passkey' => [
         'signIn' => 'Mit einem Passkey anmelden',
         'authenticating' => 'Authentifizierung läuft...',

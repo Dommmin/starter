@@ -89,6 +89,15 @@ return [
         'show' => 'Pokaż hasło',
         'hide' => 'Ukryj hasło',
     ],
+    'passwordRules' => [
+        'hint' => 'Wymagania: :rules.',
+        'minLength' => 'co najmniej :length znaków',
+        'maxLength' => 'najwyżej :length znaków',
+        'lower' => 'mała litera',
+        'upper' => 'wielka litera',
+        'digit' => 'cyfra',
+        'special' => 'znak specjalny',
+    ],
     'passkey' => [
         'signIn' => 'Zaloguj się kluczem dostępu',
         'authenticating' => 'Uwierzytelnianie...',

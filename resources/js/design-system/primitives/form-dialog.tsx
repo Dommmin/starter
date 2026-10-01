@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { useReturnFocus } from './return-focus';
 
+type FormDialogTone = 'default' | 'destructive';
+
 export type FormDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -16,6 +18,8 @@ export type FormDialogProps = {
     /** Translated accessible label for the corner close control. */
     closeLabel: string;
     onSubmit: () => void;
+    /** `destructive` renders the submit button in the danger tone, like `ConfirmDialog`. */
+    tone?: FormDialogTone;
     isPending?: boolean;
     /** Server-side error to surface above the actions, e.g. after a failed submit. */
     error?: string;
@@ -31,6 +35,7 @@ export function FormDialog({
     cancelLabel,
     closeLabel,
     onSubmit,
+    tone = 'default',
     isPending = false,
     error,
 }: FormDialogProps) {
@@ -115,7 +120,11 @@ export function FormDialog({
                             </DialogPrimitive.Close>
                             <Button
                                 type="submit"
-                                variant="primary"
+                                variant={
+                                    tone === 'destructive'
+                                        ? 'destructive'
+                                        : 'primary'
+                                }
                                 isPending={isPending}
                             >
                                 {submitLabel}

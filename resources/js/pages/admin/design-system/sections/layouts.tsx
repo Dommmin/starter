@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import {
     Accordion,
+    AuthHeading,
     Badge,
     Button,
     Card,
@@ -100,6 +101,37 @@ function LayoutsSection() {
                         title={demo('pageTitle')}
                         description={demo('pageDescription')}
                         align="center"
+                    />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="AuthHeading"
+                layout="wide"
+                notApplicable={[
+                    'disabled',
+                    'pending',
+                    'loading',
+                    'empty',
+                    'error',
+                    'success',
+                    'noMedia',
+                ]}
+            >
+                <ShowcaseState
+                    state="default"
+                    detail={demo('authHeadingDetail')}
+                    fill
+                >
+                    <AuthHeading
+                        title={demo('authHeadingTitle')}
+                        description={demo('authHeadingDescription')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="longContent" fill>
+                    <AuthHeading
+                        title={demo('longTitle')}
+                        description={demo('longDescription')}
                     />
                 </ShowcaseState>
             </ShowcaseComponent>

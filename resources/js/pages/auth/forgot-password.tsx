@@ -2,13 +2,13 @@ import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import {
     Alert,
+    AuthHeading,
     Button,
     Link,
     Stack,
     Text,
     TextField,
 } from '@/design-system/primitives';
-import AuthPageHeading from '@/components/auth-page-heading';
 import { useTranslation } from '@/i18n';
 import { focusFirstError } from '@/lib/focus-first-error';
 import {
@@ -43,7 +43,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
         <>
             <Head title={t('auth.forgotPassword.title')} />
 
-            <AuthPageHeading
+            <AuthHeading
                 title={t('auth.forgotPassword.heading')}
                 description={t('auth.forgotPassword.subheading')}
             />

@@ -1,14 +1,16 @@
-import { Form, Head } from '@inertiajs/react';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { getLocalizedResetPasswordForm } from '@/lib/localized-routes';
-import AuthPageHeading from '@/components/auth-page-heading';
+import { Head, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import {
+    AuthHeading,
+    Button,
+    PasswordField,
+    Stack,
+    TextField,
+} from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { focusFirstError } from '@/lib/focus-first-error';
+import { getLocalizedResetPasswordForm } from '@/lib/localized-routes';
+import { describePasswordRules } from '@/lib/password-rules';
 
 type Props = {
     token: string;
@@ -16,131 +18,96 @@ type Props = {
     passwordRules: string;
 };
 
+const FIELD_ORDER = ['email', 'password', 'password_confirmation'] as const;
+
 export default function ResetPassword({ token, email, passwordRules }: Props) {
     const { t, locale, defaultLocale } = useTranslation();
+    const form = useForm({
+        token,
+        email,
+        password: '',
+        password_confirmation: '',
+    });
+
+    function submit(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault();
+
+        if (form.processing) {
+            return;
+        }
+
+        const { method, action } = getLocalizedResetPasswordForm(
+            locale,
+            defaultLocale,
+        );
+
+        form.submit(method, action, {
+            onError: (errors) => focusFirstError(errors, FIELD_ORDER),
+            onFinish: () => form.reset('password', 'password_confirmation'),
+        });
+    }
+
+    const passwordLabels = {
+        showPasswordLabel: t('auth.passwordField.show'),
+        hidePasswordLabel: t('auth.passwordField.hide'),
+    };
 
     return (
         <>
             <Head title={t('auth.resetPassword.title')} />
 
-            <AuthPageHeading
+            <AuthHeading
                 title={t('auth.resetPassword.heading')}
                 description={t('auth.resetPassword.subheading')}
             />
 
-            <Form
-                {...getLocalizedResetPasswordForm(locale, defaultLocale)}
-                transform={(data) => ({ ...data, token, email })}
-                resetOnSuccess={['password', 'password_confirmation']}
-                onError={(errors) =>
-                    focusFirstError(errors, [
-                        'email',
-                        'password',
-                        'password_confirmation',
-                    ])
-                }
-            >
-                {({ processing, errors }) => (
-                    <div className="grid gap-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">
-                                {t('auth.resetPassword.email')}
-                            </Label>
-                            <Input
-                                id="email"
-                                aria-invalid={errors.email ? true : undefined}
-                                aria-describedby={
-                                    errors.email ? 'email-error' : undefined
-                                }
-                                type="email"
-                                name="email"
-                                autoComplete="email"
-                                value={email}
-                                className="mt-1 block w-full"
-                                readOnly
-                            />
-                            <InputError
-                                id="email-error"
-                                role="alert"
-                                message={errors.email}
-                                className="mt-2"
-                            />
-                        </div>
+            <form onSubmit={submit} noValidate>
+                <Stack gap="default">
+                    <TextField
+                        id="email"
+                        name="email"
+                        type="email"
+                        label={t('auth.resetPassword.email')}
+                        value={form.data.email}
+                        error={form.errors.email}
+                        autoComplete="email"
+                        readOnly
+                    />
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">
-                                {t('auth.resetPassword.password')}
-                            </Label>
-                            <PasswordInput
-                                id="password"
-                                aria-invalid={
-                                    errors.password ? true : undefined
-                                }
-                                aria-describedby={
-                                    errors.password
-                                        ? 'password-error'
-                                        : undefined
-                                }
-                                name="password"
-                                autoComplete="new-password"
-                                className="mt-1 block w-full"
-                                autoFocus
-                                placeholder={t(
-                                    'auth.resetPassword.passwordPlaceholder',
-                                )}
-                                passwordrules={passwordRules}
-                            />
-                            <InputError
-                                id="password-error"
-                                role="alert"
-                                message={errors.password}
-                            />
-                        </div>
+                    <PasswordField
+                        id="password"
+                        name="password"
+                        label={t('auth.resetPassword.password')}
+                        value={form.data.password}
+                        onChange={(value) => form.setData('password', value)}
+                        error={form.errors.password}
+                        description={describePasswordRules(passwordRules, t)}
+                        autoComplete="new-password"
+                        passwordRules={passwordRules}
+                        {...passwordLabels}
+                        required
+                    />
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
-                                {t('auth.resetPassword.passwordConfirmation')}
-                            </Label>
-                            <PasswordInput
-                                id="password_confirmation"
-                                aria-invalid={
-                                    errors.password_confirmation
-                                        ? true
-                                        : undefined
-                                }
-                                aria-describedby={
-                                    errors.password_confirmation
-                                        ? 'password-confirmation-error'
-                                        : undefined
-                                }
-                                name="password_confirmation"
-                                autoComplete="new-password"
-                                className="mt-1 block w-full"
-                                placeholder={t(
-                                    'auth.resetPassword.passwordConfirmationPlaceholder',
-                                )}
-                                passwordrules={passwordRules}
-                            />
-                            <InputError
-                                id="password-confirmation-error"
-                                role="alert"
-                                message={errors.password_confirmation}
-                                className="mt-2"
-                            />
-                        </div>
+                    <PasswordField
+                        id="password_confirmation"
+                        name="password_confirmation"
+                        label={t('auth.resetPassword.passwordConfirmation')}
+                        value={form.data.password_confirmation}
+                        onChange={(value) =>
+                            form.setData('password_confirmation', value)
+                        }
+                        error={form.errors.password_confirmation}
+                        autoComplete="new-password"
+                        passwordRules={passwordRules}
+                        {...passwordLabels}
+                        required
+                    />
 
-                        <Button
-                            type="submit"
-                            className="mt-4 w-full"
-                            disabled={processing}
-                            data-test="reset-password-button"
-                        >
-                            {processing && <Spinner />}
-                            {t('auth.resetPassword.submit')}
-                        </Button>
-                    </div>
-                )}
-            </Form>
+                    <Button type="submit" isPending={form.processing}>
+                        {t('auth.resetPassword.submit')}
+                    </Button>
+                </Stack>
+            </form>
         </>
     );
 }

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import PasskeyVerify from '@/components/passkey-verify';
 import {
     Alert,
+    AuthHeading,
     Button,
     CheckboxField,
     Link,
@@ -11,7 +12,6 @@ import {
     Text,
     TextField,
 } from '@/design-system/primitives';
-import AuthPageHeading from '@/components/auth-page-heading';
 import { useTranslation } from '@/i18n';
 import { focusFirstError } from '@/lib/focus-first-error';
 import {
@@ -50,7 +50,7 @@ export default function Login({ status, canResetPassword }: Props) {
         <>
             <Head title={t('auth.login.title')} />
 
-            <AuthPageHeading
+            <AuthHeading
                 title={t('auth.login.heading')}
                 description={t('auth.login.subheading')}
             />

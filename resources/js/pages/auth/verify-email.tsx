@@ -1,7 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { Alert, Button, Stack } from '@/design-system/primitives';
-import AuthPageHeading from '@/components/auth-page-heading';
+import { Alert, AuthHeading, Button, Stack } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import {
     getLocalizedLogoutRoute,
@@ -40,7 +39,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
         <>
             <Head title={t('auth.verifyEmail.title')} />
 
-            <AuthPageHeading
+            <AuthHeading
                 title={t('auth.verifyEmail.heading')}
                 description={t('auth.verifyEmail.subheading')}
             />

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import {
     DateField,
     NumberField,
+    OtpField,
     PasswordField,
     Stack,
     TextareaField,
     TextField,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { describePasswordRules } from '@/lib/password-rules';
 import {
     ShowcaseComponent,
     ShowcaseState,
@@ -29,6 +31,14 @@ function useDemoValues(initial: DemoValues) {
             setValues((previous) => ({ ...previous, [key]: next })),
     };
 }
+
+/**
+ * Sample of the backend `Password::defaults()->toPasswordRulesString()`
+ * output. Screens take the real string from their page props; the showcase
+ * has no form backend, so it demos the same syntax.
+ */
+const demoPasswordRules =
+    'minlength: 8; maxlength: 128; required: lower; required: upper; required: digit; required: special;';
 
 /** ADM-03 — text fields: every implemented field in its applicable states. */
 function TextFieldsSection() {
@@ -56,6 +66,10 @@ function TextFieldsSection() {
         dateError: '2025-12-31',
         dateDisabled: '2026-10-15',
         dateLong: '2026-12-24',
+        otpValue: '123456',
+        otpError: '000000',
+        otpDisabled: '123456',
+        otpPending: '123456',
     });
     const passwordLabels = {
         showPasswordLabel: demo('showPassword'),
@@ -325,6 +339,26 @@ function TextFieldsSection() {
                         onChange={onChange('passwordDescription')}
                     />
                 </ShowcaseState>
+                <ShowcaseState
+                    state="withDescription"
+                    detail={demo('passwordRulesDetail')}
+                    fill
+                >
+                    <PasswordField
+                        name="demo-password-rules"
+                        label={demo('passwordLabel')}
+                        description={describePasswordRules(
+                            demoPasswordRules,
+                            t,
+                        )}
+                        passwordRules={demoPasswordRules}
+                        autoComplete="new-password"
+                        showPasswordLabel={passwordLabels.showPasswordLabel}
+                        hidePasswordLabel={passwordLabels.hidePasswordLabel}
+                        value={value('passwordRules')}
+                        onChange={onChange('passwordRules')}
+                    />
+                </ShowcaseState>
                 <ShowcaseState state="error" fill>
                     <PasswordField
                         name="demo-password-error"
@@ -372,6 +406,76 @@ function TextFieldsSection() {
                         hidePasswordLabel={passwordLabels.hidePasswordLabel}
                         value={value('passwordLong')}
                         onChange={onChange('passwordLong')}
+                    />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="OtpField"
+                layout="wide"
+                notApplicable={[
+                    'placeholder',
+                    'readonly',
+                    'loading',
+                    'empty',
+                    'longContent',
+                ]}
+            >
+                <ShowcaseState
+                    state="default"
+                    detail={demo('otpKeyboardDetail')}
+                    fill
+                >
+                    <OtpField
+                        name="demo-otp-default"
+                        label={demo('otpLabel')}
+                        description={demo('otpDescription')}
+                        value={value('otpDefault')}
+                        onChange={onChange('otpDefault')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withValue" fill>
+                    <OtpField
+                        name="demo-otp-value"
+                        label={demo('otpLabel')}
+                        value={value('otpValue')}
+                        onChange={onChange('otpValue')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="error" fill>
+                    <OtpField
+                        name="demo-otp-error"
+                        label={demo('otpLabel')}
+                        error={demo('otpError')}
+                        value={value('otpError')}
+                        onChange={onChange('otpError')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="required" fill>
+                    <OtpField
+                        name="demo-otp-required"
+                        label={demo('otpLabel')}
+                        required
+                        value={value('otpRequired')}
+                        onChange={onChange('otpRequired')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="disabled" fill>
+                    <OtpField
+                        name="demo-otp-disabled"
+                        label={demo('otpLabel')}
+                        disabled
+                        value={value('otpDisabled')}
+                        onChange={onChange('otpDisabled')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="pending" fill>
+                    <OtpField
+                        name="demo-otp-pending"
+                        label={demo('otpLabel')}
+                        isPending
+                        value={value('otpPending')}
+                        onChange={onChange('otpPending')}
                     />
                 </ShowcaseState>
             </ShowcaseComponent>

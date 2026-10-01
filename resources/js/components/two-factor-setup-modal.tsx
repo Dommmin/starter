@@ -1,9 +1,7 @@
 import { Form } from '@inertiajs/react';
-import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Check, Copy, ScanLine } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AlertError from '@/components/alert-error';
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,12 +10,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    InputOTP,
-    InputOTPGroup,
-    InputOTPSlot,
-} from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    Button as DsButton,
+    Inline,
+    OtpField,
+    Stack,
+} from '@/design-system/primitives';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
@@ -169,18 +168,18 @@ function TwoFactorVerificationStep({
 }) {
     const { t } = useTranslation();
     const [code, setCode] = useState<string>('');
-    const pinInputContainerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        setTimeout(() => {
-            pinInputContainerRef.current?.querySelector('input')?.focus();
-        }, 0);
-    }, []);
+    const codeInput = useRef<HTMLInputElement>(null);
 
     return (
         <Form
             {...confirm.form()}
             onSuccess={() => onClose()}
+            onError={() => {
+                setCode('');
+                // The field is disabled while the request runs, so focus
+                // waits for the re-enabled control.
+                window.setTimeout(() => codeInput.current?.focus());
+            }}
             resetOnError
             resetOnSuccess
         >
@@ -191,64 +190,38 @@ function TwoFactorVerificationStep({
                 processing: boolean;
                 errors?: { confirmTwoFactorAuthentication?: { code?: string } };
             }) => (
-                <>
-                    <div
-                        ref={pinInputContainerRef}
-                        className="relative w-full space-y-3"
-                    >
-                        <div className="flex w-full flex-col items-center space-y-3 py-2">
-                            <InputOTP
-                                id="otp"
-                                name="code"
-                                maxLength={OTP_MAX_LENGTH}
-                                onChange={setCode}
-                                disabled={processing}
-                                pattern={REGEXP_ONLY_DIGITS}
-                                aria-label={t('settings.twoFactor.code')}
-                                autoComplete="one-time-code"
-                                autoFocus
-                            >
-                                <InputOTPGroup>
-                                    {Array.from(
-                                        { length: OTP_MAX_LENGTH },
-                                        (_, index) => (
-                                            <InputOTPSlot
-                                                key={index}
-                                                index={index}
-                                            />
-                                        ),
-                                    )}
-                                </InputOTPGroup>
-                            </InputOTP>
-                            <InputError
-                                message={
-                                    errors?.confirmTwoFactorAuthentication?.code
-                                }
-                            />
-                        </div>
+                <Stack gap="default">
+                    <OtpField
+                        ref={codeInput}
+                        id="otp"
+                        name="code"
+                        label={t('settings.twoFactor.code')}
+                        length={OTP_MAX_LENGTH}
+                        value={code}
+                        onChange={setCode}
+                        error={errors?.confirmTwoFactorAuthentication?.code}
+                        isPending={processing}
+                        required
+                        autoFocus
+                    />
 
-                        <div className="flex w-full space-x-5">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="flex-1"
-                                onClick={onBack}
-                                disabled={processing}
-                            >
-                                {t('settings.twoFactor.back')}
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="flex-1"
-                                disabled={
-                                    processing || code.length < OTP_MAX_LENGTH
-                                }
-                            >
-                                {t('settings.twoFactor.confirm')}
-                            </Button>
-                        </div>
-                    </div>
-                </>
+                    <Inline gap="tight" justify="end" wrap>
+                        <DsButton
+                            variant="outline"
+                            onClick={onBack}
+                            disabled={processing}
+                        >
+                            {t('settings.twoFactor.back')}
+                        </DsButton>
+                        <DsButton
+                            type="submit"
+                            isPending={processing}
+                            disabled={code.length < OTP_MAX_LENGTH}
+                        >
+                            {t('settings.twoFactor.confirm')}
+                        </DsButton>
+                    </Inline>
+                </Stack>
             )}
         </Form>
     );

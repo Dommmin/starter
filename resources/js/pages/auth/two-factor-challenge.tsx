@@ -1,16 +1,13 @@
 import { Form, Head } from '@inertiajs/react';
-import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
-import { Label } from '@/components/ui/label';
 import {
-    InputOTP,
-    InputOTPGroup,
-    InputOTPSlot,
-} from '@/components/ui/input-otp';
-import { Button, Stack, TextField } from '@/design-system/primitives';
+    AuthHeading,
+    Button,
+    OtpField,
+    Stack,
+    TextField,
+} from '@/design-system/primitives';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
-import AuthPageHeading from '@/components/auth-page-heading';
 import { useTranslation } from '@/i18n';
 import { focusFirstError } from '@/lib/focus-first-error';
 import { getLocalizedTwoFactorLoginForm } from '@/lib/localized-routes';
@@ -39,12 +36,12 @@ export default function TwoFactorChallenge() {
             <Head title={t('auth.twoFactor.title')} />
 
             {showRecoveryInput ? (
-                <AuthPageHeading
+                <AuthHeading
                     title={t('auth.twoFactor.recoveryTitle')}
                     description={t('auth.twoFactor.recoveryDescription')}
                 />
             ) : (
-                <AuthPageHeading
+                <AuthHeading
                     title={t('auth.twoFactor.heading')}
                     description={t('auth.twoFactor.subheading')}
                 />
@@ -81,49 +78,20 @@ export default function TwoFactorChallenge() {
                                 required
                             />
                         ) : (
-                            <div className="flex flex-col items-center justify-center space-y-3 text-center">
-                                <Label htmlFor="code">
-                                    {t('auth.twoFactor.code')}
-                                </Label>
-                                <div className="flex w-full items-center justify-center">
-                                    <InputOTP
-                                        id="code"
-                                        name="code"
-                                        maxLength={OTP_MAX_LENGTH}
-                                        value={code}
-                                        onChange={(value) => setCode(value)}
-                                        disabled={processing}
-                                        pattern={REGEXP_ONLY_DIGITS}
-                                        autoComplete="one-time-code"
-                                        aria-invalid={
-                                            errors.code ? true : undefined
-                                        }
-                                        aria-describedby={
-                                            errors.code
-                                                ? 'code-error'
-                                                : undefined
-                                        }
-                                        autoFocus
-                                    >
-                                        <InputOTPGroup>
-                                            {Array.from(
-                                                { length: OTP_MAX_LENGTH },
-                                                (_, index) => (
-                                                    <InputOTPSlot
-                                                        key={index}
-                                                        index={index}
-                                                    />
-                                                ),
-                                            )}
-                                        </InputOTPGroup>
-                                    </InputOTP>
-                                </div>
-                                <InputError
-                                    id="code-error"
-                                    role="alert"
-                                    message={errors.code}
+                            <Stack gap="none" align="center">
+                                <OtpField
+                                    id="code"
+                                    name="code"
+                                    label={t('auth.twoFactor.code')}
+                                    length={OTP_MAX_LENGTH}
+                                    value={code}
+                                    onChange={setCode}
+                                    error={errors.code}
+                                    isPending={processing}
+                                    required
+                                    autoFocus
                                 />
-                            </div>
+                            </Stack>
                         )}
 
                         <Button type="submit" isPending={processing}>

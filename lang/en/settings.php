@@ -64,6 +64,8 @@ return [
         'orManual' => 'or enter the setup key manually',
         'setupKey' => 'Setup key',
         'copySetupKey' => 'Copy setup key',
+        'setupKeyCopied' => 'Copied',
+        'loadingSetup' => 'Loading setup data',
         'qrCode' => 'QR code for your authenticator app',
         'code' => 'Authentication code',
         'errorTitle' => 'Something went wrong',

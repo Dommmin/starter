@@ -5,6 +5,7 @@ import {
     Button,
     ConfirmDialog,
     ConflictDialog,
+    Dialog,
     FormDialog,
     OrderableList,
     PasswordField,
@@ -284,6 +285,70 @@ function ConflictDialogDemo() {
     );
 }
 
+function DialogDemo() {
+    const demo = useDemoText();
+    const [isOpen, setOpen] = useState(false);
+    const [step, setStep] = useState<1 | 2>(1);
+    const [result, setResult] = useState<string | null>(null);
+
+    return (
+        <Stack gap="tight" align="start">
+            <Button
+                variant="outline"
+                onClick={() => {
+                    setStep(1);
+                    setOpen(true);
+                }}
+            >
+                {demo('dialogOpen')}
+            </Button>
+            <LastAction value={result} />
+            <Dialog
+                open={isOpen}
+                onOpenChange={setOpen}
+                title={demo('dialogTitle')}
+                description={demo('dialogDescription')}
+                closeLabel={demo('close')}
+                actions={
+                    step === 1 ? (
+                        <Button onClick={() => setStep(2)}>
+                            {demo('dialogContinue')}
+                        </Button>
+                    ) : (
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={() => setStep(1)}
+                            >
+                                {demo('dialogBack')}
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    setResult(demo('dialogDone'));
+                                    setOpen(false);
+                                }}
+                            >
+                                {demo('dialogDone')}
+                            </Button>
+                        </>
+                    )
+                }
+            >
+                {step === 1 ? (
+                    <TextField
+                        name="demo-dialog-key"
+                        label={demo('dialogKey')}
+                        value="JBSW Y3DP EHPK 3PXP"
+                        readOnly
+                    />
+                ) : (
+                    <Text>{demo('dialogStepTwo')}</Text>
+                )}
+            </Dialog>
+        </Stack>
+    );
+}
+
 function ActionMenuDemo({
     items,
     align,
@@ -458,6 +523,15 @@ function ActionsSection() {
                     detail={demo('destructiveFormDetail')}
                 >
                     <DestructiveFormDialogDemo />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="Dialog"
+                notApplicable={['loading', 'empty', 'error', 'noMedia']}
+            >
+                <ShowcaseState state="default" detail={demo('dialogDetail')}>
+                    <DialogDemo />
                 </ShowcaseState>
             </ShowcaseComponent>
 

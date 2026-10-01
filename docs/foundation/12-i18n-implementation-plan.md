@@ -40,7 +40,8 @@ W poprzedniej sesji przeszły 34 testy / 128 asercji: `AdminIndexTest`, `PublicL
 ### Rekomendacje tego planu
 
 - Wdrażaj publiczny język domyślny bez prefiksu. Nie buduj drugiej strategii routingu przed rzeczywistym wyborem klienta. Prefiksy wszystkich języków są dopuszczalną alternatywą z dokumentacji, ale nie obowiązkową funkcją startera.
-- Decyzja 2026-09-11: docelowy silnik UI to `i18next` + `react-i18next`, aby zastąpić własny silnik i ograniczyć koszt utrzymania. Laravel pozostaje właścicielem locale, konfiguracji i tłumaczeń backendowych. Wspólne komunikaty mają jedno źródło autorskie; zasoby React powstają przez jawny adapter lub deterministyczną generację, bez ręcznie utrzymywanej kopii PHP/TS. Szczegóły migracji i kwalifikacji wersji: sekcja 6.
+- Decyzja 2026-10-01 zastępuje poniższą: frontend używa własnego translatora `resources/js/i18n/translator.ts` (bundle), [rejestr](07-package-decision-record.md#decyzja-i18n--2026-10-01-własny-translator-zamiast-i18next).
+- Decyzja 2026-09-11 (zastąpiona): docelowy silnik UI to `i18next` + `react-i18next`, aby zastąpić własny silnik i ograniczyć koszt utrzymania. Laravel pozostaje właścicielem locale, konfiguracji i tłumaczeń backendowych. Wspólne komunikaty mają jedno źródło autorskie; zasoby React powstają przez jawny adapter lub deterministyczną generację, bez ręcznie utrzymywanej kopii PHP/TS. Szczegóły migracji i kwalifikacji wersji: sekcja 6.
 - Content przechowuj w relacyjnych tabelach tłumaczeń. JSON per pole ogranicza liczbę tabel, ale utrudnia constrainty slugów, zapytania i publikację per język; kolumny `title_pl`/`title_en` są zabronione.
 - Dla katalogów użyj EN jako schematu kluczy; publiczny fallback UI niech będzie jawnie skonfigurowany i należeć do aktywnych języków publicznych, domyślnie równy publicznemu językowi domyślnemu. Ten fallback nie dotyczy treści redakcyjnej.
 
@@ -187,7 +188,7 @@ Dla wspólnych ścieżek wystarczy zwykły plik definicji ładowany w grupach. F
 - W wiadomościach korzystaj z natywnego `HasLocalePreference`/locale powiadomienia i przywracania kontekstu oferowanego przez Laravel, gdy pokrywa dany przypadek. Własne middleware joba zachowuj tylko dla zadań, które go potrzebują; obsłuż wyjątki i aktywność preferencji.
 - Przejrzyj lokalną kopię routów Fortify pod kątem driftu względem zainstalowanej wersji. Wybierz najmniejszą obsługiwaną integrację. Nie usuwać zabezpieczeń, signed URL, throttle, MFA ani funkcji auth w imię uproszczenia.
 
-### 6.3. React: i18next i react-i18next
+### 6.3. React: i18next i react-i18next (historyczne — zastąpione 2026-10-01 własnym translatorem)
 
 Cel: gotowy silnik interpolacji, pluralizacji i integracji React zamiast utrzymywania `createTranslator`. Biblioteka nie rozstrzyga routingu, języka publicznego ani preferencji panelu. Nie dodawaj automatycznego detektora języka przeglądarki ani dodatkowego endpointu katalogów, jeśli zasoby dostarcza Inertia.
 

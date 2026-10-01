@@ -16,7 +16,7 @@ Publiczna trasa dodana w `front.php` lub `content.php` jest ładowana bez prefik
 - Język strony publicznej wynika z adresu URL; domyślny język nie ma prefiksu.
 - Język panelu jest niezależny: profil użytkownika, potem sesja, potem `en`.
 - Backend przekazuje przez Inertia `i18n.locale`, `defaultLocale`, `availableLocales` i katalog `messages`.
-- React używa `i18next` oraz `react-i18next`; komponenty pobierają `t`, `locale` i `defaultLocale` przez `useTranslation()`.
+- React używa własnego translatora (`resources/js/i18n/translator.ts`); komponenty pobierają `t`, `locale` i `defaultLocale` przez `useTranslation()`.
 - Wspólny generator URL obsługuje linki publiczne i alternaty językowe. Trasy z parametrem tłumaczonym per język (slug strony lub artykułu) same udostępniają alternaty przez `Inertia::share('i18n.alternateUrls', ...)`.
 
 ## Weryfikacja

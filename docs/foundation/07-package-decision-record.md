@@ -163,13 +163,17 @@ Opiekun startera przegląda zależności miesięcznie, alerty bezpieczeństwa na
 Który snapshot oficjalnego startera ma być bazą i czy przechodzi kwalifikację całego toolchainu na PHP 8.5 i Node 24? Który dostawca monitoringu/backupów? Czy dynamiczne role i XLSX są realną potrzebą klienta? Decyzja o paczce nie może wyprzedzać odpowiedzi o funkcji.
 
 
-## Decyzja i18n — 2026-09-11
+## Decyzja i18n — 2026-09-11 (zastąpiona 2026-10-01)
 
 Wybrano docelowo `i18next` i `react-i18next` do UI startera, aby zastąpić własny silnik interpolacji/pluralizacji oraz globalny translator. Status: wybór kierunku zaakceptowany, instalacja i kwalifikacja konkretnych wersji pozostają do wykonania. Nie deklarujemy paczek jako już wdrożonych.
 
 Laravel zachowuje translator backendowy i kontrolę locale/fallbacku. Wspólne komunikaty mają jedno źródło autorskie; adapter lub generator dostarcza zasoby React. Alternatywę w postaci rozwijania własnego silnika odrzucono ze względu na koszt utrzymania. Główne ryzyka migracji: różne formaty parametrów i liczby mnogiej, typy kluczy, payload, izolacja SSR i synchronizacja Inertia. Nie dodawać detektora języka przeglądarki ani paczki do routingu bez osobnego uzasadnienia.
 
 Przed instalacją sprawdzić stabilne wersje, peer dependencies, licencje, lockfile i audyt zależności; następnie wykonać test przekroju katalogu oraz rzeczywisty test SSR/hydracji. Wybrane biblioteki nie rozwiązują błędów routingu i fallbacku PHP. [Plan wykonania i odbiór](12-i18n-implementation-plan.md#6-routing-i-utrzymywalne-i18n--ustalenia-2026-09-11); źródła do kwalifikacji: [SSR](https://react.i18next.com/latest/ssr), [pluralizacja](https://www.i18next.com/translation-function/plurals), [interpolacja](https://www.i18next.com/translation-function/interpolation).
+
+## Decyzja i18n — 2026-10-01: własny translator zamiast i18next
+
+Zastępuje decyzję z 2026-09-11. `i18next` i `react-i18next` usunięte. Pomiar bundla pokazał, że kosztowały ok. 15 KB gzip na każdej stronie publicznej (~7% łącznego JS), a starter używał tylko wyszukiwania klucza, parametrów i liczby mnogiej. Zastępuje je `resources/js/i18n/translator.ts` (~1 KB): klucze z kropkami, parametry `:name`/`{name}`/`{{name}}`, formy liczby mnogiej Laravel przez `Intl.PluralRules`. Katalog i fallback dostarcza Laravel (już scalone), więc frontend nie potrzebuje silnika języków zapasowych. API `I18nProvider`/`useTranslation()` bez zmian. Powrót do biblioteki uzasadniają dopiero: ICU/formatowanie w komunikatach, ładowanie katalogów po stronie klienta lub kontekst/namespaces. Zatwierdził właściciel.
 
 ## Decyzja DAM — 2026-09-27: Intervention Image i ClamAV
 

@@ -20,6 +20,9 @@ import { Skeleton } from './skeleton';
  * - `actions`   — trailing row menu of the card.
  * - `secondary` — label–value pair in the card (default for columns without
  *                 `priority` once any column declares one).
+ * - `card`      — label–value pair in the card; in the table hidden like
+ *                 `optional` (e.g. an e-mail that identifies the row on a
+ *                 phone but would crowd a narrow table).
  * - `optional`  — hidden in the card; in the table hidden while the table
  *                 container is narrower than 42rem (e.g. 768 px with the
  *                 expanded sidebar), so the title does not wrap word by word.
@@ -35,7 +38,13 @@ export type DataTableColumnPriority =
     | 'status'
     | 'actions'
     | 'secondary'
+    | 'card'
     | 'optional';
+
+/** Columns the table drops while its container is narrower than 42rem. */
+function isHiddenInNarrowTable(priority?: DataTableColumnPriority): boolean {
+    return priority === 'optional' || priority === 'card';
+}
 
 export type DataTableColumn<Row> = {
     key: string;
@@ -56,7 +65,7 @@ export type DataTableSort = {
 
 /**
  * Translated labels of the sort select shown in the card layout (and in the
- * table while it is sorted by a hidden `optional` column).
+ * table while it is sorted by a column hidden there, `optional` or `card`).
  */
 export type DataTableSortLabels = {
     /** Select label, e.g. "Sort by". */
@@ -80,7 +89,7 @@ export type DataTableProps<Row> = {
     onSortChange?: (key: string, direction?: DataTableSortDirection) => void;
     /**
      * Required for the sort select of the card layout (columns with
-     * `priority`) and of a narrow table sorted by an `optional` column.
+     * `priority`) and of a narrow table sorted by an `optional` or `card` column.
      */
     sortLabels?: DataTableSortLabels;
     isLoading?: boolean;
@@ -313,7 +322,7 @@ function DataTableGrid<Row>({
     showEmpty,
 }: LayoutProps<Row>) {
     /**
-     * Sorting by an `optional` column hides its header (and sort indicator)
+     * Sorting by an `optional` or `card` column hides its header (and sort indicator)
      * in a narrow container, so the sort select takes over there. The same
      * container query that hides the column hides the select again, so no
      * JS measurement is needed and SSR output is identical.
@@ -322,7 +331,7 @@ function DataTableGrid<Row>({
         (column) =>
             column.key === sort?.key &&
             column.sortable &&
-            column.priority === 'optional',
+            isHiddenInNarrowTable(column.priority),
     );
     const showSortSelect =
         isSortedByOptionalColumn &&
@@ -334,7 +343,7 @@ function DataTableGrid<Row>({
      * select, so focus moves to that column's header sort button instead of
      * falling to `body`. The sort arrives later (an Inertia visit keeps this
      * component mounted via `preserveState`), so the key waits in a ref
-     * until `sort` reports it. When the new column is `optional` too, the
+     * until `sort` reports it. When the new column is hidden there too, the
      * select stays and keeps focus.
      */
     const rootRef = useRef<HTMLDivElement>(null);
@@ -378,9 +387,10 @@ function DataTableGrid<Row>({
      */
     const cellVisibility = (column: DataTableColumn<Row>) =>
         cn(
-            column.priority === 'optional' && 'hidden @2xl:table-cell',
+            isHiddenInNarrowTable(column.priority) && 'hidden @2xl:table-cell',
             column.priority === 'primary' && 'min-w-32 wrap-anywhere',
             column.priority === 'secondary' && 'min-w-32 wrap-anywhere',
+            column.priority === 'card' && 'min-w-32 wrap-anywhere',
         );
 
     /**
@@ -427,8 +437,9 @@ function DataTableGrid<Row>({
                                             'text-muted-foreground px-4 py-3 font-medium whitespace-nowrap',
                                             column.align === 'end' &&
                                                 'text-right',
-                                            column.priority === 'optional' &&
-                                                'hidden @2xl:table-cell',
+                                            isHiddenInNarrowTable(
+                                                column.priority,
+                                            ) && 'hidden @2xl:table-cell',
                                         )}
                                     >
                                         {column.sortable && onSortChange ? (
@@ -551,7 +562,9 @@ function DataTableCards<Row>({
     const details = columns.filter(
         (column) =>
             column !== primary &&
-            (column.priority === undefined || column.priority === 'secondary'),
+            (column.priority === undefined ||
+                column.priority === 'secondary' ||
+                column.priority === 'card'),
     );
     const sortableColumns = columns.filter((column) => column.sortable);
     const showSort =

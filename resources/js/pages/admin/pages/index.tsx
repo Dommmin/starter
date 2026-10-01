@@ -175,7 +175,7 @@ export default function AdminPagesIndex() {
                     },
                     {
                         key: 'locales',
-                        priority: 'optional',
+                        priority: 'card',
                         label: t('admin.pages.columnLocales'),
                         render: (row) =>
                             row.locales.map(localeName).join(', ') || '—',

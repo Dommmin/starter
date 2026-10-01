@@ -144,7 +144,7 @@ export default function AdminUsersIndex() {
                     },
                     {
                         key: 'email',
-                        priority: 'optional',
+                        priority: 'card',
                         label: t('admin.users.columnEmail'),
                         sortable: true,
                         render: (row) => row.email,

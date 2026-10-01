@@ -90,7 +90,7 @@ export default function AdminContactIndex() {
                     },
                     {
                         key: 'email',
-                        priority: 'optional',
+                        priority: 'card',
                         label: t('admin.contact.fields.email'),
                         render: (row) => row.email,
                     },

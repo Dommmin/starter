@@ -215,7 +215,7 @@ function useArticleColumns({
             header: demo('columns.views'),
             sortable: true,
             align: 'end',
-            priority: role('optional'),
+            priority: role('card'),
             render: (row) => formatNumber(row.views),
         },
     ];

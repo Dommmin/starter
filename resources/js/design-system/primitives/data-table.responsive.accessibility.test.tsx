@@ -215,6 +215,60 @@ describe('DataTable card layout', () => {
     });
 });
 
+describe('DataTable card priority', () => {
+    function cardColumns(): DataTableColumn<Row>[] {
+        return prioritizedColumns().map((column) =>
+            column.key === 'email' ? { ...column, priority: 'card' } : column,
+        );
+    }
+
+    it('shows card columns as label–value pairs in the card', async () => {
+        setViewport(true);
+        const container = await render(
+            <DataTable<Row>
+                caption="Articles"
+                columns={cardColumns()}
+                rows={rows}
+                rowKey={(row) => row.id}
+                emptyState="Empty"
+            />,
+        );
+
+        const card = container.querySelector('li > article');
+        expect(card?.querySelector('dt')?.textContent).toBe('Email');
+        expect(card?.querySelector('dd')?.textContent).toBe(
+            'very.long.address@example.com',
+        );
+    });
+
+    it('hides card columns in a narrow table like optional ones', async () => {
+        setViewport(false);
+        const container = await render(
+            <DataTable<Row>
+                caption="Articles"
+                columns={cardColumns()}
+                rows={rows}
+                rowKey={(row) => row.id}
+                emptyState="Empty"
+            />,
+        );
+
+        const header = Array.from(container.querySelectorAll('th')).find(
+            (cell) => cell.textContent === 'Email',
+        );
+        const optionalHeader = Array.from(
+            container.querySelectorAll('th'),
+        ).find((cell) => cell.textContent === 'Locales');
+        expect(header?.className).toContain('hidden @2xl:table-cell');
+        expect(optionalHeader?.className).toContain('hidden @2xl:table-cell');
+        expect(
+            Array.from(container.querySelectorAll('tbody td')).find(
+                (cell) => cell.textContent === 'very.long.address@example.com',
+            )?.className,
+        ).toContain('hidden @2xl:table-cell');
+    });
+});
+
 describe('DataTable sort select in the table layout', () => {
     const sortLabels = {
         label: 'Sort by',

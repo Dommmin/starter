@@ -22,6 +22,8 @@ export type AuthAbilities = {
 export type Auth = {
     user: User;
     can: AuthAbilities;
+    /** Self-service sign-up is switched on (`APP_REGISTRATION_ENABLED`). */
+    canRegister: boolean;
 };
 
 export type Passkey = {

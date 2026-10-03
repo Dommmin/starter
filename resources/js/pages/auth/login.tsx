@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import PasskeyVerify from '@/components/passkey-verify';
 import {
@@ -28,6 +28,9 @@ type Props = {
 const FIELD_ORDER = ['email', 'password'] as const;
 
 export default function Login({ status, canResetPassword }: Props) {
+    const canRegister =
+        usePage<{ auth?: { canRegister?: boolean } }>().props.auth
+            ?.canRegister ?? false;
     const { t, locale, defaultLocale } = useTranslation();
     const form = useForm({ email: '', password: '', remember: false });
 
@@ -119,14 +122,19 @@ export default function Login({ status, canResetPassword }: Props) {
                     </Stack>
                 </form>
 
-                <Text variant="caption" align="center">
-                    {t('auth.login.noAccount')}{' '}
-                    <Link
-                        href={getLocalizedRegisterRoute(locale, defaultLocale)}
-                    >
-                        {t('auth.login.signUp')}
-                    </Link>
-                </Text>
+                {canRegister && (
+                    <Text variant="caption" align="center">
+                        {t('auth.login.noAccount')}{' '}
+                        <Link
+                            href={getLocalizedRegisterRoute(
+                                locale,
+                                defaultLocale,
+                            )}
+                        >
+                            {t('auth.login.signUp')}
+                        </Link>
+                    </Text>
+                )}
             </Stack>
         </>
     );

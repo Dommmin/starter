@@ -168,16 +168,18 @@ export function PublicHeader({
                 <LogIn className="h-4 w-4" aria-hidden="true" />
                 <span>{t('nav.login')}</span>
             </Button>
-            <Button
-                variant="primary"
-                size="sm"
-                href={registerUrl}
-                ariaLabel={t('nav.register')}
-                responsiveLabel
-            >
-                <UserPlus className="h-4 w-4" aria-hidden="true" />
-                <span>{t('nav.register')}</span>
-            </Button>
+            {auth.canRegister && (
+                <Button
+                    variant="primary"
+                    size="sm"
+                    href={registerUrl}
+                    ariaLabel={t('nav.register')}
+                    responsiveLabel
+                >
+                    <UserPlus className="h-4 w-4" aria-hidden="true" />
+                    <span>{t('nav.register')}</span>
+                </Button>
+            )}
         </>
     );
 

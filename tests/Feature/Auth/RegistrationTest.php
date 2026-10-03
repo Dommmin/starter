@@ -45,3 +45,8 @@ test('new users can register', function () {
     expect($user->hasVerifiedEmail())->toBeFalse();
     $response->assertRedirect(route('admin.index', absolute: false));
 });
+
+test('the sign-up flag is shared with the pages', function () {
+    $this->get(route('login'))
+        ->assertInertia(fn (Assert $page) => $page->where('auth.canRegister', true));
+});

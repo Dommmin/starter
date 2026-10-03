@@ -22,6 +22,7 @@ use Illuminate\Validation\Rule;
     {--name= : Site name stored in the application settings}
     {--locales= : Comma-separated public languages, e.g. en,pl}
     {--default-locale= : Default public language (one of --locales)}
+    {--enable-registration : Keep self-service sign-up on (it is turned off by default)}
     {--accent= : Accent colour (default)}
     {--admin-email= : E-mail address of the first administrator}
     {--admin-name= : Name of the first administrator}
@@ -37,7 +38,7 @@ class InitProjectCommand extends Command
     /**
      * @var list<string>
      */
-    private const array LOCALE_KEYS = ['APP_PUBLIC_LOCALES', 'APP_PUBLIC_DEFAULT', 'APP_PUBLIC_FALLBACK'];
+    private const array LOCALE_KEYS = ['APP_PUBLIC_LOCALES', 'APP_PUBLIC_DEFAULT', 'APP_PUBLIC_FALLBACK', 'APP_REGISTRATION_ENABLED'];
 
     /**
      * Execute the console command.
@@ -65,6 +66,7 @@ class InitProjectCommand extends Command
             'APP_PUBLIC_LOCALES' => implode(',', $input['locales']),
             'APP_PUBLIC_DEFAULT' => $input['default_locale'],
             'APP_PUBLIC_FALLBACK' => $input['default_locale'],
+            'APP_REGISTRATION_ENABLED' => $this->option('enable-registration') ? 'true' : 'false',
         ];
 
         $emailOwner = $existingAdministrator === null

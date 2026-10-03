@@ -117,6 +117,7 @@ export default function AdminLayout({
                     homeSectionsIndex(),
                     LayoutTemplate,
                 ),
+                // app:make-resource: new navigation items
             ],
         },
         {

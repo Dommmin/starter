@@ -20,6 +20,10 @@ final class ResourceGenerator
 {
     public const array LOCALES = ['en', 'pl', 'de'];
 
+    private const string NAVIGATION_FILE = 'resources/js/layouts/admin-layout.tsx';
+
+    private const string NAVIGATION_MARKER = '// app:make-resource: new navigation items';
+
     private readonly string $basePath;
 
     private readonly ResourceRenderer $renderer;
@@ -54,6 +58,12 @@ final class ResourceGenerator
         $conflicts = [...$conflicts, ...$routeConflicts];
         if ($routes !== null) {
             $changes[] = $routes;
+        }
+
+        [$navigation, $navigationConflicts] = $this->planNavigation($resource);
+        $conflicts = [...$conflicts, ...$navigationConflicts];
+        if ($navigation !== null) {
+            $changes[] = $navigation;
         }
 
         foreach (self::LOCALES as $locale) {
@@ -272,6 +282,61 @@ final class ResourceGenerator
         }
 
         return [new PlannedChange($relative, $contents, $original), $conflicts];
+    }
+
+    /**
+     * Adds the sidebar entry of the resource to the panel layout, before the
+     * marker comment inside the content group.
+     *
+     * @return array{0: PlannedChange|null, 1: list<string>}
+     */
+    private function planNavigation(ResourceBlueprint $resource): array
+    {
+        $relative = self::NAVIGATION_FILE;
+        $target = $this->path($relative);
+
+        if (! $this->files->exists($target)) {
+            return [null, ["{$relative} does not exist."]];
+        }
+
+        $original = $this->files->get($target);
+        $kebab = $resource->kebabPlural();
+        $camel = $resource->camelPlural();
+
+        if (str_contains($original, "@/routes/admin/{$kebab}'")) {
+            return [null, ["{$relative} already links to the {$kebab} routes."]];
+        }
+
+        $markerPosition = strpos($original, self::NAVIGATION_MARKER);
+        $routeImportAnchor = strrpos($original, "from '@/routes/admin");
+        $iconImportAnchor = strpos($original, "} from 'lucide-react';");
+
+        if ($markerPosition === false || $routeImportAnchor === false || $iconImportAnchor === false) {
+            return [null, ["{$relative}: the navigation marker `".self::NAVIGATION_MARKER.'` or its imports were not found.']];
+        }
+
+        $markerLineStart = strrpos(substr($original, 0, $markerPosition), "\n") + 1;
+        $indent = str_repeat(' ', 16);
+        $entry = implode("\n", [
+            "{$indent}section(",
+            "{$indent}    '{$kebab}',",
+            "{$indent}    t('admin.{$camel}.navLabel'),",
+            "{$indent}    {$camel}Index(),",
+            "{$indent}    Boxes,",
+            "{$indent}),",
+        ])."\n";
+        $routeImport = "import { index as {$camel}Index } from '@/routes/admin/{$kebab}';\n";
+        $routeImportLineEnd = strpos($original, "\n", $routeImportAnchor) + 1;
+
+        $contents = substr($original, 0, $iconImportAnchor)
+            .(preg_match('/\bBoxes,/', $original) === 1 ? '' : "    Boxes,\n")
+            .substr($original, $iconImportAnchor, $routeImportLineEnd - $iconImportAnchor)
+            .$routeImport
+            .substr($original, $routeImportLineEnd, $markerLineStart - $routeImportLineEnd)
+            .$entry
+            .substr($original, $markerLineStart);
+
+        return [new PlannedChange($relative, $contents, $original), []];
     }
 
     /**

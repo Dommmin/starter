@@ -96,7 +96,7 @@ class MakeAdminResourceCommand extends Command
         $this->line("  2. make artisan ARGS='migrate --no-interaction'");
         $this->line("  3. make composer ARGS='types:generate'");
         $this->line("  4. make artisan ARGS='wayfinder:generate --with-form --no-interaction'");
-        $this->line("  5. Add a navigation item to a group in resources/js/layouts/admin-layout.tsx (admin.{$resource->camelPlural()}.navLabel, route admin.{$resource->kebabPlural()}.index).");
+        $this->line('  5. A sidebar entry was added to the Content group in resources/js/layouts/admin-layout.tsx; move it or change its icon if needed.');
         $this->line("  6. Optional local sample data: call {$resource->model}Seeder from database/seeders/DatabaseSeeder.php (it is not registered automatically).");
         $this->line("  7. make test ARGS='--compact tests/Feature/Admin/{$resource->model}CrudTest.php' and make npm ARGS='run check'");
 

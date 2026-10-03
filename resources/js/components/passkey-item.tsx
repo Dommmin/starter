@@ -1,17 +1,16 @@
 import { KeyRound, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import type { Passkey } from '@/types/auth';
+    Badge,
+    ConfirmDialog,
+    Icon,
+    IconButton,
+    Inline,
+    Stack,
+    Text,
+} from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import type { Passkey } from '@/types/auth';
 
 type Props = {
     passkey: Passkey;
@@ -20,6 +19,7 @@ type Props = {
 
 export default function PasskeyItem({ passkey, onDelete }: Props) {
     const { t } = useTranslation();
+    const [isOpen, setIsOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = () => {
@@ -28,78 +28,58 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
     };
 
     return (
-        <div className="flex items-center justify-between border-b p-4 last:border-b-0">
-            <div className="flex items-center gap-4">
-                <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-                    <KeyRound className="text-muted-foreground h-5 w-5" />
-                </div>
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2.5">
-                        <p className="font-medium tracking-tight">
+        <Inline justify="between" align="center">
+            <Inline gap="default" align="center">
+                <Icon icon={KeyRound} tone="muted" />
+                <Stack gap="none">
+                    <Inline gap="tight" align="center" wrap>
+                        <Text as="span" variant="label">
                             {passkey.name}
-                        </p>
+                        </Text>
                         {passkey.authenticator && (
-                            <span className="bg-muted text-muted-foreground ring-border inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide uppercase ring-1 ring-inset">
+                            <Badge tone="outline">
                                 {passkey.authenticator}
-                            </span>
+                            </Badge>
                         )}
-                    </div>
-                    <p className="text-muted-foreground text-sm">
+                    </Inline>
+                    <Text variant="caption">
                         {t('auth.passkey.added', {
                             date: passkey.created_at_diff,
                         })}
-                        {passkey.last_used_at_diff && (
-                            <>
-                                <span className="text-muted-foreground/50 mx-1">
-                                    /
-                                </span>
-                                {t('auth.passkey.lastUsed', {
-                                    date: passkey.last_used_at_diff,
-                                })}
-                            </>
-                        )}
-                    </p>
-                </div>
-            </div>
+                        {passkey.last_used_at_diff &&
+                            ` / ${t('auth.passkey.lastUsed', {
+                                date: passkey.last_used_at_diff,
+                            })}`}
+                    </Text>
+                </Stack>
+            </Inline>
 
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">
-                            {t('auth.passkey.remove')}
-                        </span>
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogTitle>{t('auth.passkey.removeTitle')}</DialogTitle>
-                    <DialogDescription>
-                        {t('auth.passkey.removeDescription', {
-                            name: passkey.name,
-                        })}
-                    </DialogDescription>
-                    <DialogFooter className="gap-2">
-                        <DialogClose asChild>
-                            <Button variant="secondary">
-                                {t('auth.passkey.cancel')}
-                            </Button>
-                        </DialogClose>
-                        <Button
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                        >
-                            {isDeleting
-                                ? t('auth.passkey.removing')
-                                : t('auth.passkey.removeSubmit')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+            <IconButton
+                icon={Trash2}
+                variant="ghost"
+                size="sm"
+                ariaLabel={t('auth.passkey.remove')}
+                onClick={() => setIsOpen(true)}
+            />
+
+            <ConfirmDialog
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                tone="destructive"
+                title={t('auth.passkey.removeTitle')}
+                description={t('auth.passkey.removeDescription', {
+                    name: passkey.name,
+                })}
+                confirmLabel={
+                    isDeleting
+                        ? t('auth.passkey.removing')
+                        : t('auth.passkey.removeSubmit')
+                }
+                cancelLabel={t('auth.passkey.cancel')}
+                closeLabel={t('actions.close')}
+                onConfirm={handleDelete}
+                isPending={isDeleting}
+            />
+        </Inline>
     );
 }

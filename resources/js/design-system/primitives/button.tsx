@@ -68,10 +68,11 @@ const variantMap: Record<ButtonVariant, string> = {
 
 // WCAG 2.2 AA target size compliance: all buttons have minimum 44x44px touch targets.
 const sizeMap: Record<ButtonSize, string> = {
-    sm: 'min-h-[44px] min-w-[44px] px-3.5 py-1.5 text-xs rounded-full gap-1.5',
-    default: 'min-h-[44px] min-w-[44px] px-5 py-2.5 text-sm rounded-full gap-2',
-    lg: 'min-h-[48px] min-w-[48px] px-8 py-3 text-base rounded-full gap-2.5 shadow-md',
-    icon: 'min-h-[44px] min-w-[44px] p-2.5 rounded-full',
+    sm: 'min-h-[44px] min-w-[44px] px-3.5 py-1.5 text-xs rounded-(--control-radius) gap-1.5',
+    default:
+        'min-h-[44px] min-w-[44px] px-5 py-2.5 text-sm rounded-(--control-radius) gap-2',
+    lg: 'min-h-[48px] min-w-[48px] px-8 py-3 text-base rounded-(--control-radius) gap-2.5 shadow-md',
+    icon: 'min-h-[44px] min-w-[44px] p-2.5 rounded-(--control-radius)',
 };
 
 export function Button({

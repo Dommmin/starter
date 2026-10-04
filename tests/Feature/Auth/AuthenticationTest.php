@@ -19,7 +19,18 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('admin.index', absolute: false));
+    $response->assertRedirect('/');
+});
+
+test('users are sent back to the page that required authentication', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->get(route('admin.users.index'))->assertRedirect(route('login'));
+
+    $this->post(route('login.store'), [
+        'email' => $admin->email,
+        'password' => 'password',
+    ])->assertRedirect(route('admin.users.index'));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

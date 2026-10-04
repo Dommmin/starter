@@ -73,6 +73,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'canRegister' => Features::enabled(Features::registration()),
                 'can' => [
+                    'accessAdminPanel' => $request->user()?->canAccessAdminPanel() ?? false,
                     'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,
                     'viewAudit' => $request->user()?->can('viewAny', AuditLog::class) ?? false,
                     'manageSiteSettings' => $request->user()?->can('update', SiteSetting::class) ?? false,

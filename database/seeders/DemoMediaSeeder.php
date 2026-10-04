@@ -140,6 +140,11 @@ class DemoMediaSeeder extends Seeder
 
         $width = $definition['width'] ?? 800;
         $height = $definition['height'] ?? 600;
+
+        if ($definition['uuid'] === self::ASSETS['logo']['uuid']) {
+            return self::logo($width, $definition['color'] ?? '27272a');
+        }
+
         $image = ImageManager::gd()->create($width, $height)->fill($definition['color'] ?? '64748b');
 
         $image->drawEllipse(intdiv($width, 3), intdiv($height, 2), function (EllipseFactory $ellipse) use ($width, $height): void {
@@ -156,6 +161,28 @@ class DemoMediaSeeder extends Seeder
             'image/webp' => $image->toWebp(80)->toString(),
             default => $image->toJpeg(80)->toString(),
         };
+    }
+
+    /**
+     * Square logo on a transparent background: a neutral disc with a light
+     * core, legible on light and dark headers with every accent preset.
+     */
+    private static function logo(int $size, string $color): string
+    {
+        $image = ImageManager::gd()->create($size, $size);
+        $center = intdiv($size, 2);
+
+        $image->drawEllipse($center, $center, function (EllipseFactory $ellipse) use ($size, $color): void {
+            $ellipse->size($size - 8, $size - 8);
+            $ellipse->background($color);
+            $ellipse->border('ffffff', intdiv($size, 32));
+        });
+        $image->drawEllipse($center, $center, function (EllipseFactory $ellipse) use ($size): void {
+            $ellipse->size(intdiv($size, 3), intdiv($size, 3));
+            $ellipse->background('fafafa');
+        });
+
+        return $image->toPng()->toString();
     }
 
     /**

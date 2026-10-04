@@ -14,9 +14,9 @@ use Illuminate\Database\Seeder;
  * Local sample menu items appended after the default menus of
  * {@see NavigationMenuSeeder} in every public language: a page link, a
  * group with a nested submenu (pages, article and external link), an
- * external link opened in a new tab and footer links; German gets a shorter
- * menu of its own. Idempotent: an item already present (same menu,
- * top level, type and label) is skipped with its children.
+ * external link opened in a new tab and a footer column of links; German
+ * gets shorter menus of its own. Idempotent: an item already present (same
+ * menu, top level, type and label) is skipped with its children.
  */
 class DemoNavigationSeeder extends Seeder
 {
@@ -51,7 +51,14 @@ class DemoNavigationSeeder extends Seeder
                     ],
                 ],
                 MenuLocation::Footer->value => [
-                    ['type' => MenuItemType::Page, 'label' => 'Impressum', 'page' => 'imprint'],
+                    [
+                        'type' => MenuItemType::Group,
+                        'label' => 'Unternehmen',
+                        'children' => [
+                            ['type' => MenuItemType::Page, 'label' => 'Leistungen', 'page' => 'services'],
+                            ['type' => MenuItemType::Page, 'label' => 'Impressum', 'page' => 'imprint'],
+                        ],
+                    ],
                 ],
             ];
         }
@@ -72,8 +79,15 @@ class DemoNavigationSeeder extends Seeder
                 ['type' => MenuItemType::External, 'label' => 'GitHub', 'url' => 'https://github.com', 'open_in_new_tab' => true],
             ],
             MenuLocation::Footer->value => [
-                ['type' => MenuItemType::Page, 'label' => $label('Terms of service', 'Regulamin'), 'page' => 'terms'],
-                ['type' => MenuItemType::Article, 'label' => $label('Our history', 'Nasza historia'), 'article' => 'history'],
+                [
+                    'type' => MenuItemType::Group,
+                    'label' => $label('Company', 'Firma'),
+                    'children' => [
+                        ['type' => MenuItemType::Page, 'label' => $label('Terms of service', 'Regulamin'), 'page' => 'terms'],
+                        ['type' => MenuItemType::Article, 'label' => $label('Our history', 'Nasza historia'), 'article' => 'history'],
+                        ['type' => MenuItemType::Page, 'label' => $label('How we work', 'Jak pracujemy'), 'page' => 'how-we-work'],
+                    ],
+                ],
             ],
         ];
     }

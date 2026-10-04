@@ -1472,7 +1472,7 @@ return [
             'withoutPriorityDetail' => 'horizontal scroll inside its own container',
             'sortHiddenDetail' => 'sorted by a hidden optional column: the sort select appears above the table',
             'emptyActionDetail' => 'CTA through emptyAction, without PageHeader; hidden for an empty filter result',
-            'bulkDetail' => 'row selection and a confirmed bulk action (nothing is sent)',
+            'bulkDetail' => 'row selection, a confirmed bulk action and a date range filter (nothing is sent)',
             'bulkDelete' => 'Delete selected',
             'bulkDeleteTitle' => 'Delete the selected articles?',
             'bulkDeleteDescription' => [
@@ -1620,6 +1620,17 @@ return [
             'dateDescription' => 'Only dates in 2026.',
             'dateError' => 'The date must fall in 2026.',
             'longDateLabel' => 'End date of the trial period and of the first review of panel access permissions',
+        ],
+        'dates' => [
+            'title' => 'ADM-05 — Dates and ranges',
+            'description' => 'Date ranges on native inputs: each bound limits the other, the browser shows its own picker, the server validates the order.',
+            'rangeLabel' => 'Received',
+            'from' => 'From',
+            'to' => 'To',
+            'rangeDescription' => 'Both days are included; leave a bound empty to keep it open.',
+            'rangeErrorTo' => 'The end date must not be earlier than the start date.',
+            'limitsDetail' => 'min/max: 2026',
+            'longRangeLabel' => 'Period in which the editorial team accepted, reviewed and scheduled submissions for the autumn issue',
         ],
         'choiceFields' => [
             'title' => 'ADM-04 — Value choice',

@@ -122,3 +122,49 @@ test('sort column mappings must be plain identifiers of declared sort keys', fun
     [['label' => 'name; drop table users']],
     [['other' => 'users.name']],
 ])->throws(InvalidArgumentException::class);
+
+function datedUserListQuery(): ListQuery
+{
+    return ListQuery::make()
+        ->sortable(['created_at'], default: 'created_at')
+        ->dateRange('created', 'created_at');
+}
+
+test('a date range accepts either bound and rejects malformed or inverted dates', function (array $input, array $errors) {
+    $validator = Validator::make($input, datedUserListQuery()->rules());
+
+    expect($validator->errors()->keys())->toEqualCanonicalizing($errors);
+})->with([
+    'both empty' => [[], []],
+    'only from' => [['created_from' => '2026-10-01'], []],
+    'only to' => [['created_to' => '2026-10-01'], []],
+    'same day' => [['created_from' => '2026-10-01', 'created_to' => '2026-10-01'], []],
+    'not a date' => [['created_from' => '01.10.2026', 'created_to' => '2026-02-30'], ['created_from', 'created_to']],
+    'inverted' => [['created_from' => '2026-10-02', 'created_to' => '2026-10-01'], ['created_to']],
+]);
+
+test('a date range filters inclusively by calendar day and echoes empty bounds', function () {
+    User::factory()->create(['created_at' => '2026-09-30 23:59:59']);
+    $first = User::factory()->create(['created_at' => '2026-10-01 00:00:00']);
+    $last = User::factory()->create(['created_at' => '2026-10-03 23:59:59']);
+    $after = User::factory()->create(['created_at' => '2026-10-04 00:00:00']);
+    $listQuery = datedUserListQuery();
+
+    $range = $listQuery->apply(User::query(), ['created_from' => '2026-10-01', 'created_to' => '2026-10-03'])->pluck('id')->all();
+    $openEnded = $listQuery->apply(User::query(), ['created_from' => '2026-10-04'])->pluck('id')->all();
+
+    expect($range)->toBe([$first->id, $last->id])
+        ->and($openEnded)->toBe([$after->id])
+        ->and($listQuery->state(['created_to' => '2026-10-03'])['filters'])
+        ->toBe(['created_from' => '', 'created_to' => '2026-10-03']);
+});
+
+test('date range names cannot collide and columns must be identifiers', function () {
+    expect(fn () => ListQuery::make()->dateRange('created', 'created_at; drop table users'))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect(fn () => ListQuery::make()
+        ->filter('created_from', ['all'], default: 'all', apply: fn () => null)
+        ->dateRange('created', 'created_at'))
+        ->toThrow(InvalidArgumentException::class);
+});

@@ -20,6 +20,7 @@ export * from './container';
 export * from './cta';
 export * from './data-table';
 export * from './date-field';
+export * from './date-range-field';
 export * from './description-list';
 export * from './dialog';
 export * from './empty-state';

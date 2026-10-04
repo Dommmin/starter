@@ -1472,7 +1472,7 @@ return [
             'withoutPriorityDetail' => 'horizontales Scrollen im eigenen Container',
             'sortHiddenDetail' => 'sortiert nach einer ausgeblendeten optionalen Spalte: über der Tabelle erscheint die Sortierauswahl',
             'emptyActionDetail' => 'CTA über emptyAction, ohne PageHeader; bei leerem Filterergebnis ausgeblendet',
-            'bulkDetail' => 'Zeilenauswahl und bestätigte Sammelaktion (es wird nichts gesendet)',
+            'bulkDetail' => 'Zeilenauswahl, bestätigte Sammelaktion und Datumsbereichsfilter (es wird nichts gesendet)',
             'bulkDelete' => 'Ausgewählte löschen',
             'bulkDeleteTitle' => 'Ausgewählte Artikel löschen?',
             'bulkDeleteDescription' => [
@@ -1620,6 +1620,17 @@ return [
             'dateDescription' => 'Nur Daten im Jahr 2026.',
             'dateError' => 'Das Datum muss im Jahr 2026 liegen.',
             'longDateLabel' => 'Enddatum der Probezeit und der ersten Überprüfung der Zugriffsrechte auf das Panel',
+        ],
+        'dates' => [
+            'title' => 'ADM-05 — Daten und Zeiträume',
+            'description' => 'Zeiträume mit nativen Feldern: Jede Grenze begrenzt die andere, der Browser zeigt seine eigene Auswahl, der Server prüft die Reihenfolge.',
+            'rangeLabel' => 'Eingegangen',
+            'from' => 'Von',
+            'to' => 'Bis',
+            'rangeDescription' => 'Beide Tage sind eingeschlossen; eine leere Grenze bleibt offen.',
+            'rangeErrorTo' => 'Das Enddatum darf nicht vor dem Startdatum liegen.',
+            'limitsDetail' => 'min/max: 2026',
+            'longRangeLabel' => 'Zeitraum, in dem die Redaktion Einsendungen für die Herbstausgabe angenommen, geprüft und eingeplant hat',
         ],
         'choiceFields' => [
             'title' => 'ADM-04 — Werteauswahl',

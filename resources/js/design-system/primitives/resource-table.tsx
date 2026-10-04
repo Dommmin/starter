@@ -9,6 +9,7 @@ import {
     type DataTableColumnPriority,
     type DataTableSortLabels,
 } from './data-table';
+import { DateRangeField } from './date-range-field';
 import { EmptyState } from './empty-state';
 import { FilterBar } from './filter-bar';
 import { Inline } from './inline';
@@ -52,7 +53,8 @@ export type ResourceTableColumn<Row> = {
     render: (row: Row) => ReactNode;
 };
 
-export type ResourceTableFilter = {
+export type ResourceTableSelectFilter = {
+    kind?: 'select';
     /** Query-string key; must match a server-side filter name. */
     name: string;
     label: string;
@@ -60,6 +62,29 @@ export type ResourceTableFilter = {
     /** Value restored by "clear filters"; same as the server default. */
     defaultValue: string;
 };
+
+/**
+ * Inclusive date range (`ListQuery::dateRange`): the query string carries
+ * `{name}_from` and `{name}_to` as `YYYY-MM-DD`; "clear filters" empties both
+ * and an inverted range is swapped before the visit.
+ */
+export type ResourceTableDateRangeFilter = {
+    kind: 'dateRange';
+    name: string;
+    label: string;
+    labels: { from: string; to: string };
+};
+
+export type ResourceTableFilter =
+    | ResourceTableSelectFilter
+    | ResourceTableDateRangeFilter;
+
+/** Query-string keys and their "clear filters" values of one filter. */
+function filterDefaults(field: ResourceTableFilter): Record<string, string> {
+    return field.kind === 'dateRange'
+        ? { [`${field.name}_from`]: '', [`${field.name}_to`]: '' }
+        : { [field.name]: field.defaultValue };
+}
 
 export type ResourceTableRowActions<Row> = {
     /** Translated accessible label of the row menu trigger. */
@@ -208,10 +233,14 @@ export function ResourceTable<Row>({
         [...selectedKeys].filter((key) => rowKeys.has(key)),
     );
 
+    const filterDefaultValues: Record<string, string> = Object.assign(
+        {},
+        ...filterFields.map(filterDefaults),
+    );
     const filterValues = Object.fromEntries(
-        filterFields.map((field) => [
-            field.name,
-            filters[field.name] ?? field.defaultValue,
+        Object.entries(filterDefaultValues).map(([key, defaultValue]) => [
+            key,
+            filters[key] ?? defaultValue,
         ]),
     );
 
@@ -260,16 +289,14 @@ export function ResourceTable<Row>({
 
     const hasActiveFilters =
         (searchable && filters.search !== '') ||
-        filterFields.some(
-            (field) => filterValues[field.name] !== field.defaultValue,
+        Object.entries(filterDefaultValues).some(
+            ([key, defaultValue]) => filterValues[key] !== defaultValue,
         );
 
     function clearFilters() {
         visit({
             search: '',
-            filters: Object.fromEntries(
-                filterFields.map((field) => [field.name, field.defaultValue]),
-            ),
+            filters: filterDefaultValues,
         });
     }
 
@@ -361,18 +388,49 @@ export function ResourceTable<Row>({
                             onChange={(search) => visit({ search }, true)}
                         />
                     )}
-                    {filterFields.map((field) => (
-                        <SelectField
-                            key={field.name}
-                            name={field.name}
-                            label={field.label}
-                            value={filterValues[field.name]}
-                            options={field.options}
-                            onChange={(value) =>
-                                visit({ filters: { [field.name]: value } })
-                            }
-                        />
-                    ))}
+                    {filterFields.map((field) =>
+                        field.kind === 'dateRange' ? (
+                            <DateRangeField
+                                key={field.name}
+                                name={field.name}
+                                label={field.label}
+                                labels={field.labels}
+                                value={{
+                                    from: filterValues[`${field.name}_from`],
+                                    to: filterValues[`${field.name}_to`],
+                                }}
+                                onChange={(range) => {
+                                    // A typed date can bypass the inputs'
+                                    // min/max; swap an inverted range so the
+                                    // list request stays valid.
+                                    const [from, to] =
+                                        range.from &&
+                                        range.to &&
+                                        range.from > range.to
+                                            ? [range.to, range.from]
+                                            : [range.from, range.to];
+
+                                    visit({
+                                        filters: {
+                                            [`${field.name}_from`]: from,
+                                            [`${field.name}_to`]: to,
+                                        },
+                                    });
+                                }}
+                            />
+                        ) : (
+                            <SelectField
+                                key={field.name}
+                                name={field.name}
+                                label={field.label}
+                                value={filterValues[field.name]}
+                                options={field.options}
+                                onChange={(value) =>
+                                    visit({ filters: { [field.name]: value } })
+                                }
+                            />
+                        ),
+                    )}
                 </FilterBar>
             )}
 

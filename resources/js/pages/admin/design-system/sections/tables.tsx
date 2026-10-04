@@ -631,6 +631,19 @@ function DemoResourceTable({
                         { value: 'draft', label: demo('statuses.draft') },
                     ],
                 },
+                ...(withBulkActions
+                    ? [
+                          {
+                              kind: 'dateRange' as const,
+                              name: 'created',
+                              label: t('admin.designSystem.dates.rangeLabel'),
+                              labels: {
+                                  from: t('admin.designSystem.dates.from'),
+                                  to: t('admin.designSystem.dates.to'),
+                              },
+                          },
+                      ]
+                    : []),
             ]}
             columns={[
                 {

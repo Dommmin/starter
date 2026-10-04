@@ -1474,7 +1474,7 @@ return [
             'withoutPriorityDetail' => 'przewijanie poziome we własnym kontenerze',
             'sortHiddenDetail' => 'sort po ukrytej kolumnie optional: nad tabelą pojawia się select sortowania',
             'emptyActionDetail' => 'CTA przez emptyAction, bez PageHeader; ukryte przy pustym wyniku filtra',
-            'bulkDetail' => 'zaznaczanie wierszy i akcja zbiorcza z potwierdzeniem (nic nie jest wysyłane)',
+            'bulkDetail' => 'zaznaczanie wierszy, akcja zbiorcza z potwierdzeniem i filtr zakresu dat (nic nie jest wysyłane)',
             'bulkDelete' => 'Usuń zaznaczone',
             'bulkDeleteTitle' => 'Usunąć zaznaczone artykuły?',
             'bulkDeleteDescription' => [
@@ -1624,6 +1624,17 @@ return [
             'dateDescription' => 'Tylko daty z 2026 roku.',
             'dateError' => 'Data musi przypadać w 2026 roku.',
             'longDateLabel' => 'Data zakończenia okresu próbnego i pierwszego przeglądu uprawnień dostępu do panelu',
+        ],
+        'dates' => [
+            'title' => 'ADM-05 — Daty i zakresy',
+            'description' => 'Zakresy dat na natywnych polach: każda granica ogranicza drugą, przeglądarka pokazuje własny wybierak, serwer sprawdza kolejność.',
+            'rangeLabel' => 'Otrzymano',
+            'from' => 'Od',
+            'to' => 'Do',
+            'rangeDescription' => 'Oba dni są wliczone; pustą granicę pozostaw otwartą.',
+            'rangeErrorTo' => 'Data końcowa nie może być wcześniejsza niż początkowa.',
+            'limitsDetail' => 'min/max: 2026',
+            'longRangeLabel' => 'Okres, w którym redakcja przyjmowała, sprawdzała i planowała zgłoszenia do jesiennego wydania',
         ],
         'choiceFields' => [
             'title' => 'ADM-04 — Wybór wartości',

@@ -58,33 +58,6 @@
         ]
     },
     {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-ALERT",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/ui/alert.tsx",
-        "contentHash": "sha256:ce9841beb06b4b3a2c88dbfb46f9635d198827870becdfd3e2619181e28fdf61",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                31,
-                31
-            ],
-            [
-                41,
-                41
-            ],
-            [
-                57,
-                57
-            ]
-        ]
-    },
-    {
         "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-AVATAR",
         "rule": "ds/no-style-escape",
         "file": "resources/js/components/ui/avatar.tsx",
@@ -108,45 +81,6 @@
             [
                 42,
                 42
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-CARD",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/ui/card.tsx",
-        "contentHash": "sha256:18889fc98cb42833b3d9e3534f891e5d05477533db42511b71ed667b59d316a0",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                9,
-                9
-            ],
-            [
-                22,
-                22
-            ],
-            [
-                32,
-                32
-            ],
-            [
-                42,
-                42
-            ],
-            [
-                52,
-                52
-            ],
-            [
-                62,
-                62
             ]
         ]
     },
@@ -362,25 +296,6 @@
             [
                 177,
                 177
-            ]
-        ]
-    },
-    {
-        "id": "DS-EXC-UPSTREAM-COMPONENTS-UI-SPINNER",
-        "rule": "ds/no-style-escape",
-        "file": "resources/js/components/ui/spinner.tsx",
-        "contentHash": "sha256:3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
-        "reason": "Upstream scaffold pending design system primitives refactoring",
-        "alternatives": "Refactor using design system primitives",
-        "scope": "className in component/layout markup",
-        "owner": "starter-foundation",
-        "reviewRef": "ADR-019 full audit",
-        "expires": "2026-10-31",
-        "task": "P0-B Task 09",
-        "lineRanges": [
-            [
-                10,
-                10
             ]
         ]
     },

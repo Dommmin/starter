@@ -100,6 +100,7 @@ test('store validates required fields and creates nothing', function () {
     expect({{ Model }}::query()->count())->toBe(0);
 });
 {{ referenceTests }}
+{{ manyRelationTests }}
 test('the edit screen exposes the stored values and the version for locking', function () {
     $admin = User::factory()->admin()->create();
     ${{ variable }} = {{ Model }}::factory()->create();

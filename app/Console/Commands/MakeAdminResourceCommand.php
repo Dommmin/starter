@@ -14,7 +14,7 @@ use RuntimeException;
 
 #[Signature('app:make-resource
     {name : Singular StudlyCase model name, e.g. Product}
-    {--fields= : Comma separated name:type[:required]; types: string, text, integer, decimal, boolean, date, enum(a|b:success), belongsTo(Model.label_column), image, richtext}
+    {--fields= : Comma separated name:type[:required]; types: string, text, integer, decimal, boolean, date, enum(a|b:success), belongsTo(Model.label_column), belongsToMany(Model.label_column) with a plural name, image, richtext}
     {--searchable= : Comma separated string/text fields matched by the list search}
     {--sortable= : Comma separated sortable columns (non-text, non-relation fields, id, created_at, updated_at); default created_at}
     {--filters= : Comma separated boolean/enum/belongsTo fields offered as list filters}

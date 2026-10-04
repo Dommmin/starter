@@ -488,7 +488,62 @@ test('relations, rich text and badge tones are validated before planning', funct
     'relation sortable' => [['--fields' => 'name:string,faq:belongsTo(Faq.question)', '--sortable' => 'faq'], 'Sortable column [faq] must be a non-text field'],
     'image filter' => [['--fields' => 'name:string,cover:image', '--filters' => 'cover'], 'Filter [cover] must be a boolean or enum field'],
     'unknown badge tone' => [['--fields' => 'status:enum(draft|published:rainbow)'], 'Enum tone [rainbow] of value [published] of field [status] must be one of: neutral, primary, success, danger, outline.'],
+    'singular many relation' => [['--fields' => 'name:string,faq:belongsToMany(Faq.question)'], 'belongsToMany field name [faq] must be plural'],
+    'many relation to a missing model' => [['--fields' => 'name:string,tags:belongsToMany(Tag.name)'], 'model app/Models/Tag.php does not exist.'],
+    'many relation to users' => [['--fields' => 'name:string,owners:belongsToMany(User.name)'], 'cannot reference [User]'],
+    'many relation to itself' => [['--fields' => 'name:string,products:belongsToMany(Product.name)'], 'a belongsToMany relation to the resource itself is not supported'],
+    'only many relations' => [['--fields' => 'faqs:belongsToMany(Faq.question)'], 'At least one column field is required besides belongsToMany relations.'],
+    'many relation as a filter' => [['--fields' => 'name:string,faqs:belongsToMany(Faq.question)', '--filters' => 'faqs'], 'Filter [faqs] must be a boolean or enum field'],
 ]);
+
+test('a belongsToMany relation gets a pivot table, a synced multi-select and its own tests', function () {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,faqs:belongsToMany(Faq.question):required',
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+
+    expect($migration)
+        ->toContain("Schema::create('faq_product', function (Blueprint \$table) {")
+        ->toContain("\$table->foreignId('product_id')->constrained('products')->cascadeOnDelete();")
+        ->toContain("\$table->foreignId('faq_id')->index()->constrained('faqs')->cascadeOnDelete();")
+        ->toContain("\$table->primary(['product_id', 'faq_id']);")
+        ->and(strpos($migration, "Schema::dropIfExists('faq_product');"))->toBeLessThan(strpos($migration, "Schema::dropIfExists('products');"));
+
+    expect($read('app/Models/Product.php'))
+        ->toContain("return \$this->belongsToMany(Faq::class, 'faq_product');")
+        ->toContain('@property-read Collection<int, Faq> $faqs')
+        ->not->toContain("'faq_ids'");
+
+    expect($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))
+        ->toContain("'faq_ids' => ['required', 'array', 'list', 'max:'.RecordOptionData::LIMIT],")
+        ->toContain("'faq_ids.*' => ['integer', 'distinct', Rule::exists(Faq::class, 'id')],")
+        ->toContain("return \$this->safe()->except(['faq_ids']);")
+        ->toContain("'faqs' => self::ids(\$validated['faq_ids'] ?? []),");
+
+    expect($read('app/Http/Controllers/Admin/Products/ProductController.php'))
+        ->toContain('$product = DB::transaction(function () use ($request): Product {')
+        ->toContain("\$product->faqs()->sync(\$relationIds['faqs']);")
+        ->toContain('$request->expectedUpdatedAt(), $request->relationIds());');
+
+    expect($read('app/Actions/Products/UpdateProduct.php'))
+        ->toContain("\$locked->faqs()->sync(\$relationIds['faqs']);");
+
+    expect($read('resources/js/pages/admin/products/form.tsx'))
+        ->toContain("type: 'multiSelect',")
+        ->toContain("name: 'faq_ids',")
+        ->toContain('labels: multiSelectLabels(t),')
+        ->toContain('faq_ids: record.faqIds.map(String),');
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('the faqs are synced on create, replaced on update and unlinked with their record'")
+        ->toContain("test('unknown or repeated faqs ids are rejected without linking anything'");
+});
 
 test('enum badge tones are parsed per value and default to neutral', function () {
     $status = ResourceBlueprint::parse('Product', 'status:enum(draft|published:success|archived:danger)')->field('status');

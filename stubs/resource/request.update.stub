@@ -41,6 +41,7 @@ class Update{{ Model }}Request extends FormRequest
     {
         return {{ updateFieldValues }};
     }
+{{ relationIdsMethod }}
 
     public function expectedUpdatedAt(): string
     {

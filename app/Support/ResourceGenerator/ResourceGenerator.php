@@ -54,6 +54,13 @@ final class ResourceGenerator
             $conflicts[] = 'A migration creating the ['.$resource->table().'] table already exists: '.basename($migration).'.';
         }
 
+        foreach ($resource->manyRelations as $relation) {
+            $pivot = $relation->pivotTable($resource->model);
+            foreach ($this->files->glob($this->path("database/migrations/*_create_{$pivot}_table.php")) as $migration) {
+                $conflicts[] = "A migration creating the [{$pivot}] pivot table already exists: ".basename($migration).'.';
+            }
+        }
+
         [$routes, $routeConflicts] = $this->planRoutes($resource);
         $conflicts = [...$conflicts, ...$routeConflicts];
         if ($routes !== null) {
@@ -78,7 +85,7 @@ final class ResourceGenerator
     }
 
     /**
-     * Problems with the models referenced by belongsTo fields. The model
+     * Problems with the models referenced by belongsTo and belongsToMany fields. The model
      * source is read instead of the database schema, so the check behaves the
      * same in a dry run, in tests and before any migration ran: the label
      * column must be a fillable or documented (`@property`, not `@property-read`) attribute and the
@@ -90,7 +97,7 @@ final class ResourceGenerator
     {
         $errors = [];
 
-        foreach ($resource->fieldsOfType('belongsTo') as $field) {
+        foreach ($resource->optionFields() as $field) {
             $model = (string) $field->relatedModel;
             $label = (string) $field->relatedLabel;
             $relative = "app/Models/{$model}.php";

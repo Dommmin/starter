@@ -71,11 +71,17 @@ final class ResourceRenderer
         $files = [
             "database/migrations/{$migrationTimestamp}_create_{$resource->table()}_table.php" => $this->php('migration', $resource, [
                 'columns' => $this->migrationColumns($resource),
+                'pivotTables' => $this->pivotTables($resource),
+                'dropPivotTables' => $resource->manyRelations === [] ? null : implode(PHP_EOL, array_map(
+                    fn (ResourceField $field): string => "        Schema::dropIfExists('{$field->pivotTable($resource->model)}');",
+                    $resource->manyRelations,
+                )),
             ]),
             "app/Models/{$model}.php" => $this->php('model', $resource, [
                 'imports' => $this->imports([
                     ...$this->enumImportList($resource),
                     ...($this->relationFields($resource) === [] ? [] : ['Illuminate\Database\Eloquent\Relations\BelongsTo']),
+                    ...($resource->manyRelations === [] ? [] : ['Illuminate\Database\Eloquent\Collection', 'Illuminate\Database\Eloquent\Relations\BelongsToMany']),
                 ]),
                 'propertyDocs' => $this->propertyDocs($resource),
                 'fillable' => $this->quotedList(array_map(fn (ResourceField $field): string => $field->column(), $resource->fields)),
@@ -93,7 +99,7 @@ final class ResourceRenderer
             "app/Policies/{$model}Policy.php" => $this->php('policy', $resource, [
                 'exportMethod' => $resource->export ? $this->policyExportMethod($resource) : null,
             ]),
-            "app/Actions/{$plural}/Update{$model}.php" => $this->php('action.update', $resource),
+            "app/Actions/{$plural}/Update{$model}.php" => $this->php('action.update', $resource, $this->updateActionFragments($resource)),
             "app/Http/Controllers/Admin/{$plural}/{$model}Controller.php" => $this->php('controller', $resource, $this->controllerFragments($resource)),
             "app/Http/Requests/Admin/{$plural}/List{$plural}Request.php" => $this->php('request.list', $resource, [
                 'imports' => $this->imports([
@@ -109,15 +115,29 @@ final class ResourceRenderer
                 'imports' => $this->storeRequestImports($resource),
                 'prepareInput' => $this->prepareInput($resource, 'self'),
                 'rules' => $this->validationRules($resource),
-                'storeFieldValues' => $resource->hasType('richtext') ? 'self::sanitizeRichText($this->validated())' : '$this->validated()',
+                'storeFieldValues' => $resource->hasType('richtext')
+                    ? 'self::sanitizeRichText('.$this->validatedColumns($resource, []).')'
+                    : $this->validatedColumns($resource, []),
+                'relationIdsMethod' => $this->storeRelationIdsMethod($resource),
                 'blankInputsMethod' => $this->blankInputsMethod($resource),
                 'sanitizeMethod' => $this->sanitizeMethod($resource),
             ]),
             "app/Http/Requests/Admin/{$plural}/Update{$model}Request.php" => $this->php('request.update', $resource, [
                 'prepareInput' => $this->prepareInput($resource, "Store{$model}Request"),
                 'updateFieldValues' => $resource->hasType('richtext')
-                    ? "Store{$model}Request::sanitizeRichText(\$this->safe()->except(['updated_at']))"
-                    : "\$this->safe()->except(['updated_at'])",
+                    ? "Store{$model}Request::sanitizeRichText(".$this->validatedColumns($resource, ['updated_at']).')'
+                    : $this->validatedColumns($resource, ['updated_at']),
+                'relationIdsMethod' => $resource->manyRelations === [] ? null : PHP_EOL.<<<PHP
+                        /**
+                         * Related ids per belongsToMany relation, ready for `sync()`.
+                         *
+                         * @return {$this->relationIdsShape($resource)}
+                         */
+                        public function relationIds(): array
+                        {
+                            return Store{$model}Request::relationIdsFrom(\$this->validated());
+                        }
+                    PHP,
             ]),
             "app/Data/Admin/{$plural}/{$model}ListItemData.php" => $this->php('data.list-item', $resource, [
                 'imports' => $this->enumImports($resource),
@@ -180,11 +200,12 @@ final class ResourceRenderer
                 'updatedExpectations' => $this->payloadExpectations($resource, '$'.$resource->variable()),
                 'requiredFields' => $this->quotedList(array_map(
                     fn (ResourceField $field): string => $field->column(),
-                    array_values(array_filter($resource->fields, fn (ResourceField $field): bool => $field->isRequired())),
+                    array_values(array_filter([...$resource->fields, ...$resource->manyRelations], fn (ResourceField $field): bool => $field->isRequired())),
                 )),
                 'invalidField' => $resource->fields[0]->column(),
                 'invalidValue' => $this->invalidValue($resource->fields[0]),
                 'referenceTests' => $this->referenceTests($resource),
+                'manyRelationTests' => $this->manyRelationTests($resource),
                 'forbiddenExport' => $this->forbiddenExport($resource),
                 'exportTests' => $this->exportTests($resource),
             ]),
@@ -228,7 +249,7 @@ final class ResourceRenderer
     public function langBlock(ResourceBlueprint $resource, string $locale): string
     {
         $fieldLabels = [];
-        foreach ($resource->fields as $field) {
+        foreach ([...$resource->fields, ...$resource->manyRelations] as $field) {
             $fieldLabels[] = "            '{$field->name}' => '{$field->label()}',";
         }
 
@@ -374,8 +395,12 @@ final class ResourceRenderer
             $classes[] = 'Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull';
         }
 
-        foreach ($resource->fieldsOfType('belongsTo') as $field) {
+        foreach ($resource->optionFields() as $field) {
             $classes[] = 'App\\Models\\'.$field->relatedClass();
+        }
+
+        if ($resource->manyRelations !== []) {
+            $classes[] = 'Illuminate\Support\Facades\DB';
         }
 
         if ($resource->hasType('image')) {
@@ -394,12 +419,16 @@ final class ResourceRenderer
     {
         $classes = $this->enumImportList($resource);
 
-        foreach ($resource->fieldsOfType('belongsTo') as $field) {
+        foreach ($resource->optionFields() as $field) {
             $classes[] = 'App\\Models\\'.$field->relatedClass();
         }
 
-        if ($resource->enumFields() !== [] || $resource->hasType('belongsTo')) {
+        if ($resource->enumFields() !== [] || $resource->optionFields() !== []) {
             $classes[] = 'Illuminate\Validation\Rule';
+        }
+
+        if ($resource->manyRelations !== []) {
+            $classes[] = 'App\Data\Listing\RecordOptionData';
         }
 
         if ($resource->hasType('image')) {
@@ -550,6 +579,119 @@ final class ResourceRenderer
         return implode(PHP_EOL, $lines);
     }
 
+    /**
+     * Validated values of the resource columns, without `$except` and the
+     * related ids of belongsToMany relations (those are synced separately).
+     *
+     * @param  list<string>  $except
+     */
+    private function validatedColumns(ResourceBlueprint $resource, array $except): string
+    {
+        $keys = [...$except, ...array_map(fn (ResourceField $field): string => $field->column(), $resource->manyRelations)];
+
+        return $keys === [] ? '$this->validated()' : '$this->safe()->except(['.$this->quotedList($keys).'])';
+    }
+
+    /**
+     * PHPStan shape of the related ids, e.g. `array{tags: list<int>}`.
+     */
+    private function relationIdsShape(ResourceBlueprint $resource): string
+    {
+        $entries = array_map(fn (ResourceField $field): string => "{$field->relation()}: list<int>", $resource->manyRelations);
+
+        return 'array{'.implode(', ', $entries).'}';
+    }
+
+    private function storeRelationIdsMethod(ResourceBlueprint $resource): ?string
+    {
+        if ($resource->manyRelations === []) {
+            return null;
+        }
+
+        $shape = $this->relationIdsShape($resource);
+        $entries = implode(PHP_EOL, array_map(
+            fn (ResourceField $field): string => "            '{$field->relation()}' => self::ids(\$validated['{$field->column()}'] ?? []),",
+            $resource->manyRelations,
+        ));
+
+        return PHP_EOL.<<<PHP
+            /**
+             * Related ids per belongsToMany relation, ready for `sync()`.
+             *
+             * @return {$shape}
+             */
+            public function relationIds(): array
+            {
+                return self::relationIdsFrom(\$this->validated());
+            }
+
+            /**
+             * @param  array<string, mixed>  \$validated
+             * @return {$shape}
+             */
+            public static function relationIdsFrom(array \$validated): array
+            {
+                return [
+        {$entries}
+                ];
+            }
+
+            /**
+             * @return list<int>
+             */
+            private static function ids(mixed \$value): array
+            {
+                return is_array(\$value) ? array_values(array_map(intval(...), \$value)) : [];
+            }
+        PHP;
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function updateActionFragments(ResourceBlueprint $resource): array
+    {
+        if ($resource->manyRelations === []) {
+            return ['relationParamDoc' => null, 'relationParameter' => '', 'relationUse' => '', 'syncRelations' => null];
+        }
+
+        return [
+            'relationParamDoc' => "     * @param  {$this->relationIdsShape($resource)}  \$relationIds  Related ids per belongsToMany relation.",
+            'relationParameter' => ', array $relationIds',
+            'relationUse' => ', $relationIds',
+            'syncRelations' => implode(PHP_EOL, array_map(
+                fn (ResourceField $field): string => "            \$locked->{$field->relation()}()->sync(\$relationIds['{$field->relation()}']);",
+                $resource->manyRelations,
+            )),
+        ];
+    }
+
+    /**
+     * Pivot tables of the belongsToMany relations, created right after the
+     * resource table in the same migration. Both keys cascade on delete:
+     * removing either record removes only the link.
+     */
+    private function pivotTables(ResourceBlueprint $resource): ?string
+    {
+        $blocks = [];
+        foreach ($resource->manyRelations as $field) {
+            $pivot = $field->pivotTable($resource->model);
+            $ownKey = Str::snake($resource->model).'_id';
+            $relatedKey = Str::snake((string) $field->relatedModel).'_id';
+
+            $blocks[] = <<<PHP
+
+                        Schema::create('{$pivot}', function (Blueprint \$table) {
+                            \$table->foreignId('{$ownKey}')->constrained('{$resource->table()}')->cascadeOnDelete();
+                            \$table->foreignId('{$relatedKey}')->index()->constrained('{$field->relatedTable()}')->cascadeOnDelete();
+                            \$table->primary(['{$ownKey}', '{$relatedKey}']);
+                        });
+                PHP;
+        }
+
+        return $blocks === [] ? null : implode(PHP_EOL, $blocks);
+    }
+
     private function propertyDocs(ResourceBlueprint $resource): string
     {
         $lines = [];
@@ -568,6 +710,10 @@ final class ResourceRenderer
 
         foreach ($this->relationFields($resource) as $field) {
             $lines[] = " * @property-read {$field->relatedClass()}".($field->isRequired() ? '' : '|null')." \${$field->relation()}";
+        }
+
+        foreach ($resource->manyRelations as $field) {
+            $lines[] = " * @property-read Collection<int, {$field->relatedClass()}> \${$field->relation()}";
         }
 
         return implode(PHP_EOL, $lines);
@@ -608,6 +754,20 @@ final class ResourceRenderer
                 public function {$field->relation()}(): BelongsTo
                 {
                     return \$this->belongsTo({$class}::class, '{$field->column()}');
+                }
+            PHP;
+        }
+
+        foreach ($resource->manyRelations as $field) {
+            $class = $field->relatedClass();
+            $methods[] = <<<PHP
+
+                /**
+                 * @return BelongsToMany<{$class}, \$this>
+                 */
+                public function {$field->relation()}(): BelongsToMany
+                {
+                    return \$this->belongsToMany({$class}::class, '{$field->pivotTable($resource->model)}');
                 }
             PHP;
         }
@@ -660,7 +820,7 @@ final class ResourceRenderer
      */
     private function controllerFragments(ResourceBlueprint $resource): array
     {
-        $belongsTo = $resource->fieldsOfType('belongsTo');
+        $belongsTo = $resource->optionFields();
         $classes = [];
 
         foreach ($belongsTo as $field) {
@@ -701,8 +861,29 @@ final class ResourceRenderer
             $editorArguments[] = "            {$relation}OptionsTruncated: \${$relation}OptionsTruncated,";
         }
 
+        $variable = '$'.$resource->variable();
+        $storeStatement = "        {$variable} = {$resource->model}::query()->create(\$request->fieldValues());";
+        if ($resource->manyRelations !== []) {
+            $classes[] = 'Illuminate\Support\Facades\DB';
+            $syncs = implode(PHP_EOL, array_map(
+                fn (ResourceField $field): string => "            {$variable}->{$field->relation()}()->sync(\$relationIds['{$field->relation()}']);",
+                $resource->manyRelations,
+            ));
+            $storeStatement = implode(PHP_EOL, [
+                "        {$variable} = DB::transaction(function () use (\$request): {$resource->model} {",
+                "            {$variable} = {$resource->model}::query()->create(\$request->fieldValues());",
+                '            $relationIds = $request->relationIds();',
+                $syncs,
+                '',
+                "            return {$variable};",
+                '        });',
+            ]);
+        }
+
         return [
             'imports' => $this->imports($classes),
+            'storeStatement' => $storeStatement,
+            'updateRelationArgument' => $resource->manyRelations === [] ? '' : ', $request->relationIds()',
             'constants' => ! $resource->export ? null : implode(PHP_EOL, [
                 '    /**',
                 '     * Default maximum number of rows of one CSV export; a larger result',
@@ -854,7 +1035,7 @@ final class ResourceRenderer
     private function optionMethods(ResourceBlueprint $resource): ?string
     {
         $methods = [];
-        foreach ($resource->fieldsOfType('belongsTo') as $field) {
+        foreach ($resource->optionFields() as $field) {
             $class = $field->relatedClass();
             $label = (string) $field->relatedLabel;
             $lower = Str::ucfirst(Str::lower(Str::headline(Str::pluralStudly($class))));
@@ -862,7 +1043,7 @@ final class ResourceRenderer
             $methods[] = <<<PHP
 
                 /**
-                 * {$lower} offered by the {$field->name} select, ordered by label and
+                 * {$lower} offered by the {$field->name} field, ordered by label and
                  * capped at RecordOptionData::LIMIT.
                  *
                  * @return array{0: list<RecordOptionData>, 1: bool} The options and whether the list was truncated.
@@ -917,7 +1098,7 @@ final class ResourceRenderer
      */
     private function editorDataFragments(ResourceBlueprint $resource): array
     {
-        $fields = $resource->fieldsOfType('belongsTo');
+        $fields = $resource->optionFields();
         if ($fields === []) {
             return ['imports' => null, 'constructorDoc' => null, 'properties' => null];
         }
@@ -926,7 +1107,7 @@ final class ResourceRenderer
         $properties = [];
         foreach ($fields as $field) {
             $relation = $field->relation();
-            $docs[] = "     * @param  list<RecordOptionData>  \${$relation}Options  Choices of the {$field->name} select (at most RecordOptionData::LIMIT).";
+            $docs[] = "     * @param  list<RecordOptionData>  \${$relation}Options  Choices of the {$field->name} field (at most RecordOptionData::LIMIT).";
             $docs[] = "     * @param  bool  \${$relation}OptionsTruncated  Whether more {$field->name} records exist than were sent.";
             $properties[] = "        public array \${$relation}Options,";
             $properties[] = "        public bool \${$relation}OptionsTruncated,";
@@ -943,13 +1124,16 @@ final class ResourceRenderer
     private function formConstructorDoc(ResourceBlueprint $resource): ?string
     {
         $fields = $resource->fieldsOfType('richtext');
-        if ($fields === []) {
+        if ($fields === [] && $resource->manyRelations === []) {
             return null;
         }
 
         $docs = ['    /**'];
         foreach ($fields as $field) {
             $docs[] = "     * @param  array<string, mixed>|null  \${$field->property()}  Tiptap JSON document (`{ type: 'doc', content: [...] }`).";
+        }
+        foreach ($resource->manyRelations as $field) {
+            $docs[] = "     * @param  list<int>  \${$field->property()}  Ids of the linked {$field->name}.";
         }
         $docs[] = '     */';
 
@@ -1066,6 +1250,12 @@ final class ResourceRenderer
             $lines[] = "            '{$field->column()}' => [{$rules}],";
         }
 
+        foreach ($resource->manyRelations as $field) {
+            $presence = $field->isRequired() ? "'required'" : "'nullable'";
+            $lines[] = "            '{$field->column()}' => [{$presence}, 'array', 'list', 'max:'.RecordOptionData::LIMIT],";
+            $lines[] = "            '{$field->column()}.*' => ['integer', 'distinct', Rule::exists({$field->relatedClass()}::class, 'id')],";
+        }
+
         return implode(PHP_EOL, $lines);
     }
 
@@ -1104,6 +1294,12 @@ final class ResourceRenderer
             $lines[] = '        public '.($nullable ? '?' : '')."{$type} \${$field->property()},";
         }
 
+        if (! $listOnly) {
+            foreach ($resource->manyRelations as $field) {
+                $lines[] = "        public array \${$field->property()},";
+            }
+        }
+
         return implode(PHP_EOL, $lines);
     }
 
@@ -1133,6 +1329,13 @@ final class ResourceRenderer
             $lines[] = "            {$field->property()}: {$value},";
         }
 
+        if (! $listOnly) {
+            foreach ($resource->manyRelations as $field) {
+                $key = $field->relatedTable().'.id';
+                $lines[] = "            {$field->property()}: array_values(array_map(intval(...), {$variable}->{$field->relation()}()->orderBy('{$key}')->pluck('{$key}')->all())),";
+            }
+        }
+
         return implode(PHP_EOL, $lines);
     }
 
@@ -1147,6 +1350,10 @@ final class ResourceRenderer
             };
 
             $lines[] = "            {$field->property()}: {$value},";
+        }
+
+        foreach ($resource->manyRelations as $field) {
+            $lines[] = "            {$field->property()}: [],";
         }
 
         return implode(PHP_EOL, $lines);
@@ -1404,7 +1611,8 @@ final class ResourceRenderer
             'pickerImport' => $needsPicker ? "import { useMediaImagePicker } from '@/hooks/use-media-image-picker';" : null,
             'valueTypes' => $this->formValueTypes($resource),
             'stateType' => $this->formStateType($resource),
-            'fieldNames' => $this->quotedList(array_map(fn (ResourceField $field): string => $field->column(), $resource->fields)),
+            'fieldNames' => $this->quotedList(array_map(fn (ResourceField $field): string => $field->column(), [...$resource->fields, ...$resource->manyRelations])),
+            'multiSelectImport' => $resource->manyRelations === [] ? null : "import { multiSelectLabels } from '@/lib/multi-select-labels';",
             'helpers' => $this->formHelpers($resource, $optionalRelations !== []),
             'toState' => $this->formToState($resource),
             'pickerSetup' => $this->formPickerSetup($resource),
@@ -1421,8 +1629,9 @@ final class ResourceRenderer
             'boolean' => 'boolean',
             'enum' => 'App.Enums.'.$field->enumClass($resource->model),
             'richtext' => 'RichTextDocument',
+            'belongsToMany' => 'string[]',
             default => 'string',
-        }.';', $resource->fields));
+        }.';', [...$resource->fields, ...$resource->manyRelations]));
     }
 
     private function formStateType(ResourceBlueprint $resource): string
@@ -1512,7 +1721,10 @@ final class ResourceRenderer
             };
 
             return "        {$field->column()}: {$value},";
-        }, $resource->fields));
+        }, $resource->fields)).implode('', array_map(
+            fn (ResourceField $field): string => PHP_EOL."        {$field->column()}: record.{$field->property()}.map(String),",
+            $resource->manyRelations,
+        ));
     }
 
     private function formPickerSetup(ResourceBlueprint $resource): ?string
@@ -1551,7 +1763,7 @@ final class ResourceRenderer
         $keys = 'admin.'.$resource->camelPlural();
         $blocks = [];
 
-        foreach ($resource->fields as $field) {
+        foreach ([...$resource->fields, ...$resource->manyRelations] as $field) {
             $indent = str_repeat(' ', 32);
             $lines = ['                            {'];
             $lines[] = $indent.'type: '.match ($field->type) {
@@ -1560,6 +1772,7 @@ final class ResourceRenderer
                 'date' => "'date'",
                 'boolean' => "'switch'",
                 'enum', 'belongsTo' => "'select'",
+                'belongsToMany' => "'multiSelect'",
                 'image' => "'image'",
                 'richtext' => "'richText'",
                 default => "'text'",
@@ -1585,6 +1798,21 @@ final class ResourceRenderer
                     $lines[] = $indent."    { value: '{$value}', label: t('{$keys}.options.{$field->name}.{$value}') },";
                 }
                 $lines[] = $indent.'],';
+            }
+
+            if ($field->type === 'belongsToMany') {
+                $options = "editor.{$field->relation()}Options";
+                $lines[] = $indent."placeholder: t('{$keys}.{$field->relation()}Placeholder'),";
+                $lines[] = $indent."options: {$options}.map((option) => ({";
+                $lines[] = $indent.'    value: String(option.id),';
+                $lines[] = $indent.'    label: option.label,';
+                $lines[] = $indent.'})),';
+                $lines[] = $indent.'labels: multiSelectLabels(t),';
+                $lines[] = $indent."hint: editor.{$field->relation()}OptionsTruncated";
+                $lines[] = $indent."    ? t('{$keys}.optionsTruncated', { max: {$options}.length })";
+                $lines[] = $indent."    : {$options}.length === 0";
+                $lines[] = $indent."      ? t('{$keys}.{$field->relation()}Empty')";
+                $lines[] = $indent.'      : undefined,';
             }
 
             if ($field->type === 'belongsTo') {
@@ -1649,7 +1877,7 @@ final class ResourceRenderer
             $entries = [...$entries, ...$labels['export']];
         }
 
-        $belongsTo = $resource->fieldsOfType('belongsTo');
+        $belongsTo = $resource->optionFields();
         if ($belongsTo !== []) {
             $entries = [...$entries, ...$labels['relation']];
         }
@@ -1859,10 +2087,82 @@ final class ResourceRenderer
 
     private function testPayload(ResourceBlueprint $resource): string
     {
-        return implode(PHP_EOL, array_map(
-            fn (ResourceField $field): string => "        '{$field->column()}' => {$this->samplePhpValue($resource, $field, raw: true)},",
-            $resource->fields,
-        ));
+        return implode(PHP_EOL, [
+            ...array_map(
+                fn (ResourceField $field): string => "        '{$field->column()}' => {$this->samplePhpValue($resource, $field, raw: true)},",
+                $resource->fields,
+            ),
+            ...array_map(
+                fn (ResourceField $field): string => "        '{$field->column()}' => [{$field->relatedClass()}::factory()->create()->id],",
+                $resource->manyRelations,
+            ),
+        ]);
+    }
+
+    /**
+     * Sync on create and update, the editor payload, rejected ids and the
+     * pivot cascade of every belongsToMany relation.
+     */
+    private function manyRelationTests(ResourceBlueprint $resource): ?string
+    {
+        $tests = [];
+        $model = $resource->model;
+        $variable = $resource->variable();
+        $kebab = $resource->kebabPlural();
+
+        foreach ($resource->manyRelations as $field) {
+            $class = $field->relatedClass();
+            $relation = $field->relation();
+            $key = $field->column();
+            $qualifiedId = $field->relatedTable().'.id';
+            $pivot = $field->pivotTable($model);
+
+            $tests[] = <<<PHP
+
+            test('the {$field->name} are synced on create, replaced on update and unlinked with their record', function () {
+                \$editor = User::factory()->editor()->create();
+                [\$first, \$second] = {$class}::factory()->count(2)->create();
+
+                \$this->actingAs(\$editor)->post(route('admin.{$kebab}.store'), {$variable}Payload(['{$key}' => [\$first->id]]))
+                    ->assertSessionHasNoErrors();
+                \${$variable} = {$model}::query()->sole();
+                expect(\${$variable}->{$relation}()->pluck('{$qualifiedId}')->all())->toBe([\$first->id]);
+
+                \$this->actingAs(\$editor)->get(route('admin.{$kebab}.edit', \${$variable}))
+                    ->assertInertia(fn (Assert \$inertia) => \$inertia
+                        ->where('{$variable}.{$field->property()}', [\$first->id])
+                        ->has('{$relation}Options', {$class}::query()->count())
+                    );
+
+                \$this->actingAs(\$editor)->put(route('admin.{$kebab}.update', \${$variable}), {$variable}Payload([
+                    '{$key}' => [\$second->id],
+                    'updated_at' => \${$variable}->updated_at?->toIso8601String(),
+                ]))->assertSessionHasNoErrors();
+
+                expect(\${$variable}->{$relation}()->pluck('{$qualifiedId}')->all())->toBe([\$second->id]);
+
+                \$second->delete();
+
+                expect(DB::table('{$pivot}')->count())->toBe(0)
+                    ->and({$model}::query()->whereKey(\${$variable}->id)->exists())->toBeTrue();
+            });
+
+            test('unknown or repeated {$field->name} ids are rejected without linking anything', function () {
+                \$editor = User::factory()->editor()->create();
+                \$related = {$class}::factory()->create();
+
+                \$this->actingAs(\$editor)->post(route('admin.{$kebab}.store'), {$variable}Payload(['{$key}' => [\$related->id + 1000]]))
+                    ->assertSessionHasErrors(['{$key}.0']);
+                \$this->actingAs(\$editor)->post(route('admin.{$kebab}.store'), {$variable}Payload(['{$key}' => [\$related->id, \$related->id]]))
+                    ->assertSessionHasErrors(['{$key}.0']);
+
+                expect({$model}::query()->count())->toBe(0)
+                    ->and(DB::table('{$pivot}')->count())->toBe(0);
+            });
+            PHP;
+        }
+
+        return $tests === [] ? null : implode(PHP_EOL, $tests);
     }
 
     private function samplePhpValue(ResourceBlueprint $resource, ResourceField $field, bool $raw): string

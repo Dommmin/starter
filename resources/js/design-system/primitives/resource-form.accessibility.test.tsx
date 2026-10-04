@@ -278,3 +278,65 @@ describe('ResourceForm', () => {
         }
     });
 });
+
+describe('ResourceForm multiSelect field', () => {
+    type TagValues = { tag_ids: string[] };
+
+    const tagSections: ResourceFormSection<TagValues>[] = [
+        {
+            id: 'tags',
+            title: 'Tags',
+            fields: [
+                {
+                    type: 'multiSelect',
+                    name: 'tag_ids',
+                    label: 'Tags',
+                    options: [
+                        { value: '1', label: 'News' },
+                        { value: '2', label: 'Events' },
+                    ],
+                    labels: {
+                        noResults: 'No tags',
+                        remove: (label) => `Remove ${label}`,
+                        selected: (count) => `${count} selected`,
+                    },
+                },
+            ],
+        },
+    ];
+
+    it('renders the selected values as chips, reports removals and shows item errors', async () => {
+        const onChange = vi.fn();
+        await render(
+            <ResourceForm<TagValues>
+                sections={tagSections}
+                values={{ tag_ids: ['2'] }}
+                errors={{ 'tag_ids.0': 'The selected tag is invalid.' }}
+                onChange={onChange}
+                onSubmit={() => {}}
+                labels={{ submit: 'Save', errorSummaryTitle: 'Fix' }}
+            />,
+        );
+
+        const input = document.querySelector<HTMLInputElement>(
+            'input[role="combobox"]',
+        );
+        expect(
+            document.querySelector(`label[for="${input?.id}"]`)?.textContent,
+        ).toBe('Tags');
+        expect(input?.getAttribute('aria-invalid')).toBe('true');
+        expect(document.body.textContent).toContain(
+            'The selected tag is invalid.',
+        );
+
+        await act(async () => {
+            document
+                .querySelector<HTMLButtonElement>(
+                    'button[aria-label="Remove Events"]',
+                )
+                ?.click();
+        });
+
+        expect(onChange).toHaveBeenCalledWith('tag_ids', []);
+    });
+});

@@ -65,6 +65,8 @@ final readonly class ResourceBlueprint
      * @param  list<string>  $sortable
      * @param  list<string>  $filters
      * @param  bool  $export  Whether the list gets a CSV export (admins only).
+     * @param  list<ResourceField>  $manyRelations  belongsToMany fields: no column on the
+     *                                              resource table, edited with a multi-select.
      */
     private function __construct(
         public string $model,
@@ -73,6 +75,7 @@ final readonly class ResourceBlueprint
         public array $sortable,
         public array $filters,
         public bool $export = false,
+        public array $manyRelations = [],
     ) {}
 
     /**
@@ -84,8 +87,21 @@ final readonly class ResourceBlueprint
     {
         $errors = self::validateName($name);
 
-        [$parsedFields, $fieldErrors] = self::parseFields($fields);
+        [$allFields, $fieldErrors] = self::parseFields($fields);
         $errors = [...$errors, ...$fieldErrors];
+
+        $parsedFields = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type !== 'belongsToMany'));
+        $manyRelations = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type === 'belongsToMany'));
+
+        if ($allFields !== [] && $parsedFields === []) {
+            $errors[] = 'At least one column field is required besides belongsToMany relations.';
+        }
+
+        foreach ($manyRelations as $relation) {
+            if ($relation->relatedModel === $name) {
+                $errors[] = "Field [{$relation->name}]: a belongsToMany relation to the resource itself is not supported.";
+            }
+        }
 
         $byName = [];
         foreach ($parsedFields as $field) {
@@ -128,6 +144,7 @@ final readonly class ResourceBlueprint
             sortable: $sortableList === [] ? ['created_at'] : $sortableList,
             filters: $filterList,
             export: $export,
+            manyRelations: $manyRelations,
         );
     }
 
@@ -166,19 +183,20 @@ final readonly class ResourceBlueprint
         }
 
         foreach ($parts as $part) {
-            if (preg_match('/^([^:]+):(string|text|integer|decimal|boolean|date|image|richtext|enum\(([^)]*)\)|belongsTo\(([^)]*)\))(?::(required|nullable))?$/', $part, $matches) !== 1) {
-                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column)).';
+            if (preg_match('/^(?<name>[^:]+):(?<type>string|text|integer|decimal|boolean|date|image|richtext|enum\((?<enum>[^)]*)\)|belongsToMany\((?<many>[^)]*)\)|belongsTo\((?<target>[^)]*)\))(?::(?<presence>required|nullable))?$/', $part, $matches) !== 1) {
+                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column), belongsToMany as belongsToMany(Model.label_column)).';
 
                 continue;
             }
 
-            $name = $matches[1];
+            $name = $matches['name'];
             $type = match (true) {
-                str_starts_with($matches[2], 'enum(') => 'enum',
-                str_starts_with($matches[2], 'belongsTo(') => 'belongsTo',
-                default => $matches[2],
+                str_starts_with($matches['type'], 'enum(') => 'enum',
+                str_starts_with($matches['type'], 'belongsToMany(') => 'belongsToMany',
+                str_starts_with($matches['type'], 'belongsTo(') => 'belongsTo',
+                default => $matches['type'],
             };
-            $required = ($matches[5] ?? '') === 'required';
+            $required = ($matches['presence'] ?? '') === 'required';
 
             if (preg_match('/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/', $name) !== 1 || strlen($name) > 50) {
                 $errors[] = "Field name [{$name}] must be a snake_case identifier (max 50 characters).";
@@ -201,7 +219,7 @@ final readonly class ResourceBlueprint
             $values = [];
             $tones = [];
             if ($type === 'enum') {
-                [$values, $tones, $valueErrors] = self::parseEnumValues($name, $matches[3] ?? '');
+                [$values, $tones, $valueErrors] = self::parseEnumValues($name, $matches['enum'] ?? '');
                 if ($valueErrors !== []) {
                     $errors = [...$errors, ...$valueErrors];
 
@@ -211,19 +229,26 @@ final readonly class ResourceBlueprint
 
             $relatedModel = null;
             $relatedLabel = null;
-            if ($type === 'belongsTo') {
-                $relationErrors = self::validateBelongsTo($name, $matches[4] ?? '');
+            if ($type === 'belongsTo' || $type === 'belongsToMany') {
+                $target = $type === 'belongsTo' ? ($matches['target'] ?? '') : ($matches['many'] ?? '');
+                $relationErrors = self::validateBelongsTo($name, $target);
                 if ($relationErrors !== []) {
                     $errors = [...$errors, ...$relationErrors];
 
                     continue;
                 }
 
-                [$relatedModel, $relatedLabel] = explode('.', trim($matches[4] ?? ''), 2);
+                [$relatedModel, $relatedLabel] = explode('.', trim($target), 2);
             }
 
-            if (in_array($type, ['belongsTo', 'image'], true) && (str_ends_with($name, '_id') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
+            if (in_array($type, ['belongsTo', 'belongsToMany', 'image'], true) && (str_ends_with($name, '_id') || str_ends_with($name, '_ids') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
                 $errors[] = "Relation field name [{$name}] must name the relation (e.g. category, not category_id) and must not shadow an Eloquent method.";
+
+                continue;
+            }
+
+            if ($type === 'belongsToMany' && (Str::plural($name) !== $name || Str::singular($name) === $name)) {
+                $errors[] = "belongsToMany field name [{$name}] must be plural, e.g. tags.";
 
                 continue;
             }
@@ -308,7 +333,7 @@ final readonly class ResourceBlueprint
     }
 
     /**
-     * Syntax of `belongsTo(Model.label_column)`. Whether the model and the
+     * Syntax of `belongsTo(Model.label_column)` (also used by belongsToMany). Whether the model and the
      * column exist is checked by {@see ResourceGenerator::relationErrors()}.
      *
      * @return list<string>
@@ -431,6 +456,17 @@ final readonly class ResourceBlueprint
     public function fieldsOfType(string $type): array
     {
         return array_values(array_filter($this->fields, fn (ResourceField $field): bool => $field->type === $type));
+    }
+
+    /**
+     * Relations whose editor offers related records: belongsTo selects and
+     * belongsToMany multi-selects.
+     *
+     * @return list<ResourceField>
+     */
+    public function optionFields(): array
+    {
+        return [...$this->fieldsOfType('belongsTo'), ...$this->manyRelations];
     }
 
     public function hasType(string $type): bool

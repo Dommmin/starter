@@ -90,18 +90,20 @@ cp .env.example .env
 composer dump-autoload --no-interaction --quiet
 php artisan key:generate --force --no-interaction >/dev/null
 
-# Every field type, badge tones, a required and an optional relation, image,
-# rich text, filters (enum first) and the CSV export.
+# Every field type, badge tones, a required and an optional relation, an
+# optional many-to-many relation, image, rich text, filters (enum first) and
+# the CSV export.
 generate SmokeItem \
-    --fields='title:string:required,summary:text,rank:integer,price:decimal,active:boolean,published_on:date,status:enum(draft|published:success|archived:danger),faq:belongsTo(Faq.question):required,backup_faq:belongsTo(Faq.question),cover:image,body:richtext' \
+    --fields='title:string:required,summary:text,rank:integer,price:decimal,active:boolean,published_on:date,status:enum(draft|published:success|archived:danger),faq:belongsTo(Faq.question):required,backup_faq:belongsTo(Faq.question),related_faqs:belongsToMany(Faq.question),cover:image,body:richtext' \
     --searchable=title,summary \
     --sortable=title,rank,created_at \
     --filters=status,faq,active \
     --export
-# An optional relation as the first filter, a boolean filter and rich text
-# without images or enums; export without search.
+# An optional relation as the first filter, a boolean filter, a required
+# many-to-many relation and rich text without images or enums; export
+# without search.
 generate SmokeNote \
-    --fields='label:string:required,faq:belongsTo(Faq.question),enabled:boolean,notes:richtext' \
+    --fields='label:string:required,faq:belongsTo(Faq.question),faqs:belongsToMany(Faq.question):required,enabled:boolean,notes:richtext' \
     --filters=faq,enabled \
     --export
 # The plain resource without relations, filters or export.

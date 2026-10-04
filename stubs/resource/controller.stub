@@ -65,7 +65,7 @@ class {{ Model }}Controller extends Controller
      */
     public function store(Store{{ Model }}Request $request): RedirectResponse
     {
-        ${{ variable }} = {{ Model }}::query()->create($request->fieldValues());
+{{ storeStatement }}
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.created')]);
 
@@ -85,7 +85,7 @@ class {{ Model }}Controller extends Controller
      */
     public function update(Update{{ Model }}Request $request, {{ Model }} ${{ variable }}, Update{{ Model }} $update{{ Model }}): RedirectResponse
     {
-        $update{{ Model }}->handle(${{ variable }}, $request->fieldValues(), $request->expectedUpdatedAt());
+        $update{{ Model }}->handle(${{ variable }}, $request->fieldValues(), $request->expectedUpdatedAt(){{ updateRelationArgument }});
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.updated')]);
 

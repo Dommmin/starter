@@ -4,15 +4,17 @@ namespace Database\Seeders;
 
 use App\Enums\PublicationStatus;
 use App\Models\Page;
+use App\Models\PageSlugRedirect;
 use App\Models\PageTranslation;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 
 /**
  * Local sample pages: published, scheduled and draft translations, pages in
- * one to three languages, empty meta descriptions and long rich text. Slugs
+ * one to three languages, empty meta descriptions, long rich text and 301
+ * redirects from former slugs; enough pages for two admin list pages. Slugs
  * come from the {@see DemoContent} registry used by `--remove-demo`.
- * Idempotent: a page whose first seeded slug already exists is skipped.
+ * Idempotent: a page with any registered slug already present is skipped.
  */
 class PageSeeder extends Seeder
 {
@@ -59,15 +61,59 @@ class PageSeeder extends Seeder
             'en' => ['Ok', null, 'published', -1],
             'pl' => ['Ok', null, 'published', -1],
         ]],
+        'services' => ['long' => true, 'translations' => [
+            'de' => ['Leistungen', 'Websites, Pflege und Hosting für kleine Unternehmen.', 'published', -40],
+            'en' => ['Services', 'Websites, maintenance and hosting for small businesses.', 'published', -40],
+            'pl' => ['Usługi', 'Strony, opieka techniczna i hosting dla małych firm.', 'published', -40],
+        ]],
+        'pricing' => ['translations' => [
+            'en' => ['Pricing', 'Three simple packages with a fixed monthly price.', 'published', -35],
+            'pl' => ['Cennik', 'Trzy proste pakiety ze stałą miesięczną opłatą.', 'published', -35],
+        ]],
+        'portfolio' => ['long' => true, 'translations' => [
+            'en' => ['Portfolio', 'Selected projects for bakeries, clinics and associations.', 'published', -28],
+            'pl' => ['Realizacje', 'Wybrane projekty dla piekarni, gabinetów i stowarzyszeń.', 'published', -28],
+        ]],
+        'imprint' => ['translations' => [
+            'de' => ['Impressum', 'Angaben gemäß § 5 DDG.', 'published', -50],
+            'en' => ['Imprint', 'Legal information about the website operator.', 'published', -50],
+        ]],
+        'how-we-work' => ['long' => true, 'translations' => [
+            'en' => ['How we work', 'From the first call to the launch in four steps.', 'published', -14],
+            'pl' => ['Jak pracujemy', 'Od pierwszej rozmowy do startu w czterech krokach.', 'published', -14],
+        ]],
+        'partners' => ['translations' => [
+            'pl' => ['Partnerzy', 'Firmy, z którymi współpracujemy na co dzień.', 'published', -12],
+        ]],
+        'press' => ['translations' => [
+            'en' => ['Press kit', null, 'draft', 0],
+            'pl' => ['Dla prasy', null, 'draft', 0],
+        ]],
+        'workshops' => ['translations' => [
+            'de' => ['Workshops für Vereine', 'Termine im Herbst.', 'scheduled', 10],
+            'en' => ['Workshops for associations', 'Autumn dates.', 'scheduled', 10],
+            'pl' => ['Warsztaty dla stowarzyszeń', 'Terminy jesienne.', 'scheduled', 10],
+        ]],
+    ];
+
+    /**
+     * Former slugs of seeded translations as `former slug => [page key,
+     * locale]`; each one redirects (301) to the current slug.
+     *
+     * @var array<string, array{0: string, 1: string}>
+     */
+    public const array REDIRECTS = [
+        'who-we-are' => ['about', 'en'],
+        'kim-jestesmy' => ['about', 'pl'],
+        'oferta' => ['services', 'pl'],
     ];
 
     public function run(): void
     {
         foreach (self::PAGES as $key => $definition) {
             $slugs = self::slugs($key);
-            $firstLocale = (string) array_key_first($slugs);
 
-            if (PageTranslation::query()->where('locale', $firstLocale)->where('slug', $slugs[$firstLocale])->exists()) {
+            if (self::seeded($slugs)) {
                 continue;
             }
 
@@ -79,12 +125,24 @@ class PageSeeder extends Seeder
                     'title' => $title,
                     'slug' => $slugs[$locale],
                     'meta_description' => $metaDescription,
-                    'body' => ($definition['long'] ?? false)
-                        ? DemoDocument::long($locale, $metaDescription ?? $title)
-                        : DemoDocument::short($metaDescription ?? $title),
+                    'body' => DemoDocument::for($locale, $title, $metaDescription, $definition['long'] ?? false),
                     'status' => $state === 'draft' ? PublicationStatus::Draft : PublicationStatus::Published,
                     'published_at' => self::publishedAt($state, $days),
                 ]);
+            }
+        }
+
+        foreach (self::REDIRECTS as $formerSlug => [$key, $locale]) {
+            $translationId = PageTranslation::query()
+                ->where('locale', $locale)
+                ->where('slug', self::slugs($key)[$locale])
+                ->value('id');
+
+            if (is_int($translationId)) {
+                PageSlugRedirect::query()->firstOrCreate(
+                    ['locale' => $locale, 'old_slug' => $formerSlug],
+                    ['page_translation_id' => $translationId],
+                );
             }
         }
     }
@@ -100,6 +158,23 @@ class PageSeeder extends Seeder
             'scheduled' => now()->addDays($days)->startOfDay(),
             default => now()->addDays($days),
         };
+    }
+
+    /**
+     * Whether any registered translation of a sample already exists (a
+     * translation added to the registry later does not duplicate it).
+     *
+     * @param  array<string, string>  $slugs
+     */
+    private static function seeded(array $slugs): bool
+    {
+        foreach ($slugs as $locale => $slug) {
+            if (PageTranslation::query()->where('locale', $locale)->where('slug', $slug)->exists()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -17,7 +17,8 @@ use Intervention\Image\ImageManager;
 
 /**
  * Local sample DAM assets with real files generated offline with GD: images
- * of different proportions and formats, two PDFs, alt texts (some missing),
+ * of different proportions and formats, a neutral logo that suits every
+ * accent preset, two PDFs, alt texts (some missing),
  * one asset still in quarantine and one rejected.
  *
  * Demo data only: the seeder sets the scan status directly instead of
@@ -45,6 +46,9 @@ class DemoMediaSeeder extends Seeder
         'no-alt' => ['uuid' => 'de000000-0000-4000-a000-000000000010', 'name' => 'IMG_2048.jpg', 'mime' => 'image/jpeg', 'width' => 1024, 'height' => 768, 'color' => '475569', 'alt' => null, 'status' => MediaStatus::Clean],
         'pending' => ['uuid' => 'de000000-0000-4000-a000-000000000011', 'name' => 'nowe-zdjęcie.jpg', 'mime' => 'image/jpeg', 'width' => 800, 'height' => 600, 'color' => '64748b', 'alt' => null, 'status' => MediaStatus::Quarantine],
         'rejected' => ['uuid' => 'de000000-0000-4000-a000-000000000012', 'name' => 'faktura-podejrzana.jpg', 'mime' => 'image/jpeg', 'width' => 800, 'height' => 600, 'color' => '991b1b', 'alt' => null, 'status' => MediaStatus::Rejected],
+        'logo' => ['uuid' => 'de000000-0000-4000-a000-000000000015', 'name' => 'logo-pracownia.png', 'mime' => 'image/png', 'width' => 512, 'height' => 512, 'color' => '27272a', 'alt' => 'Logo Pracowni Nowak', 'status' => MediaStatus::Clean],
+        'office' => ['uuid' => 'de000000-0000-4000-a000-000000000016', 'name' => 'biuro-piotrkowska.jpg', 'mime' => 'image/jpeg', 'width' => 1600, 'height' => 1067, 'color' => '57534e', 'alt' => 'Biuro pracowni przy ulicy Piotrkowskiej', 'status' => MediaStatus::Clean],
+        'workshop' => ['uuid' => 'de000000-0000-4000-a000-000000000017', 'name' => 'workshop-laptops.jpg', 'mime' => 'image/jpeg', 'width' => 1600, 'height' => 900, 'color' => '1e3a8a', 'alt' => 'Laptops on a table during a workshop', 'status' => MediaStatus::Clean],
         'pdf' => ['uuid' => 'de000000-0000-4000-a000-000000000013', 'name' => 'cennik-2026.pdf', 'mime' => 'application/pdf', 'alt' => 'Cennik usług 2026', 'status' => MediaStatus::Clean],
         'pdf-pending' => ['uuid' => 'de000000-0000-4000-a000-000000000014', 'name' => 'terms-and-conditions.pdf', 'mime' => 'application/pdf', 'alt' => null, 'status' => MediaStatus::Quarantine],
     ];

@@ -12,16 +12,42 @@ use Illuminate\Support\Facades\DB;
 /**
  * Local sample accounts next to the sample administrator: editors, accounts
  * without a panel role, one unverified account, Polish characters and very
- * long names and e-mail addresses. Every account uses the local-only
- * password `password`. Creation is recorded as `user.created` by the sample
- * administrator. Idempotent: existing e-mail addresses are skipped.
+ * long names and e-mail addresses, plus short demo logins for every role
+ * (`editor@`, `user@`, `mfa@example.com`; the last one is an administrator
+ * with confirmed two-factor authentication). Every account uses the
+ * local-only password `password`; the TOTP secret and recovery codes below
+ * are synthetic and documented in the README. Creation is recorded as
+ * `user.created` by the sample administrator. Idempotent: existing e-mail
+ * addresses are skipped.
  */
 class DemoUserSeeder extends Seeder
 {
     /**
-     * @var array<string, array{name: string, role: UserRole|null, verified: bool}>
+     * Synthetic base32 TOTP secret of the two-factor demo account.
+     */
+    public const string TWO_FACTOR_SECRET = 'JBSWY3DPEHPK3PXP';
+
+    /**
+     * Synthetic recovery codes of the two-factor demo account.
+     *
+     * @var list<string>
+     */
+    public const array TWO_FACTOR_RECOVERY_CODES = [
+        'demo-recovery-01',
+        'demo-recovery-02',
+        'demo-recovery-03',
+        'demo-recovery-04',
+    ];
+
+    /**
+     * @var array<string, array{name: string, role: UserRole|null, verified: bool, two_factor?: bool}>
      */
     public const array USERS = [
+        'editor@example.com' => ['name' => 'Demo Editor', 'role' => UserRole::Editor, 'verified' => true],
+        'user@example.com' => ['name' => 'Demo User', 'role' => null, 'verified' => true],
+        'mfa@example.com' => ['name' => 'Demo Admin 2FA', 'role' => UserRole::Admin, 'verified' => true, 'two_factor' => true],
+        'klaus.schneider@example.com' => ['name' => 'Klaus Schneider', 'role' => null, 'verified' => true],
+        'oliwia.pazdzioch@example.com' => ['name' => 'Oliwia Paździoch', 'role' => UserRole::Editor, 'verified' => true],
         'katarzyna.wisniewska@example.com' => ['name' => 'Katarzyna Wiśniewska-Żółkiewska', 'role' => UserRole::Editor, 'verified' => true],
         'lukasz.slezak@example.com' => ['name' => 'Łukasz Ślęzak', 'role' => UserRole::Editor, 'verified' => true],
         'grzegorz.brzeczyszczykiewicz@example.com' => ['name' => 'Grzegorz Brzęczyszczykiewicz', 'role' => null, 'verified' => true],
@@ -52,6 +78,11 @@ class DemoUserSeeder extends Seeder
                     'password' => 'password',
                     'email_verified_at' => $definition['verified'] ? now() : null,
                     'role' => $definition['role'],
+                    ...(($definition['two_factor'] ?? false) ? [
+                        'two_factor_secret' => encrypt(self::TWO_FACTOR_SECRET),
+                        'two_factor_recovery_codes' => encrypt((string) json_encode(self::TWO_FACTOR_RECOVERY_CODES)),
+                        'two_factor_confirmed_at' => now(),
+                    ] : []),
                 ])->save();
 
                 $audit->handle(AuditAction::UserCreated, $user, $administrator, [

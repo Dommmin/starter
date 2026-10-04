@@ -11,6 +11,20 @@ make doctor
 
 `setup` tworzy `.env` tylko przy jego braku, buduje obraz, instaluje `composer.lock` i `package-lock.json`, generuje brakujący APP_KEY, wykonuje migracje, wgrywa idempotentne dane demo (`db:seed`: konto `test@example.com` / `password`, konta, media, strony, artykuły, FAQ, wiadomości, menu, sekcje strony głównej) i uruchamia cały stack. Kolejne wykonanie zachowuje klucz i dane, nie duplikując demo. Pierwsze pobranie obrazów wymaga internetu i może potrwać kilka minut. Setup nie importuje starego SQLite.
 
+### Konta i dane demo (tylko `APP_ENV=local`)
+
+Wszystkie konta demo mają lokalne hasło `password`; adresy są syntetyczne (`example.com`) i działają tylko w lokalnym stacku.
+
+| Konto | Rola | Do czego |
+| --- | --- | --- |
+| `test@example.com` | admin | Pełny panel, ustawienia, użytkownicy |
+| `mfa@example.com` | admin z 2FA | Logowanie z kodem TOTP: sekret `JBSWY3DPEHPK3PXP` (np. `oathtool --totp -b JBSWY3DPEHPK3PXP`) lub kod odzyskiwania `demo-recovery-01`…`04` |
+| `editor@example.com` | editor | Treści bez zarządzania użytkownikami i ustawieniami |
+| `user@example.com` | bez roli | Ustawienia konta, brak dostępu do panelu |
+| `piotr.zak@example.com` | bez roli, niezweryfikowane | Ekran weryfikacji e-maila |
+
+Seed wypełnia każdy ekran: co najmniej 16 rekordów na listach panelu (2 strony), statusy szkic/zaplanowany/opublikowany, media quarantine/clean/rejected, wiadomości pending/sent/failed, treści en/pl/de z brakującymi tłumaczeniami, długie tytuły i znaki wielobajtowe, przekierowania 301 starych slugów (`PageSeeder::REDIRECTS`, `ArticleSeeder::REDIRECTS`), menu z podmenu w trzech językach, sekcje strony głównej w innej kolejności (en) i z ukrytymi sekcjami (de) oraz dziennik zdarzeń. Sekret 2FA i kody są syntetyczne; `app:init-project --remove-demo` usuwa nieedytowane dane demo.
+
 Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:5173`, skrzynka Mailpit `http://localhost:8025`. Używaj `localhost`, aby origin HMR i cookies były spójne. Lokalny HTTP na localhost obsługuje secure-context APIs przeglądarki; certyfikaty i domeny Herda nie są potrzebne.
 
 ## Start nowego projektu

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\RedirectIfTwoFactorAuthenticatable;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Http\Responses\AuthenticatedResponse;
 use App\Services\Localization\LocalizedUrlGenerator;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -17,7 +18,10 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Contracts\RedirectsIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -32,6 +36,10 @@ class FortifyServiceProvider extends ServiceProvider
             RedirectsIfTwoFactorAuthenticatable::class,
             RedirectIfTwoFactorAuthenticatable::class,
         );
+
+        foreach ([LoginResponse::class, RegisterResponse::class, TwoFactorLoginResponse::class] as $contract) {
+            $this->app->singleton($contract, AuthenticatedResponse::class);
+        }
     }
 
     /**

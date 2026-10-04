@@ -62,6 +62,9 @@ export async function logIn(
     // Playwright matches; anchor the name so "Show password" never matches.
     await page.getByLabel(/^Password\*?$/).fill(e2ePassword());
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
+    // Signing in lands on the home page; the panel is a separate visit.
+    await expect(page).toHaveURL(/\/$/);
+    await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin$/);
 }
 

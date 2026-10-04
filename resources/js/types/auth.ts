@@ -14,6 +14,7 @@ export type User = {
 };
 
 export type AuthAbilities = {
+    accessAdminPanel: boolean;
     manageUsers: boolean;
     viewAudit: boolean;
     manageSiteSettings: boolean;

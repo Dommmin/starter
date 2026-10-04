@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 {{-- Admin panel pages (admin/*) use the admin surface; keep in sync with surfaceFor() in resources/js/lib/page-resolver.ts --}}
 @php($surface = str_starts_with($page['component'], 'admin/') ? 'admin' : null)
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) @if($surface) data-surface="{{ $surface }}" @endif>
+{{-- Accent preset from APP_ACCENT; the default needs no attribute. --}}
+@php($accent = \App\Enums\AccentColor::tryFrom((string) config('app.accent')) ?? \App\Enums\AccentColor::Default)
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) @if($surface) data-surface="{{ $surface }}" @endif @if($accent !== \App\Enums\AccentColor::Default) data-accent="{{ $accent->value }}" @endif>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -19,6 +19,9 @@ beforeEach(function () {
     $this->files->makeDirectory($this->sandbox.'/routes', 0755, true);
     $this->files->copy(base_path('routes/admin.php'), $this->sandbox.'/routes/admin.php');
 
+    $this->files->makeDirectory($this->sandbox.'/resources/js/layouts', 0755, true);
+    $this->files->copy(base_path('resources/js/layouts/admin-layout.tsx'), $this->sandbox.'/resources/js/layouts/admin-layout.tsx');
+
     foreach (ResourceGenerator::LOCALES as $locale) {
         $this->files->makeDirectory($this->sandbox."/lang/{$locale}", 0755, true);
         $this->files->copy(lang_path("{$locale}/admin.php"), $this->sandbox."/lang/{$locale}/admin.php");
@@ -129,6 +132,13 @@ test('generation writes plain files and extends routes and catalogs', function (
         ->toContain("->name('products.destroy')")
         ->toContain("->can('delete', 'product');");
 
+    $layout = $this->files->get("{$this->sandbox}/resources/js/layouts/admin-layout.tsx");
+    expect($layout)->toContain("import { index as productsIndex } from '@/routes/admin/products';")
+        ->toContain("t('admin.products.navLabel'),\n                    productsIndex(),")
+        ->toContain("    Boxes,\n")
+        ->toContain('// app:make-resource: new navigation items');
+    expect(strpos($layout, "'products',"))->toBeLessThan(strpos($layout, '// app:make-resource: new navigation items'));
+
     foreach (ResourceGenerator::LOCALES as $locale) {
         $catalog = require "{$this->sandbox}/lang/{$locale}/admin.php";
         $original = require lang_path("{$locale}/admin.php");
@@ -175,6 +185,13 @@ test('an existing route, catalog key or migration blocks the whole generation', 
             $files->put($path, str_replace("    'users' => [", "    'products' => [],\n    'users' => [", $files->get($path)));
         },
         'lang/de/admin.php already contains the [products] key.',
+    ],
+    'navigation marker' => [
+        function (Filesystem $files, string $sandbox): void {
+            $path = "{$sandbox}/resources/js/layouts/admin-layout.tsx";
+            $files->put($path, str_replace('// app:make-resource: new navigation items', '', $files->get($path)));
+        },
+        'the navigation marker',
     ],
     'migration' => [
         function (Filesystem $files, string $sandbox): void {

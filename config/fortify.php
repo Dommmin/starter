@@ -163,7 +163,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        ...(env('APP_REGISTRATION_ENABLED', true) ? [Features::registration()] : []),
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

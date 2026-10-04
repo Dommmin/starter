@@ -5,9 +5,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { PublicHeader } from './public-header';
 
+const authState = vi.hoisted(() => ({ canRegister: true }));
+
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
-        props: { auth: { user: null }, i18n: { alternateUrls: {} } },
+        props: {
+            auth: { user: null, canRegister: authState.canRegister },
+            i18n: { alternateUrls: {} },
+        },
     }),
     router: {
         on: () => () => {},
@@ -76,6 +81,25 @@ afterEach(async () => {
 });
 
 describe('PublicHeader', () => {
+    it('offers the register action only while sign-up is enabled', async () => {
+        const hasRegister = async (canRegister: boolean) => {
+            authState.canRegister = canRegister;
+            const container = await render(<PublicHeader />);
+            const found = Array.from(container.querySelectorAll('a')).some(
+                (link) => link.getAttribute('href') === '/register',
+            );
+            await act(async () => {
+                mountedRoots.splice(0).forEach((root) => root.unmount());
+            });
+            document.body.replaceChildren();
+
+            return found;
+        };
+
+        expect(await hasRegister(true)).toBe(true);
+        expect(await hasRegister(false)).toBe(false);
+    });
+
     it('keeps the theme and language switchers reachable in the mobile menu without nav items', async () => {
         const container = await render(<PublicHeader />);
 

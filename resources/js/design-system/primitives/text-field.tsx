@@ -17,6 +17,8 @@ export type TextFieldProps = FieldValueProps & {
     disabled?: boolean;
     placeholder?: string;
     autoComplete?: string;
+    /** Moves focus into the field on mount, e.g. a field revealed by the user's own action. */
+    autoFocus?: boolean;
     /**
      * Stable id for the control, e.g. so a parent can link an `ErrorSummary`
      * item to this exact field. Falls back to an internally generated id.
@@ -41,6 +43,7 @@ export function TextField({
     readOnly = false,
     placeholder,
     autoComplete,
+    autoFocus,
     id,
     ref,
 }: TextFieldProps) {
@@ -78,6 +81,7 @@ export function TextField({
                 onBlur={onBlur}
                 placeholder={placeholder}
                 autoComplete={autoComplete}
+                autoFocus={autoFocus}
                 disabled={disabled}
                 readOnly={readOnly}
                 required={isRequired}

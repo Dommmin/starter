@@ -69,6 +69,8 @@ export * from './rich-text-content';
 export * from './rich-text-field';
 export * from './search-input';
 export * from './section';
+export * from './section-nav';
+export * from './centered-layout';
 export * from './select-field';
 export * from './seo';
 export * from './session-expired';

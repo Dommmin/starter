@@ -237,11 +237,19 @@ test('sign-up is switched off unless --enable-registration is given', function (
         ->and($enabled)->toContain('APP_REGISTRATION_ENABLED=true');
 });
 
+test('the chosen accent is printed as APP_ACCENT', function () {
+    $this->app['env'] = 'local';
+
+    [, $output] = runInit(['--accent' => 'blue']);
+
+    expect($output)->toContain('APP_ACCENT=blue');
+});
+
 test('declining the confirmation leaves .env untouched', function () {
     $this->app['env'] = 'local';
 
     $this->artisan('app:init-project', [...initOptions(['--write-env' => true]), '--no-interaction' => false])
-        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED to .env?', 'no')
+        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED, APP_ACCENT to .env?', 'no')
         ->assertSuccessful();
 
     expect(file_get_contents($this->envPath))->toBe(INIT_ENV)
@@ -252,7 +260,7 @@ test('a confirmed write backs up .env and changes only the language keys', funct
     $this->app['env'] = 'local';
 
     $this->artisan('app:init-project', [...initOptions(['--write-env' => true]), '--no-interaction' => false])
-        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED to .env?', 'yes')
+        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED, APP_ACCENT to .env?', 'yes')
         ->expectsOutputToContain('make restart')
         ->assertSuccessful();
 
@@ -262,7 +270,7 @@ test('a confirmed write backs up .env and changes only the language keys', funct
         ->and(file_get_contents($backups[0]))->toBe(INIT_ENV)
         ->and(fileperms($backups[0]) & 0777)->toBe(0600)
         ->and(file_get_contents($this->envPath))->toBe(
-            "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=pl,en\nAPP_ENV=local\nAPP_PUBLIC_DEFAULT=pl\nAPP_PUBLIC_FALLBACK=pl\nAPP_REGISTRATION_ENABLED=false\n",
+            "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=pl,en\nAPP_ENV=local\nAPP_PUBLIC_DEFAULT=pl\nAPP_PUBLIC_FALLBACK=pl\nAPP_REGISTRATION_ENABLED=false\nAPP_ACCENT=default\n",
         );
 });
 

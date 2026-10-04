@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/react';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ResourceForm, type ResourceFormSection } from './resource-form';
 import {
     isAllowedRichTextHref,
@@ -80,6 +80,16 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 
     return container;
 }
+
+beforeAll(async () => {
+    // Warm the lazily imported editor and picker dialog chunks so the tests
+    // measure the field, not the cold module transform of the first dynamic
+    // import under a loaded test runner (it can exceed the polling budget).
+    await Promise.all([
+        import('./rich-text-editor'),
+        import('./rich-text-image-dialog'),
+    ]);
+});
 
 /** The editor chunk is lazy-loaded after mount; wait until Tiptap renders. */
 async function waitForEditor(container: HTMLElement): Promise<void> {

@@ -494,7 +494,44 @@ test('relations, rich text and badge tones are validated before planning', funct
     'many relation to itself' => [['--fields' => 'name:string,products:belongsToMany(Product.name)'], 'a belongsToMany relation to the resource itself is not supported'],
     'only many relations' => [['--fields' => 'faqs:belongsToMany(Faq.question)'], 'At least one column field is required besides belongsToMany relations.'],
     'many relation as a filter' => [['--fields' => 'name:string,faqs:belongsToMany(Faq.question)', '--filters' => 'faqs'], 'Filter [faqs] must be a boolean or enum field'],
+    'owned resource with a user field' => [['--fields' => 'name:string,user:string', '--owned' => true], 'Field [user] collides with the owner relation added by --owned'],
 ]);
+
+test('an owned resource stores its owner server-side and lets only the owner reach a record', function () {
+    $this->artisan('app:make-resource', [...$this->productArguments, '--owned' => true])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+    $model = $read('app/Models/Product.php');
+    $policy = $read('app/Policies/ProductPolicy.php');
+    $controller = $read('app/Http/Controllers/Admin/Products/ProductController.php');
+
+    expect($migration)->toContain("\$table->foreignId('user_id')->index()->constrained('users')->cascadeOnDelete();")
+        ->and($model)->toContain('return $this->belongsTo(User::class);')
+        ->and($model)->not->toContain("'user_id'")
+        ->and($read('database/factories/ProductFactory.php'))->toContain("'user_id' => User::factory(),")
+        ->and($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))->not->toContain('user_id');
+
+    expect($policy)->toContain('return $user->canAccessAdminPanel() && $user->id === $product->user_id;')
+        ->not->toContain('isAdmin()');
+
+    expect($controller)
+        ->toContain("Product::query()->where('user_id', \$request->user()?->id)")
+        ->toContain('$product->user()->associate($request->user());')
+        ->toContain(': ($user?->canAccessAdminPanel() ?? false),');
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('another user cannot open, change or delete a product, administrators included'")
+        ->toContain("test('a new product belongs to its creator whatever user_id is submitted'")
+        ->toContain('Product::factory()->for($admin)->create();');
+});
+
+test('a resource without --owned keeps the panel-wide policy', function () {
+    $this->artisan('app:make-resource', $this->productArguments)->assertSuccessful();
+
+    expect($this->files->get("{$this->sandbox}/app/Policies/ProductPolicy.php"))->toContain('return $user->isAdmin();')
+        ->and($this->files->get("{$this->sandbox}/app/Models/Product.php"))->not->toContain('user_id');
+});
 
 test('a belongsToMany relation gets a pivot table, a synced multi-select and its own tests', function () {
     copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');

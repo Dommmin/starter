@@ -36,7 +36,7 @@ class {{ Model }}Controller extends Controller
         $listQuery = $request->listQuery();
         $validated = $request->validated();
 
-        $paginator = $listQuery->paginate({{ Model }}::query(){{ with }}, $validated);
+        $paginator = $listQuery->paginate({{ Model }}::query(){{ ownerScope }}{{ with }}, $validated);
 
         $items = [];
         foreach ($paginator->items() as ${{ variable }}) {
@@ -123,7 +123,7 @@ class {{ Model }}Controller extends Controller
             create: $user?->can('create', {{ Model }}::class) ?? false,
             delete: ${{ variable }} !== null
                 ? ($user?->can('delete', ${{ variable }}) ?? false)
-                : ($user?->isAdmin() ?? false),
+                : ({{ listDeleteAbility }}),
 {{ exportAbility }}
         );
     }

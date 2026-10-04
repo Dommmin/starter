@@ -29,7 +29,7 @@ test('guests are redirected to the login page', function () {
 
 test('the list exposes the typed list payload with defaults', function () {
     $editor = User::factory()->editor()->create();
-    ${{ variable }} = {{ Model }}::factory()->create();
+    ${{ variable }} = {{ Model }}::factory(){{ ownedByEditor }}->create();
 
     $this->actingAs($editor)->get(route('admin.{{ kebabPlural }}.index'))
         ->assertOk()
@@ -103,7 +103,7 @@ test('store validates required fields and creates nothing', function () {
 {{ manyRelationTests }}
 test('the edit screen exposes the stored values and the version for locking', function () {
     $admin = User::factory()->admin()->create();
-    ${{ variable }} = {{ Model }}::factory()->create();
+    ${{ variable }} = {{ Model }}::factory(){{ ownedByAdmin }}->create();
 
     $this->actingAs($admin)->get(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
         ->assertOk()
@@ -117,7 +117,7 @@ test('the edit screen exposes the stored values and the version for locking', fu
 
 test('an update with the current version saves the values', function () {
     $admin = User::factory()->admin()->create();
-    ${{ variable }} = {{ Model }}::factory()->create();
+    ${{ variable }} = {{ Model }}::factory(){{ ownedByAdmin }}->create();
 
     $this->travel(5)->minutes();
 
@@ -137,7 +137,7 @@ test('an update with the current version saves the values', function () {
 
 test('a stale version is rejected with a conflict error and nothing changes', function () {
     $admin = User::factory()->admin()->create();
-    ${{ variable }} = {{ Model }}::factory()->create();
+    ${{ variable }} = {{ Model }}::factory(){{ ownedByAdmin }}->create();
     $original = ${{ variable }}->fresh()?->toArray();
 
     $this->actingAs($admin)
@@ -169,7 +169,7 @@ test('users without a panel role can neither open nor mutate {{ pluralLower }}',
         ->and(${{ variable }}->fresh()?->toArray())->toBe($original);
 });
 
-test('an editor cannot delete a {{ singularLower }}', function () {
+test('{{ editorDeleteTitle }}', function () {
     $editor = User::factory()->editor()->create();
     ${{ variable }} = {{ Model }}::factory()->create();
 
@@ -180,7 +180,7 @@ test('an editor cannot delete a {{ singularLower }}', function () {
 
 test('an admin deletes a {{ singularLower }}', function () {
     $admin = User::factory()->admin()->create();
-    ${{ variable }} = {{ Model }}::factory()->create();
+    ${{ variable }} = {{ Model }}::factory(){{ ownedByAdmin }}->create();
 
     $this->actingAs($admin)->delete(route('admin.{{ kebabPlural }}.destroy', ${{ variable }}))
         ->assertRedirect(route('admin.{{ kebabPlural }}.index'))
@@ -188,4 +188,5 @@ test('an admin deletes a {{ singularLower }}', function () {
 
     expect({{ Model }}::query()->count())->toBe(0);
 });
+{{ ownedTests }}
 {{ exportTests }}

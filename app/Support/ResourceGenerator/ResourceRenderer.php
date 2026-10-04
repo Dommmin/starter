@@ -80,7 +80,7 @@ final class ResourceRenderer
             "app/Models/{$model}.php" => $this->php('model', $resource, [
                 'imports' => $this->imports([
                     ...$this->enumImportList($resource),
-                    ...($this->relationFields($resource) === [] ? [] : ['Illuminate\Database\Eloquent\Relations\BelongsTo']),
+                    ...($this->relationFields($resource) === [] && ! $resource->owned ? [] : ['Illuminate\Database\Eloquent\Relations\BelongsTo']),
                     ...($resource->manyRelations === [] ? [] : ['Illuminate\Database\Eloquent\Collection', 'Illuminate\Database\Eloquent\Relations\BelongsToMany']),
                 ]),
                 'propertyDocs' => $this->propertyDocs($resource),
@@ -92,11 +92,12 @@ final class ResourceRenderer
                 'imports' => $this->imports([
                     ...$this->enumImportList($resource),
                     ...array_map(fn (ResourceField $field): string => 'App\\Models\\'.$field->relatedClass(), $resource->fieldsOfType('belongsTo')),
+                    ...($resource->owned ? ['App\Models\User'] : []),
                 ]),
                 'definition' => $this->factoryDefinition($resource),
             ]),
             "database/seeders/{$model}Seeder.php" => $this->php('seeder', $resource),
-            "app/Policies/{$model}Policy.php" => $this->php('policy', $resource, [
+            "app/Policies/{$model}Policy.php" => $this->php($resource->owned ? 'policy.owned' : 'policy', $resource, [
                 'exportMethod' => $resource->export ? $this->policyExportMethod($resource) : null,
             ]),
             "app/Actions/{$plural}/Update{$model}.php" => $this->php('action.update', $resource, $this->updateActionFragments($resource)),
@@ -206,6 +207,12 @@ final class ResourceRenderer
                 'invalidValue' => $this->invalidValue($resource->fields[0]),
                 'referenceTests' => $this->referenceTests($resource),
                 'manyRelationTests' => $this->manyRelationTests($resource),
+                'ownedTests' => $this->ownedTests($resource),
+                'ownedByEditor' => $resource->owned ? '->for($editor)' : '',
+                'ownedByAdmin' => $resource->owned ? '->for($admin)' : '',
+                'editorDeleteTitle' => $resource->owned
+                    ? 'an editor cannot delete a '.Str::lower($resource->singularLabel()).' of another user'
+                    : 'an editor cannot delete a '.Str::lower($resource->singularLabel()),
                 'forbiddenExport' => $this->forbiddenExport($resource),
                 'exportTests' => $this->exportTests($resource),
             ]),
@@ -543,7 +550,8 @@ final class ResourceRenderer
 
     private function migrationColumns(ResourceBlueprint $resource): string
     {
-        $lines = [];
+        // The owner of an --owned record; deleting the account deletes its records.
+        $lines = $resource->owned ? ["            \$table->foreignId('user_id')->index()->constrained('users')->cascadeOnDelete();"] : [];
         foreach ($resource->fields as $field) {
             if ($field->isRelation()) {
                 $table = $field->type === 'image' ? 'media_assets' : Str::snake(Str::pluralStudly($field->relatedClass()));
@@ -577,6 +585,24 @@ final class ResourceRenderer
         }
 
         return implode(PHP_EOL, $lines);
+    }
+
+    /**
+     * Restricts the list and the export of an --owned resource to the
+     * signed-in owner (no user: no rows).
+     */
+    private function ownerScope(ResourceBlueprint $resource): string
+    {
+        return $resource->owned ? "->where('user_id', \$request->user()?->id)" : '';
+    }
+
+    /**
+     * `Model::factory()` of a generated test; an --owned record belongs to
+     * the acting user so the owner-only policy lets the test reach it.
+     */
+    private function ownedFactory(ResourceBlueprint $resource, string $actor): string
+    {
+        return "{$resource->model}::factory()".($resource->owned ? "->for(\${$actor})" : '');
     }
 
     /**
@@ -694,7 +720,7 @@ final class ResourceRenderer
 
     private function propertyDocs(ResourceBlueprint $resource): string
     {
-        $lines = [];
+        $lines = $resource->owned ? [' * @property int $user_id'] : [];
         foreach ($resource->fields as $field) {
             $type = match ($field->type) {
                 'integer', 'belongsTo', 'image' => 'int',
@@ -714,6 +740,10 @@ final class ResourceRenderer
 
         foreach ($resource->manyRelations as $field) {
             $lines[] = " * @property-read Collection<int, {$field->relatedClass()}> \${$field->relation()}";
+        }
+
+        if ($resource->owned) {
+            $lines[] = ' * @property-read User $user';
         }
 
         return implode(PHP_EOL, $lines);
@@ -744,6 +774,21 @@ final class ResourceRenderer
     private function relationMethods(ResourceBlueprint $resource): ?string
     {
         $methods = [];
+
+        if ($resource->owned) {
+            $methods[] = <<<'PHP'
+
+                /**
+                 * Owner of the record; set by the server, never from the request.
+                 *
+                 * @return BelongsTo<User, $this>
+                 */
+                public function user(): BelongsTo
+                {
+                    return $this->belongsTo(User::class);
+                }
+            PHP;
+        }
         foreach ($this->relationFields($resource) as $field) {
             $class = $field->relatedClass();
             $methods[] = <<<PHP
@@ -777,7 +822,7 @@ final class ResourceRenderer
 
     private function factoryDefinition(ResourceBlueprint $resource): string
     {
-        $lines = [];
+        $lines = $resource->owned ? ["            'user_id' => User::factory(),"] : [];
         foreach ($resource->fields as $field) {
             $value = match ($field->type) {
                 'string' => 'fake()->words(3, true)',
@@ -862,7 +907,12 @@ final class ResourceRenderer
         }
 
         $variable = '$'.$resource->variable();
-        $storeStatement = "        {$variable} = {$resource->model}::query()->create(\$request->fieldValues());";
+        $model = $resource->model;
+        // An --owned record gets its owner from the session, never from the request.
+        $create = $resource->owned
+            ? ["{$variable} = new {$model}(\$request->fieldValues());", "{$variable}->user()->associate(\$request->user());", "{$variable}->save();"]
+            : ["{$variable} = {$model}::query()->create(\$request->fieldValues());"];
+        $storeStatement = implode(PHP_EOL, array_map(fn (string $line): string => "        {$line}", $create));
         if ($resource->manyRelations !== []) {
             $classes[] = 'Illuminate\Support\Facades\DB';
             $syncs = implode(PHP_EOL, array_map(
@@ -871,7 +921,7 @@ final class ResourceRenderer
             ));
             $storeStatement = implode(PHP_EOL, [
                 "        {$variable} = DB::transaction(function () use (\$request): {$resource->model} {",
-                "            {$variable} = {$resource->model}::query()->create(\$request->fieldValues());",
+                ...array_map(fn (string $line): string => "            {$line}", $create),
                 '            $relationIds = $request->relationIds();',
                 $syncs,
                 '',
@@ -883,6 +933,8 @@ final class ResourceRenderer
         return [
             'imports' => $this->imports($classes),
             'storeStatement' => $storeStatement,
+            'ownerScope' => $this->ownerScope($resource),
+            'listDeleteAbility' => $resource->owned ? '$user?->canAccessAdminPanel() ?? false' : '$user?->isAdmin() ?? false',
             'updateRelationArgument' => $resource->manyRelations === [] ? '' : ', $request->relationIds()',
             'constants' => ! $resource->export ? null : implode(PHP_EOL, [
                 '    /**',
@@ -945,7 +997,7 @@ final class ResourceRenderer
                 \$validated = \$request->validated();
                 \$maxRows = self::exportMaxRows();
 
-                \$query = \$listQuery->apply({$model}::query(){$with}, \$validated);
+                \$query = \$listQuery->apply({$model}::query(){$this->ownerScope($resource)}{$with}, \$validated);
                 \$rows = (clone \$query)->reorder()->count();
 
                 if (\$rows > \$maxRows) {
@@ -2224,13 +2276,85 @@ final class ResourceRenderer
 
     private function editorAbilities(ResourceBlueprint $resource): string
     {
+        // Owners delete their own records, so an editor sees the delete action.
+        $delete = $resource->owned ? 'true' : 'false';
+
         return $resource->export
-            ? "'create' => true, 'delete' => false, 'export' => false"
-            : "'create' => true, 'delete' => false";
+            ? "'create' => true, 'delete' => {$delete}, 'export' => false"
+            : "'create' => true, 'delete' => {$delete}";
+    }
+
+    /**
+     * Owner-only behaviour of an --owned resource: the scoped list, the
+     * server-side owner and the refusal for every other user.
+     */
+    private function ownedTests(ResourceBlueprint $resource): ?string
+    {
+        if (! $resource->owned) {
+            return null;
+        }
+
+        $model = $resource->model;
+        $variable = $resource->variable();
+        $kebab = $resource->kebabPlural();
+        $singular = Str::lower($resource->singularLabel());
+
+        return <<<PHP
+
+        test('the list shows only the {$resource->pluralLabel()} of the signed-in owner', function () {
+            \$owner = User::factory()->editor()->create();
+            \$mine = {$model}::factory()->for(\$owner)->create();
+            {$model}::factory()->create();
+
+            \$this->actingAs(\$owner)->get(route('admin.{$kebab}.index'))
+                ->assertOk()
+                ->assertInertia(fn (Assert \$inertia) => \$inertia
+                    ->has('items', 1)
+                    ->where('items.0.id', \$mine->id)
+                );
+        });
+
+        test('a new {$singular} belongs to its creator whatever user_id is submitted', function () {
+            \$editor = User::factory()->editor()->create();
+            \$other = User::factory()->editor()->create();
+
+            \$this->actingAs(\$editor)->post(route('admin.{$kebab}.store'), {$variable}Payload(['user_id' => \$other->id]))
+                ->assertSessionHasNoErrors();
+
+            expect({$model}::query()->sole()->user_id)->toBe(\$editor->id);
+        });
+
+        test('another user cannot open, change or delete a {$singular}, administrators included', function () {
+            \$owner = User::factory()->editor()->create();
+            \${$variable} = {$model}::factory()->for(\$owner)->create();
+            \$original = \${$variable}->fresh()?->toArray();
+
+            foreach ([User::factory()->editor()->create(), User::factory()->admin()->create()] as \$intruder) {
+                \$this->actingAs(\$intruder)->get(route('admin.{$kebab}.edit', \${$variable}))->assertForbidden();
+                \$this->actingAs(\$intruder)->put(route('admin.{$kebab}.update', \${$variable}), {$variable}Payload([
+                    'updated_at' => \${$variable}->updated_at?->toIso8601String(),
+                ]))->assertForbidden();
+                \$this->actingAs(\$intruder)->delete(route('admin.{$kebab}.destroy', \${$variable}))->assertForbidden();
+            }
+
+            expect(\${$variable}->fresh()?->toArray())->toBe(\$original);
+        });
+
+        test('the owner deletes their {$singular}', function () {
+            \$editor = User::factory()->editor()->create();
+            \${$variable} = {$model}::factory()->for(\$editor)->create();
+
+            \$this->actingAs(\$editor)->delete(route('admin.{$kebab}.destroy', \${$variable}))
+                ->assertRedirect(route('admin.{$kebab}.index'));
+
+            expect({$model}::query()->count())->toBe(0);
+        });
+        PHP;
     }
 
     private function searchTest(ResourceBlueprint $resource): string
     {
+        $factory = $this->ownedFactory($resource, 'admin');
         if ($resource->searchable === []) {
             return '';
         }
@@ -2244,8 +2368,8 @@ final class ResourceRenderer
 
         test('search matches the searchable columns', function () {
             \$admin = User::factory()->admin()->create();
-            \$match = {$model}::factory()->create(['{$column}' => 'Needle in a haystack']);
-            {$model}::factory()->create(['{$column}' => 'Something else']);
+            \$match = {$factory}->create(['{$column}' => 'Needle in a haystack']);
+            {$factory}->create(['{$column}' => 'Something else']);
 
             \$this->actingAs(\$admin)->get(route('{$route}', ['search' => 'needle']))
                 ->assertOk()
@@ -2295,6 +2419,7 @@ final class ResourceRenderer
 
     private function filterTest(ResourceBlueprint $resource): string
     {
+        $factory = $this->ownedFactory($resource, 'admin');
         $field = $resource->filterFields()[0] ?? null;
         if ($field === null) {
             return '';
@@ -2309,21 +2434,21 @@ final class ResourceRenderer
             $active = "'yes'";
             $expected = "'yes'";
             $matching = "['{$field->name}' => true]";
-            $other = "{$model}::factory()->create(['{$field->name}' => false]);";
+            $other = "{$factory}->create(['{$field->name}' => false]);";
         } elseif ($field->type === 'belongsTo') {
             $related = $field->relatedClass();
             $setup = PHP_EOL."    \$related = {$related}::factory()->create();";
             $active = '(string) $related->id';
             $expected = '(string) $related->id';
             $matching = "['{$field->column()}' => \$related->id]";
-            $other = "{$model}::factory()->create();";
+            $other = "{$factory}->create();";
         } else {
             $enum = $field->enumClass($model);
             $active = "'{$field->enumValues[0]}'";
             $expected = $active;
             $matching = "['{$field->name}' => {$enum}::".ResourceField::enumCase($field->enumValues[0]).']';
             $other = count($field->enumValues) > 1
-                ? "{$model}::factory()->create(['{$field->name}' => {$enum}::".ResourceField::enumCase($field->enumValues[1]).']);'
+                ? "{$factory}->create(['{$field->name}' => {$enum}::".ResourceField::enumCase($field->enumValues[1]).']);'
                 : '';
         }
 
@@ -2333,7 +2458,7 @@ final class ResourceRenderer
 
         test('the {$field->name} filter narrows the list and rejects unknown values', function () {
             \$admin = User::factory()->admin()->create();{$setup}
-            \$match = {$model}::factory()->create({$matching});{$otherLine}
+            \$match = {$factory}->create({$matching});{$otherLine}
 
             \$this->actingAs(\$admin)->get(route('{$route}', ['{$field->name}' => {$active}]))
                 ->assertOk()
@@ -2358,6 +2483,7 @@ final class ResourceRenderer
      */
     private function referenceTests(ResourceBlueprint $resource): string
     {
+        $factory = $this->ownedFactory($resource, 'admin');
         $cases = [];
         foreach ($resource->fields as $field) {
             $value = match ($field->type) {
@@ -2393,7 +2519,7 @@ final class ResourceRenderer
 
         test('invalid references and documents are rejected without changing the record', function (string \$field, Closure \$value) {
             \$admin = User::factory()->admin()->create();
-            {$variable} = {$model}::factory()->create();
+            {$variable} = {$factory}->create();
             \$original = {$variable}->fresh()?->toArray();
 
             \$this->actingAs(\$admin)
@@ -2427,6 +2553,7 @@ final class ResourceRenderer
 
     private function exportTests(ResourceBlueprint $resource): ?string
     {
+        $factory = $this->ownedFactory($resource, 'admin');
         if (! $resource->export) {
             return null;
         }
@@ -2509,7 +2636,7 @@ final class ResourceRenderer
         }
 
         $hasOther = $filter !== null && ($filter->type !== 'enum' || count($filter->enumValues) > 1);
-        $otherLine = $hasOther ? PHP_EOL."    {$model}::factory()->create([".implode(', ', $otherAttributes).']);' : '';
+        $otherLine = $hasOther ? PHP_EOL."    {$factory}->create([".implode(', ', $otherAttributes).']);' : '';
         $setupLines = $setup === [] ? '' : implode(PHP_EOL, $setup).PHP_EOL;
         $headerList = implode(', ', $headers);
         $matchList = implode(', ', $matchAttributes);
@@ -2541,7 +2668,7 @@ final class ResourceRenderer
 
         test('an admin exports the filtered list as CSV with labels and safe cells', function () {
             \$admin = User::factory()->admin()->create();
-        {$setupLines}    \$match = {$model}::factory()->create([{$matchList}]);{$otherLine}
+        {$setupLines}    \$match = {$factory}->create([{$matchList}]);{$otherLine}
 
             \$response = \$this->actingAs(\$admin)->get(route('admin.{$kebab}.export', [{$queryList}]));
 
@@ -2566,7 +2693,7 @@ final class ResourceRenderer
         test('an export above the row limit is refused without a file or an audit entry', function () {
             config(['exports.{$kebab}.max_rows' => 1]);
             \$admin = User::factory()->admin()->create();
-            {$model}::factory()->count(2)->create();
+            {$factory}->count(2)->create();
 
             \$this->actingAs(\$admin)->get(route('admin.{$kebab}.export'))
                 ->assertStatus(422)

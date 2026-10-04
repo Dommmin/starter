@@ -67,6 +67,8 @@ final readonly class ResourceBlueprint
      * @param  bool  $export  Whether the list gets a CSV export (admins only).
      * @param  list<ResourceField>  $manyRelations  belongsToMany fields: no column on the
      *                                              resource table, edited with a multi-select.
+     * @param  bool  $owned  Whether every record belongs to the user who created it
+     *                       (`user_id`, owner-only policy, list scoped to the owner).
      */
     private function __construct(
         public string $model,
@@ -76,6 +78,7 @@ final readonly class ResourceBlueprint
         public array $filters,
         public bool $export = false,
         public array $manyRelations = [],
+        public bool $owned = false,
     ) {}
 
     /**
@@ -83,7 +86,7 @@ final readonly class ResourceBlueprint
      *
      * @throws InvalidArgumentException With every problem found, one per line.
      */
-    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false): self
+    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false, bool $owned = false): self
     {
         $errors = self::validateName($name);
 
@@ -95,6 +98,14 @@ final readonly class ResourceBlueprint
 
         if ($allFields !== [] && $parsedFields === []) {
             $errors[] = 'At least one column field is required besides belongsToMany relations.';
+        }
+
+        if ($owned) {
+            foreach ($allFields as $field) {
+                if (in_array($field->name, ['user', 'user_id'], true) || $field->column() === 'user_id') {
+                    $errors[] = "Field [{$field->name}] collides with the owner relation added by --owned (user, user_id).";
+                }
+            }
         }
 
         foreach ($manyRelations as $relation) {
@@ -145,6 +156,7 @@ final readonly class ResourceBlueprint
             filters: $filterList,
             export: $export,
             manyRelations: $manyRelations,
+            owned: $owned,
         );
     }
 

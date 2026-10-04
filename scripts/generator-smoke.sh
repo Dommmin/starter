@@ -110,6 +110,14 @@ generate SmokeNote \
 generate SmokeTag \
     --fields='name:string:required,weight:integer:required,starts_on:date' \
     --sortable=name,weight
+# An owned resource (owner-only policy, scoped list) with search, an enum
+# filter, a many-to-many relation and the export.
+generate SmokeTask \
+    --fields='title:string:required,state:enum(open|done:success),faqs:belongsToMany(Faq.question),due_on:date' \
+    --searchable=title \
+    --filters=state \
+    --export \
+    --owned
 
 step "Pint (generated files, routes and catalogs)"
 # shellcheck disable=SC2086
@@ -137,4 +145,4 @@ step "UI contract (generated pages)"
 # shellcheck disable=SC2086
 node scripts/check-ui-contract.mjs --files $GENERATED_UI
 
-step "Generator smoke passed: SmokeItem, SmokeNote and SmokeTag generated and verified without manual fixes"
+step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag and SmokeTask generated and verified without manual fixes"

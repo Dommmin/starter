@@ -19,6 +19,7 @@ use RuntimeException;
     {--sortable= : Comma separated sortable columns (non-text, non-relation fields, id, created_at, updated_at); default created_at}
     {--filters= : Comma separated boolean/enum/belongsTo fields offered as list filters}
     {--export : Add a CSV export of the filtered list (administrators only, audited)}
+    {--owned : Records belong to their creator: user_id, owner-only policy (also for administrators) and a list scoped to the owner}
     {--dry-run : List the files that would be created or changed without writing anything}
     {--no-format : Skip Pint and the frontend formatter on the generated files}', aliases: ['make:admin-resource'])]
 #[Description('Generate a plain admin CRUD resource (migration, model, factory, seeder, policy, controller, requests, Data, React pages, i18n, routes and tests)')]
@@ -37,6 +38,7 @@ class MakeAdminResourceCommand extends Command
                 (string) $this->option('sortable'),
                 (string) $this->option('filters'),
                 (bool) $this->option('export'),
+                (bool) $this->option('owned'),
             );
         } catch (InvalidArgumentException $exception) {
             foreach (explode(PHP_EOL, $exception->getMessage()) as $message) {

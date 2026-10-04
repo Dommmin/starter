@@ -125,10 +125,14 @@ final class ResourceRenderer
                     : $this->validatedColumns($resource, []),
                 'relationIdsMethod' => $this->storeRelationIdsMethod($resource),
                 'blankInputsMethod' => $this->blankInputsMethod($resource),
+                'slugMethod' => $this->slugMethod($resource),
+                'ruleParameter' => $resource->public ? "?{$model} \${$resource->variable()} = null" : '',
                 'sanitizeMethod' => $this->sanitizeMethod($resource),
             ]),
             "app/Http/Requests/Admin/{$plural}/Update{$model}Request.php" => $this->php('request.update', $resource, [
                 'prepareInput' => $this->prepareInput($resource, "Store{$model}Request"),
+                'ruleRecord' => $resource->public ? "        \$record = \$this->route('{$resource->variable()}');".PHP_EOL : null,
+                'ruleArgument' => $resource->public ? "\$record instanceof {$model} ? \$record : null" : '',
                 'updateFieldValues' => $resource->hasType('richtext')
                     ? "Store{$model}Request::sanitizeRichText(".$this->validatedColumns($resource, ['updated_at']).')'
                     : $this->validatedColumns($resource, ['updated_at']),
@@ -212,6 +216,7 @@ final class ResourceRenderer
                 'referenceTests' => $this->referenceTests($resource),
                 'manyRelationTests' => $this->manyRelationTests($resource),
                 'ownedTests' => $this->ownedTests($resource),
+                'publicSlugTests' => $this->publicSlugTests($resource),
                 'ownedByEditor' => $resource->owned ? '->for($editor)' : '',
                 'ownedByAdmin' => $resource->owned ? '->for($admin)' : '',
                 'editorDeleteTitle' => $resource->owned
@@ -221,6 +226,10 @@ final class ResourceRenderer
                 'exportTests' => $this->exportTests($resource),
             ]),
         ];
+
+        if ($resource->public) {
+            $files = [...$files, ...$this->publicFiles($resource)];
+        }
 
         foreach ($resource->enumFields() as $field) {
             $enum = $field->enumClass($model);
@@ -235,6 +244,89 @@ final class ResourceRenderer
         }
 
         return $files;
+    }
+
+    /**
+     * Files of the public list and detail pages of a `--public` resource.
+     *
+     * @return array<string, string>
+     */
+    private function publicFiles(ResourceBlueprint $resource): array
+    {
+        $model = $resource->model;
+        $variable = '$'.$resource->variable();
+        $title = $resource->titleField();
+        $summary = $resource->fieldsOfType('text')[0] ?? null;
+        $body = $resource->fieldsOfType('richtext')[0] ?? null;
+        $pages = 'resources/js/pages/public/'.$resource->kebabPlural();
+
+        $shared = [
+            'titleColumn' => $title?->column() ?? 'id',
+            'summaryValue' => $summary === null ? 'null' : "{$variable}->{$summary->column()}",
+        ];
+
+        return [
+            "app/Http/Controllers/Content/Public{$model}Controller.php" => $this->php('public.controller', $resource, [
+                ...$shared,
+                'imports' => $body === null ? null : 'use App\Services\Content\RichTextRenderer;',
+                'dependencies' => $body === null ? null : '        private readonly RichTextRenderer $richText,',
+                'bodyValue' => $body === null
+                    ? 'null'
+                    : "{$variable}->{$body->column()} === null ? null : \$this->richText->toHtml({$variable}->{$body->column()})",
+            ]),
+            "app/Data/Content/Public{$model}SummaryData.php" => $this->php('public.data.summary', $resource, $shared),
+            "app/Data/Content/Public{$model}ListData.php" => $this->php('public.data.list', $resource),
+            "app/Data/Content/Public{$model}Data.php" => $this->php('public.data', $resource),
+            "app/Actions/Seo/{$resource->plural()}SitemapSource.php" => $this->php('public.sitemap', $resource),
+            "{$pages}/index.tsx" => $this->render('react.public-index', $resource),
+            "{$pages}/show.tsx" => $this->render('react.public-show', $resource),
+            "tests/Feature/Content/Public{$model}Test.php" => $this->php('test.public', $resource, $shared),
+        ];
+    }
+
+    /**
+     * Admin-side checks of the slug of a `--public` resource.
+     */
+    private function publicSlugTests(ResourceBlueprint $resource): ?string
+    {
+        $title = $resource->titleField();
+        if (! $resource->public || $title === null) {
+            return null;
+        }
+
+        return PHP_EOL.$this->render('test.feature-slug', $resource, [
+            'titleField' => $title->name,
+            'titleColumn' => $title->column(),
+            'ownedByEditor' => $resource->owned ? '->for($editor)' : '',
+        ]);
+    }
+
+    /**
+     * Public routes appended at the marker of routes/front.php.
+     */
+    public function publicRoutesBlock(ResourceBlueprint $resource): string
+    {
+        return $this->render('routes.public', $resource);
+    }
+
+    /**
+     * The `{camelPlural}` entry of the public catalog for one locale.
+     */
+    public function publicLangBlock(ResourceBlueprint $resource, string $locale): string
+    {
+        $texts = [
+            'en' => ['title' => $resource->pluralLabel(), 'description' => 'Browse the published '.Str::lower($resource->pluralLabel()).'.', 'empty' => 'Nothing has been published here yet.', 'backToList' => 'Back to the list', 'updatedOn' => 'Updated :date', 'previousPage' => 'Previous page', 'nextPage' => 'Next page', 'paginationSummary' => 'Page :page of :total'],
+            'pl' => ['title' => $resource->pluralLabel(), 'description' => 'Przeglądaj opublikowane wpisy.', 'empty' => 'Nic tu jeszcze nie opublikowano.', 'backToList' => 'Wróć do listy', 'updatedOn' => 'Zaktualizowano :date', 'previousPage' => 'Poprzednia strona', 'nextPage' => 'Następna strona', 'paginationSummary' => 'Strona :page z :total'],
+            'de' => ['title' => $resource->pluralLabel(), 'description' => 'Veröffentlichte Einträge durchsuchen.', 'empty' => 'Hier wurde noch nichts veröffentlicht.', 'backToList' => 'Zurück zur Liste', 'updatedOn' => 'Aktualisiert am :date', 'previousPage' => 'Vorherige Seite', 'nextPage' => 'Nächste Seite', 'paginationSummary' => 'Seite :page von :total'],
+        ][$locale];
+
+        $lines = ["    '{$resource->camelPlural()}' => ["];
+        foreach ($texts as $key => $text) {
+            $lines[] = "        '{$key}' => '".str_replace("'", "\\'", $text)."',";
+        }
+        $lines[] = '    ],';
+
+        return implode(PHP_EOL, $lines);
     }
 
     /**
@@ -434,8 +526,12 @@ final class ResourceRenderer
             $classes[] = 'App\\Models\\'.$field->relatedClass();
         }
 
-        if ($resource->enumFields() !== [] || $resource->optionFields() !== []) {
+        if ($resource->enumFields() !== [] || $resource->optionFields() !== [] || $resource->public) {
             $classes[] = 'Illuminate\Validation\Rule';
+        }
+
+        if ($resource->public) {
+            $classes[] = 'Illuminate\Support\Str';
         }
 
         if ($resource->manyRelations !== []) {
@@ -475,19 +571,64 @@ final class ResourceRenderer
      */
     private function prepareInput(ResourceBlueprint $resource, string $owner): ?string
     {
-        if ($this->blankableFields($resource) === []) {
+        $merges = [];
+        $docs = [];
+
+        if ($this->blankableFields($resource) !== []) {
+            $merges[] = "        \$this->merge({$owner}::blankOptionalInputsAsNull(\$this->all()));";
+            $docs[] = '     * Blank optional number, date, relation and image inputs mean "no value".';
+        }
+
+        if ($resource->public) {
+            $merges[] = "        \$this->merge({$owner}::defaultSlug(\$this->all()));";
+            $docs[] = '     * A blank slug is derived from the title.';
+        }
+
+        if ($merges === []) {
             return null;
         }
 
-        return <<<PHP
-            /**
-             * Blank optional number, date, relation and image inputs mean "no value".
-             */
-            protected function prepareForValidation(): void
-            {
-                \$this->merge({$owner}::blankOptionalInputsAsNull(\$this->all()));
-            }
+        return implode(PHP_EOL, [
+            '    /**',
+            ...$docs,
+            '     */',
+            '    protected function prepareForValidation(): void',
+            '    {',
+            ...$merges,
+            '    }',
+            '',
+        ]).PHP_EOL;
+    }
 
+    /**
+     * `defaultSlug()` of a public resource: a blank slug becomes the
+     * kebab-case title, so the public URL needs no extra typing.
+     */
+    private function slugMethod(ResourceBlueprint $resource): ?string
+    {
+        $title = $resource->titleField();
+        if (! $resource->public || $title === null) {
+            return null;
+        }
+
+        return PHP_EOL.<<<PHP
+            /**
+             * The slug derived from the {$title->name} when the slug input is blank.
+             *
+             * @param  array<string, mixed>  \$input
+             * @return array<string, string>
+             */
+            public static function defaultSlug(array \$input): array
+            {
+                \$slug = \$input['slug'] ?? null;
+                if (is_string(\$slug) && trim(\$slug) !== '') {
+                    return [];
+                }
+
+                \$title = \$input['{$title->column()}'] ?? null;
+
+                return is_string(\$title) ? ['slug' => Str::slug(\$title)] : [];
+            }
         PHP;
     }
 
@@ -572,6 +713,7 @@ final class ResourceRenderer
                 'integer' => "\$table->integer('{$field->name}')",
                 'decimal' => "\$table->decimal('{$field->name}', 12, 2)",
                 'boolean' => "\$table->boolean('{$field->name}')->default(false)",
+                'slug' => "\$table->string('{$field->name}')->unique()",
                 'date' => "\$table->date('{$field->name}')",
                 'richtext' => "\$table->json('{$field->name}')",
                 default => "\$table->string('{$field->name}', 32)->default('{$field->enumValues[0]}')",
@@ -838,6 +980,7 @@ final class ResourceRenderer
                 'belongsTo' => $field->relatedClass().'::factory()',
                 'image' => 'null',
                 'richtext' => "['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => fake()->sentence()]]]]]",
+                'slug' => 'fake()->unique()->slug(3)',
                 default => 'fake()->randomElement('.$field->enumClass($resource->model).'::cases())',
             };
 
@@ -1303,6 +1446,7 @@ final class ResourceRenderer
                 'belongsTo' => "{$presence}, 'integer', Rule::exists({$field->relatedClass()}::class, 'id')",
                 'image' => "{$presence}, 'integer', new DamImage",
                 'richtext' => "{$presence}, 'array', new RichTextDocument(app(RichTextRenderer::class))",
+                'slug' => "{$presence}, 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique({$resource->model}::class, 'slug')->ignore(\${$resource->variable()})",
                 default => "{$presence}, Rule::enum(".$field->enumClass($resource->model).'::class)',
             };
 
@@ -2024,6 +2168,7 @@ final class ResourceRenderer
             'decimal' => $variant === 0 ? "'10.00'" : "'20.00'",
             'boolean' => $variant === 0 ? 'true' : 'false',
             'date' => $variant === 0 ? "'2026-01-15'" : "'2026-02-15'",
+            'slug' => $variant === 0 ? "'first-record'" : "'second-record'",
             default => "'".($variant === 0 ? $field->enumValues[0] : $field->enumValues[count($field->enumValues) - 1])."'",
         };
     }
@@ -2260,6 +2405,7 @@ final class ResourceRenderer
             'decimal' => "'12.50'",
             'boolean' => 'true',
             'date' => "'2026-01-15'",
+            'slug' => "'example-record'",
             'belongsTo' => $field->relatedClass().'::factory()->create()->id',
             'image' => 'MediaAsset::factory()->withVariants()->create()->id',
             'richtext' => "['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Example ".Str::lower($field->label())."']]]]]",
@@ -2805,6 +2951,7 @@ final class ResourceRenderer
             'date' => "'15.01.2026'",
             'belongsTo', 'image' => "'not-an-id'",
             'richtext' => "'not a document'",
+            'slug' => "'Not A Slug'",
             default => "'not_a_value'",
         };
     }

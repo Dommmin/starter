@@ -499,7 +499,90 @@ test('relations, rich text and badge tones are validated before planning', funct
     'only many relations' => [['--fields' => 'faqs:belongsToMany(Faq.question)'], 'At least one column field is required besides belongsToMany relations.'],
     'many relation as a filter' => [['--fields' => 'name:string,faqs:belongsToMany(Faq.question)', '--filters' => 'faqs'], 'Filter [faqs] must be a boolean or enum field'],
     'owned resource with a user field' => [['--fields' => 'name:string,user:string', '--owned' => true], 'Field [user] collides with the owner relation added by --owned'],
+    'public resource with its own slug' => [['--fields' => 'name:string,slug:string', '--public' => true], 'Field [slug] is added by --public (slug, published); remove it from --fields.'],
+    'public resource without a title' => [['--fields' => 'rank:integer', '--public' => true], '--public needs a string field'],
 ]);
+
+/**
+ * Copy the files a `--public` resource extends into the sandbox.
+ */
+function copyPublicTargetsIntoSandbox(Filesystem $files, string $sandbox): void
+{
+    $files->copy(base_path('routes/front.php'), "{$sandbox}/routes/front.php");
+    $files->ensureDirectoryExists("{$sandbox}/app/Providers");
+    $files->copy(app_path('Providers/SitemapServiceProvider.php'), "{$sandbox}/app/Providers/SitemapServiceProvider.php");
+
+    foreach (ResourceGenerator::LOCALES as $locale) {
+        $files->copy(lang_path("{$locale}/public.php"), "{$sandbox}/lang/{$locale}/public.php");
+        $files->copy(lang_path("{$locale}/common.php"), "{$sandbox}/lang/{$locale}/common.php");
+    }
+}
+
+test('a public resource gets SSR list and detail pages, public routes, catalog texts and a sitemap source', function () {
+    copyPublicTargetsIntoSandbox($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,description:text,body:richtext',
+        '--public' => true,
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+
+    expect($migration)->toContain("\$table->string('slug')->unique();")
+        ->toContain("\$table->boolean('published')->default(false);");
+
+    expect($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))
+        ->toContain("Rule::unique(Product::class, 'slug')->ignore(\$product)")
+        ->toContain('$this->merge(self::defaultSlug($this->all()));')
+        ->and($read('app/Http/Requests/Admin/Products/UpdateProductRequest.php'))
+        ->toContain('...StoreProductRequest::fieldRules($record instanceof Product ? $record : null),');
+
+    expect($read('routes/front.php'))
+        ->toContain('use App\Http\Controllers\Content\PublicProductController;')
+        ->toContain("Route::get('/products', [PublicProductController::class, 'index'])->name('products.index');")
+        ->and(strpos($read('routes/front.php'), "->name('products.show')"))->toBeLessThan(strpos($read('routes/front.php'), '// app:make-resource: public routes'));
+
+    expect($read('app/Providers/SitemapServiceProvider.php'))
+        ->toContain('use App\Actions\Seo\ProductsSitemapSource;')
+        ->toContain('ProductsSitemapSource::class,');
+
+    expect($read('app/Http/Controllers/Content/PublicProductController.php'))
+        ->toContain("->where('published', true)")
+        ->toContain('$this->richText->toHtml($product->body)')
+        ->toContain('$this->config->getPublicDefault()');
+
+    expect($read('resources/js/pages/public/products/index.tsx'))->toContain('<PublicChrome>')->toContain("robots={pagination.page > 1 ? 'noindex,follow' : undefined}")
+        ->and($read('resources/js/pages/public/products/show.tsx'))->toContain('canonical={canonical}');
+
+    foreach (ResourceGenerator::LOCALES as $locale) {
+        $catalog = require "{$this->sandbox}/lang/{$locale}/public.php";
+        expect($catalog['products'])->toHaveKeys(['title', 'description', 'empty', 'backToList', 'updatedOn', 'paginationSummary']);
+    }
+
+    expect($read('tests/Feature/Content/PublicProductTest.php'))->toContain("test('unpublished and unknown products are the same 404'")
+        ->and($read('tests/Feature/Admin/ProductCrudTest.php'))->toContain("test('a blank slug is derived from the name and a malformed or taken slug is rejected'");
+});
+
+test('a public resource whose routes already exist writes nothing', function () {
+    copyPublicTargetsIntoSandbox($this->files, $this->sandbox);
+    $front = $this->files->get("{$this->sandbox}/routes/front.php");
+    $this->files->put("{$this->sandbox}/routes/front.php", $front."\nRoute::get('/products', fn () => 'taken')->name('products.index');\n");
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required',
+        '--public' => true,
+        '--no-format' => true,
+    ])
+        ->expectsOutputToContain('routes/front.php already defines products routes.')
+        ->assertFailed();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+});
 
 test('an owned resource stores its owner server-side and lets only the owner reach a record', function () {
     $this->artisan('app:make-resource', [...$this->productArguments, '--owned' => true])->assertSuccessful();

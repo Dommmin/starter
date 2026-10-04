@@ -47,6 +47,11 @@ final readonly class ResourceBlueprint
     private const array SYSTEM_SORT_COLUMNS = ['id', 'created_at', 'updated_at'];
 
     /**
+     * First path segments of the website that a public module must not take.
+     */
+    private const array RESERVED_PUBLIC_SEGMENTS = ['articles', 'admin', 'contact-messages', 'sitemap-xml', 'robots-txt', 'up'];
+
+    /**
      * Eloquent model methods a generated relation method must not shadow.
      */
     private const array RESERVED_RELATIONS = [
@@ -69,6 +74,8 @@ final readonly class ResourceBlueprint
      *                                              resource table, edited with a multi-select.
      * @param  bool  $owned  Whether every record belongs to the user who created it
      *                       (`user_id`, owner-only policy, list scoped to the owner).
+     * @param  bool  $public  Whether published records get a public list and detail
+     *                        page (adds the `slug` and `published` fields).
      */
     private function __construct(
         public string $model,
@@ -79,6 +86,7 @@ final readonly class ResourceBlueprint
         public bool $export = false,
         public array $manyRelations = [],
         public bool $owned = false,
+        public bool $public = false,
     ) {}
 
     /**
@@ -86,7 +94,7 @@ final readonly class ResourceBlueprint
      *
      * @throws InvalidArgumentException With every problem found, one per line.
      */
-    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false, bool $owned = false): self
+    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false, bool $owned = false, bool $public = false): self
     {
         $errors = self::validateName($name);
 
@@ -98,6 +106,22 @@ final readonly class ResourceBlueprint
 
         if ($allFields !== [] && $parsedFields === []) {
             $errors[] = 'At least one column field is required besides belongsToMany relations.';
+        }
+
+        if ($public) {
+            foreach ($allFields as $field) {
+                if (in_array($field->name, ['slug', 'published'], true)) {
+                    $errors[] = "Field [{$field->name}] is added by --public (slug, published); remove it from --fields.";
+                }
+            }
+
+            if (array_filter($allFields, fn (ResourceField $field): bool => $field->type === 'string') === []) {
+                $errors[] = '--public needs a string field: the first one titles the public pages and seeds the slug.';
+            }
+
+            if (in_array(Str::kebab(Str::plural($name)), self::RESERVED_PUBLIC_SEGMENTS, true)) {
+                $errors[] = 'The public URL segment ['.Str::kebab(Str::plural($name)).'] is already used by the website.';
+            }
         }
 
         if ($owned) {
@@ -112,6 +136,12 @@ final readonly class ResourceBlueprint
             if ($relation->relatedModel === $name) {
                 $errors[] = "Field [{$relation->name}]: a belongsToMany relation to the resource itself is not supported.";
             }
+        }
+
+        if ($public) {
+            // URL key of the public detail page and its visibility switch.
+            $parsedFields[] = new ResourceField('slug', 'slug', true);
+            $parsedFields[] = new ResourceField('published', 'boolean', false);
         }
 
         $byName = [];
@@ -157,6 +187,7 @@ final readonly class ResourceBlueprint
             export: $export,
             manyRelations: $manyRelations,
             owned: $owned,
+            public: $public,
         );
     }
 

@@ -221,4 +221,5 @@ test('a bulk delete needs a bounded list of distinct ids', function () {
     $this->actingAs($admin)->delete(route('admin.{{ kebabPlural }}.destroy-many'), ['ids' => range(1, 101)])->assertSessionHasErrors(['ids']);
 });
 {{ ownedTests }}
+{{ publicSlugTests }}
 {{ exportTests }}

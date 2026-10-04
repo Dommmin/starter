@@ -44,7 +44,7 @@ generate() {
     created=$(printf '%s\n' "$output" | sed -n 's/^  create //p')
     GENERATED_PHP="$GENERATED_PHP $(printf '%s\n' "$created" | grep '\.php$' | grep -v '^tests/' | tr '\n' ' ')"
     GENERATED_UI="$GENERATED_UI $(printf '%s\n' "$created" | grep '\.tsx$' | tr '\n' ' ')"
-    GENERATED_TESTS="$GENERATED_TESTS tests/Feature/Admin/${model}CrudTest.php"
+    GENERATED_TESTS="$GENERATED_TESTS tests/Feature/Admin/${model}CrudTest.php $(printf '%s\n' "$created" | grep '^tests/Feature/Content/' | tr '\n' ' ')"
 }
 
 step "Copy the repository to $WORK"
@@ -117,19 +117,27 @@ generate SmokeTask \
     --searchable=title \
     --filters=state,due_on \
     --export \
-    --owned
+    --owned \
+    --public
+# A public resource: slug, published flag, SSR list and detail pages with
+# summary and rich text body, public routes, catalog texts and sitemap source.
+generate SmokePost \
+    --fields='headline:string:required,teaser:text,content:richtext' \
+    --searchable=headline \
+    --filters=published \
+    --public
 
-step "Pint (generated files, routes and catalogs)"
+step "Pint (generated files, routes, catalogs and the sitemap provider)"
 # shellcheck disable=SC2086
-vendor/bin/pint --test $GENERATED_PHP $GENERATED_TESTS routes/admin.php lang/en/admin.php lang/pl/admin.php lang/de/admin.php
+vendor/bin/pint --test $GENERATED_PHP $GENERATED_TESTS routes/admin.php routes/front.php app/Providers/SitemapServiceProvider.php lang/en/admin.php lang/pl/admin.php lang/de/admin.php lang/en/public.php lang/pl/public.php lang/de/public.php
 
 step "PHPStan (generated application code)"
 # shellcheck disable=SC2086
 vendor/bin/phpstan analyse --no-progress --memory-limit=1G $GENERATED_PHP
 
-step "Pest: generated CRUD tests (migrations on SQLite :memory:) and the i18n gate"
+step "Pest: generated CRUD and public tests (migrations on SQLite :memory:), the i18n gate and the sitemap"
 # shellcheck disable=SC2086
-php artisan test --compact $GENERATED_TESTS tests/Feature/LocalizationCatalogGateTest.php
+php artisan test --compact $GENERATED_TESTS tests/Feature/LocalizationCatalogGateTest.php tests/Feature/Seo/SitemapTest.php
 
 step "TypeScript contracts and Wayfinder routes"
 composer types:generate
@@ -141,8 +149,11 @@ npm run types:check
 step "npm run check (lint, format, UI tests)"
 npm run check
 
+step "Client and SSR build (public pages render on the server)"
+npm run build:ssr
+
 step "UI contract (generated pages)"
 # shellcheck disable=SC2086
 node scripts/check-ui-contract.mjs --files $GENERATED_UI
 
-step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag and SmokeTask generated and verified without manual fixes"
+step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag, SmokeTask and SmokePost generated and verified without manual fixes"

@@ -42,12 +42,13 @@ class Store{{ Model }}Request extends FormRequest
      *
      * @return array<string, list<mixed>>
      */
-    public static function fieldRules(): array
+    public static function fieldRules({{ ruleParameter }}): array
     {
         return [
 {{ rules }}
         ];
     }
 {{ blankInputsMethod }}
+{{ slugMethod }}
 {{ sanitizeMethod }}
 }

@@ -10,6 +10,7 @@ export * from './brand-logo';
 export * from './button';
 export * from './card';
 export * from './checkbox-field';
+export * from './checkbox-group-field';
 export * from './collapsible';
 export * from './command-palette';
 export * from './conflict-dialog';

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import {
     CheckboxField,
+    CheckboxGroupField,
     RadioGroupField,
     SelectField,
     Stack,
     SwitchField,
+    type CheckboxGroupOption,
     type RadioGroupOption,
     type SelectFieldOption,
 } from '@/design-system/primitives';
@@ -84,6 +86,23 @@ function ChoiceFieldsSection() {
             description: demo('visibilityScheduledDescription'),
             disabled: true,
         },
+    ];
+    const groups = useDemoChoices<string[]>(
+        {
+            groupValue: ['email', 'sms'],
+            groupDisabled: ['email'],
+            groupLong: ['email'],
+        },
+        [],
+    );
+    const channelOptions: CheckboxGroupOption[] = [
+        { value: 'email', label: demo('channelEmail') },
+        {
+            value: 'sms',
+            label: demo('channelSms'),
+            description: demo('channelSmsDescription'),
+        },
+        { value: 'push', label: demo('channelPush'), disabled: true },
     ];
     const plainVisibilityOptions: RadioGroupOption[] = visibilityOptions.map(
         (option) => ({ value: option.value, label: option.label }),
@@ -352,6 +371,89 @@ function ChoiceFieldsSection() {
                         options={longRadioOptions}
                         value={choices.value('radioLong')}
                         onChange={choices.onChange('radioLong')}
+                    />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="CheckboxGroupField"
+                layout="wide"
+                notApplicable={[
+                    'placeholder',
+                    'readonly',
+                    'indeterminate',
+                    'pending',
+                    'loading',
+                    'empty',
+                ]}
+            >
+                <ShowcaseState state="default" fill>
+                    <CheckboxGroupField
+                        name="demo-group-default"
+                        label={demo('channelsLabel')}
+                        options={channelOptions}
+                        value={groups.value('groupDefault')}
+                        onChange={groups.onChange('groupDefault')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withValue" fill>
+                    <CheckboxGroupField
+                        name="demo-group-value"
+                        label={demo('channelsLabel')}
+                        options={channelOptions}
+                        value={groups.value('groupValue')}
+                        onChange={groups.onChange('groupValue')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withDescription" fill>
+                    <CheckboxGroupField
+                        name="demo-group-description"
+                        label={demo('channelsLabel')}
+                        description={demo('channelsDescription')}
+                        options={channelOptions}
+                        value={groups.value('groupDescription')}
+                        onChange={groups.onChange('groupDescription')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="error" fill>
+                    <CheckboxGroupField
+                        name="demo-group-error"
+                        label={demo('channelsLabel')}
+                        error={demo('channelsError')}
+                        required
+                        options={channelOptions}
+                        value={groups.value('groupError')}
+                        onChange={groups.onChange('groupError')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="disabled" fill>
+                    <CheckboxGroupField
+                        name="demo-group-disabled"
+                        label={demo('channelsLabel')}
+                        disabled
+                        options={channelOptions}
+                        value={groups.value('groupDisabled')}
+                        onChange={groups.onChange('groupDisabled')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="required" fill>
+                    <CheckboxGroupField
+                        name="demo-group-required"
+                        label={demo('channelsLabel')}
+                        required
+                        options={channelOptions}
+                        value={groups.value('groupRequired')}
+                        onChange={groups.onChange('groupRequired')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="longContent" fill>
+                    <CheckboxGroupField
+                        name="demo-group-long"
+                        label={demo('longChannelsLabel')}
+                        description={demo('longDescription')}
+                        options={channelOptions}
+                        value={groups.value('groupLong')}
+                        onChange={groups.onChange('groupLong')}
                     />
                 </ShowcaseState>
             </ShowcaseComponent>

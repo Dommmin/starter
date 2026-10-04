@@ -3,7 +3,7 @@ import type { ComponentType, ReactNode } from 'react';
 
 type PageModule = { default: ResolvedComponent };
 type LayoutComponent = ComponentType<{ children: ReactNode }>;
-type LayoutGroup = 'none' | 'auth' | 'settings' | 'admin' | 'app';
+type LayoutGroup = 'none' | 'auth' | 'settings' | 'admin';
 
 /**
  * Page modules, lazy-loaded per visit. Tests colocated with pages
@@ -36,11 +36,15 @@ const layoutLoaders: Record<
         return [publicLayout.default, settings.default];
     },
     admin: async () => [(await import('@/layouts/admin-layout')).default],
-    app: async () => [(await import('@/layouts/app-layout')).default],
 };
 
 const loadedLayouts = new Map<LayoutGroup, LayoutComponent[]>();
 
+/**
+ * Every page belongs to an explicit group. An unknown prefix fails fast so a
+ * new page area cannot silently render without its frame; add the prefix here
+ * (and to `surfaceFor`/app.blade.php when it needs a surface).
+ */
 function layoutGroup(name: string): LayoutGroup {
     switch (true) {
         case name === 'welcome':
@@ -56,7 +60,7 @@ function layoutGroup(name: string): LayoutGroup {
         case name.startsWith('admin/'):
             return 'admin';
         default:
-            return 'app';
+            throw new Error(`No layout group for page: ${name}`);
     }
 }
 

@@ -403,7 +403,6 @@ function reactModuleScopes(): array
         "{$base}/layouts/auth-layout.tsx" => ['auth'],
         "{$base}/layouts/admin-layout.tsx" => ['admin'],
         "{$base}/layouts/settings/layout.tsx" => ['admin'],
-        "{$base}/layouts/app-layout.tsx" => ['admin'],
         // Loaded on the first 423 response of a password-confirmed route.
         "{$base}/components/password-confirmation-dialog.tsx" => ['admin'],
     ];

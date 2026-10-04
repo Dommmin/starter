@@ -73,7 +73,25 @@ return [
         'removed' => ':label entfernt',
         'limit' => ':count von :max Einträgen',
     ],
+    'multiSelect' => [
+        'noResults' => 'Keine passenden Optionen',
+        'remove' => ':label entfernen',
+        'selected' => [
+            'zero' => 'Keine Option ausgewählt',
+            'one' => ':count Option ausgewählt',
+            'other' => ':count Optionen ausgewählt',
+        ],
+    ],
     'table' => [
+        'bulkActions' => 'Sammelaktionen',
+        'selectAll' => 'Alle Zeilen dieser Seite auswählen',
+        'selectRow' => ':label auswählen',
+        'clearSelection' => 'Auswahl aufheben',
+        'selected' => [
+            'zero' => 'Keine Zeilen ausgewählt',
+            'one' => ':count ausgewählt',
+            'other' => ':count ausgewählt',
+        ],
         'sortBy' => 'Sortieren nach',
         'sortAscending' => ':column (aufsteigend)',
         'sortDescending' => ':column (absteigend)',

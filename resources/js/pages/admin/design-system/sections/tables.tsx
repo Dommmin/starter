@@ -503,6 +503,7 @@ function DemoResourceTable({
     total,
     withHeader = false,
     withEmptyAction = false,
+    withBulkActions = false,
 }: {
     rows: DemoArticle[];
     search?: string;
@@ -512,6 +513,8 @@ function DemoResourceTable({
     withHeader?: boolean;
     /** Empty-list CTA (`emptyAction`), independent of the header. */
     withEmptyAction?: boolean;
+    /** Row selection with a confirmed bulk delete; nothing is sent. */
+    withBulkActions?: boolean;
 }) {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
@@ -539,6 +542,43 @@ function DemoResourceTable({
                         {demo('createArticle')}
                     </Button>
                 ) : undefined
+            }
+            bulkActions={
+                withBulkActions
+                    ? {
+                          label: t('table.bulkActions'),
+                          selectAllLabel: t('table.selectAll'),
+                          selectRowLabel: (row) =>
+                              t('table.selectRow', { label: row.title }),
+                          selectedSummary: (count) =>
+                              t('table.selected', {}, count),
+                          clearLabel: t('table.clearSelection'),
+                          actions: [
+                              {
+                                  id: 'delete',
+                                  label: demo('bulkDelete'),
+                                  tone: 'destructive',
+                                  confirm: {
+                                      title: demo('bulkDeleteTitle'),
+                                      description: (count) =>
+                                          t(
+                                              'admin.designSystem.tables.bulkDeleteDescription',
+                                              {},
+                                              count,
+                                          ),
+                                      confirmLabel: demo('bulkDeleteConfirm'),
+                                      cancelLabel: t('actions.cancel'),
+                                      closeLabel: t('actions.close'),
+                                  },
+                                  // Demo only: pretend the request succeeded.
+                                  onRun: () =>
+                                      new Promise((resolve) =>
+                                          setTimeout(resolve, 600),
+                                      ),
+                              },
+                          ],
+                      }
+                    : undefined
             }
             rows={rows}
             rowKey={(row) => row.id}
@@ -591,6 +631,19 @@ function DemoResourceTable({
                         { value: 'draft', label: demo('statuses.draft') },
                     ],
                 },
+                ...(withBulkActions
+                    ? [
+                          {
+                              kind: 'dateRange' as const,
+                              name: 'created',
+                              label: t('admin.designSystem.dates.rangeLabel'),
+                              labels: {
+                                  from: t('admin.designSystem.dates.from'),
+                                  to: t('admin.designSystem.dates.to'),
+                              },
+                          },
+                      ]
+                    : []),
             ]}
             columns={[
                 {
@@ -785,6 +838,17 @@ function TablesSection() {
                         page={2}
                         total={14}
                         withHeader
+                    />
+                </ShowcaseState>
+                <ShowcaseState
+                    state="variants"
+                    detail={demo('bulkDetail')}
+                    fill
+                >
+                    <DemoResourceTable
+                        rows={articles}
+                        total={articles.length}
+                        withBulkActions
                     />
                 </ShowcaseState>
                 <ShowcaseState

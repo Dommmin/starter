@@ -67,6 +67,8 @@ function sourceFiles(directory: string, isRoot = true): string[] {
 }
 
 describe('sonner boundary', () => {
+    // Synchronous scan of every source file: on a Docker bind mount under a
+    // loaded runner it can exceed the default 5 s, so it gets an I/O budget.
     it('is imported only by notify and the vendored Toaster', () => {
         const root = resolve(import.meta.dirname, '../../../..');
         const offenders = sourceFiles(resolve(root, 'resources/js'))
@@ -79,5 +81,5 @@ describe('sonner boundary', () => {
             );
 
         expect(offenders).toEqual([]);
-    });
+    }, 30_000);
 });

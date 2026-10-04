@@ -149,6 +149,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/contact', [ContactMessageController::class, 'index'])
             ->name('contact.index')
             ->can('viewAny', ContactMessage::class);
+        Route::delete('/contact', [ContactMessageController::class, 'destroyMany'])
+            ->name('contact.destroy-many')
+            ->can('viewAny', ContactMessage::class);
         Route::get('/contact/{contactMessage}', [ContactMessageController::class, 'show'])
             ->name('contact.show')
             ->can('view', 'contactMessage');

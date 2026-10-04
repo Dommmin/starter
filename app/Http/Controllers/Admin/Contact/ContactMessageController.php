@@ -2,18 +2,22 @@
 
 namespace App\Http\Controllers\Admin\Contact;
 
+use App\Actions\Contact\DeleteContactMessages;
 use App\Actions\Contact\RetryContactMessage;
 use App\Data\Admin\Contact\ContactMessageAbilitiesData;
 use App\Data\Admin\Contact\ContactMessageDetailData;
 use App\Data\Admin\Contact\ContactMessageIndexData;
+use App\Data\Admin\Contact\ContactMessageListAbilitiesData;
 use App\Data\Admin\Contact\ContactMessageListFiltersData;
 use App\Data\Admin\Contact\ContactMessageListItemData;
 use App\Data\Admin\Contact\ContactMessageShowData;
 use App\Data\Listing\ListPaginationData;
 use App\Enums\ContactMessageStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Contact\DestroyContactMessagesRequest;
 use App\Http\Requests\Admin\Contact\ListContactMessagesRequest;
 use App\Models\ContactMessage;
+use App\Models\User;
 use App\Repositories\Contact\ContactMessageRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +51,11 @@ class ContactMessageController extends Controller
             items: $items,
             pagination: ListPaginationData::from($listQuery->paginationPayload($paginator)),
             filters: ContactMessageListFiltersData::from($listQuery->filtersPayload($validated)),
+            // List-level hint like the other modules; each message is
+            // authorized again when the selection is deleted.
+            can: new ContactMessageListAbilitiesData(
+                delete: $request->user()?->isAdmin() ?? false,
+            ),
         ));
     }
 
@@ -92,5 +101,20 @@ class ContactMessageController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.contact.deleted')]);
 
         return to_route('admin.contact.index');
+    }
+
+    /**
+     * Permanently delete the selected messages of one list page (administrators
+     * only; all or nothing).
+     */
+    public function destroyMany(DestroyContactMessagesRequest $request, DeleteContactMessages $deleteContactMessages): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $deleted = $deleteContactMessages->handle($user, $request->ids());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.contact.deletedMany', ['count' => $deleted])]);
+
+        return back();
     }
 }

@@ -7,6 +7,11 @@ import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { FormActions } from './form-actions';
 import { FormSection } from './form-section';
 import {
+    MultiSelectField,
+    type MultiSelectFieldLabels,
+    type MultiSelectOption,
+} from './multi-select-field';
+import {
     ImagePickerField,
     type ImagePickerFieldLabels,
 } from './image-picker-field';
@@ -32,12 +37,12 @@ import { useSubmitErrorFocus } from './use-submit-error-focus';
 
 /**
  * Form values handled by `ResourceForm`: flat string/boolean fields (number
- * and date inputs keep their raw string), rich text documents and repeated
- * items (lists of flat string records).
+ * and date inputs keep their raw string), string lists (multi-select),
+ * rich text documents and repeated items (lists of flat string records).
  */
 export type ResourceFormValues = Record<
     string,
-    string | boolean | RichTextDocument | ResourceFormRepeaterItem[]
+    string | boolean | string[] | RichTextDocument | ResourceFormRepeaterItem[]
 >;
 
 /** One item of a `repeater` field. */
@@ -51,6 +56,21 @@ type KeysOfType<Values, Type> = {
 
 function stringValue(value: unknown): string {
     return typeof value === 'string' ? value : '';
+}
+
+function repeaterItems(value: unknown): ResourceFormRepeaterItem[] {
+    return Array.isArray(value)
+        ? value.filter(
+              (item): item is ResourceFormRepeaterItem =>
+                  typeof item === 'object' && item !== null,
+          )
+        : [];
+}
+
+function stringListValue(value: unknown): string[] {
+    return Array.isArray(value)
+        ? value.filter((item): item is string => typeof item === 'string')
+        : [];
 }
 
 type ResourceFormFieldBase = {
@@ -100,6 +120,19 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   name: KeysOfType<Values, string>;
                   options: SelectFieldOption[];
                   placeholder?: string;
+              }
+            | {
+                  /**
+                   * Searchable multiple choice; the value is the list of
+                   * selected option values. Item errors
+                   * (`errors['<name>.<index>']`) are shown on the field.
+                   */
+                  type: 'multiSelect';
+                  name: KeysOfType<Values, string[]>;
+                  options: MultiSelectOption[];
+                  labels: MultiSelectFieldLabels;
+                  placeholder?: string;
+                  max?: number;
               }
             | {
                   type: 'switch' | 'checkbox';
@@ -220,8 +253,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                 return own;
             }
 
-            const items = values[field.name];
-            const nested = (Array.isArray(items) ? items : []).flatMap(
+            const nested = repeaterItems(values[field.name]).flatMap(
                 (_, index) =>
                     field.itemFields.flatMap((itemField) => {
                         const itemMessage =
@@ -348,6 +380,31 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         }
                     />
                 );
+            case 'multiSelect': {
+                const itemError = Object.entries(errors).find(([key]) =>
+                    key.startsWith(`${field.name}.`),
+                )?.[1];
+
+                return (
+                    <MultiSelectField
+                        key={field.name}
+                        {...common}
+                        error={common.error ?? itemError}
+                        options={field.options}
+                        labels={field.labels}
+                        placeholder={field.placeholder}
+                        max={field.max}
+                        required={field.required}
+                        value={stringListValue(values[field.name])}
+                        onChange={(value) =>
+                            onChange(
+                                field.name,
+                                value as Values[typeof field.name],
+                            )
+                        }
+                    />
+                );
+            }
             case 'switch':
                 return (
                     <SwitchField
@@ -407,8 +464,6 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         itemErrors[key.slice(prefix.length)] = message;
                     }
                 }
-                const items = values[field.name];
-
                 return (
                     <RepeaterField
                         key={field.name}
@@ -419,7 +474,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         error={common.error}
                         itemErrors={itemErrors}
                         disabled={common.disabled}
-                        items={Array.isArray(items) ? items : []}
+                        items={repeaterItems(values[field.name])}
                         itemFields={field.itemFields}
                         newItem={field.newItem}
                         maxItems={field.maxItems}

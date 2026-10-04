@@ -47,6 +47,11 @@ final readonly class ResourceBlueprint
     private const array SYSTEM_SORT_COLUMNS = ['id', 'created_at', 'updated_at'];
 
     /**
+     * First path segments of the website that a public module must not take.
+     */
+    private const array RESERVED_PUBLIC_SEGMENTS = ['articles', 'admin', 'contact-messages', 'sitemap-xml', 'robots-txt', 'up'];
+
+    /**
      * Eloquent model methods a generated relation method must not shadow.
      */
     private const array RESERVED_RELATIONS = [
@@ -65,6 +70,12 @@ final readonly class ResourceBlueprint
      * @param  list<string>  $sortable
      * @param  list<string>  $filters
      * @param  bool  $export  Whether the list gets a CSV export (admins only).
+     * @param  list<ResourceField>  $manyRelations  belongsToMany fields: no column on the
+     *                                              resource table, edited with a multi-select.
+     * @param  bool  $owned  Whether every record belongs to the user who created it
+     *                       (`user_id`, owner-only policy, list scoped to the owner).
+     * @param  bool  $public  Whether published records get a public list and detail
+     *                        page (adds the `slug` and `published` fields).
      */
     private function __construct(
         public string $model,
@@ -73,6 +84,9 @@ final readonly class ResourceBlueprint
         public array $sortable,
         public array $filters,
         public bool $export = false,
+        public array $manyRelations = [],
+        public bool $owned = false,
+        public bool $public = false,
     ) {}
 
     /**
@@ -80,12 +94,55 @@ final readonly class ResourceBlueprint
      *
      * @throws InvalidArgumentException With every problem found, one per line.
      */
-    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false): self
+    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false, bool $owned = false, bool $public = false): self
     {
         $errors = self::validateName($name);
 
-        [$parsedFields, $fieldErrors] = self::parseFields($fields);
+        [$allFields, $fieldErrors] = self::parseFields($fields);
         $errors = [...$errors, ...$fieldErrors];
+
+        $parsedFields = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type !== 'belongsToMany'));
+        $manyRelations = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type === 'belongsToMany'));
+
+        if ($allFields !== [] && $parsedFields === []) {
+            $errors[] = 'At least one column field is required besides belongsToMany relations.';
+        }
+
+        if ($public) {
+            foreach ($allFields as $field) {
+                if (in_array($field->name, ['slug', 'published'], true)) {
+                    $errors[] = "Field [{$field->name}] is added by --public (slug, published); remove it from --fields.";
+                }
+            }
+
+            if (array_filter($allFields, fn (ResourceField $field): bool => $field->type === 'string') === []) {
+                $errors[] = '--public needs a string field: the first one titles the public pages and seeds the slug.';
+            }
+
+            if (in_array(Str::kebab(Str::plural($name)), self::RESERVED_PUBLIC_SEGMENTS, true)) {
+                $errors[] = 'The public URL segment ['.Str::kebab(Str::plural($name)).'] is already used by the website.';
+            }
+        }
+
+        if ($owned) {
+            foreach ($allFields as $field) {
+                if (in_array($field->name, ['user', 'user_id'], true) || $field->column() === 'user_id') {
+                    $errors[] = "Field [{$field->name}] collides with the owner relation added by --owned (user, user_id).";
+                }
+            }
+        }
+
+        foreach ($manyRelations as $relation) {
+            if ($relation->relatedModel === $name) {
+                $errors[] = "Field [{$relation->name}]: a belongsToMany relation to the resource itself is not supported.";
+            }
+        }
+
+        if ($public) {
+            // URL key of the public detail page and its visibility switch.
+            $parsedFields[] = new ResourceField('slug', 'slug', true);
+            $parsedFields[] = new ResourceField('published', 'boolean', false);
+        }
 
         $byName = [];
         foreach ($parsedFields as $field) {
@@ -112,8 +169,8 @@ final readonly class ResourceBlueprint
         $filterList = self::splitList($filters);
         foreach ($filterList as $column) {
             $field = $byName[$column] ?? null;
-            if ($field === null || ! in_array($field->type, ['boolean', 'enum', 'belongsTo'], true)) {
-                $errors[] = "Filter [{$column}] must be a boolean or enum field. A belongsTo relation is accepted as well.";
+            if ($field === null || ! in_array($field->type, ['boolean', 'enum', 'belongsTo', 'date'], true)) {
+                $errors[] = "Filter [{$column}] must be a boolean or enum field. A belongsTo relation or a date (range filter) is accepted as well.";
             }
         }
 
@@ -128,6 +185,9 @@ final readonly class ResourceBlueprint
             sortable: $sortableList === [] ? ['created_at'] : $sortableList,
             filters: $filterList,
             export: $export,
+            manyRelations: $manyRelations,
+            owned: $owned,
+            public: $public,
         );
     }
 
@@ -166,19 +226,20 @@ final readonly class ResourceBlueprint
         }
 
         foreach ($parts as $part) {
-            if (preg_match('/^([^:]+):(string|text|integer|decimal|boolean|date|image|richtext|enum\(([^)]*)\)|belongsTo\(([^)]*)\))(?::(required|nullable))?$/', $part, $matches) !== 1) {
-                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column)).';
+            if (preg_match('/^(?<name>[^:]+):(?<type>string|text|integer|decimal|boolean|date|image|richtext|enum\((?<enum>[^)]*)\)|belongsToMany\((?<many>[^)]*)\)|belongsTo\((?<target>[^)]*)\))(?::(?<presence>required|nullable))?$/', $part, $matches) !== 1) {
+                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column), belongsToMany as belongsToMany(Model.label_column)).';
 
                 continue;
             }
 
-            $name = $matches[1];
+            $name = $matches['name'];
             $type = match (true) {
-                str_starts_with($matches[2], 'enum(') => 'enum',
-                str_starts_with($matches[2], 'belongsTo(') => 'belongsTo',
-                default => $matches[2],
+                str_starts_with($matches['type'], 'enum(') => 'enum',
+                str_starts_with($matches['type'], 'belongsToMany(') => 'belongsToMany',
+                str_starts_with($matches['type'], 'belongsTo(') => 'belongsTo',
+                default => $matches['type'],
             };
-            $required = ($matches[5] ?? '') === 'required';
+            $required = ($matches['presence'] ?? '') === 'required';
 
             if (preg_match('/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/', $name) !== 1 || strlen($name) > 50) {
                 $errors[] = "Field name [{$name}] must be a snake_case identifier (max 50 characters).";
@@ -201,7 +262,7 @@ final readonly class ResourceBlueprint
             $values = [];
             $tones = [];
             if ($type === 'enum') {
-                [$values, $tones, $valueErrors] = self::parseEnumValues($name, $matches[3] ?? '');
+                [$values, $tones, $valueErrors] = self::parseEnumValues($name, $matches['enum'] ?? '');
                 if ($valueErrors !== []) {
                     $errors = [...$errors, ...$valueErrors];
 
@@ -211,19 +272,26 @@ final readonly class ResourceBlueprint
 
             $relatedModel = null;
             $relatedLabel = null;
-            if ($type === 'belongsTo') {
-                $relationErrors = self::validateBelongsTo($name, $matches[4] ?? '');
+            if ($type === 'belongsTo' || $type === 'belongsToMany') {
+                $target = $type === 'belongsTo' ? ($matches['target'] ?? '') : ($matches['many'] ?? '');
+                $relationErrors = self::validateBelongsTo($name, $target);
                 if ($relationErrors !== []) {
                     $errors = [...$errors, ...$relationErrors];
 
                     continue;
                 }
 
-                [$relatedModel, $relatedLabel] = explode('.', trim($matches[4] ?? ''), 2);
+                [$relatedModel, $relatedLabel] = explode('.', trim($target), 2);
             }
 
-            if (in_array($type, ['belongsTo', 'image'], true) && (str_ends_with($name, '_id') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
+            if (in_array($type, ['belongsTo', 'belongsToMany', 'image'], true) && (str_ends_with($name, '_id') || str_ends_with($name, '_ids') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
                 $errors[] = "Relation field name [{$name}] must name the relation (e.g. category, not category_id) and must not shadow an Eloquent method.";
+
+                continue;
+            }
+
+            if ($type === 'belongsToMany' && (Str::plural($name) !== $name || Str::singular($name) === $name)) {
+                $errors[] = "belongsToMany field name [{$name}] must be plural, e.g. tags.";
 
                 continue;
             }
@@ -308,7 +376,7 @@ final readonly class ResourceBlueprint
     }
 
     /**
-     * Syntax of `belongsTo(Model.label_column)`. Whether the model and the
+     * Syntax of `belongsTo(Model.label_column)` (also used by belongsToMany). Whether the model and the
      * column exist is checked by {@see ResourceGenerator::relationErrors()}.
      *
      * @return list<string>
@@ -433,12 +501,25 @@ final readonly class ResourceBlueprint
         return array_values(array_filter($this->fields, fn (ResourceField $field): bool => $field->type === $type));
     }
 
+    /**
+     * Relations whose editor offers related records: belongsTo selects and
+     * belongsToMany multi-selects.
+     *
+     * @return list<ResourceField>
+     */
+    public function optionFields(): array
+    {
+        return [...$this->fieldsOfType('belongsTo'), ...$this->manyRelations];
+    }
+
     public function hasType(string $type): bool
     {
         return $this->fieldsOfType($type) !== [];
     }
 
     /**
+     * Select filters (boolean, enum, belongsTo); date fields are range filters.
+     *
      * @return list<ResourceField>
      */
     public function filterFields(): array
@@ -446,7 +527,25 @@ final readonly class ResourceBlueprint
         $fields = [];
         foreach ($this->filters as $name) {
             $field = $this->field($name);
-            if ($field !== null) {
+            if ($field !== null && $field->type !== 'date') {
+                $fields[] = $field;
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Date fields filtered by an inclusive range (`{name}_from`, `{name}_to`).
+     *
+     * @return list<ResourceField>
+     */
+    public function dateFilterFields(): array
+    {
+        $fields = [];
+        foreach ($this->filters as $name) {
+            $field = $this->field($name);
+            if ($field !== null && $field->type === 'date') {
                 $fields[] = $field;
             }
         }

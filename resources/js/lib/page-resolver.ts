@@ -50,6 +50,8 @@ function layoutGroup(name: string): LayoutGroup {
         case name === 'welcome':
         case name.startsWith('pages/'):
         case name.startsWith('articles/'):
+        // Public pages of generated modules (`app:make-resource --public`).
+        case name.startsWith('public/'):
         case name.startsWith('errors/'):
         case name.startsWith('design-system/'):
             return 'none';

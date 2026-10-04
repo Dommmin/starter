@@ -75,6 +75,17 @@ return [
         'removed' => 'Usunięto :label',
         'limit' => ':count z :max elementów',
     ],
+    'multiSelect' => [
+        'noResults' => 'Brak pasujących opcji',
+        'remove' => 'Usuń :label',
+        'selected' => [
+            'zero' => 'Nie wybrano żadnej opcji',
+            'one' => 'Wybrano :count opcję',
+            'few' => 'Wybrano :count opcje',
+            'many' => 'Wybrano :count opcji',
+            'other' => 'Wybrano :count opcji',
+        ],
+    ],
     'table' => [
         'sortBy' => 'Sortuj według',
         'sortAscending' => ':column (rosnąco)',

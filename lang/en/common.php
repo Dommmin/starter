@@ -73,6 +73,15 @@ return [
         'removed' => ':label removed',
         'limit' => ':count of :max items',
     ],
+    'multiSelect' => [
+        'noResults' => 'No matching options',
+        'remove' => 'Remove :label',
+        'selected' => [
+            'zero' => 'No options selected',
+            'one' => ':count option selected',
+            'other' => ':count options selected',
+        ],
+    ],
     'table' => [
         'sortBy' => 'Sort by',
         'sortAscending' => ':column (ascending)',

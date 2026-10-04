@@ -46,6 +46,7 @@ export * from './locale-switcher';
 export * from './maintenance';
 export * from './media-grid';
 export * from './mobile-nav';
+export * from './multi-select-field';
 export * from './nav-item';
 export * from './not-found';
 export * from './notify';

@@ -132,7 +132,9 @@ test('literal React translation keys exist in the English catalog schema', funct
         $messages = array_replace_recursive($messages, $catalog);
     }
 
-    $keys = flattenArray($messages);
+    // Leaf keys plus whole plural groups: `t('group.key', params, count)`
+    // resolves a plural group by count, so the group itself is a valid key.
+    $keys = flattenArray($messages) + flattenTranslationKeys($messages);
 
     foreach (File::allFiles(resource_path('js')) as $sourceFile) {
         if (! in_array($sourceFile->getExtension(), ['ts', 'tsx', 'js', 'jsx'], true)) {

@@ -758,7 +758,12 @@ declare namespace App {
         }
     }
     namespace Enums {
-        export type AccentColor = 'default';
+        export type AccentColor =
+            | 'default'
+            | 'blue'
+            | 'violet'
+            | 'rose'
+            | 'green';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

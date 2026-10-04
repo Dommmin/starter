@@ -139,8 +139,8 @@ final readonly class ResourceBlueprint
         $filterList = self::splitList($filters);
         foreach ($filterList as $column) {
             $field = $byName[$column] ?? null;
-            if ($field === null || ! in_array($field->type, ['boolean', 'enum', 'belongsTo'], true)) {
-                $errors[] = "Filter [{$column}] must be a boolean or enum field. A belongsTo relation is accepted as well.";
+            if ($field === null || ! in_array($field->type, ['boolean', 'enum', 'belongsTo', 'date'], true)) {
+                $errors[] = "Filter [{$column}] must be a boolean or enum field. A belongsTo relation or a date (range filter) is accepted as well.";
             }
         }
 
@@ -487,6 +487,8 @@ final readonly class ResourceBlueprint
     }
 
     /**
+     * Select filters (boolean, enum, belongsTo); date fields are range filters.
+     *
      * @return list<ResourceField>
      */
     public function filterFields(): array
@@ -494,7 +496,25 @@ final readonly class ResourceBlueprint
         $fields = [];
         foreach ($this->filters as $name) {
             $field = $this->field($name);
-            if ($field !== null) {
+            if ($field !== null && $field->type !== 'date') {
+                $fields[] = $field;
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Date fields filtered by an inclusive range (`{name}_from`, `{name}_to`).
+     *
+     * @return list<ResourceField>
+     */
+    public function dateFilterFields(): array
+    {
+        $fields = [];
+        foreach ($this->filters as $name) {
+            $field = $this->field($name);
+            if ($field !== null && $field->type === 'date') {
                 $fields[] = $field;
             }
         }

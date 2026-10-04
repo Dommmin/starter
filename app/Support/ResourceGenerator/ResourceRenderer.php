@@ -37,18 +37,21 @@ final class ResourceRenderer
             'relation' => ['noneOption' => 'None', 'optionsTruncated' => 'Only the first :max options are listed.'],
             'relationField' => ['Placeholder' => 'Select: {label}', 'Empty' => 'No options available yet: {label}.'],
             'image' => ['imageChoose' => 'Choose image', 'imageChange' => 'Change image', 'imageRemove' => 'Remove image', 'imageEmpty' => 'No image selected', 'imagePreview' => 'Selected image'],
+            'dateFilter' => ['dateFrom' => 'From', 'dateTo' => 'To'],
         ],
         'pl' => [
             'export' => ['export' => 'Eksportuj CSV', 'exportTooLarge' => 'Eksport CSV obejmuje najwyżej :max wierszy. Najpierw zawęź listę wyszukiwaniem lub filtrami.', 'exportFilename' => '{kebab}-:date.csv'],
             'relation' => ['noneOption' => 'Brak', 'optionsTruncated' => 'Wyświetlono tylko pierwsze :max opcji.'],
             'relationField' => ['Placeholder' => 'Wybierz: {label}', 'Empty' => 'Brak dostępnych opcji: {label}.'],
             'image' => ['imageChoose' => 'Wybierz obraz', 'imageChange' => 'Zmień obraz', 'imageRemove' => 'Usuń obraz', 'imageEmpty' => 'Nie wybrano obrazu', 'imagePreview' => 'Wybrany obraz'],
+            'dateFilter' => ['dateFrom' => 'Od', 'dateTo' => 'Do'],
         ],
         'de' => [
             'export' => ['export' => 'CSV exportieren', 'exportTooLarge' => 'Der CSV-Export ist auf :max Zeilen begrenzt. Grenzen Sie die Liste zuerst mit Suche oder Filtern ein.', 'exportFilename' => '{kebab}-:date.csv'],
             'relation' => ['noneOption' => 'Keine Auswahl', 'optionsTruncated' => 'Es werden nur die ersten :max Optionen angezeigt.'],
             'relationField' => ['Placeholder' => 'Auswählen: {label}', 'Empty' => 'Noch keine Optionen verfügbar: {label}.'],
             'image' => ['imageChoose' => 'Bild auswählen', 'imageChange' => 'Bild ändern', 'imageRemove' => 'Bild entfernen', 'imageEmpty' => 'Kein Bild ausgewählt', 'imagePreview' => 'Ausgewähltes Bild'],
+            'dateFilter' => ['dateFrom' => 'Von', 'dateTo' => 'Bis'],
         ],
     ];
 
@@ -104,7 +107,7 @@ final class ResourceRenderer
             "app/Http/Controllers/Admin/{$plural}/{$model}Controller.php" => $this->php('controller', $resource, $this->controllerFragments($resource)),
             "app/Http/Requests/Admin/{$plural}/List{$plural}Request.php" => $this->php('request.list', $resource, [
                 'imports' => $this->imports([
-                    ...($resource->filters === [] ? [] : ['Illuminate\Database\Eloquent\Builder']),
+                    ...($resource->filterFields() === [] ? [] : ['Illuminate\Database\Eloquent\Builder']),
                     ...array_map(fn (ResourceField $field): string => 'App\\Models\\'.$field->relatedClass(), $this->relationFilterFields($resource)),
                     ...($this->relationFilterFields($resource) === [] ? [] : ['App\Data\Listing\RecordOptionData']),
                 ]),
@@ -112,6 +115,7 @@ final class ResourceRenderer
                 'definition' => $this->listDefinition($resource),
                 'methods' => $this->listRequestMethods($resource),
             ]),
+            "app/Http/Requests/Admin/{$plural}/Destroy{$plural}Request.php" => $this->php('request.destroy-many', $resource),
             "app/Http/Requests/Admin/{$plural}/Store{$model}Request.php" => $this->php('request.store', $resource, [
                 'imports' => $this->storeRequestImports($resource),
                 'prepareInput' => $this->prepareInput($resource, 'self'),
@@ -196,7 +200,7 @@ final class ResourceRenderer
                 'searchTest' => $this->searchTest($resource),
                 'blankInputsTest' => $this->blankInputsTest($resource),
                 'sortColumn' => $resource->sortable[0],
-                'filterTest' => $this->filterTest($resource),
+                'filterTest' => $this->filterTest($resource).$this->dateFilterTest($resource),
                 'createdExpectations' => $this->payloadExpectations($resource, '$'.$resource->variable()),
                 'updatedExpectations' => $this->payloadExpectations($resource, '$'.$resource->variable()),
                 'requiredFields' => $this->quotedList(array_map(
@@ -914,7 +918,6 @@ final class ResourceRenderer
             : ["{$variable} = {$model}::query()->create(\$request->fieldValues());"];
         $storeStatement = implode(PHP_EOL, array_map(fn (string $line): string => "        {$line}", $create));
         if ($resource->manyRelations !== []) {
-            $classes[] = 'Illuminate\Support\Facades\DB';
             $syncs = implode(PHP_EOL, array_map(
                 fn (ResourceField $field): string => "            {$variable}->{$field->relation()}()->sync(\$relationIds['{$field->relation()}']);",
                 $resource->manyRelations,
@@ -1278,6 +1281,10 @@ final class ResourceRenderer
             $lines[] = '            })';
         }
 
+        foreach ($resource->dateFilterFields() as $field) {
+            $lines[] = "            ->dateRange('{$field->name}', '{$field->name}')";
+        }
+
         return implode(PHP_EOL, $lines);
     }
 
@@ -1427,6 +1434,13 @@ final class ResourceRenderer
             $lines[] = "        public string \${$field->name},";
         }
 
+        foreach ($resource->dateFilterFields() as $field) {
+            $lines[] = "        /** Start of the {$field->name} range, `YYYY-MM-DD` or `''`. */";
+            $lines[] = "        public string \${$field->name}_from,";
+            $lines[] = "        /** End of the {$field->name} range, `YYYY-MM-DD` or `''`. */";
+            $lines[] = "        public string \${$field->name}_to,";
+        }
+
         return $lines === [] ? null : implode(PHP_EOL, $lines);
     }
 
@@ -1572,6 +1586,18 @@ final class ResourceRenderer
             }
 
             $lines[] = '                        ],';
+            $lines[] = '                    },';
+        }
+
+        foreach ($resource->dateFilterFields() as $field) {
+            $lines[] = '                    {';
+            $lines[] = "                        kind: 'dateRange',";
+            $lines[] = "                        name: '{$field->name}',";
+            $lines[] = "                        label: t('{$keys}.fields.{$field->name}'),";
+            $lines[] = '                        labels: {';
+            $lines[] = "                            from: t('{$keys}.dateFrom'),";
+            $lines[] = "                            to: t('{$keys}.dateTo'),";
+            $lines[] = '                        },';
             $lines[] = '                    },';
         }
 
@@ -1944,6 +1970,10 @@ final class ResourceRenderer
             $entries = [...$entries, ...$labels['image']];
         }
 
+        if ($resource->dateFilterFields() !== []) {
+            $entries = [...$entries, ...$labels['dateFilter']];
+        }
+
         if ($entries === []) {
             return null;
         }
@@ -2009,6 +2039,11 @@ final class ResourceRenderer
 
         foreach ($resource->filterFields() as $field) {
             $lines[] = "            {$field->name}: 'all',";
+        }
+
+        foreach ($resource->dateFilterFields() as $field) {
+            $lines[] = "            {$field->name}_from: '',";
+            $lines[] = "            {$field->name}_to: '',";
         }
 
         return implode(PHP_EOL, $lines);
@@ -2271,6 +2306,11 @@ final class ResourceRenderer
             $lines[] = "                '{$field->name}' => 'all',";
         }
 
+        foreach ($resource->dateFilterFields() as $field) {
+            $lines[] = "                '{$field->name}_from' => '',";
+            $lines[] = "                '{$field->name}_to' => '',";
+        }
+
         return implode(PHP_EOL, $lines);
     }
 
@@ -2412,6 +2452,47 @@ final class ResourceRenderer
 
             {$variable} = {$model}::query()->sole();
         {$expectations}
+        });
+
+        PHP;
+    }
+
+    /**
+     * Inclusive range of the first date filter and the rejected inverted range.
+     */
+    private function dateFilterTest(ResourceBlueprint $resource): string
+    {
+        $field = $resource->dateFilterFields()[0] ?? null;
+        if ($field === null) {
+            return '';
+        }
+
+        $factory = $this->ownedFactory($resource, 'admin');
+        $route = "admin.{$resource->kebabPlural()}.index";
+        $name = $field->name;
+
+        return <<<PHP
+
+        test('the {$name} range filter keeps both days and rejects an inverted range', function () {
+            \$admin = User::factory()->admin()->create();
+            {$factory}->create(['{$name}' => '2026-02-28']);
+            \$first = {$factory}->create(['{$name}' => '2026-03-01']);
+            \$last = {$factory}->create(['{$name}' => '2026-03-31']);
+            {$factory}->create(['{$name}' => '2026-04-01']);
+
+            \$this->actingAs(\$admin)->get(route('{$route}', ['{$name}_from' => '2026-03-01', '{$name}_to' => '2026-03-31']))
+                ->assertOk()
+                ->assertInertia(fn (Assert \$inertia) => \$inertia
+                    ->has('items', 2)
+                    ->where('items', fn (\$items): bool => collect(\$items)->pluck('id')->sort()->values()->all() === [\$first->id, \$last->id])
+                    ->where('filters.{$name}_from', '2026-03-01')
+                    ->where('filters.{$name}_to', '2026-03-31')
+                );
+
+            \$this->actingAs(\$admin)
+                ->from(route('{$route}'))
+                ->get(route('{$route}', ['{$name}_from' => '2026-03-31', '{$name}_to' => '2026-03-01']))
+                ->assertSessionHasErrors(['{$name}_to']);
         });
 
         PHP;

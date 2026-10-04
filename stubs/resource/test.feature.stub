@@ -188,5 +188,37 @@ test('an admin deletes a {{ singularLower }}', function () {
 
     expect({{ Model }}::query()->count())->toBe(0);
 });
+
+test('an admin deletes the selected {{ pluralLower }} and keeps the others', function () {
+    $admin = User::factory()->admin()->create();
+    [$first, $second, $kept] = {{ Model }}::factory(){{ ownedByAdmin }}->count(3)->create();
+
+    $this->actingAs($admin)
+        ->from(route('admin.{{ kebabPlural }}.index'))
+        ->delete(route('admin.{{ kebabPlural }}.destroy-many'), ['ids' => [$first->id, $second->id, $second->id + 1000]])
+        ->assertRedirect(route('admin.{{ kebabPlural }}.index'))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.deletedMany', ['count' => 2])]);
+
+    expect({{ Model }}::query()->pluck('id')->all())->toBe([$kept->id]);
+});
+
+test('a bulk delete including a {{ singularLower }} the user may not delete removes nothing', function () {
+    $editor = User::factory()->editor()->create();
+    ${{ variable }}List = {{ Model }}::factory()->count(2)->create();
+
+    $this->actingAs($editor)
+        ->delete(route('admin.{{ kebabPlural }}.destroy-many'), ['ids' => ${{ variable }}List->modelKeys()])
+        ->assertForbidden();
+
+    expect({{ Model }}::query()->count())->toBe(2);
+});
+
+test('a bulk delete needs a bounded list of distinct ids', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->delete(route('admin.{{ kebabPlural }}.destroy-many'), [])->assertSessionHasErrors(['ids']);
+    $this->actingAs($admin)->delete(route('admin.{{ kebabPlural }}.destroy-many'), ['ids' => [1, 1]])->assertSessionHasErrors(['ids.0']);
+    $this->actingAs($admin)->delete(route('admin.{{ kebabPlural }}.destroy-many'), ['ids' => range(1, 101)])->assertSessionHasErrors(['ids']);
+});
 {{ ownedTests }}
 {{ exportTests }}

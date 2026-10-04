@@ -424,7 +424,11 @@ test('relation, image, rich text, badge tones and export generate the expected f
     $keys = [];
     foreach (ResourceGenerator::LOCALES as $locale) {
         $catalog = require "{$this->sandbox}/lang/{$locale}/admin.php";
-        $keys[$locale] = array_keys(Arr::dot($catalog['products']));
+        // Plural groups differ per language (Polish adds few/many); compare them as one key.
+        $keys[$locale] = array_values(array_unique(array_map(
+            fn (string $key): string => (string) preg_replace('/\.(zero|one|two|few|many|other)$/', '', $key),
+            array_keys(Arr::dot($catalog['products'])),
+        )));
 
         expect($catalog['products']['exportTooLarge'])->toContain(':max')
             ->and($catalog['products']['exportFilename'])->toBe('products-:date.csv')
@@ -486,7 +490,7 @@ test('relations, rich text and badge tones are validated before planning', funct
     'rich text searchable' => [['--fields' => 'name:string,body:richtext', '--searchable' => 'body'], 'Searchable column [body] must be a string or text field.'],
     'rich text sortable' => [['--fields' => 'name:string,body:richtext', '--sortable' => 'body'], 'Sortable column [body] must be a non-text field'],
     'relation sortable' => [['--fields' => 'name:string,faq:belongsTo(Faq.question)', '--sortable' => 'faq'], 'Sortable column [faq] must be a non-text field'],
-    'image filter' => [['--fields' => 'name:string,cover:image', '--filters' => 'cover'], 'Filter [cover] must be a boolean or enum field'],
+    'image filter' => [['--fields' => 'name:string,cover:image', '--filters' => 'cover'], 'Filter [cover] must be a boolean or enum field. A belongsTo relation or a date (range filter) is accepted as well.'],
     'unknown badge tone' => [['--fields' => 'status:enum(draft|published:rainbow)'], 'Enum tone [rainbow] of value [published] of field [status] must be one of: neutral, primary, success, danger, outline.'],
     'singular many relation' => [['--fields' => 'name:string,faq:belongsToMany(Faq.question)'], 'belongsToMany field name [faq] must be plural'],
     'many relation to a missing model' => [['--fields' => 'name:string,tags:belongsToMany(Tag.name)'], 'model app/Models/Tag.php does not exist.'],
@@ -524,6 +528,47 @@ test('an owned resource stores its owner server-side and lets only the owner rea
         ->toContain("test('another user cannot open, change or delete a product, administrators included'")
         ->toContain("test('a new product belongs to its creator whatever user_id is submitted'")
         ->toContain('Product::factory()->for($admin)->create();');
+});
+
+test('every list gets a confirmed bulk delete that authorizes each record', function () {
+    $this->artisan('app:make-resource', $this->productArguments)->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+
+    expect($read('routes/admin.php'))
+        ->toContain("Route::delete('/products', [ProductController::class, 'destroyMany'])")
+        ->toContain("->name('products.destroy-many')");
+
+    expect($read('app/Http/Requests/Admin/Products/DestroyProductsRequest.php'))
+        ->toContain("'ids' => ['required', 'array', 'list', 'min:1', 'max:'.self::MAX_IDS],");
+
+    expect($read('app/Http/Controllers/Admin/Products/ProductController.php'))
+        ->toContain("Gate::forUser(\$request->user())->authorize('delete', \$record);")
+        ->toContain('lockForUpdate()');
+
+    expect($read('resources/js/pages/admin/products/index.tsx'))
+        ->toContain('bulkActions={')
+        ->toContain('router.delete(destroyMany.url(), {');
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('a bulk delete including a product the user may not delete removes nothing'");
+});
+
+test('a date filter becomes an inclusive range filter of the list', function () {
+    $this->artisan('app:make-resource', [...$this->productArguments, '--filters' => 'launched_on,status'])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+
+    expect($read('app/Http/Requests/Admin/Products/ListProductsRequest.php'))->toContain("->dateRange('launched_on', 'launched_on')");
+    expect($read('app/Data/Admin/Products/ProductListFiltersData.php'))
+        ->toContain('public string $launched_on_from,')
+        ->toContain('public string $launched_on_to,');
+    expect($read('resources/js/pages/admin/products/index.tsx'))
+        ->toContain("kind: 'dateRange',")
+        ->toContain("from: t('admin.products.dateFrom'),");
+    expect($read('lang/pl/admin.php'))->toContain("'dateFrom' => 'Od',");
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('the launched_on range filter keeps both days and rejects an inverted range'");
 });
 
 test('a resource without --owned keeps the panel-wide policy', function () {

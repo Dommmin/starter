@@ -10,6 +10,7 @@ import { index as adminIndex } from '@/routes/admin';
 import {
     create,
     destroy,
+    destroyMany,
     edit,
 {{ exportImport }}
     index,
@@ -29,6 +30,19 @@ export default function Admin{{ Plural }}Index() {
 {{ labelMaps }}
     const rowTitle = (row: Row) =>
         {{ rowTitle }};
+
+    const deleteSelected = (keys: string[]): Promise<void> =>
+        new Promise((resolve, reject) => {
+            router.delete(destroyMany.url(), {
+                data: { ids: keys.map(Number) },
+                preserveScroll: true,
+                onSuccess: () => resolve(),
+                onError: () => reject(new Error('validation')),
+                // Global handling still shows the HTTP or network error.
+                onHttpException: () => reject(new Error('http')),
+                onNetworkError: () => reject(new Error('network')),
+            });
+        });
 
     function confirmDelete() {
         if (!rowToDelete) {
@@ -89,6 +103,39 @@ export default function Admin{{ Plural }}Index() {
                 columns={[
 {{ columns }}
                 ]}
+                bulkActions={
+                    can.delete
+                        ? {
+                              label: t('table.bulkActions'),
+                              selectAllLabel: t('table.selectAll'),
+                              selectRowLabel: (row) =>
+                                  t('table.selectRow', { label: rowTitle(row) }),
+                              selectedSummary: (count) =>
+                                  t('table.selected', {}, count),
+                              clearLabel: t('table.clearSelection'),
+                              actions: [
+                                  {
+                                      id: 'delete',
+                                      label: t('admin.{{ camelPlural }}.bulkDelete'),
+                                      tone: 'destructive',
+                                      confirm: {
+                                          title: t('admin.{{ camelPlural }}.bulkDeleteTitle'),
+                                          description: (count) =>
+                                              t(
+                                                  'admin.{{ camelPlural }}.bulkDeleteDescription',
+                                                  {},
+                                                  count,
+                                              ),
+                                          confirmLabel: t('admin.{{ camelPlural }}.deleteConfirm'),
+                                          cancelLabel: t('admin.{{ camelPlural }}.cancel'),
+                                          closeLabel: t('actions.close'),
+                                      },
+                                      onRun: deleteSelected,
+                                  },
+                              ],
+                          }
+                        : undefined
+                }
                 rowActions={{
                     label: (row) =>
                         t('admin.{{ camelPlural }}.rowActionsLabel', {

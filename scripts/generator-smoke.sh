@@ -97,7 +97,7 @@ generate SmokeItem \
     --fields='title:string:required,summary:text,rank:integer,price:decimal,active:boolean,published_on:date,status:enum(draft|published:success|archived:danger),faq:belongsTo(Faq.question):required,backup_faq:belongsTo(Faq.question),related_faqs:belongsToMany(Faq.question),cover:image,body:richtext' \
     --searchable=title,summary \
     --sortable=title,rank,created_at \
-    --filters=status,faq,active \
+    --filters=status,faq,active,published_on \
     --export
 # An optional relation as the first filter, a boolean filter, a required
 # many-to-many relation and rich text without images or enums; export
@@ -115,7 +115,7 @@ generate SmokeTag \
 generate SmokeTask \
     --fields='title:string:required,state:enum(open|done:success),faqs:belongsToMany(Faq.question),due_on:date' \
     --searchable=title \
-    --filters=state \
+    --filters=state,due_on \
     --export \
     --owned
 

@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import {
     Card,
     CardContent,
@@ -22,6 +22,12 @@ export default function ArticlesIndex({
     locale,
 }: App.Data.Content.PublicArticleListData) {
     const { t, formatDate } = useTranslation();
+    const alternateUrls =
+        (
+            usePage().props as {
+                i18n?: { alternateUrls?: Record<string, string> };
+            }
+        ).i18n?.alternateUrls ?? {};
 
     function goToPage(page: number) {
         router.get(window.location.pathname, page > 1 ? { page } : {}, {
@@ -35,6 +41,7 @@ export default function ArticlesIndex({
                 title={t('articles.title')}
                 description={t('articles.description')}
                 robots={pagination.page > 1 ? 'noindex,follow' : undefined}
+                alternates={alternateUrls}
                 jsonLd={{
                     '@context': 'https://schema.org',
                     '@type': 'CollectionPage',

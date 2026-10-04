@@ -89,7 +89,7 @@ beforeAll(async () => {
         import('./rich-text-editor'),
         import('./rich-text-image-dialog'),
     ]);
-});
+}, 30_000);
 
 /** The editor chunk is lazy-loaded after mount; wait until Tiptap renders. */
 async function waitForEditor(container: HTMLElement): Promise<void> {

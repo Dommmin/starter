@@ -87,6 +87,17 @@ return [
         ],
     ],
     'table' => [
+        'bulkActions' => 'Akcje zbiorcze',
+        'selectAll' => 'Zaznacz wszystkie wiersze na tej stronie',
+        'selectRow' => 'Zaznacz: :label',
+        'clearSelection' => 'Wyczyść zaznaczenie',
+        'selected' => [
+            'zero' => 'Nie zaznaczono żadnego wiersza',
+            'one' => 'Zaznaczono :count',
+            'few' => 'Zaznaczono :count',
+            'many' => 'Zaznaczono :count',
+            'other' => 'Zaznaczono :count',
+        ],
         'sortBy' => 'Sortuj według',
         'sortAscending' => ':column (rosnąco)',
         'sortDescending' => ':column (malejąco)',

@@ -19,5 +19,6 @@ class ContactMessageIndexData extends Data
         public array $items,
         public ListPaginationData $pagination,
         public ContactMessageListFiltersData $filters,
+        public ContactMessageListAbilitiesData $can,
     ) {}
 }

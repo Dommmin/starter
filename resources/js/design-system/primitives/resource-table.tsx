@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 import { ActionMenu, type ActionMenuItem } from './action-menu';
 import { Button } from './button';
+import { ConfirmDialog } from './confirm-dialog';
 import {
     DataTable,
     type DataTableColumn,
@@ -10,6 +11,7 @@ import {
 } from './data-table';
 import { EmptyState } from './empty-state';
 import { FilterBar } from './filter-bar';
+import { Inline } from './inline';
 import { PageHeader } from './page-header';
 import { Paginator } from './paginator';
 import { RetryPanel } from './retry-panel';
@@ -89,6 +91,44 @@ export type ResourceTableLabels = {
     }) => string;
 };
 
+/** One action over the selected rows; always confirmed in a dialog. */
+export type ResourceTableBulkAction = {
+    id: string;
+    label: string;
+    tone?: 'default' | 'destructive';
+    confirm: {
+        title: string;
+        description: (count: number) => string;
+        confirmLabel: string;
+        cancelLabel: string;
+        closeLabel: string;
+    };
+    /**
+     * Runs the action for the selected row keys (`String(rowKey(row))`).
+     * Resolve after success: the dialog closes and the selection is cleared.
+     * Reject to keep both, e.g. when the server refused the request; the
+     * page reports the error (flash toast or inline message).
+     */
+    onRun: (keys: string[]) => Promise<void>;
+};
+
+/**
+ * Row selection with bulk actions. Selection covers the current page only
+ * and is cleared by every search, filter, sort or page change. Show it only
+ * when the user may perform at least one action; the server authorizes each
+ * selected record again.
+ */
+export type ResourceTableBulkActions<Row> = {
+    /** Accessible name of the bulk action toolbar. */
+    label: string;
+    selectAllLabel: string;
+    selectRowLabel: (row: Row) => string;
+    /** Announced count, e.g. "3 selected". */
+    selectedSummary: (count: number) => string;
+    clearLabel: string;
+    actions: ResourceTableBulkAction[];
+};
+
 export type ResourceTableProps<Row> = {
     /** List endpoint, e.g. a Wayfinder route: `usersIndex()`. */
     url: string | { url: string };
@@ -115,6 +155,7 @@ export type ResourceTableProps<Row> = {
      * `header`, so a page with its own `PageHeader` still gets the CTA.
      */
     emptyAction?: ReactNode;
+    bulkActions?: ResourceTableBulkActions<Row>;
     className?: never;
     style?: never;
 };
@@ -149,9 +190,23 @@ export function ResourceTable<Row>({
     rowActions,
     header,
     emptyAction,
+    bulkActions,
 }: ResourceTableProps<Row>) {
     const [isLoading, setIsLoading] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
+        () => new Set(),
+    );
+    const [confirming, setConfirming] =
+        useState<ResourceTableBulkAction | null>(null);
+    const [isRunning, setIsRunning] = useState(false);
+
+    // Rows removed by a reload (e.g. after a bulk delete) drop out of the
+    // selection without an effect: only keys of the current rows count.
+    const rowKeys = new Set(rows.map((row) => String(rowKey(row))));
+    const selection = new Set(
+        [...selectedKeys].filter((key) => rowKeys.has(key)),
+    );
 
     const filterValues = Object.fromEntries(
         filterFields.map((field) => [
@@ -161,6 +216,7 @@ export function ResourceTable<Row>({
     );
 
     function visit(change: QueryChange, replace = false) {
+        setSelectedKeys(new Set());
         setHasError(false);
         setIsLoading(true);
 
@@ -242,6 +298,24 @@ export function ResourceTable<Row>({
         });
     }
 
+    async function runConfirmed(): Promise<void> {
+        if (!confirming) {
+            return;
+        }
+
+        setIsRunning(true);
+
+        try {
+            await confirming.onRun([...selection]);
+            setConfirming(null);
+            setSelectedKeys(new Set());
+        } catch {
+            // The page reports the failure; keep the dialog and selection.
+        } finally {
+            setIsRunning(false);
+        }
+    }
+
     const showNoResults = hasActiveFilters && labels.noResultsTitle;
     const from =
         pagination.total === 0
@@ -310,6 +384,82 @@ export function ResourceTable<Row>({
                 />
             ) : (
                 <>
+                    {bulkActions && (
+                        <>
+                            {/*
+                             * Always rendered while bulk actions exist, so the
+                             * first selection does not shift the table under
+                             * the pointer; actions stay disabled until a row
+                             * is selected.
+                             */}
+                            <div
+                                role="toolbar"
+                                aria-label={bulkActions.label}
+                                className="bg-surface-subtle border-border-subtle rounded-lg border px-4 py-2"
+                            >
+                                <Inline gap="tight" align="center" wrap>
+                                    <span
+                                        role="status"
+                                        aria-live="polite"
+                                        className="text-foreground me-auto text-sm font-medium"
+                                    >
+                                        {bulkActions.selectedSummary(
+                                            selection.size,
+                                        )}
+                                    </span>
+                                    {bulkActions.actions.map((action) => (
+                                        <Button
+                                            key={action.id}
+                                            size="sm"
+                                            variant={
+                                                action.tone === 'destructive'
+                                                    ? 'destructive'
+                                                    : 'outline'
+                                            }
+                                            disabled={selection.size === 0}
+                                            onClick={() =>
+                                                setConfirming(action)
+                                            }
+                                        >
+                                            {action.label}
+                                        </Button>
+                                    ))}
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        disabled={selection.size === 0}
+                                        onClick={() =>
+                                            setSelectedKeys(new Set())
+                                        }
+                                    >
+                                        {bulkActions.clearLabel}
+                                    </Button>
+                                </Inline>
+                            </div>
+                            {confirming && (
+                                <ConfirmDialog
+                                    open
+                                    onOpenChange={(open) => {
+                                        if (!open && !isRunning) {
+                                            setConfirming(null);
+                                        }
+                                    }}
+                                    title={confirming.confirm.title}
+                                    description={confirming.confirm.description(
+                                        selection.size,
+                                    )}
+                                    confirmLabel={
+                                        confirming.confirm.confirmLabel
+                                    }
+                                    cancelLabel={confirming.confirm.cancelLabel}
+                                    closeLabel={confirming.confirm.closeLabel}
+                                    tone={confirming.tone ?? 'default'}
+                                    isPending={isRunning}
+                                    onConfirm={() => void runConfirmed()}
+                                />
+                            )}
+                        </>
+                    )}
                     <DataTable<Row>
                         caption={labels.caption}
                         rows={rows}
@@ -322,6 +472,18 @@ export function ResourceTable<Row>({
                         onSortChange={handleSortChange}
                         sortLabels={labels.sort}
                         columns={tableColumns}
+                        selection={
+                            bulkActions
+                                ? {
+                                      selectedKeys: selection,
+                                      onChange: setSelectedKeys,
+                                      selectAllLabel:
+                                          bulkActions.selectAllLabel,
+                                      selectRowLabel:
+                                          bulkActions.selectRowLabel,
+                                  }
+                                : undefined
+                        }
                         emptyState={
                             showNoResults ? (
                                 <EmptyState

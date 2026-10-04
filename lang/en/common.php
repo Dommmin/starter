@@ -83,6 +83,15 @@ return [
         ],
     ],
     'table' => [
+        'bulkActions' => 'Bulk actions',
+        'selectAll' => 'Select all rows on this page',
+        'selectRow' => 'Select :label',
+        'clearSelection' => 'Clear selection',
+        'selected' => [
+            'zero' => 'No rows selected',
+            'one' => ':count selected',
+            'other' => ':count selected',
+        ],
         'sortBy' => 'Sort by',
         'sortAscending' => ':column (ascending)',
         'sortDescending' => ':column (descending)',

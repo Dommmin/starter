@@ -7,6 +7,7 @@ import {
     type ReactNode,
 } from 'react';
 import { cn } from '@/lib/utils';
+import { CheckboxControl } from './checkbox-control';
 import { SelectField } from './select-field';
 import { Skeleton } from './skeleton';
 
@@ -74,6 +75,21 @@ export type DataTableSortLabels = {
     option: (column: string, direction: DataTableSortDirection) => string;
 };
 
+/**
+ * Row selection of the current rows (one list page). The table adds a
+ * leading checkbox column with a tri-state "select all" header; the card
+ * layout puts the checkbox next to the card title and a "select all" control
+ * above the list. Keys are `String(rowKey(row))`.
+ */
+export type DataTableSelection<Row> = {
+    selectedKeys: ReadonlySet<string>;
+    onChange: (selectedKeys: Set<string>) => void;
+    /** Accessible name of the "select all" control. */
+    selectAllLabel: string;
+    /** Accessible name of a row checkbox, e.g. `Select ${row.title}`. */
+    selectRowLabel: (row: Row) => string;
+};
+
 export type DataTableProps<Row> = {
     /** Translated accessible table name, passed from caller via useTranslation. */
     caption: string;
@@ -99,7 +115,49 @@ export type DataTableProps<Row> = {
     onRetry?: () => void;
     /** Rendered instead of rows when `rows` is empty and there is no error/loading. */
     emptyState: ReactNode;
+    selection?: DataTableSelection<Row>;
 };
+
+type SelectionState = {
+    isSelected: (key: string) => boolean;
+    toggle: (key: string, checked: boolean) => void;
+    all: boolean | 'indeterminate';
+    toggleAll: (checked: boolean) => void;
+};
+
+function selectionState<Row>(
+    selection: DataTableSelection<Row>,
+    rows: Row[],
+    rowKey: (row: Row) => string | number,
+): SelectionState {
+    const keys = rows.map((row) => String(rowKey(row)));
+    const selectedCount = keys.filter((key) =>
+        selection.selectedKeys.has(key),
+    ).length;
+
+    return {
+        isSelected: (key) => selection.selectedKeys.has(key),
+        toggle: (key, checked) => {
+            const next = new Set(selection.selectedKeys);
+
+            if (checked) {
+                next.add(key);
+            } else {
+                next.delete(key);
+            }
+
+            selection.onChange(next);
+        },
+        all:
+            selectedCount === 0
+                ? false
+                : selectedCount === keys.length
+                  ? true
+                  : 'indeterminate',
+        toggleAll: (checked) =>
+            selection.onChange(new Set(checked ? keys : [])),
+    };
+}
 
 /** Below Tailwind `md` (48rem); must stay in sync with the `md:` classes below. */
 const CARD_LAYOUT_QUERY = '(max-width: 47.99rem)';
@@ -244,6 +302,7 @@ export function DataTable<Row>({
     retryLabel,
     onRetry,
     emptyState,
+    selection,
 }: DataTableProps<Row>) {
     const isResponsive = columns.some((column) => column.priority);
     const layout = useResponsiveLayout(isResponsive);
@@ -264,6 +323,7 @@ export function DataTable<Row>({
             onRetry={onRetry}
             emptyState={emptyState}
             showEmpty={showEmpty}
+            selection={selection}
         />
     );
 
@@ -286,6 +346,7 @@ export function DataTable<Row>({
             onRetry={onRetry}
             emptyState={emptyState}
             showEmpty={showEmpty}
+            selection={selection}
         />
     );
 
@@ -320,6 +381,7 @@ function DataTableGrid<Row>({
     onRetry,
     emptyState,
     showEmpty,
+    selection,
 }: LayoutProps<Row>) {
     /**
      * Sorting by an `optional` or `card` column hides its header (and sort indicator)
@@ -385,6 +447,8 @@ function DataTableGrid<Row>({
      * titles and secondary values (e.g. long e-mails) wrap instead of forcing
      * horizontal scroll, the title keeping a readable minimum width.
      */
+    const selected = selection ? selectionState(selection, rows, rowKey) : null;
+    const columnCount = columns.length + (selected ? 1 : 0);
     const cellVisibility = (column: DataTableColumn<Row>) =>
         cn(
             isHiddenInNarrowTable(column.priority) && 'hidden @2xl:table-cell',
@@ -418,6 +482,18 @@ function DataTableGrid<Row>({
                     <caption className="sr-only">{caption}</caption>
                     <thead className="bg-surface-subtle">
                         <tr>
+                            {selected && selection && (
+                                <th scope="col" className="w-12 px-4 py-3">
+                                    <CheckboxControl
+                                        checked={selected.all}
+                                        onChange={selected.toggleAll}
+                                        disabled={
+                                            isLoading || rows.length === 0
+                                        }
+                                        label={selection.selectAllLabel}
+                                    />
+                                </th>
+                            )}
                             {columns.map((column) => {
                                 const isSorted = sort?.key === column.key;
                                 const ariaSort = isSorted
@@ -473,6 +549,7 @@ function DataTableGrid<Row>({
                         {isLoading &&
                             Array.from({ length: 5 }, (_, rowIndex) => (
                                 <tr key={`skeleton-${rowIndex}`}>
+                                    {selected && <td className="px-4 py-3" />}
                                     {columns.map((column) => (
                                         <td
                                             key={column.key}
@@ -489,7 +566,7 @@ function DataTableGrid<Row>({
                         {!isLoading && error && (
                             <tr>
                                 <td
-                                    colSpan={columns.length}
+                                    colSpan={columnCount}
                                     className="px-4 py-6 text-center"
                                 >
                                     <ErrorMessage
@@ -502,36 +579,58 @@ function DataTableGrid<Row>({
                         )}
                         {showEmpty && (
                             <tr>
-                                <td
-                                    colSpan={columns.length}
-                                    className="px-4 py-6"
-                                >
+                                <td colSpan={columnCount} className="px-4 py-6">
                                     {emptyState}
                                 </td>
                             </tr>
                         )}
                         {!isLoading &&
                             !error &&
-                            rows.map((row) => (
-                                <tr
-                                    key={rowKey(row)}
-                                    className="hover:bg-surface-subtle/60"
-                                >
-                                    {columns.map((column) => (
-                                        <td
-                                            key={column.key}
-                                            className={cn(
-                                                'text-foreground px-4 py-3',
-                                                column.align === 'end' &&
-                                                    'text-right',
-                                                cellVisibility(column),
-                                            )}
-                                        >
-                                            {column.render(row)}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
+                            rows.map((row) => {
+                                const key = String(rowKey(row));
+                                const isRowSelected =
+                                    selected?.isSelected(key) ?? false;
+
+                                return (
+                                    <tr
+                                        key={key}
+                                        data-selected={
+                                            isRowSelected ? '' : undefined
+                                        }
+                                        className="hover:bg-surface-subtle/60 data-[selected]:bg-surface-subtle"
+                                    >
+                                        {selected && selection && (
+                                            <td className="w-12 px-4 py-3">
+                                                <CheckboxControl
+                                                    checked={isRowSelected}
+                                                    onChange={(checked) =>
+                                                        selected.toggle(
+                                                            key,
+                                                            checked,
+                                                        )
+                                                    }
+                                                    label={selection.selectRowLabel(
+                                                        row,
+                                                    )}
+                                                />
+                                            </td>
+                                        )}
+                                        {columns.map((column) => (
+                                            <td
+                                                key={column.key}
+                                                className={cn(
+                                                    'text-foreground px-4 py-3',
+                                                    column.align === 'end' &&
+                                                        'text-right',
+                                                    cellVisibility(column),
+                                                )}
+                                            >
+                                                {column.render(row)}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                );
+                            })}
                     </tbody>
                 </table>
             </div>
@@ -553,6 +652,7 @@ function DataTableCards<Row>({
     onRetry,
     emptyState,
     showEmpty,
+    selection,
 }: LayoutProps<Row>) {
     const idPrefix = useId();
     const primary =
@@ -567,6 +667,8 @@ function DataTableCards<Row>({
                 column.priority === 'card'),
     );
     const sortableColumns = columns.filter((column) => column.sortable);
+    const selected = selection ? selectionState(selection, rows, rowKey) : null;
+    const selectAllId = `${idPrefix}-select-all`;
     const showSort =
         onSortChange !== undefined &&
         sortLabels !== undefined &&
@@ -599,6 +701,26 @@ function DataTableCards<Row>({
                 </div>
             )}
 
+            {selected &&
+                selection &&
+                !isLoading &&
+                !error &&
+                rows.length > 0 && (
+                    <div className="flex items-center gap-2.5 px-4">
+                        <CheckboxControl
+                            id={selectAllId}
+                            checked={selected.all}
+                            onChange={selected.toggleAll}
+                        />
+                        <label
+                            htmlFor={selectAllId}
+                            className="text-muted-foreground text-sm"
+                        >
+                            {selection.selectAllLabel}
+                        </label>
+                    </div>
+                )}
+
             {(isLoading || (!error && rows.length > 0)) && (
                 <ul
                     aria-label={caption}
@@ -617,14 +739,37 @@ function DataTableCards<Row>({
                           ))
                         : rows.map((row, index) => {
                               const titleId = `${idPrefix}-title-${index}`;
+                              const key = String(rowKey(row));
+                              const isRowSelected =
+                                  selected?.isSelected(key) ?? false;
 
                               return (
-                                  <li key={rowKey(row)}>
+                                  <li
+                                      key={key}
+                                      data-selected={
+                                          isRowSelected ? '' : undefined
+                                      }
+                                      className="data-[selected]:bg-surface-subtle"
+                                  >
                                       <article
                                           aria-labelledby={titleId}
                                           className="flex flex-col gap-2 p-4 text-sm"
                                       >
                                           <div className="flex items-start gap-3">
+                                              {selected && selection && (
+                                                  <CheckboxControl
+                                                      checked={isRowSelected}
+                                                      onChange={(checked) =>
+                                                          selected.toggle(
+                                                              key,
+                                                              checked,
+                                                          )
+                                                      }
+                                                      label={selection.selectRowLabel(
+                                                          row,
+                                                      )}
+                                                  />
+                                              )}
                                               <div
                                                   id={titleId}
                                                   className="text-foreground min-w-0 flex-1 font-medium break-words"

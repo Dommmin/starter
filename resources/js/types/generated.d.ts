@@ -101,6 +101,10 @@ declare namespace App {
                     items: App.Data.Admin.Contact.ContactMessageListItemData[];
                     pagination: App.Data.Listing.ListPaginationData;
                     filters: App.Data.Admin.Contact.ContactMessageListFiltersData;
+                    can: App.Data.Admin.Contact.ContactMessageListAbilitiesData;
+                };
+                export type ContactMessageListAbilitiesData = {
+                    delete: boolean;
                 };
                 export type ContactMessageListFiltersData = {
                     search: string;
@@ -758,7 +762,12 @@ declare namespace App {
         }
     }
     namespace Enums {
-        export type AccentColor = 'default';
+        export type AccentColor =
+            | 'default'
+            | 'blue'
+            | 'violet'
+            | 'rose'
+            | 'green';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

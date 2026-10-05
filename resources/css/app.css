@@ -156,13 +156,13 @@
 }
 
 [data-accent='rose'] {
-    --accent-hue: 5;
+    --accent-hue: 350;
     --accent-l: 0.02;
 }
 
 [data-accent='green'] {
-    --accent-hue: 150;
-    --accent-l: -0.03;
+    --accent-hue: 170;
+    --accent-l: -0.045;
 }
 
 .dark {

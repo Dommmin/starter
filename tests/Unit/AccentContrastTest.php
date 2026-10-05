@@ -45,17 +45,27 @@ function accentResolve(string $value, array $variables): float
 }
 
 /**
+ * OKLab coordinates of an `oklch(L C H)` declaration.
+ *
  * @param  array<string, string>  $variables
  * @return array{0: float, 1: float, 2: float}
  */
-function accentColor(string $declaration, array $variables): array
+function accentLab(string $declaration, array $variables): array
 {
     $atom = 'calc\((?:[^()]|\([^()]*\))*\)|var\([^)]*\)|[^\s)]+';
     preg_match("/^oklch\\(\\s*({$atom})\\s+({$atom})\\s+({$atom})/", $declaration, $m);
     [$lightness, $chroma, $hue] = [accentResolve($m[1], $variables), accentResolve($m[2], $variables), accentResolve($m[3], $variables)];
 
-    $a = $chroma * cos(deg2rad($hue));
-    $b = $chroma * sin(deg2rad($hue));
+    return [$lightness, $chroma * cos(deg2rad($hue)), $chroma * sin(deg2rad($hue))];
+}
+
+/**
+ * @param  array<string, string>  $variables
+ * @return array{0: float, 1: float, 2: float}
+ */
+function accentColor(string $declaration, array $variables): array
+{
+    [$lightness, $a, $b] = accentLab($declaration, $variables);
     $l = ($lightness + 0.3963377774 * $a + 0.2158037573 * $b) ** 3;
     $m = ($lightness - 0.1055613458 * $a - 0.0638541728 * $b) ** 3;
     $s = ($lightness - 0.0894841775 * $a - 1.2914855480 * $b) ** 3;
@@ -68,6 +78,18 @@ function accentColor(string $declaration, array $variables): array
             -0.0041960863 * $l - 0.7034186147 * $m + 1.7076147010 * $s,
         ],
     );
+}
+
+/**
+ * Euclidean OKLab distance of two `oklch(L C H)` declarations.
+ *
+ * @param  array<string, string>  $variables
+ */
+function accentDistance(string $first, string $second, array $variables): float
+{
+    [$a, $b] = [accentLab($first, $variables), accentLab($second, $variables)];
+
+    return sqrt(($a[0] - $b[0]) ** 2 + ($a[1] - $b[1]) ** 2 + ($a[2] - $b[2]) ** 2);
 }
 
 /**
@@ -121,5 +143,31 @@ test('accent buttons and links keep AA contrast in every surface and mode', func
 
     expect($button)->toBeGreaterThanOrEqual(4.5, "{$preset} primary button")
         ->and($link)->toBeGreaterThanOrEqual(4.5, "{$preset} brand text");
+})->with('accent surfaces')
+    ->with(array_map(fn (AccentColor $accent): string => $accent->value, AccentColor::cases()));
+
+test('accent buttons stay distinguishable from destructive actions and success states', function (array $bases, string $selector, string $preset) {
+    $variables = accentBlock(':root');
+    $variables = [
+        '--accent-hue' => $variables['--accent-hue'],
+        '--accent-l' => $variables['--accent-l'],
+    ];
+    if ($preset !== 'default') {
+        $variables = array_merge($variables, accentBlock("\[data-accent='{$preset}'\]"));
+    }
+
+    $tokens = [];
+    foreach ($bases as $base) {
+        $tokens = array_merge($tokens, accentBlock($base));
+    }
+    $tokens = array_merge($tokens, accentBlock($selector));
+
+    // 0.065 sits just under the default orange vs destructive red (about
+    // 0.07), the closest pair accepted in review; rose and green once fell
+    // below it and were hard to tell from Delete buttons and Sent badges.
+    expect(accentDistance($tokens['--primary'], $tokens['--destructive'], $variables))
+        ->toBeGreaterThanOrEqual(0.065, "{$preset} primary vs destructive")
+        ->and(accentDistance($tokens['--primary'], $tokens['--status-success'], $variables))
+        ->toBeGreaterThanOrEqual(0.065, "{$preset} primary vs success");
 })->with('accent surfaces')
     ->with(array_map(fn (AccentColor $accent): string => $accent->value, AccentColor::cases()));

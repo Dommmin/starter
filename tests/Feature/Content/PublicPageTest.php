@@ -75,3 +75,24 @@ test('a published page with the about slug is served at /about', function () {
             ->where('title', 'About us')
         );
 });
+
+test('a page without a meta description describes itself with its first paragraph', function () {
+    PageTranslation::factory()->published()->create([
+        'slug' => 'about',
+        'meta_description' => null,
+        'body' => ['type' => 'doc', 'content' => [
+            ['type' => 'heading', 'attrs' => ['level' => 2], 'content' => [['type' => 'text', 'text' => 'Who we are']]],
+            ['type' => 'paragraph', 'content' => []],
+            ['type' => 'paragraph', 'content' => [
+                ['type' => 'text', 'text' => 'A small studio '],
+                ['type' => 'text', 'text' => 'from Łódź.', 'marks' => [['type' => 'bold']]],
+            ]],
+        ]],
+    ]);
+
+    $this->get('/about')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('metaDescription', 'A small studio from Łódź.')
+        );
+});

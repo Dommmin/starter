@@ -4,6 +4,7 @@ namespace App\Data\Content;
 
 use App\Data\Media\MediaImageData;
 use App\Models\ArticleTranslation;
+use App\Services\Content\RichTextRenderer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -50,7 +51,9 @@ class PublicArticleData extends Data
         return new self(
             title: $translation->title,
             excerpt: $translation->excerpt,
-            metaDescription: $translation->meta_description ?? $translation->excerpt,
+            metaDescription: $translation->meta_description
+                ?? $translation->excerpt
+                ?? RichTextRenderer::summary($translation->body),
             bodyHtml: $bodyHtml,
             locale: $translation->locale,
             publishedAt: $translation->published_at?->toIso8601String(),

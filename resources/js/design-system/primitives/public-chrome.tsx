@@ -90,14 +90,16 @@ export function PublicChrome({
         }));
 
     return (
-        <>
+        <div className="flex min-h-svh flex-col">
             <PublicHeader
                 navItems={navItems ?? navigation?.header}
                 logo={resolvedLogo}
                 brandName={brandName}
             />
 
-            <main id="main-content">{children}</main>
+            <main id="main-content" className="flex-1">
+                {children}
+            </main>
 
             <Footer
                 copyright={copyright}
@@ -107,6 +109,6 @@ export function PublicChrome({
                 logo={resolvedLogo}
                 brandName={brandName}
             />
-        </>
+        </div>
     );
 }

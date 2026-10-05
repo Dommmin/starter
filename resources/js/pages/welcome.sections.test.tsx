@@ -35,6 +35,7 @@ const initialPage = {
             availableLocales: [],
             messages: {
                 home: {
+                    latestArticlesTitle: 'Latest articles',
                     latestArticlesEmpty: 'No articles yet.',
                     allArticles: 'All articles',
                     readMore: 'Read article: :title',
@@ -239,6 +240,11 @@ describe('HomeSections', () => {
 
         expect(container.textContent).toContain('No questions yet.');
         expect(container.textContent).toContain('No articles yet.');
+        expect(
+            Array.from(container.querySelectorAll('h2')).map(
+                (heading) => heading.textContent,
+            ),
+        ).toContain('Latest articles');
 
         const empty = await render([]);
         expect(empty.textContent).toBe('Starter site');

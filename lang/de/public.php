@@ -76,6 +76,7 @@ return [
         'defaultDescription' => 'Punkt Startowy ist eine durchdachte Basis für moderne Webanwendungen.',
     ],
     'home' => [
+        'latestArticlesTitle' => 'Neueste Artikel',
         'latestArticlesEmpty' => 'Es wurden noch keine Artikel veröffentlicht.',
         'allArticles' => 'Alle Artikel',
         'readMore' => 'Artikel lesen: :title',

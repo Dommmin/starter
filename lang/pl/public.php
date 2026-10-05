@@ -76,6 +76,7 @@ return [
         'defaultDescription' => 'Punkt Startowy to przemyślana baza dla nowoczesnych aplikacji internetowych. Sprawdź demonstracyjny landing page studia i produktu.',
     ],
     'home' => [
+        'latestArticlesTitle' => 'Najnowsze artykuły',
         'latestArticlesEmpty' => 'Nie opublikowano jeszcze żadnych artykułów.',
         'allArticles' => 'Wszystkie artykuły',
         'readMore' => 'Przeczytaj artykuł: :title',

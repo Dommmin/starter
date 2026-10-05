@@ -5,8 +5,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { PublicHeader } from './public-header';
 
+const currentPage = vi.hoisted(() => ({ url: '/' }));
+
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
+        url: currentPage.url,
         props: { auth: { user: null }, i18n: { alternateUrls: {} } },
     }),
     router: {
@@ -66,6 +69,7 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 }
 
 afterEach(async () => {
+    currentPage.url = '/';
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -278,5 +282,38 @@ describe('PublicHeader', () => {
         });
 
         expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('marks only the link of the current section as the current page', async () => {
+        currentPage.url = '/articles/launch?page=2';
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'features',
+                        kind: 'anchor',
+                        label: 'Features',
+                        href: '/#features',
+                    },
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: 'http://localhost/articles',
+                    },
+                    {
+                        id: 'home',
+                        kind: 'internal',
+                        label: 'Home',
+                        href: '/',
+                    },
+                ]}
+            />,
+        );
+
+        const current = container.querySelectorAll('[aria-current="page"]');
+
+        expect(current).toHaveLength(1);
+        expect(current[0].textContent).toBe('Articles');
     });
 });

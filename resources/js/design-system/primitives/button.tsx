@@ -77,6 +77,8 @@ export function Button({
         'disabled:pointer-events-none disabled:opacity-50',
         variantMap[variant],
         variant !== 'link' && sizeMap[size],
+        // Icon-only below `sm`: keep the 44 px touch target a circle.
+        responsiveLabel && 'max-sm:px-0',
     );
 
     const content = (

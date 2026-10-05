@@ -1,11 +1,16 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { BrandLogo } from './brand-logo';
 import { Footer } from './footer';
 import { MobileNav } from './mobile-nav';
+
+vi.mock('@inertiajs/react', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@inertiajs/react')>()),
+    usePage: () => ({ url: '/', props: {} }),
+}));
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 

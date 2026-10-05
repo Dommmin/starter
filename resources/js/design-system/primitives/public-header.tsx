@@ -21,7 +21,7 @@ import { Button } from './button';
 import { HeaderUtility } from './header-utility';
 import { MobileNav } from './mobile-nav';
 import type { NavItem } from './nav-item';
-import { isNavLink, NavItemLink } from './nav-item-link';
+import { isCurrentNavItem, isNavLink, NavItemLink } from './nav-item-link';
 
 export type PublicHeaderProps = {
     /**
@@ -38,9 +38,9 @@ export type PublicHeaderProps = {
 };
 
 const topLinkClasses =
-    'text-foreground decoration-border rounded-sm underline underline-offset-4 transition-colors duration-150 hover:decoration-current focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
+    'text-muted-foreground hover:text-foreground hover:bg-surface-subtle aria-[current=page]:text-foreground inline-flex min-h-[44px] items-center rounded-md px-2 text-sm font-medium transition-colors duration-150 focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
 const submenuLinkClasses =
-    'text-foreground hover:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2 text-sm whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none';
+    'text-foreground hover:bg-surface-subtle aria-[current=page]:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2 text-sm whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none';
 
 /**
  * Disclosure submenu (button + list of links), deliberately not an ARIA
@@ -48,13 +48,17 @@ const submenuLinkClasses =
  * trigger, and focus leaving the item closes it.
  */
 function DesktopSubmenu({ item }: { item: NavItem }) {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
+    const { url } = usePage();
     const [open, setOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const links = [
         ...(isNavLink(item) ? [{ ...item, children: undefined }] : []),
         ...(item.children ?? []),
     ].filter(isNavLink);
+    const hasCurrent = links.some((link) =>
+        isCurrentNavItem(link, url, locale),
+    );
 
     return (
         <CollapsiblePrimitive.Root
@@ -80,7 +84,8 @@ function DesktopSubmenu({ item }: { item: NavItem }) {
         >
             <CollapsiblePrimitive.Trigger
                 ref={triggerRef}
-                className="text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
+                data-current={hasCurrent ? 'true' : undefined}
+                className="text-muted-foreground hover:text-foreground data-[current=true]:text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
             >
                 {item.label}
                 <ChevronDown
@@ -158,7 +163,7 @@ export function PublicHeader({
         <>
             <Button
                 variant="ghost"
-                size="sm"
+                size="default"
                 href={loginUrl}
                 ariaLabel={t('nav.login')}
                 responsiveLabel
@@ -168,7 +173,7 @@ export function PublicHeader({
             </Button>
             <Button
                 variant="primary"
-                size="sm"
+                size="default"
                 href={registerUrl}
                 ariaLabel={t('nav.register')}
                 responsiveLabel
@@ -182,7 +187,7 @@ export function PublicHeader({
     return (
         <HeaderUtility logo={logo} brandName={brandName}>
             {navItems.length > 0 && (
-                <ul className="hidden items-center gap-4 md:flex">
+                <ul className="hidden items-center gap-1 md:flex">
                     {navItems.map((item) => (
                         <li key={item.id}>
                             {(item.children ?? []).length > 0 ? (

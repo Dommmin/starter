@@ -82,7 +82,7 @@ export function SearchInput({
                 placeholder={placeholder}
                 disabled={disabled}
                 className={cn(
-                    'border-input placeholder:text-muted-foreground h-11 w-full rounded-md border bg-transparent py-2 pr-9 pl-9 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+                    'border-input placeholder:text-muted-foreground h-11 w-full rounded-md border bg-transparent py-2 pr-11 pl-9 text-sm shadow-xs transition-[color,box-shadow] outline-none',
                     'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                     'disabled:pointer-events-none disabled:opacity-50',
                 )}
@@ -93,7 +93,7 @@ export function SearchInput({
                     onClick={() => commit('')}
                     disabled={disabled}
                     aria-label={clearLabel}
-                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 focus-visible:ring-2 focus-visible:outline-none"
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
                 >
                     <X className="size-3.5" aria-hidden="true" />
                 </button>

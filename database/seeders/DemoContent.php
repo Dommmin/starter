@@ -12,6 +12,9 @@ use App\Support\DemoContent\DemoMenuItems;
 use App\Support\DemoContent\DemoNavigationItems;
 use App\Support\DemoContent\DemoPages;
 use App\Support\DemoContent\DemoUsers;
+use Carbon\CarbonInterface;
+use Closure;
+use Illuminate\Support\Carbon;
 
 /**
  * Registry of the sample content created by the seeders. Seeders use these
@@ -104,4 +107,57 @@ final class DemoContent
         DemoUsers::class,
         DemoHomeSections::class,
     ];
+
+    /**
+     * Creation moment of a sample page or article: shortly before its
+     * earliest publication, or a few hours ago (offset by the key, so the
+     * samples differ) when it is only a draft or scheduled.
+     *
+     * @param  array<string, array{0: string, 1: string|null, 2: string, 3: int}>  $translations
+     */
+    public static function createdAt(string $key, array $translations, CarbonInterface $now): CarbonInterface
+    {
+        $earliest = min(0, ...array_column($translations, 3));
+
+        return $earliest < 0
+            ? $now->copy()->addDays($earliest)->subHours(2)
+            : $now->copy()->subHours(2 + strlen($key));
+    }
+
+    /**
+     * Publication date of a sample translation relative to the real `$now`:
+     * none for a draft, the start of a future day when scheduled, otherwise
+     * `$days` from now.
+     */
+    public static function publishedAt(string $state, int $days, CarbonInterface $now): ?CarbonInterface
+    {
+        return match ($state) {
+            'draft' => null,
+            'scheduled' => $now->copy()->addDays($days)->startOfDay(),
+            default => $now->copy()->addDays($days),
+        };
+    }
+
+    /**
+     * Run `$callback` with the clock frozen at `$moment`, so a sample record,
+     * its timestamps and its audit entries carry that past date (created and
+     * updated equal, so `--remove-demo` still sees it as unedited). The
+     * previous test clock, if any, is restored.
+     *
+     * @template TResult
+     *
+     * @param  Closure(): TResult  $callback
+     * @return TResult
+     */
+    public static function at(CarbonInterface $moment, Closure $callback): mixed
+    {
+        $previous = Carbon::getTestNow();
+        Carbon::setTestNow($moment);
+
+        try {
+            return $callback();
+        } finally {
+            Carbon::setTestNow($previous);
+        }
+    }
 }

@@ -25,6 +25,7 @@ use Database\Seeders\DemoUserSeeder;
 use Database\Seeders\HomeSectionSeeder;
 use Database\Seeders\PageSeeder;
 use Database\Seeders\SiteSettingsSeeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -101,6 +102,24 @@ test('the local seed gives every admin list two pages and every state to review'
         ->and(ArticleSlugRedirect::query()->count())->toBe(count(ArticleSeeder::REDIRECTS))
         ->and(HomeSection::query()->where('enabled', false)->exists())->toBeTrue()
         ->and($homeOrder('en'))->not->toBe($homeOrder('pl'));
+});
+
+test('the local seed spreads samples over past dates and leaves them unedited', function () {
+    $this->app['env'] = 'local';
+
+    $this->seed(DatabaseSeeder::class);
+
+    $days = fn (string $model): int => $model::query()->pluck('created_at')->map->toDateString()->unique()->count();
+
+    expect(Carbon::getTestNow())->toBeNull()
+        ->and($days(User::class))->toBeGreaterThan(10)
+        ->and($days(MediaAsset::class))->toBeGreaterThan(10)
+        ->and($days(Article::class))->toBeGreaterThan(10)
+        ->and($days(AuditLog::class))->toBeGreaterThan(10)
+        ->and(AuditLog::query()->where('created_at', '>', now())->exists())->toBeFalse()
+        ->and(ArticleTranslation::query()->whereColumn('updated_at', '>', 'created_at')->exists())->toBeFalse()
+        ->and(PageTranslation::query()->whereColumn('updated_at', '>', 'created_at')->exists())->toBeFalse()
+        ->and(User::query()->whereColumn('updated_at', '>', 'created_at')->exists())->toBeFalse();
 });
 
 test('the local seed has no sample that only repeats its title or describes the starter', function () {

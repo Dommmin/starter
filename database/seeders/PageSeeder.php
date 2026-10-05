@@ -6,7 +6,6 @@ use App\Enums\PublicationStatus;
 use App\Models\Page;
 use App\Models\PageSlugRedirect;
 use App\Models\PageTranslation;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 
 /**
@@ -110,6 +109,8 @@ class PageSeeder extends Seeder
 
     public function run(): void
     {
+        $now = now();
+
         foreach (self::PAGES as $key => $definition) {
             $slugs = self::slugs($key);
 
@@ -117,19 +118,21 @@ class PageSeeder extends Seeder
                 continue;
             }
 
-            $page = Page::query()->create();
+            DemoContent::at(DemoContent::createdAt($key, $definition['translations'], $now), function () use ($definition, $slugs, $now): void {
+                $page = Page::query()->create();
 
-            foreach ($definition['translations'] as $locale => [$title, $metaDescription, $state, $days]) {
-                $page->translations()->create([
-                    'locale' => $locale,
-                    'title' => $title,
-                    'slug' => $slugs[$locale],
-                    'meta_description' => $metaDescription,
-                    'body' => DemoDocument::for($locale, $title, $metaDescription, $definition['long'] ?? false),
-                    'status' => $state === 'draft' ? PublicationStatus::Draft : PublicationStatus::Published,
-                    'published_at' => self::publishedAt($state, $days),
-                ]);
-            }
+                foreach ($definition['translations'] as $locale => [$title, $metaDescription, $state, $days]) {
+                    $page->translations()->create([
+                        'locale' => $locale,
+                        'title' => $title,
+                        'slug' => $slugs[$locale],
+                        'meta_description' => $metaDescription,
+                        'body' => DemoDocument::for($locale, $title, $metaDescription, $definition['long'] ?? false),
+                        'status' => $state === 'draft' ? PublicationStatus::Draft : PublicationStatus::Published,
+                        'published_at' => DemoContent::publishedAt($state, $days, $now),
+                    ]);
+                }
+            });
         }
 
         foreach (self::REDIRECTS as $formerSlug => [$key, $locale]) {
@@ -145,19 +148,6 @@ class PageSeeder extends Seeder
                 );
             }
         }
-    }
-
-    /**
-     * Publication date of a sample translation: none for a draft, the start
-     * of a future day when scheduled, otherwise `$days` from now.
-     */
-    private static function publishedAt(string $state, int $days): ?CarbonInterface
-    {
-        return match ($state) {
-            'draft' => null,
-            'scheduled' => now()->addDays($days)->startOfDay(),
-            default => now()->addDays($days),
-        };
     }
 
     /**

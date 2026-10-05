@@ -7,8 +7,9 @@ use Illuminate\Database\Seeder;
 
 /**
  * Local sample FAQs in Polish, English and German, short and long answers,
- * published and hidden; enough of them for two pages of the admin list.
- * Idempotent: a question already present in its language is skipped.
+ * published and hidden, added over the past weeks; enough of them for two
+ * pages of the admin list. Idempotent: a question already present in its
+ * language is skipped.
  */
 class FaqSeeder extends Seeder
 {
@@ -37,11 +38,13 @@ class FaqSeeder extends Seeder
 
     public function run(): void
     {
+        $now = now();
+
         foreach (self::FAQS as $position => $definition) {
-            Faq::query()->firstOrCreate(
+            DemoContent::at($now->copy()->subDays(count(self::FAQS) - $position), fn () => Faq::query()->firstOrCreate(
                 ['locale' => $definition['locale'], 'question' => $definition['question']],
                 ['answer' => $definition['answer'], 'published' => $definition['published'], 'position' => $position + 1],
-            );
+            ));
         }
     }
 }

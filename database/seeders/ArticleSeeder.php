@@ -6,7 +6,6 @@ use App\Enums\PublicationStatus;
 use App\Models\Article;
 use App\Models\ArticleSlugRedirect;
 use App\Models\ArticleTranslation;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 
 /**
@@ -140,6 +139,8 @@ class ArticleSeeder extends Seeder
 
     public function run(): void
     {
+        $now = now();
+
         foreach (self::ARTICLES as $key => $definition) {
             $slugs = self::slugs($key);
 
@@ -147,22 +148,24 @@ class ArticleSeeder extends Seeder
                 continue;
             }
 
-            $article = Article::query()->create([
-                'cover_media_id' => isset($definition['cover']) ? DemoMediaSeeder::assetId($definition['cover']) : null,
-            ]);
-
-            foreach ($definition['translations'] as $locale => [$title, $excerpt, $state, $days]) {
-                $article->translations()->create([
-                    'locale' => $locale,
-                    'title' => $title,
-                    'slug' => $slugs[$locale],
-                    'excerpt' => $excerpt,
-                    'meta_description' => $excerpt,
-                    'body' => self::body($definition, $locale, $title, $excerpt),
-                    'status' => $state === 'draft' ? PublicationStatus::Draft : PublicationStatus::Published,
-                    'published_at' => self::publishedAt($state, $days),
+            DemoContent::at(DemoContent::createdAt($key, $definition['translations'], $now), function () use ($definition, $slugs, $now): void {
+                $article = Article::query()->create([
+                    'cover_media_id' => isset($definition['cover']) ? DemoMediaSeeder::assetId($definition['cover']) : null,
                 ]);
-            }
+
+                foreach ($definition['translations'] as $locale => [$title, $excerpt, $state, $days]) {
+                    $article->translations()->create([
+                        'locale' => $locale,
+                        'title' => $title,
+                        'slug' => $slugs[$locale],
+                        'excerpt' => $excerpt,
+                        'meta_description' => $excerpt,
+                        'body' => self::body($definition, $locale, $title, $excerpt),
+                        'status' => $state === 'draft' ? PublicationStatus::Draft : PublicationStatus::Published,
+                        'published_at' => DemoContent::publishedAt($state, $days, $now),
+                    ]);
+                }
+            });
         }
 
         foreach (self::REDIRECTS as $formerSlug => [$key, $locale]) {
@@ -192,19 +195,6 @@ class ArticleSeeder extends Seeder
         return isset($definition['bodies'][$locale])
             ? DemoDocument::short($definition['bodies'][$locale])
             : DemoDocument::for($locale, $title, $excerpt, $definition['long'] ?? false);
-    }
-
-    /**
-     * Publication date of a sample translation: none for a draft, the start
-     * of a future day when scheduled, otherwise `$days` from now.
-     */
-    private static function publishedAt(string $state, int $days): ?CarbonInterface
-    {
-        return match ($state) {
-            'draft' => null,
-            'scheduled' => now()->addDays($days)->startOfDay(),
-            default => now()->addDays($days),
-        };
     }
 
     /**

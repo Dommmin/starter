@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\DB;
  * without a panel role, one unverified account, Polish characters and very
  * long names and e-mail addresses, plus short demo logins for every role
  * (`editor@`, `user@`, `mfa@example.com`; the last one is an administrator
- * with confirmed two-factor authentication). Every account uses the
- * local-only password `password`; the TOTP secret and recovery codes below
- * are synthetic and documented in the README. Creation is recorded as
- * `user.created` by the sample administrator. Idempotent: existing e-mail
- * addresses are skipped.
+ * with confirmed two-factor authentication), created over the past weeks.
+ * Every account uses the local-only password `password`; the TOTP secret
+ * and recovery codes below are synthetic and documented in the README.
+ * Creation is recorded as `user.created` by the sample administrator.
+ * Idempotent: existing e-mail addresses are skipped.
  */
 class DemoUserSeeder extends Seeder
 {
@@ -64,13 +64,17 @@ class DemoUserSeeder extends Seeder
     public function run(RecordAuditEvent $audit): void
     {
         $administrator = User::query()->where('email', DemoContent::USER_EMAIL)->first();
+        $now = now();
+        $remaining = count(self::USERS);
 
         foreach (self::USERS as $email => $definition) {
+            $createdAt = $now->copy()->subDays(4 * $remaining--);
+
             if (User::query()->where('email', $email)->exists()) {
                 continue;
             }
 
-            DB::transaction(function () use ($email, $definition, $administrator, $audit): void {
+            DemoContent::at($createdAt, fn () => DB::transaction(function () use ($email, $definition, $administrator, $audit): void {
                 $user = new User;
                 $user->forceFill([
                     'name' => $definition['name'],
@@ -90,7 +94,7 @@ class DemoUserSeeder extends Seeder
                     'email' => RecordAuditEvent::redacted(),
                     'role' => RecordAuditEvent::change(null, $definition['role']?->value),
                 ]);
-            });
+            }));
         }
     }
 }

@@ -17,9 +17,9 @@ use Intervention\Image\ImageManager;
 
 /**
  * Local sample DAM assets with real files generated offline with GD: images
- * of different proportions and formats, a neutral logo that suits every
- * accent preset, two PDFs, alt texts (some missing),
- * one asset still in quarantine and one rejected.
+ * of different proportions and formats uploaded over the past weeks, a
+ * neutral logo that suits every accent preset, two PDFs, alt texts (some
+ * missing), one asset still in quarantine and one rejected.
  *
  * Demo data only: the seeder sets the scan status directly instead of
  * running ClamAV, because the files are generated here and never come from
@@ -57,8 +57,12 @@ class DemoMediaSeeder extends Seeder
     {
         $owner = User::query()->where('email', DemoContent::USER_EMAIL)->first();
         $disk = (string) config('media.disk');
+        $now = now();
+        $remaining = count(self::ASSETS);
 
         foreach (self::ASSETS as $definition) {
+            $createdAt = $now->copy()->subDays(3 * $remaining--);
+
             if (MediaAsset::query()->where('uuid', $definition['uuid'])->exists()) {
                 continue;
             }
@@ -77,7 +81,7 @@ class DemoMediaSeeder extends Seeder
                 Storage::disk($disk)->put($path, $bytes);
             }
 
-            $asset = DB::transaction(function () use ($definition, $owner, $disk, $path, $bytes, $status, $audit): MediaAsset {
+            $asset = DemoContent::at($createdAt, fn (): MediaAsset => DB::transaction(function () use ($definition, $owner, $disk, $path, $bytes, $status, $audit): MediaAsset {
                 $asset = new MediaAsset;
                 $asset->forceFill([
                     'uuid' => $definition['uuid'],
@@ -111,7 +115,7 @@ class DemoMediaSeeder extends Seeder
                 }
 
                 return $asset;
-            });
+            }));
 
             if ($status === MediaStatus::Clean && $asset->isImage()) {
                 GenerateImageVariants::dispatch($asset->id);

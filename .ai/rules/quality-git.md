@@ -33,6 +33,8 @@ Glob: `lefthook.yml`, `commitlint.config.mjs`, `.githooks/**`, `.github/workflow
 - `commit-msg`: walidacja wiadomości przez commitlint.
 - Hooki działają w trybie check — bez `--fix`, automatycznego `git add` i stashowania. `stage_fixed: false`.
 - Brak narzędzia/Dockera/timeout blokuje commit z instrukcją naprawy, nie cichym pominięciem.
+- Kontener hooka uruchamia `.githooks/app-run`: z UID/GID hosta (jak `make`; gołe `docker compose run app` zmienia właściciela `storage` i aplikacja zwraca 500) oraz, w worktree, z katalogiem `git rev-parse --git-common-dir` zamontowanym pod tą samą ścieżką. Nowe wywołania kontenera w hookach idą przez ten skrypt.
+- `core.hooksPath` ma wartość względną `.githooks` (`make hooks`, `make hook-check`). Wartość absolutna jest wspólna dla wszystkich worktree, więc commit w worktree uruchamia hooki z gałęzi głównego checkoutu. Agent jej nie zmienia — zgłasza człowiekowi; do czasu poprawki commit w worktree wymaga tymczasowego montowania `.git` i `chown` storage, nigdy obejścia hooków.
 
 ## Pint
 

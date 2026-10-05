@@ -167,7 +167,7 @@ test('slugs must be lowercase kebab case and not a reserved path', function (str
     ])->assertSessionHasErrors('translations.en.slug');
 
     expect(Page::query()->count())->toBe(0);
-})->with(['About-Us', 'about us', 'about--us', '-about', 'über', 'login', 'admin', 'settings', 'about', 'pl']);
+})->with(['About-Us', 'about us', 'about--us', '-about', 'über', 'login', 'admin', 'settings', 'articles', 'pl']);
 
 test('slugs are unique per locale but may repeat across locales', function () {
     $editor = User::factory()->editor()->create();

@@ -24,9 +24,9 @@ export type FooterSocialLink = {
 
 export type FooterProps = {
     /**
-     * Link columns: each top-level entry is one column. A `group` (or any
-     * entry with `children`) titles the column and lists its children; a
-     * plain link becomes a single-link column.
+     * Link columns: a `group` (or any entry with `children`) titles a column
+     * and lists its children; top-level plain links share one "Information"
+     * column, placed where the first of them appears.
      */
     groups?: NavItem[];
     contact?: FooterContact;
@@ -81,6 +81,20 @@ export function Footer({
         contact?.email || contact?.phone || contact?.address,
     );
     const hasColumns = groups.length > 0 || hasContact || social.length > 0;
+    const plainLinks = groups.filter(
+        (item) => (item.children ?? []).length === 0 && isNavLink(item),
+    );
+    const columns = groups.flatMap((item) => {
+        if ((item.children ?? []).length > 0) {
+            return [
+                { id: item.id, title: item.label, links: item.children ?? [] },
+            ];
+        }
+
+        return item === plainLinks[0]
+            ? [{ id: 'links', title: t('footer.links'), links: plainLinks }]
+            : [];
+    });
 
     return (
         <footer className="border-border-subtle border-t">
@@ -88,17 +102,14 @@ export function Footer({
                 <div className="flex flex-col gap-8 py-10 sm:py-12">
                     {hasColumns && (
                         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-                            {groups.map((group) => {
-                                const children = group.children ?? [];
-                                const links =
-                                    children.length > 0 ? children : [group];
-
-                                return (
-                                    <FooterColumn
-                                        key={group.id}
-                                        title={group.label}
-                                    >
-                                        {links.filter(isNavLink).map((link) => (
+                            {columns.map((column) => (
+                                <FooterColumn
+                                    key={column.id}
+                                    title={column.title}
+                                >
+                                    {column.links
+                                        .filter(isNavLink)
+                                        .map((link) => (
                                             <li key={link.id}>
                                                 <NavItemLink
                                                     item={link}
@@ -106,9 +117,8 @@ export function Footer({
                                                 />
                                             </li>
                                         ))}
-                                    </FooterColumn>
-                                );
-                            })}
+                                </FooterColumn>
+                            ))}
                             {hasContact && contact && (
                                 <FooterColumn title={t('footer.contact')}>
                                     {contact.email && (

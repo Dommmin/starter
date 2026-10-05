@@ -57,6 +57,18 @@ implementacją.
 | 23 | Baza zawiera śmieci po testach E2E i ręcznych (potwierdzone: `make e2e` losuje hasło kont `e2e-*` przy każdym uruchomieniu, więc lokalnie nie ma konta ze znanym hasłem): 2 strony `e2e-page-*`, ok. 15 kont `*@mailinator.com`, „Docs” w menu i konta `e2e-*`. Nie ma konta demo `test@example.com`. | E2E działało na lokalnej bazie deweloperskiej. |
 | 24 | Copy demo jest techniczne (ADR-002, „zero hydration mismatch”) i nie nadaje się do pokazania klientowi. | Treść demo z seederów. |
 
+### Znalezione po świeżym seedzie (2026-10-05)
+
+| # | Problem | Przyczyna | Status |
+|---|---------|-----------|--------|
+| 25 | Stopka i tytuł pokazują „Laravel” („© 2026 Laravel”, „… - Laravel”), a logo pokazuje „Punkt Startowy”. | `seo.site_name` i `seo.organization.name` spadały na `APP_NAME` (domyślnie `Laravel`). | Poprawione: bez zapisanych ustawień i bez `SEO_SITE_NAME` używana jest marka z katalogu (`common.brand.name`). `documentTitle` nie dokleja nazwy, gdy tytuł już ją zawiera. |
+| 26 | Stopka dubluje pojedynczy link: „Privacy policy” jako tytuł kolumny i link pod nim. | `Footer` robił z każdego samodzielnego linku osobną kolumnę z tytułem równym etykiecie. | Poprawione: samodzielne linki trafiają do jednej kolumny „Informacje”. |
+| 27 | Po świeżym seedzie strona główna nie ma sekcji artykułów w żadnym języku. | `HomeSectionSeeder` ustawia `latest_articles` jako wyłączoną. | Otwarte: do decyzji, czy demo ma ją włączać. |
+
+Przy resecie zauważono też:
+- `make backup` pada (`tar: media: Cannot open: Permission denied`).
+- Ustawienia strony w cache (`rememberForever`) przetrwają `migrate:fresh` i trzeba wywołać `cache:clear`.
+
 ## Plan poprawek
 
 Kolejność uwzględnia ryzyko i zależności. Każdy krok to osobny, mały commit z

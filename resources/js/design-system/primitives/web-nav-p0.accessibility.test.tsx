@@ -216,6 +216,41 @@ describe('Footer', () => {
         expect(container.textContent).toContain('© 2026 Acme');
     });
 
+    it('lists top-level plain links once in a shared column', async () => {
+        const container = await render(
+            <Footer
+                copyright="© 2026 Acme"
+                groups={[
+                    {
+                        id: 'privacy',
+                        kind: 'internal',
+                        label: 'Privacy policy',
+                        href: '/privacy-policy',
+                    },
+                    {
+                        id: 'terms',
+                        kind: 'internal',
+                        label: 'Terms',
+                        href: '/terms',
+                    },
+                ]}
+            />,
+        );
+
+        const lists = container.querySelectorAll('footer ul');
+
+        expect(lists).toHaveLength(1);
+        expect(container.textContent).toContain('footer.links');
+        expect(
+            container.textContent?.match(/Privacy policy/g) ?? [],
+        ).toHaveLength(1);
+        expect(
+            Array.from(lists[0].querySelectorAll('a')).map((link) =>
+                link.getAttribute('href'),
+            ),
+        ).toEqual(['/privacy-policy', '/terms']);
+    });
+
     it('omits the columns row when there are no groups, contact or social links', async () => {
         const container = await render(<Footer copyright="© 2026 Acme" />);
 

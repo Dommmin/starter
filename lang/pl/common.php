@@ -35,6 +35,7 @@ return [
         'submenu' => 'Podmenu: :label',
     ],
     'footer' => [
+        'links' => 'Informacje',
         'contact' => 'Kontakt',
         'social' => 'Media społecznościowe',
     ],

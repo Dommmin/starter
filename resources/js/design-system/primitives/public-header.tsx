@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserMenuContent } from '@/components/user-menu-content';
@@ -20,6 +21,7 @@ import type { BrandLogoImage } from './brand-logo';
 import { Button } from './button';
 import { HeaderUtility } from './header-utility';
 import { MobileNav } from './mobile-nav';
+import { ThemeMenuGroup } from './theme-switcher';
 import type { NavItem } from './nav-item';
 import { isCurrentNavItem, isNavLink, NavItemLink } from './nav-item-link';
 
@@ -156,6 +158,8 @@ export function PublicHeader({
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
+                <ThemeMenuGroup />
+                <DropdownMenuSeparator />
                 <UserMenuContent user={auth.user} />
             </DropdownMenuContent>
         </DropdownMenu>

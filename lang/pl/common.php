@@ -44,6 +44,7 @@ return [
         'moved' => ':label przesunięto na pozycję :position z :total',
     ],
     'theme' => [
+        'label' => 'Motyw',
         'light' => 'Jasny',
         'dark' => 'Ciemny',
         'system' => 'Systemowy',

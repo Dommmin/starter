@@ -218,6 +218,34 @@ describe('PublicChrome', () => {
         ).toBeNull();
     });
 
+    it('offers the theme switcher in the footer to guests only', async () => {
+        const themeButton = (root: Element | null | undefined) =>
+            root?.querySelector('button[aria-label^="a11y.themeSwitcher"]');
+
+        const guest = await render(
+            <PublicChrome>
+                <p>Page body</p>
+            </PublicChrome>,
+        );
+
+        expect(themeButton(guest.querySelector('footer'))).not.toBeNull();
+        expect(themeButton(guest.querySelector('header'))).toBeNull();
+
+        sharedProps.current = {
+            auth: {
+                user: { id: 1, name: 'Ada Admin', email: 'ada@example.test' },
+            },
+        };
+        const signedIn = await render(
+            <PublicChrome>
+                <p>Page body</p>
+            </PublicChrome>,
+        );
+
+        expect(themeButton(signedIn.querySelector('footer'))).toBeNull();
+        expect(themeButton(signedIn.querySelector('header'))).toBeNull();
+    });
+
     it('uses the copyright line the page passes', async () => {
         const container = await render(
             <PublicChrome footer={{ copyright: '© 2026 Custom' }}>

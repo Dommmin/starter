@@ -1,14 +1,13 @@
 import { useTranslation } from '@/i18n';
 import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { LocaleSwitcher } from './locale-switcher';
-import { ThemeSwitcher } from './theme-switcher';
 
 export type HeaderUtilityProps = {
     /** Right-hand actions (account controls, mobile menu trigger). */
     children?: React.ReactNode;
     /**
      * Main navigation, placed next to the logo in its own `nav` landmark;
-     * theme and locale switchers stay with the actions on the right.
+     * the locale switcher stays with the actions on the right.
      */
     navigation?: React.ReactNode;
     /** Optional image logo; the text logo otherwise. */
@@ -50,7 +49,6 @@ export function HeaderUtility({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-                    <ThemeSwitcher />
                     <LocaleSwitcher />
                     {children}
                 </div>

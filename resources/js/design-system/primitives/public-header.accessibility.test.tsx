@@ -5,12 +5,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { PublicHeader } from './public-header';
 
-const currentPage = vi.hoisted(() => ({ url: '/' }));
+const currentPage = vi.hoisted(() => ({
+    url: '/',
+    user: null as Record<string, unknown> | null,
+}));
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
         url: currentPage.url,
-        props: { auth: { user: null }, i18n: { alternateUrls: {} } },
+        props: {
+            auth: { user: currentPage.user },
+            i18n: { alternateUrls: {} },
+        },
     }),
     router: {
         on: () => () => {},
@@ -70,6 +76,7 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 
 afterEach(async () => {
     currentPage.url = '/';
+    currentPage.user = null;
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -340,5 +347,33 @@ describe('PublicHeader', () => {
         expect(main?.querySelector('a[href="/articles"]')).not.toBeNull();
         expect(main?.querySelectorAll('button')).toHaveLength(0);
         expect(main?.textContent).not.toContain('nav.login');
+    });
+
+    it('offers the theme choice in the account menu of a signed-in user', async () => {
+        currentPage.user = {
+            id: 1,
+            name: 'Ada Admin',
+            email: 'ada@example.test',
+        };
+        const container = await render(<PublicHeader />);
+
+        expect(
+            container.querySelector('button[aria-label^="a11y.themeSwitcher"]'),
+        ).toBeNull();
+
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.userMenu"]',
+        );
+        await act(async () => {
+            trigger?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+
+        const items = Array.from(
+            document.querySelectorAll('[role="menuitemradio"]'),
+        ).map((item) => item.textContent);
+
+        expect(items).toEqual(['theme.light', 'theme.dark', 'theme.system']);
     });
 });

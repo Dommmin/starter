@@ -34,12 +34,10 @@ export function LocaleSwitcher() {
                 <button
                     type="button"
                     className="hover:bg-surface-subtle focus-visible:ring-ring text-text-subtle hover:text-foreground flex min-h-[44px] cursor-pointer items-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-3 sm:text-sm"
-                    aria-label={t('a11y.languageSelector')}
+                    aria-label={`${t('a11y.languageSelector')}: ${currentLocale?.native ?? locale}`}
                 >
-                    <Globe className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-                    <span className="hidden sm:inline">
-                        {currentLocale?.native ?? locale.toUpperCase()}
-                    </span>
+                    <Globe className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                    <span>{locale.toUpperCase()}</span>
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -57,7 +55,12 @@ export function LocaleSwitcher() {
                                 href={targetUrl}
                                 className="flex w-full items-center justify-between px-2.5 py-1.5 text-sm"
                             >
-                                <span>{loc.native}</span>
+                                <span>
+                                    <span className="text-muted-foreground mr-2 font-medium">
+                                        {loc.code.toUpperCase()}
+                                    </span>
+                                    {loc.native}
+                                </span>
                                 {isCurrent && (
                                     <span className="text-primary ml-2 font-semibold">
                                         ✓

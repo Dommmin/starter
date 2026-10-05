@@ -26,7 +26,7 @@ const toneMap: Record<SectionTone, string> = {
     default: 'bg-background text-foreground',
     subtle: 'bg-surface-subtle text-foreground',
     raised: 'bg-surface-raised text-foreground',
-    inverted: 'bg-surface-inverted text-surface-inverted-foreground',
+    inverted: 'bg-surface-emphasis text-surface-emphasis-foreground',
 };
 
 export function Section({
@@ -48,6 +48,7 @@ export function Section({
         <section
             id={id}
             aria-labelledby={ariaLabelledBy}
+            data-tone={tone === 'inverted' ? 'inverted' : undefined}
             className={cn(
                 'relative w-full',
                 spacingMap[spacing],

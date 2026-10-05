@@ -30,7 +30,7 @@ const toneMap: Record<HeadingTone, string> = {
     default: 'text-foreground',
     muted: 'text-muted-foreground',
     primary: 'text-primary',
-    inverted: 'text-surface-inverted-foreground',
+    inverted: 'text-surface-emphasis-foreground',
 };
 
 const alignMap: Record<HeadingAlign, string> = {

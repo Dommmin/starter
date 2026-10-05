@@ -20,7 +20,7 @@ const toneMap: Record<SurfaceTone, string> = {
     default: 'bg-card text-card-foreground',
     subtle: 'bg-surface-subtle text-foreground',
     raised: 'bg-surface-raised text-foreground shadow-md',
-    inverted: 'bg-surface-inverted text-surface-inverted-foreground shadow-xl',
+    inverted: 'bg-surface-emphasis text-surface-emphasis-foreground shadow-xl',
 };
 
 const paddingMap: Record<SurfacePadding, string> = {

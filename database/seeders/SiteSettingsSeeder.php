@@ -52,7 +52,7 @@ class SiteSettingsSeeder extends Seeder
         $updateSiteSettings->handle(
             new SiteSettingsInputData(
                 siteName: $current->site_name ?? self::SITE_NAME,
-                logoMediaId: DemoMediaSeeder::assetId('square'),
+                logoMediaId: DemoMediaSeeder::assetId('logo'),
                 ogImageMediaId: DemoMediaSeeder::assetId('landscape'),
                 contactEmail: 'kontakt@example.com',
                 contactPhone: '+48 42 123 45 67',

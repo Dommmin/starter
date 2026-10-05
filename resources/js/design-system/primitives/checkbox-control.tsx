@@ -46,6 +46,8 @@ export function CheckboxControl({
                 'border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary',
                 'data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground data-[state=indeterminate]:border-primary',
                 'focus-visible:ring-ring/50 mt-0.5 size-5 shrink-0 rounded-[4px] border shadow-xs outline-none focus-visible:ring-[3px]',
+                // Unlabelled row checkboxes: a 28 px hit area around the 20 px box (WCAG 2.5.8).
+                "relative after:absolute after:-inset-1 after:content-['']",
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 invalid && 'border-destructive',
             )}

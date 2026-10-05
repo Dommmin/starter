@@ -39,6 +39,14 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('npx lefthook run pre-commit', pre_commit)
         self.assertNotIn('--no-verify', pre_commit)
 
+        commit_msg = (ROOT / ".githooks/commit-msg").read_text()
+        app_run = ROOT / ".githooks/app-run"
+        self.assertIn('/app-run" npx lefthook run pre-commit', pre_commit)
+        self.assertIn('/app-run" npx lefthook run commit-msg', commit_msg)
+        self.assertTrue(os.access(app_run, os.X_OK))
+        self.assertIn('export LOCAL_UID LOCAL_GID', app_run.read_text())
+        self.assertIn('--volume "$common_dir:$common_dir"', app_run.read_text())
+
     def test_ci_covers_develop_main_and_manual_deploy(self):
         package = json.loads((ROOT / "package.json").read_text())
         self.assertEqual(

@@ -6,6 +6,7 @@ use App\Data\Media\MediaImageData;
 use App\Models\MediaAsset;
 use App\Repositories\Media\MediaAssetRepository;
 use App\Services\Content\RichText\MediaImage;
+use Illuminate\Support\Str;
 use Tiptap\Editor;
 use Tiptap\Marks\Bold;
 use Tiptap\Marks\Code;
@@ -133,6 +134,56 @@ final class RichTextRenderer
             'type' => 'doc',
             'content' => $this->sanitizeChildren($content, 1, 'doc'),
         ];
+    }
+
+    /**
+     * Plain text of the first non-empty top-level paragraph, whitespace
+     * collapsed and shortened on a word boundary to at most `$limit`
+     * characters (plus an ellipsis): the fallback meta description of
+     * content without an explicit summary.
+     *
+     * @param  array<mixed>|null  $document
+     */
+    public static function summary(?array $document, int $limit = 160): ?string
+    {
+        foreach ($document['content'] ?? [] as $node) {
+            if (! is_array($node) || ($node['type'] ?? null) !== 'paragraph') {
+                continue;
+            }
+
+            $text = trim((string) preg_replace('/\s+/u', ' ', self::plainText($node)));
+
+            if ($text !== '') {
+                return Str::limit($text, $limit, '…', preserveWords: true);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Concatenated text of a node and its descendants.
+     *
+     * @param  array<mixed>  $node
+     */
+    private static function plainText(array $node): string
+    {
+        if (($node['type'] ?? null) === 'text') {
+            return is_string($node['text'] ?? null) ? $node['text'] : '';
+        }
+
+        if (($node['type'] ?? null) === 'hardBreak') {
+            return ' ';
+        }
+
+        $text = '';
+        foreach ($node['content'] ?? [] as $child) {
+            if (is_array($child)) {
+                $text .= self::plainText($child);
+            }
+        }
+
+        return $text;
     }
 
     /**

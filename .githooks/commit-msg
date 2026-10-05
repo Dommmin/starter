@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 
-exec docker compose run --rm --no-deps app npx lefthook run commit-msg "$1"
+exec "$(dirname "$0")/app-run" npx lefthook run commit-msg "$1"

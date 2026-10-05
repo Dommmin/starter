@@ -330,6 +330,7 @@ function LatestArticlesSection({
                                                 height={article.cover.height}
                                                 alt=""
                                                 sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
+                                                frame="wide"
                                             />
                                         )}
                                         <Heading level={3} variant="group">

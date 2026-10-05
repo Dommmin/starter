@@ -17,8 +17,9 @@ use Intervention\Image\ImageManager;
 
 /**
  * Local sample DAM assets with real files generated offline with GD: images
- * of different proportions and formats, two PDFs, alt texts (some missing),
- * one asset still in quarantine and one rejected.
+ * of different proportions and formats uploaded over the past weeks, a
+ * neutral logo that suits every accent preset, two PDFs, alt texts (some
+ * missing), one asset still in quarantine and one rejected.
  *
  * Demo data only: the seeder sets the scan status directly instead of
  * running ClamAV, because the files are generated here and never come from
@@ -45,6 +46,9 @@ class DemoMediaSeeder extends Seeder
         'no-alt' => ['uuid' => 'de000000-0000-4000-a000-000000000010', 'name' => 'IMG_2048.jpg', 'mime' => 'image/jpeg', 'width' => 1024, 'height' => 768, 'color' => '475569', 'alt' => null, 'status' => MediaStatus::Clean],
         'pending' => ['uuid' => 'de000000-0000-4000-a000-000000000011', 'name' => 'nowe-zdjęcie.jpg', 'mime' => 'image/jpeg', 'width' => 800, 'height' => 600, 'color' => '64748b', 'alt' => null, 'status' => MediaStatus::Quarantine],
         'rejected' => ['uuid' => 'de000000-0000-4000-a000-000000000012', 'name' => 'faktura-podejrzana.jpg', 'mime' => 'image/jpeg', 'width' => 800, 'height' => 600, 'color' => '991b1b', 'alt' => null, 'status' => MediaStatus::Rejected],
+        'logo' => ['uuid' => 'de000000-0000-4000-a000-000000000015', 'name' => 'logo-pracownia.png', 'mime' => 'image/png', 'width' => 512, 'height' => 512, 'color' => '27272a', 'alt' => 'Logo Pracowni Nowak', 'status' => MediaStatus::Clean],
+        'office' => ['uuid' => 'de000000-0000-4000-a000-000000000016', 'name' => 'biuro-piotrkowska.jpg', 'mime' => 'image/jpeg', 'width' => 1600, 'height' => 1067, 'color' => '57534e', 'alt' => 'Biuro pracowni przy ulicy Piotrkowskiej', 'status' => MediaStatus::Clean],
+        'workshop' => ['uuid' => 'de000000-0000-4000-a000-000000000017', 'name' => 'workshop-laptops.jpg', 'mime' => 'image/jpeg', 'width' => 1600, 'height' => 900, 'color' => '1e3a8a', 'alt' => 'Laptops on a table during a workshop', 'status' => MediaStatus::Clean],
         'pdf' => ['uuid' => 'de000000-0000-4000-a000-000000000013', 'name' => 'cennik-2026.pdf', 'mime' => 'application/pdf', 'alt' => 'Cennik usług 2026', 'status' => MediaStatus::Clean],
         'pdf-pending' => ['uuid' => 'de000000-0000-4000-a000-000000000014', 'name' => 'terms-and-conditions.pdf', 'mime' => 'application/pdf', 'alt' => null, 'status' => MediaStatus::Quarantine],
     ];
@@ -53,8 +57,12 @@ class DemoMediaSeeder extends Seeder
     {
         $owner = User::query()->where('email', DemoContent::USER_EMAIL)->first();
         $disk = (string) config('media.disk');
+        $now = now();
+        $remaining = count(self::ASSETS);
 
         foreach (self::ASSETS as $definition) {
+            $createdAt = $now->copy()->subDays(3 * $remaining--);
+
             if (MediaAsset::query()->where('uuid', $definition['uuid'])->exists()) {
                 continue;
             }
@@ -73,7 +81,7 @@ class DemoMediaSeeder extends Seeder
                 Storage::disk($disk)->put($path, $bytes);
             }
 
-            $asset = DB::transaction(function () use ($definition, $owner, $disk, $path, $bytes, $status, $audit): MediaAsset {
+            $asset = DemoContent::at($createdAt, fn (): MediaAsset => DB::transaction(function () use ($definition, $owner, $disk, $path, $bytes, $status, $audit): MediaAsset {
                 $asset = new MediaAsset;
                 $asset->forceFill([
                     'uuid' => $definition['uuid'],
@@ -107,7 +115,7 @@ class DemoMediaSeeder extends Seeder
                 }
 
                 return $asset;
-            });
+            }));
 
             if ($status === MediaStatus::Clean && $asset->isImage()) {
                 GenerateImageVariants::dispatch($asset->id);
@@ -136,6 +144,11 @@ class DemoMediaSeeder extends Seeder
 
         $width = $definition['width'] ?? 800;
         $height = $definition['height'] ?? 600;
+
+        if ($definition['uuid'] === self::ASSETS['logo']['uuid']) {
+            return self::logo($width, $definition['color'] ?? '27272a');
+        }
+
         $image = ImageManager::gd()->create($width, $height)->fill($definition['color'] ?? '64748b');
 
         $image->drawEllipse(intdiv($width, 3), intdiv($height, 2), function (EllipseFactory $ellipse) use ($width, $height): void {
@@ -152,6 +165,28 @@ class DemoMediaSeeder extends Seeder
             'image/webp' => $image->toWebp(80)->toString(),
             default => $image->toJpeg(80)->toString(),
         };
+    }
+
+    /**
+     * Square logo on a transparent background: a neutral disc with a light
+     * core, legible on light and dark headers with every accent preset.
+     */
+    private static function logo(int $size, string $color): string
+    {
+        $image = ImageManager::gd()->create($size, $size);
+        $center = intdiv($size, 2);
+
+        $image->drawEllipse($center, $center, function (EllipseFactory $ellipse) use ($size, $color): void {
+            $ellipse->size($size - 8, $size - 8);
+            $ellipse->background($color);
+            $ellipse->border('ffffff', intdiv($size, 32));
+        });
+        $image->drawEllipse($center, $center, function (EllipseFactory $ellipse) use ($size): void {
+            $ellipse->size(intdiv($size, 3), intdiv($size, 3));
+            $ellipse->background('fafafa');
+        });
+
+        return $image->toPng()->toString();
     }
 
     /**

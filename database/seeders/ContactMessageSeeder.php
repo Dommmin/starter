@@ -8,7 +8,8 @@ use Illuminate\Database\Seeder;
 
 /**
  * Local sample contact form messages: pending, sent and failed deliveries,
- * mostly Polish, short and very long. Timestamps are spread over the last
+ * in every public language, short and very long, enough for two pages of
+ * the admin list. Timestamps are spread over the last
  * weeks. Failed messages have used up every delivery attempt, so
  * `contact:retry-failed` leaves them failed; pending ones are picked up by
  * the regular recovery and delivered to the local Mailpit. Idempotent: a
@@ -29,6 +30,13 @@ class ContactMessageSeeder extends Seeder
         'john.smith@example.org' => ['name' => 'John Smith', 'locale' => 'en', 'status' => ContactMessageStatus::Sent, 'days' => 9, 'message' => 'Hello, do you build websites for clients abroad?'],
         'sarah.connor@example.org' => ['name' => 'Sarah Connor', 'locale' => 'en', 'status' => ContactMessageStatus::Failed, 'days' => 5, 'message' => "Hi,\n\nI tried to reach you by phone twice this week. Could you please call me back regarding the redesign of our online shop? We would like to migrate the product catalogue, keep the existing URLs for SEO and add a blog.\n\nThanks,\nSarah"],
         'hans.mueller@example.org' => ['name' => 'Hans Müller', 'locale' => 'de', 'status' => ContactMessageStatus::Sent, 'days' => 3, 'message' => 'Guten Tag, bieten Sie auch Wartungsverträge an?'],
+        'klara.becker@example.org' => ['name' => 'Klara Becker', 'locale' => 'de', 'status' => ContactMessageStatus::Pending, 'days' => 2, 'message' => 'Können Sie unsere Vereinsseite auf Deutsch und Polnisch umsetzen?'],
+        'lukas.fischer@example.org' => ['name' => 'Lukas Fischer', 'locale' => 'de', 'status' => ContactMessageStatus::Failed, 'days' => 7, 'message' => 'Bitte rufen Sie mich zurück – es geht um ein Angebot für eine Zahnarztpraxis in Görlitz.'],
+        'emma.johnson@example.org' => ['name' => 'Emma Johnson', 'locale' => 'en', 'status' => ContactMessageStatus::Pending, 'days' => 1, 'message' => 'Could you send me the price list for a small portfolio website?'],
+        'oliver.brown@example.org' => ['name' => 'Oliver Brown', 'locale' => 'en', 'status' => ContactMessageStatus::Sent, 'days' => 12, 'message' => 'Thanks for the quick call yesterday — looking forward to the proposal.'],
+        'krzysztof.mazur@example.org' => ['name' => 'Krzysztof Mazur', 'locale' => 'pl', 'status' => ContactMessageStatus::Sent, 'days' => 16, 'message' => 'Czy możecie przenieść naszą starą stronę z zachowaniem adresów podstron?'],
+        'joanna.krawczyk@example.org' => ['name' => 'Joanna Krawczyk', 'locale' => 'pl', 'status' => ContactMessageStatus::Sent, 'days' => 25, 'message' => 'Dzień dobry, interesuje mnie strona dla przedszkola z galerią zdjęć i aktualnościami dla rodziców.'],
+        'stanislaw.grabowski@example.org' => ['name' => 'Stanisław Grabowski', 'locale' => 'pl', 'status' => ContactMessageStatus::Failed, 'days' => 4, 'message' => 'Proszę o fakturę za ostatni miesiąc utrzymania strony.'],
         'barbara.wozniak@example.org' => ['name' => 'Barbara Woźniak', 'locale' => 'pl', 'status' => ContactMessageStatus::Pending, 'days' => 0, 'message' => 'Zażółć gęślą jaźń — sprawdzam, czy polskie znaki docierają poprawnie.'],
     ];
 

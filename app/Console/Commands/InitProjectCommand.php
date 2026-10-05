@@ -11,6 +11,7 @@ use App\Enums\UserRole;
 use App\Models\User;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\DemoContent;
+use Database\Seeders\DemoUserSeeder;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -244,13 +245,13 @@ class InitProjectCommand extends Command
     }
 
     /**
-     * An administrator other than the seeded sample account.
+     * An administrator other than the seeded sample accounts.
      */
     private function existingAdministrator(): ?User
     {
         return User::query()
             ->where('role', UserRole::Admin->value)
-            ->where('email', '!=', DemoContent::USER_EMAIL)
+            ->whereNotIn('email', [DemoContent::USER_EMAIL, ...array_keys(DemoUserSeeder::USERS)])
             ->orderBy('id')
             ->first();
     }

@@ -92,6 +92,7 @@ export default function ArticleShow({
                                     alt={coverAlt}
                                     sizes="(min-width: 48rem) 48rem, 100vw"
                                     priority
+                                    frame="wide"
                                 />
                             )}
                             <RichTextContent html={bodyHtml} />

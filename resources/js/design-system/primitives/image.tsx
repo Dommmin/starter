@@ -32,6 +32,11 @@ export type ImageProps = {
     priority?: boolean;
     /** `intrinsic` scales down within its container; `cover` fills a sized frame. */
     fit?: ImageFit;
+    /**
+     * `wide` renders the image in a full-width 16:9 frame and crops it to
+     * fill (`cover`), so covers of mixed proportions keep one height.
+     */
+    frame?: 'wide';
     className?: never;
     style?: never;
 };
@@ -43,7 +48,8 @@ const fitMap: Record<ImageFit, string> = {
 
 /**
  * Responsive image with mandatory dimensions and alternative text. Renders a
- * `<picture>` when modern sources are given, with the fallback `<img>` last.
+ * `<picture>` when modern sources are given, with the fallback `<img>` last;
+ * `frame` wraps it in a fixed-ratio frame.
  */
 export function Image({
     src,
@@ -55,7 +61,26 @@ export function Image({
     sizes,
     priority = false,
     fit = 'intrinsic',
+    frame,
 }: ImageProps) {
+    if (frame) {
+        return (
+            <span className="bg-surface-subtle block aspect-video w-full overflow-hidden rounded-lg">
+                <Image
+                    src={src}
+                    srcset={srcset}
+                    sources={sources}
+                    width={width}
+                    height={height}
+                    alt={alt}
+                    sizes={sizes}
+                    priority={priority}
+                    fit="cover"
+                />
+            </span>
+        );
+    }
+
     const image = (
         <img
             src={src}

@@ -64,6 +64,24 @@ describe('Image', () => {
         );
     });
 
+    it('crops an image into a full-width 16:9 frame', async () => {
+        const container = await render(
+            <Image
+                src="/square.jpg"
+                width={1200}
+                height={1200}
+                alt="A square cover"
+                frame="wide"
+            />,
+        );
+
+        const frame = container.firstElementChild!;
+        const img = frame.querySelector('img')!;
+        expect(frame.classList.contains('aspect-video')).toBe(true);
+        expect(img.classList.contains('object-cover')).toBe(true);
+        expect(img.getAttribute('alt')).toBe('A square cover');
+    });
+
     it('loads the LCP image eagerly with high priority', async () => {
         const container = await render(
             <Image

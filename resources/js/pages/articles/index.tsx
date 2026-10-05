@@ -89,6 +89,7 @@ export default function ArticlesIndex({
                                                         }
                                                         alt=""
                                                         sizes="(min-width: 64rem) 22rem, (min-width: 40rem) 45vw, 100vw"
+                                                        frame="wide"
                                                     />
                                                 )}
                                                 <Heading

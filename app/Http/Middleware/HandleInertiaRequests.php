@@ -136,6 +136,19 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Organization name before the settings are saved: `seo.organization.name`,
+     * then the site name.
+     */
+    protected function organizationName(): string
+    {
+        $configured = config('seo.organization.name');
+
+        return is_string($configured) && $configured !== ''
+            ? $configured
+            : $this->siteSettings->siteName();
+    }
+
+    /**
      * Site-wide SEO defaults. The canonical URL is the current URL without
      * the query string; public URLs already carry their locale prefix and
      * the default locale alias (`/{default}/...`) redirects to it.
@@ -156,7 +169,7 @@ class HandleInertiaRequests extends Middleware
             organization: new SeoOrganizationData(
                 name: $this->siteSettings->exists()
                     ? $this->siteSettings->siteName()
-                    : (string) config('seo.organization.name'),
+                    : $this->organizationName(),
                 url: is_string($organizationUrl) && $organizationUrl !== '' ? url($organizationUrl) : $appUrl,
                 logo: $siteLogo !== null
                     ? $siteLogo->src

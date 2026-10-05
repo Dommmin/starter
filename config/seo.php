@@ -5,9 +5,11 @@ return [
     |--------------------------------------------------------------------------
     | Site Name
     |--------------------------------------------------------------------------
-    | Used for og:site_name and the WebSite JSON-LD node.
+    | Used for og:site_name and the WebSite JSON-LD node until the site name is
+    | saved in the panel. Empty: the translated catalog brand (`common.brand`),
+    | the same name the header logo shows, never the framework APP_NAME.
     */
-    'site_name' => env('SEO_SITE_NAME', env('APP_NAME', 'Laravel')),
+    'site_name' => env('SEO_SITE_NAME'),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,7 +28,7 @@ return [
     | URL; `logo` accepts an absolute URL or a path relative to it.
     */
     'organization' => [
-        'name' => env('SEO_ORGANIZATION_NAME', env('APP_NAME', 'Laravel')),
+        'name' => env('SEO_ORGANIZATION_NAME'),
         'url' => env('SEO_ORGANIZATION_URL'),
         'logo' => env('SEO_ORGANIZATION_LOGO'),
     ],

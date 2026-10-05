@@ -4,7 +4,13 @@ import { LocaleSwitcher } from './locale-switcher';
 import { ThemeSwitcher } from './theme-switcher';
 
 export type HeaderUtilityProps = {
+    /** Right-hand actions (account controls, mobile menu trigger). */
     children?: React.ReactNode;
+    /**
+     * Main navigation, placed next to the logo in its own `nav` landmark;
+     * theme and locale switchers stay with the actions on the right.
+     */
+    navigation?: React.ReactNode;
     /** Optional image logo; the text logo otherwise. */
     logo?: BrandLogoImage;
     /** One-tone text logo name; the catalog brand otherwise. */
@@ -15,6 +21,7 @@ export type HeaderUtilityProps = {
 
 export function HeaderUtility({
     children,
+    navigation,
     logo,
     brandName,
 }: HeaderUtilityProps) {
@@ -29,16 +36,24 @@ export function HeaderUtility({
                 {t('a11y.skipToContent')}
             </a>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
-                <BrandLogo image={logo} name={brandName} />
+                <div className="flex min-w-0 items-center gap-8">
+                    <BrandLogo image={logo} name={brandName} />
 
-                <nav
-                    aria-label={t('a11y.mainNavigation')}
-                    className="flex items-center gap-1.5 sm:gap-3"
-                >
+                    {navigation && (
+                        <nav
+                            aria-label={t('a11y.mainNavigation')}
+                            className="hidden lg:block"
+                        >
+                            {navigation}
+                        </nav>
+                    )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
                     <ThemeSwitcher />
                     <LocaleSwitcher />
                     {children}
-                </nav>
+                </div>
             </div>
         </header>
     );

@@ -90,7 +90,7 @@ export function Button({
                 />
             )}
             {responsiveLabel ? (
-                <span className="inline-flex items-center gap-1.5 [&>*:not(svg)]:hidden sm:[&>*:not(svg)]:inline">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap [&>*:not(svg)]:hidden sm:[&>*:not(svg)]:inline">
                     {children}
                 </span>
             ) : (

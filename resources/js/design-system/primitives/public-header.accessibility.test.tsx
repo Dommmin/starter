@@ -316,4 +316,29 @@ describe('PublicHeader', () => {
         expect(current).toHaveLength(1);
         expect(current[0].textContent).toBe('Articles');
     });
+
+    it('keeps only the main menu inside the navigation landmark', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                    },
+                ]}
+            />,
+        );
+
+        const landmarks = container.querySelectorAll('nav');
+        const main = container.querySelector(
+            'nav[aria-label="a11y.mainNavigation"]',
+        );
+
+        expect(landmarks).toHaveLength(1);
+        expect(main?.querySelector('a[href="/articles"]')).not.toBeNull();
+        expect(main?.querySelectorAll('button')).toHaveLength(0);
+        expect(main?.textContent).not.toContain('nav.login');
+    });
 });

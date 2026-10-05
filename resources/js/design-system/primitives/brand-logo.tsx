@@ -63,11 +63,11 @@ export function BrandLogo({ href, ariaLabel, image, name }: BrandLogoProps) {
                         <Compass className="h-5 w-5" aria-hidden="true" />
                     </span>
                     {name ? (
-                        <span className="text-foreground font-serif text-lg tracking-tight">
+                        <span className="text-foreground font-serif text-lg tracking-tight sm:whitespace-nowrap">
                             {name}
                         </span>
                     ) : (
-                        <span className="text-foreground font-serif text-lg tracking-tight">
+                        <span className="text-foreground font-serif text-lg tracking-tight sm:whitespace-nowrap">
                             {t('brand.firstPart')}{' '}
                             <span className="text-primary">
                                 {t('brand.secondPart')}

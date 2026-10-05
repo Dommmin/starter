@@ -185,28 +185,33 @@ export function PublicHeader({
     );
 
     return (
-        <HeaderUtility logo={logo} brandName={brandName}>
-            {navItems.length > 0 && (
-                <ul className="hidden items-center gap-1 md:flex">
-                    {navItems.map((item) => (
-                        <li key={item.id}>
-                            {(item.children ?? []).length > 0 ? (
-                                <DesktopSubmenu item={item} />
-                            ) : isNavLink(item) ? (
-                                <NavItemLink
-                                    item={item}
-                                    classes={topLinkClasses}
-                                />
-                            ) : null}
-                        </li>
-                    ))}
-                </ul>
-            )}
+        <HeaderUtility
+            logo={logo}
+            brandName={brandName}
+            navigation={
+                navItems.length > 0 ? (
+                    <ul className="flex items-center gap-1">
+                        {navItems.map((item) => (
+                            <li key={item.id}>
+                                {(item.children ?? []).length > 0 ? (
+                                    <DesktopSubmenu item={item} />
+                                ) : isNavLink(item) ? (
+                                    <NavItemLink
+                                        item={item}
+                                        classes={topLinkClasses}
+                                    />
+                                ) : null}
+                            </li>
+                        ))}
+                    </ul>
+                ) : undefined
+            }
+        >
             <div className="flex items-center gap-1.5 sm:gap-3">
                 {authControls}
             </div>
             {navItems.length > 0 && (
-                <div className="md:hidden">
+                <div className="lg:hidden">
                     <MobileNav
                         title={t('nav.menuTitle')}
                         items={navItems}

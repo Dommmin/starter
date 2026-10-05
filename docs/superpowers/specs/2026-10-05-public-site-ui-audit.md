@@ -63,7 +63,7 @@ implementacją.
 |---|---------|-----------|--------|
 | 25 | Stopka i tytuł pokazują „Laravel” („© 2026 Laravel”, „… - Laravel”), a logo pokazuje „Punkt Startowy”. | `seo.site_name` i `seo.organization.name` spadały na `APP_NAME` (domyślnie `Laravel`). | Poprawione: bez zapisanych ustawień i bez `SEO_SITE_NAME` używana jest marka z katalogu (`common.brand.name`). `documentTitle` nie dokleja nazwy, gdy tytuł już ją zawiera. |
 | 26 | Stopka dubluje pojedynczy link: „Privacy policy” jako tytuł kolumny i link pod nim. | `Footer` robił z każdego samodzielnego linku osobną kolumnę z tytułem równym etykiecie. | Poprawione: samodzielne linki trafiają do jednej kolumny „Informacje”. |
-| 27 | Po świeżym seedzie strona główna nie ma sekcji artykułów w żadnym języku. | `HomeSectionSeeder` ustawia `latest_articles` jako wyłączoną. | Otwarte: do decyzji, czy demo ma ją włączać. |
+| 27 | Po świeżym seedzie strona główna nie ma sekcji artykułów w żadnym języku. | `HomeSectionSeeder` ustawia `latest_articles` jako wyłączoną. | Poprawione (decyzja 2026-10-05): demo włącza sekcję artykułów, a `init-project --remove-demo` nadal ją ukrywa. |
 
 Przy resecie zauważono też:
 - `make backup` pada (`tar: media: Cannot open: Permission denied`).

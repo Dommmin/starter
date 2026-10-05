@@ -22,8 +22,8 @@ use Spatie\LaravelData\Data;
 /**
  * Demo content of the home page: the former static landing page rebuilt from
  * `lang/{locale}/public.php` (`landing.*`) for every public locale. Hero,
- * features, contact and CTA start enabled; FAQ, testimonials and latest
- * articles start disabled. Idempotent: existing sections are kept as edited.
+ * features, latest articles, contact and CTA start enabled; FAQ and
+ * testimonials start disabled. Idempotent: existing sections are kept as edited.
  */
 class HomeSectionSeeder extends Seeder
 {
@@ -35,6 +35,7 @@ class HomeSectionSeeder extends Seeder
     public const array ENABLED_TYPES = [
         HomeSectionType::Hero,
         HomeSectionType::Features,
+        HomeSectionType::LatestArticles,
         HomeSectionType::Contact,
         HomeSectionType::Cta,
     ];

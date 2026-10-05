@@ -49,7 +49,7 @@ test('the demo seeder rebuilds the former landing page and is idempotent', funct
     expect(HomeSection::query()->count())->toBe(21);
 
     $enabled = HomeSection::query()->where('locale', 'en')->where('enabled', true)->orderBy('position')->pluck('type')->all();
-    expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::Contact, HomeSectionType::Cta]);
+    expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::LatestArticles, HomeSectionType::Contact, HomeSectionType::Cta]);
 
     $plHero = HomeSection::query()->where('locale', 'pl')->where('type', HomeSectionType::Hero)->sole();
     expect($plHero->content->title)->toBe(__('public.landing.heroTitle', [], 'pl'));

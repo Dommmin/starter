@@ -72,7 +72,7 @@ Nie uruchamiaj równolegle starego `composer dev`, Herda ani hostowego Vite dla 
 
 ## Commity, CI i deploy
 
-Przed pierwszym commitem zainstaluj hostowy [Gitleaks 8.30.1](https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1), następnie uruchom `make hooks`. Hooki są wersjonowane w `.githooks`, a PHP/Node uruchamiają w kontenerze; nie wykonują automatycznego formatowania ani stagingu. Commit i tytuł PR mają format `type(scope): opis`, z małymi literami typu i limitem 72 znaków. Dozwolone typy: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`, `revert`.
+Przed pierwszym commitem zainstaluj hostowy [Gitleaks 8.30.1](https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1), następnie uruchom `make hooks`. Hooki są wersjonowane w `.githooks`, a PHP/Node uruchamiają w kontenerze (`.githooks/app-run`: z UID/GID hosta jak `make`, a w worktree z zamontowanym katalogiem `.git` głównego repo); nie wykonują automatycznego formatowania ani stagingu. Commit i tytuł PR mają format `type(scope): opis`, z małymi literami typu i limitem 72 znaków. Dozwolone typy: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`, `revert`.
 
 Push pozostaje ręczny. GitHub Actions uruchamia CI dla pushy i PR do `develop` oraz `main`; wymagane checki to `commit-convention`, `secrets` i `quality`. Workflow **Deploy** uruchamia wyłącznie człowiek ręcznie. Buduje, testuje i przekazuje do Deployer jeden artefakt z manifestem SHA-256. Nie dodawaj do niego sekretów.
 

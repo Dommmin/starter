@@ -25,7 +25,7 @@ test.describe('public website', () => {
         expect(html).toMatch(/<link rel="canonical" href="[^"]+"/);
         expect(html).toContain('Solid foundation for modern digital products');
         expect(html).toContain('Send message');
-        expect(html).toContain('aria-label="Select language"');
+        expect(html).toContain('aria-label="Select language: English"');
 
         await page.goto('/');
         await expect(page).toHaveTitle(/Punkt Startowy/);

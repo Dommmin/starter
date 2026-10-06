@@ -40,7 +40,7 @@ implementacją.
 | 11 | Submenu „Articles” zawiera ponownie „Articles”, a zewnętrzny „Docs” nie ma oznaczenia zewnętrznego linku. | `DesktopSubmenu` dokleja rodzica jako pierwszą pozycję, a `NavItemLink` nie ma ikony dla linku zewnętrznego. |
 | 12 | Mobile: nazwa „Studio Test” łamie się w dwie linie, a w nagłówku jest 5 okrągłych kontrolek (motyw, język, logowanie, rejestracja, menu). Szuflada menu nie zawiera motywu, języka ani logowania. | `BrandLogo` nie ma `whitespace-nowrap`/truncate. Utility nie przenosi się do `MobileNav`. **[DS]** |
 | 13 | Niespójne rozmiary przycisków: hero `lg`, „Send message” mniejszy tekst na pełną szerokość, „All articles” mały. | Każda sekcja dobiera `size` osobno. Trzeba ustalić regułę: CTA sekcji `lg`, submit formularza `default`. |
-| 14 | Hierarchia w sekcji Features: tytuł cechy (ok. 13 px) jest mniejszy od opisu, a ikony są bardzo małe. | `FeatureGrid` używa wariantu tekstu tytułu mniejszego niż body. **[DS]** |
+| 14 | Hierarchia w sekcji Features: tytuł cechy (ok. 13 px) jest mniejszy od opisu, a ikony są bardzo małe. | `FeatureGrid` używa wariantu tekstu tytułu mniejszego niż body. **[DS]** **Poprawione 2026-10-06:** tytuł cechy to `h3` (wariant `group`), ikona w kafelku `brand-glow`. |
 | 15 | Sekcja „Najnowsze artykuły” nie ma nagłówka, a karty zajmują 2 z 3 kolumn, wyrównane do lewej, mimo że reszta strony jest wyśrodkowana. | Sekcja nie przekazuje tytułu, grid ma stałe 3 kolumny. |
 | 16 | Stopka na krótkich stronach (`/articles`, artykuł, 404) kończy się w połowie ekranu, a pod nią zostaje pusta przestrzeń. | `PublicChrome` nie ma układu `min-h-screen` + `flex-1` dla `main`. |
 | 17 | Stopka jest uboga: tylko „Contact” i e-mail, bez nawigacji ani linków prawnych. | Brak menu `footer` w danych. Do decyzji, czy starter ma je seedować. |
@@ -55,7 +55,7 @@ implementacją.
 | 21 | `/pl` nie ma sekcji artykułów, choć istnieje polski artykuł. | `home_sections` (pl, `latest_articles`) ma `enabled = false`. Kolejność sekcji EN też różni się od PL i DE. |
 | 22 | Artykuł „Coming next week” ma opis „stay hidden until publication date”, ale data już minęła i artykuł jest widoczny. | Seeder ustawił stałą datę. Demo powinno liczyć ją względnie. |
 | 23 | Baza zawiera śmieci po testach E2E i ręcznych (potwierdzone: `make e2e` losuje hasło kont `e2e-*` przy każdym uruchomieniu, więc lokalnie nie ma konta ze znanym hasłem): 2 strony `e2e-page-*`, ok. 15 kont `*@mailinator.com`, „Docs” w menu i konta `e2e-*`. Nie ma konta demo `test@example.com`. | E2E działało na lokalnej bazie deweloperskiej. |
-| 24 | Copy demo jest techniczne (ADR-002, „zero hydration mismatch”) i nie nadaje się do pokazania klientowi. | Treść demo z seederów. |
+| 24 | Copy demo jest techniczne (ADR-002, „zero hydration mismatch”) i nie nadaje się do pokazania klientowi. | Treść demo z seederów. **Poprawione 2026-10-06:** neutralny tekst przykładowego studia (EN/PL/DE), przyciski demo prowadzą do kontaktu i aktualności zamiast rejestracji i logowania, nowe domyślne tytuły i opisy SEO. Lokalna baza pokaże go po ponownym seedzie. |
 
 ### Znalezione po świeżym seedzie (2026-10-05)
 
@@ -66,7 +66,9 @@ implementacją.
 | 27 | Po świeżym seedzie strona główna nie ma sekcji artykułów w żadnym języku. | `HomeSectionSeeder` ustawia `latest_articles` jako wyłączoną. | Poprawione (decyzja 2026-10-05): demo włącza sekcję artykułów, a `init-project --remove-demo` nadal ją ukrywa. |
 
 Przy resecie zauważono też:
-- `make backup` pada (`tar: media: Cannot open: Permission denied`).
+- `make backup` pada (`tar: media: Cannot open: Permission denied`). **Wyjaśnione 2026-10-06:** to nie błąd backupu. Hooki `.githooks/pre-commit` i `commit-msg` na tej gałęzi wołają gołe `docker compose run`, co zmienia właściciela `storage` na UID 1000, a backup działa jako UID hosta. `make restart` przywraca właściciela; `make backup` i `make restore-drill` przechodzą. Trwała poprawka hooków to `.githooks/app-run` w PR #39.
+- **Izolacja E2E (2026-10-06):** `make e2e` używa osobnej bazy `<DB_DATABASE>_e2e` (tworzonej, gdy jej brak, i odbudowywanej przez `migrate:fresh --seed`) oraz osobnych prefiksów Redis dla cache, sesji, kolejek i Horizon. Dane deweloperskie zostają nietknięte. Przy okazji poprawiono asercję E2E przełącznika języka po zmianie etykiety w `724fdee`.
+- **Stare szablony auth (2026-10-06):** usunięto `layouts/auth/auth-{simple,card,split}-layout.tsx`, ich 3 wyjątki UI i martwy typ `AuthLayoutProps`.
 - Ustawienia strony w cache (`rememberForever`) przetrwają `migrate:fresh` i trzeba wywołać `cache:clear`.
 
 ## Plan poprawek

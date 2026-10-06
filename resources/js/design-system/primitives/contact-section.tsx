@@ -182,7 +182,7 @@ export function ContactSection({
                                 />
                             </div>
                         )}
-                        <Button type="submit" isPending={isPending}>
+                        <Button type="submit" size="lg" isPending={isPending}>
                             {submitLabel}
                         </Button>
                     </form>

@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 import type { RouteDefinition } from '@/wayfinder';
@@ -14,12 +15,28 @@ type ButtonVariant =
     | 'link';
 type ButtonSize = 'sm' | 'default' | 'lg' | 'icon';
 
-export type ButtonProps = {
+type ButtonHref = string | RouteDefinition<'get'> | { url: string };
+
+/**
+ * `external` opens `href` in a new tab (`<a target="_blank" rel="noopener
+ * noreferrer">`, no Inertia visit or prefetch) and adds a visually hidden
+ * "opens in a new tab" hint; it is only valid together with `href`.
+ */
+type ButtonTarget =
+    | {
+          /** A value starting with `#` renders a plain in-page anchor (no Inertia visit). */
+          href?: ButtonHref;
+          external?: false;
+      }
+    | {
+          href: ButtonHref;
+          external: true;
+      };
+
+export type ButtonProps = ButtonTarget & {
     children: ReactNode;
     variant?: ButtonVariant;
     size?: ButtonSize;
-    /** A value starting with `#` renders a plain in-page anchor (no Inertia visit). */
-    href?: string | RouteDefinition<'get'> | { url: string };
     /**
      * With `href`: render a plain `<a download>` (no Inertia visit) so the
      * browser saves the response. A string suggests the file name.
@@ -51,10 +68,11 @@ const variantMap: Record<ButtonVariant, string> = {
 
 // WCAG 2.2 AA target size compliance: all buttons have minimum 44x44px touch targets.
 const sizeMap: Record<ButtonSize, string> = {
-    sm: 'min-h-[44px] min-w-[44px] px-3.5 py-1.5 text-xs rounded-full gap-1.5',
-    default: 'min-h-[44px] min-w-[44px] px-5 py-2.5 text-sm rounded-full gap-2',
-    lg: 'min-h-[48px] min-w-[48px] px-8 py-3 text-base rounded-full gap-2.5 shadow-md',
-    icon: 'min-h-[44px] min-w-[44px] p-2.5 rounded-full',
+    sm: 'min-h-[44px] min-w-[44px] px-3.5 py-1.5 text-xs rounded-(--control-radius) gap-1.5',
+    default:
+        'min-h-[44px] min-w-[44px] px-5 py-2.5 text-sm rounded-(--control-radius) gap-2',
+    lg: 'min-h-[48px] min-w-[48px] px-8 py-3 text-base rounded-(--control-radius) gap-2.5 shadow-md',
+    icon: 'min-h-[44px] min-w-[44px] p-2.5 rounded-(--control-radius)',
 };
 
 export function Button({
@@ -62,6 +80,7 @@ export function Button({
     variant = 'primary',
     size = 'default',
     href,
+    external = false,
     download,
     isPending = false,
     disabled = false,
@@ -73,6 +92,8 @@ export function Button({
 }: ButtonProps) {
     const baseClasses = cn(
         'group inline-flex items-center justify-center font-medium transition-all duration-150',
+        // Child icons (raw Lucide SVGs default to 24px) follow the label size.
+        "[&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
         'disabled:pointer-events-none disabled:opacity-50',
         variantMap[variant],
@@ -104,6 +125,22 @@ export function Button({
             typeof href === 'object' && href !== null && 'url' in href
                 ? href.url
                 : href;
+
+        if (external) {
+            return (
+                <a
+                    href={targetHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={ariaLabel}
+                    className={baseClasses}
+                    onClick={onClick}
+                >
+                    {content}
+                    <NewTabHint />
+                </a>
+            );
+        }
 
         // In-page anchor (`#section`): a plain link, no Inertia visit.
         if (download || targetHref.startsWith('#')) {
@@ -151,4 +188,11 @@ export function Button({
             {content}
         </button>
     );
+}
+
+/** Visually hidden suffix of the accessible name of a new-tab link. */
+function NewTabHint() {
+    const { t } = useTranslation();
+
+    return <span className="sr-only"> ({t('a11y.opensInNewTab')})</span>;
 }

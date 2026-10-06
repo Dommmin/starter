@@ -14,11 +14,13 @@ use RuntimeException;
 
 #[Signature('app:make-resource
     {name : Singular StudlyCase model name, e.g. Product}
-    {--fields= : Comma separated name:type[:required]; types: string, text, integer, decimal, boolean, date, enum(a|b:success), belongsTo(Model.label_column), image, richtext}
+    {--fields= : Comma separated name:type[:required]; types: string, text, integer, decimal, boolean, date, enum(a|b:success), belongsTo(Model.label_column), belongsToMany(Model.label_column) with a plural name, image, richtext}
     {--searchable= : Comma separated string/text fields matched by the list search}
     {--sortable= : Comma separated sortable columns (non-text, non-relation fields, id, created_at, updated_at); default created_at}
     {--filters= : Comma separated boolean/enum/belongsTo fields offered as list filters}
     {--export : Add a CSV export of the filtered list (administrators only, audited)}
+    {--owned : Records belong to their creator: user_id, owner-only policy (also for administrators) and a list scoped to the owner}
+    {--public : Published records get a public list and detail page (SSR, SEO meta, sitemap); adds the slug and published fields}
     {--dry-run : List the files that would be created or changed without writing anything}
     {--no-format : Skip Pint and the frontend formatter on the generated files}', aliases: ['make:admin-resource'])]
 #[Description('Generate a plain admin CRUD resource (migration, model, factory, seeder, policy, controller, requests, Data, React pages, i18n, routes and tests)')]
@@ -37,6 +39,8 @@ class MakeAdminResourceCommand extends Command
                 (string) $this->option('sortable'),
                 (string) $this->option('filters'),
                 (bool) $this->option('export'),
+                (bool) $this->option('owned'),
+                (bool) $this->option('public'),
             );
         } catch (InvalidArgumentException $exception) {
             foreach (explode(PHP_EOL, $exception->getMessage()) as $message) {
@@ -96,7 +100,7 @@ class MakeAdminResourceCommand extends Command
         $this->line("  2. make artisan ARGS='migrate --no-interaction'");
         $this->line("  3. make composer ARGS='types:generate'");
         $this->line("  4. make artisan ARGS='wayfinder:generate --with-form --no-interaction'");
-        $this->line("  5. Add a navigation item to a group in resources/js/layouts/admin-layout.tsx (admin.{$resource->camelPlural()}.navLabel, route admin.{$resource->kebabPlural()}.index).");
+        $this->line('  5. A sidebar entry was added to the Content group in resources/js/layouts/admin-layout.tsx; move it or change its icon if needed.');
         $this->line("  6. Optional local sample data: call {$resource->model}Seeder from database/seeders/DatabaseSeeder.php (it is not registered automatically).");
         $this->line("  7. make test ARGS='--compact tests/Feature/Admin/{$resource->model}CrudTest.php' and make npm ARGS='run check'");
 

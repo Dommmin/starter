@@ -9,6 +9,7 @@ import {
     ResourceTable,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import { create, destroy, edit, index } from '@/routes/admin/faqs';
 
@@ -55,6 +56,13 @@ export default function AdminFaqsIndex() {
                         </Button>
                     ) : undefined,
                 }}
+                emptyAction={
+                    can.create ? (
+                        <Button href={create()}>
+                            {t('admin.faqs.create')}
+                        </Button>
+                    ) : undefined
+                }
                 rows={items}
                 rowKey={(row) => row.id}
                 pagination={pagination}
@@ -62,6 +70,7 @@ export default function AdminFaqsIndex() {
                 searchable
                 labels={{
                     caption: t('admin.faqs.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.faqs.searchLabel'),
                     searchPlaceholder: t('admin.faqs.searchPlaceholder'),
                     searchClear: t('admin.faqs.searchClear'),
@@ -94,6 +103,7 @@ export default function AdminFaqsIndex() {
                 columns={[
                     {
                         key: 'question',
+                        priority: 'primary',
                         label: t('admin.faqs.fields.question'),
                         sortable: true,
                         render: (row) => (
@@ -104,12 +114,14 @@ export default function AdminFaqsIndex() {
                     },
                     {
                         key: 'position',
+                        priority: 'optional',
                         label: t('admin.faqs.fields.position'),
                         sortable: true,
                         render: (row) => row.position ?? '—',
                     },
                     {
                         key: 'published',
+                        priority: 'status',
                         label: t('admin.faqs.fields.published'),
                         render: (row) => (
                             <Badge tone={row.published ? 'success' : 'neutral'}>
@@ -121,6 +133,7 @@ export default function AdminFaqsIndex() {
                     },
                     {
                         key: 'created_at',
+                        priority: 'optional',
                         label: t('admin.faqs.columnCreatedAt'),
                         sortable: true,
                         render: (row) =>

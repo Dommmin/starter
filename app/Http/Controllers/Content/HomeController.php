@@ -24,7 +24,7 @@ class HomeController extends Controller
             contactForm: new ContactFormData(
                 token: StoreContactMessageRequest::issueFormToken(),
             ),
-            sections: $buildSections->handle($localization->getCurrentLocale($request)),
+            sections: $buildSections->handle($localization->getCurrentLocale($request), $request->user()),
         ));
     }
 }

@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import { ResourceTable, Text } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import { index as auditIndex } from '@/routes/admin/audit';
 
@@ -40,6 +41,7 @@ export default function AdminAuditIndex() {
                 filters={filters}
                 labels={{
                     caption: t('admin.audit.tableCaption'),
+                    sort: tableSortLabels(t),
                     clearFilters: t('admin.audit.clearFilters'),
                     emptyTitle: t('admin.audit.emptyTitle'),
                     emptyDescription: t('admin.audit.emptyDescription'),
@@ -71,6 +73,7 @@ export default function AdminAuditIndex() {
                 columns={[
                     {
                         key: 'created_at',
+                        priority: 'secondary',
                         label: t('admin.audit.columnDate'),
                         sortable: true,
                         render: (row) =>
@@ -83,22 +86,26 @@ export default function AdminAuditIndex() {
                     },
                     {
                         key: 'actor',
+                        priority: 'secondary',
                         label: t('admin.audit.columnActor'),
                         render: (row) =>
                             row.actorName ?? t('admin.audit.system'),
                     },
                     {
                         key: 'action',
+                        priority: 'primary',
                         label: t('admin.audit.columnAction'),
                         render: (row) => actionLabel(row.action),
                     },
                     {
                         key: 'subject',
+                        priority: 'secondary',
                         label: t('admin.audit.columnSubject'),
                         render: subjectLabel,
                     },
                     {
                         key: 'changes',
+                        priority: 'optional',
                         label: t('admin.audit.columnChanges'),
                         render: (row) =>
                             row.changedFields.length > 0 ? (

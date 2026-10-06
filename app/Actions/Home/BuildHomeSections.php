@@ -20,6 +20,7 @@ use App\Data\Home\TestimonialsContentData;
 use App\Enums\HomeLinkTarget;
 use App\Models\HomeSection;
 use App\Models\PageTranslation;
+use App\Models\User;
 use App\Repositories\Content\ArticleRepository;
 use App\Repositories\Content\PageRepository;
 use App\Repositories\Home\HomeSectionRepository;
@@ -43,9 +44,10 @@ class BuildHomeSections
     ) {}
 
     /**
+     * @param  User|null  $viewer  Signed-in user; guest-only actions are replaced or dropped for them.
      * @return list<HomeSectionData>
      */
-    public function handle(string $locale): array
+    public function handle(string $locale, ?User $viewer = null): array
     {
         $sections = $this->sections->enabledFor($locale);
         $publishedPages = $this->pages->publishedInLocale($locale, $this->linkedPageIds($sections->all()));
@@ -56,7 +58,7 @@ class BuildHomeSections
                 id: $section->id,
                 type: $section->type,
                 anchor: $section->type->anchor(),
-                content: $this->content($section, $locale, $publishedPages),
+                content: $this->content($section, $locale, $publishedPages, $viewer),
             );
         }
 
@@ -66,7 +68,7 @@ class BuildHomeSections
     /**
      * @param  array<int, PageTranslation>  $publishedPages
      */
-    private function content(HomeSection $section, string $locale, array $publishedPages): HomeHeroData|FeaturesContentData|HomeFaqData|TestimonialsContentData|HomeLatestArticlesData|ContactContentData|HomeCtaData
+    private function content(HomeSection $section, string $locale, array $publishedPages, ?User $viewer): HomeHeroData|FeaturesContentData|HomeFaqData|TestimonialsContentData|HomeLatestArticlesData|ContactContentData|HomeCtaData
     {
         $content = $section->content;
 
@@ -75,14 +77,14 @@ class BuildHomeSections
                 eyebrow: $content->eyebrow,
                 title: $content->title,
                 description: $content->description,
-                primaryAction: $this->links->resolve($content->primaryAction, $locale, $publishedPages),
-                secondaryAction: $this->links->resolve($content->secondaryAction, $locale, $publishedPages),
+                primaryAction: $this->links->resolve($content->primaryAction, $locale, $publishedPages, $viewer),
+                secondaryAction: $this->links->resolve($content->secondaryAction, $locale, $publishedPages, $viewer),
             ),
             $content instanceof CtaContentData => new HomeCtaData(
                 title: $content->title,
                 description: $content->description,
-                primaryAction: $this->links->resolve($content->primaryAction, $locale, $publishedPages),
-                secondaryAction: $this->links->resolve($content->secondaryAction, $locale, $publishedPages),
+                primaryAction: $this->links->resolve($content->primaryAction, $locale, $publishedPages, $viewer),
+                secondaryAction: $this->links->resolve($content->secondaryAction, $locale, $publishedPages, $viewer),
             ),
             $content instanceof FaqContentData => new HomeFaqData(
                 title: $content->title,

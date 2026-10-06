@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import {
     CircleHelp,
     Newspaper,
+    Palette,
     FileText,
     History,
     Images,
@@ -47,7 +48,7 @@ export default function AdminLayout({
     children: ReactNode;
 }) {
     const { t } = useTranslation();
-    const { auth, site } = usePage().props;
+    const { auth, site, designSystemUrl } = usePage().props;
     const { currentUrl, isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
     const section = (
@@ -116,6 +117,7 @@ export default function AdminLayout({
                     homeSectionsIndex(),
                     LayoutTemplate,
                 ),
+                // app:make-resource: new navigation items
             ],
         },
         {
@@ -165,6 +167,20 @@ export default function AdminLayout({
                       ]
                     : []),
             ],
+        },
+        {
+            id: 'developer',
+            label: t('admin.nav.developer'),
+            items: designSystemUrl
+                ? [
+                      section(
+                          'design-system',
+                          t('admin.designSystem.navLabel'),
+                          designSystemUrl,
+                          Palette,
+                      ),
+                  ]
+                : [],
         },
     ].filter((group) => group.items.length > 0);
 

@@ -11,9 +11,11 @@ E2E_RUN := $(E2E_COMPOSE) run --rm --no-deps -e APP_ENV=local -e E2E_PASSWORD ap
 RUN := $(COMPOSE) run --rm --no-deps app
 ARGS ?=
 SERVICE ?=
+CONFIRM ?=
 TEST_PROCESSES ?= 4
+PGSQL_TEST_DATABASE ?= starter_testing
 
-.PHONY: help env setup up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
+.PHONY: help env local-guard setup seed fresh up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-pgsql test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -21,14 +23,26 @@ help: ## Lista komend
 env: ## Utwórz lokalny .env bez nadpisywania istniejącej konfiguracji
 	@test -f .env || (umask 077; cp .env.example .env)
 
-setup: env ## Pierwsza instalacja: obraz, zależności, klucz, migracje, start
-	@grep -qx 'APP_ENV=local' .env || { echo 'Setup wymaga APP_ENV=local w .env'; exit 1; }
-	@grep -qx 'DB_HOST=postgres' .env || { echo 'Setup wymaga lokalnego DB_HOST=postgres'; exit 1; }
+local-guard: env
+	@grep -qx 'APP_ENV=local' .env || { echo 'Ta komenda wymaga APP_ENV=local w .env'; exit 1; }
+	@grep -qx 'DB_HOST=postgres' .env || { echo 'Ta komenda wymaga lokalnego DB_HOST=postgres'; exit 1; }
+
+setup: local-guard ## Pierwsza instalacja: obraz, zależności, klucz, migracje, dane demo, start
 	$(COMPOSE) build app
 	$(MAKE) deps
 	$(COMPOSE) up -d --wait postgres redis mailpit
-	$(RUN) sh -ec 'php artisan config:clear; if ! grep -Eq "^APP_KEY=.+" .env; then php artisan key:generate --no-interaction; fi; php artisan migrate --no-interaction; if [ ! -L public/storage ] && [ ! -e public/storage ]; then php artisan storage:link --no-interaction; fi'
+	$(RUN) sh -ec 'php artisan config:clear; if ! grep -Eq "^APP_KEY=.+" .env; then php artisan key:generate --no-interaction; fi; php artisan migrate --no-interaction; if [ ! -L public/storage ] && [ ! -e public/storage ]; then php artisan storage:link --no-interaction; fi; php artisan db:seed --no-interaction'
 	$(MAKE) up
+
+seed: local-guard ## Dane demo (idempotentnie, tylko APP_ENV=local)
+	$(COMPOSE) up -d --wait postgres redis
+	$(RUN) php artisan db:seed --no-interaction
+
+fresh: local-guard ## Usuń lokalną bazę i odtwórz ją z danymi demo (pyta o potwierdzenie; CONFIRM=1 pomija)
+	@echo "make fresh usunie WSZYSTKIE tabele i dane lokalnej bazy PostgreSQL projektu '$$(grep -E '^COMPOSE_PROJECT_NAME=' .env | cut -d= -f2)' (konta, treści, media w bazie, audit log) i wgra dane demo."
+	@if [ "$(CONFIRM)" != "1" ]; then printf 'Kontynuować? [y/N] '; read answer; case "$$answer" in y|Y|yes|tak) ;; *) echo 'Przerwano, baza bez zmian.'; exit 1;; esac; fi
+	$(COMPOSE) up -d --wait postgres redis
+	$(RUN) php artisan migrate:fresh --seed --no-interaction
 
 deps: env ## Instaluj dokładnie zależności z lockfile (również po git pull)
 	$(COMPOSE) stop vite queue scheduler web app
@@ -78,6 +92,19 @@ test: ## Testy Pest; opcjonalnie ARGS='--filter=nazwa'
 test-parallel: ## Równoległe testy Pest; TEST_PROCESSES=4 domyślnie
 	$(RUN) php artisan test --compact --parallel --processes=$(TEST_PROCESSES) $(ARGS)
 
+test-pgsql: local-guard ## Pest na PostgreSQL z compose w osobnej bazie PGSQL_TEST_DATABASE (starter_testing); opcjonalnie ARGS
+	@case "$(PGSQL_TEST_DATABASE)" in *[!a-z0-9_]*|'') echo 'PGSQL_TEST_DATABASE: dozwolone tylko [a-z0-9_]'; exit 1;; esac
+	$(COMPOSE) up -d --wait postgres
+	@$(COMPOSE) exec -T -e TEST_DB=$(PGSQL_TEST_DATABASE) postgres sh -ec '\
+		if [ "$$TEST_DB" = "$$POSTGRES_DB" ]; then echo "Baza testowa nie może być bazą aplikacji ($$POSTGRES_DB)"; exit 1; fi; \
+		psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT 1 FROM pg_database WHERE datname = '"'"'$$TEST_DB'"'"'" | grep -qx 1 \
+		|| createdb -U "$$POSTGRES_USER" "$$TEST_DB"'
+	@DB_USERNAME="$$($(COMPOSE) exec -T postgres printenv POSTGRES_USER)" \
+	DB_PASSWORD="$$($(COMPOSE) exec -T postgres printenv POSTGRES_PASSWORD)"; export DB_USERNAME DB_PASSWORD; \
+	$(COMPOSE) run --rm --no-deps -e DB_CONNECTION=pgsql -e DB_HOST=postgres -e DB_PORT=5432 \
+		-e DB_DATABASE=$(PGSQL_TEST_DATABASE) -e DB_URL= -e DB_USERNAME -e DB_PASSWORD \
+		app php artisan test --compact $(ARGS)
+
 test-setup: ## Testy bootstrappingu i ochrony konfiguracji
 	$(RUN) node --test scripts/dev-environment.test.mjs
 
@@ -99,7 +126,8 @@ e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymu
 	$(E2E_COMPOSE) up -d --wait --wait-timeout 180 web queue ssr playwright
 	@E2E_PASSWORD="$${E2E_PASSWORD:-$$(od -An -tx1 -N18 /dev/urandom | tr -d ' \n')}"; export E2E_PASSWORD; \
 	$(COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$${POSTGRES_DB}_e2e" -tAc "SELECT 1" >/dev/null 2>&1 || createdb -U "$$POSTGRES_USER" "$${POSTGRES_DB}_e2e"' \
-	&& $(E2E_RUN) php artisan migrate:fresh --seed --force --no-interaction \
+	&& $(E2E_RUN) php artisan migrate:fresh --force --no-interaction \
+	&& $(E2E_RUN) php artisan cache:clear --no-interaction \
 	&& $(E2E_RUN) php artisan app:e2e-prepare --client-host=playwright --no-interaction \
 	&& $(E2E_COMPOSE) exec -T -e E2E_PASSWORD playwright npx playwright test $(ARGS); \
 	status=$$?; $(E2E_COMPOSE) rm --stop --force ssr playwright; \

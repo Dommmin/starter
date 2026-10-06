@@ -55,6 +55,7 @@ export function ThemeMenuGroup() {
 
 export type ThemeMenuProps = {
     trigger: ReactElement;
+    align: 'start' | 'end';
     open: boolean;
     openedWithKeyboard: boolean;
     onOpenChange: (open: boolean) => void;
@@ -66,6 +67,7 @@ export type ThemeMenuProps = {
  */
 export default function ThemeMenu({
     trigger,
+    align,
     open,
     openedWithKeyboard,
     onOpenChange,
@@ -76,7 +78,7 @@ export default function ThemeMenu({
         <DropdownMenu open={open} onOpenChange={onOpenChange}>
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
             <DropdownMenuContent
-                align="end"
+                align={align}
                 className="w-36"
                 onFocus={focusFirstItemOnce}
             >

@@ -2,8 +2,9 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Eye } from 'lucide-react';
 import { Link, ResourceTable } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
-import { index, show } from '@/routes/admin/contact';
+import { destroyMany, index, show } from '@/routes/admin/contact';
 import { ContactStatusBadge } from './status-badge';
 
 type Row = App.Data.Admin.Contact.ContactMessageListItemData;
@@ -13,8 +14,21 @@ type IndexProps = App.Data.Admin.Contact.ContactMessageIndexData;
  * Admin list of contact form messages with their delivery status.
  */
 export default function AdminContactIndex() {
-    const { items, pagination, filters } = usePage<IndexProps>().props;
+    const { items, pagination, filters, can } = usePage<IndexProps>().props;
     const { t, formatDate } = useTranslation();
+
+    const deleteMessages = (keys: string[]): Promise<void> =>
+        new Promise((resolve, reject) => {
+            router.delete(destroyMany.url(), {
+                data: { ids: keys.map(Number) },
+                preserveScroll: true,
+                onSuccess: () => resolve(),
+                onError: () => reject(new Error('validation')),
+                // Global handling still shows the HTTP or network error.
+                onHttpException: () => reject(new Error('http')),
+                onNetworkError: () => reject(new Error('network')),
+            });
+        });
 
     return (
         <>
@@ -33,6 +47,7 @@ export default function AdminContactIndex() {
                 searchable
                 labels={{
                     caption: t('admin.contact.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.contact.searchLabel'),
                     searchPlaceholder: t('admin.contact.searchPlaceholder'),
                     searchClear: t('admin.contact.searchClear'),
@@ -78,6 +93,7 @@ export default function AdminContactIndex() {
                 columns={[
                     {
                         key: 'name',
+                        priority: 'primary',
                         label: t('admin.contact.fields.name'),
                         render: (row) => (
                             <Link href={show(row.id)} tone="primary">
@@ -87,11 +103,13 @@ export default function AdminContactIndex() {
                     },
                     {
                         key: 'email',
+                        priority: 'card',
                         label: t('admin.contact.fields.email'),
                         render: (row) => row.email,
                     },
                     {
                         key: 'status',
+                        priority: 'status',
                         label: t('admin.contact.fields.status'),
                         render: (row) => (
                             <ContactStatusBadge status={row.status} />
@@ -99,12 +117,50 @@ export default function AdminContactIndex() {
                     },
                     {
                         key: 'created_at',
+                        priority: 'secondary',
                         label: t('admin.contact.fields.createdAt'),
                         sortable: true,
                         render: (row) =>
                             row.createdAt ? formatDate(row.createdAt) : '—',
                     },
                 ]}
+                bulkActions={
+                    can.delete
+                        ? {
+                              label: t('table.bulkActions'),
+                              selectAllLabel: t('table.selectAll'),
+                              selectRowLabel: (row) =>
+                                  t('table.selectRow', { label: row.name }),
+                              selectedSummary: (count) =>
+                                  t('table.selected', {}, count),
+                              clearLabel: t('table.clearSelection'),
+                              actions: [
+                                  {
+                                      id: 'delete',
+                                      label: t('admin.contact.bulkDelete'),
+                                      tone: 'destructive',
+                                      confirm: {
+                                          title: t(
+                                              'admin.contact.bulkDeleteTitle',
+                                          ),
+                                          description: (count) =>
+                                              t(
+                                                  'admin.contact.bulkDeleteDescription',
+                                                  {},
+                                                  count,
+                                              ),
+                                          confirmLabel: t(
+                                              'admin.contact.bulkDeleteConfirm',
+                                          ),
+                                          cancelLabel: t('actions.cancel'),
+                                          closeLabel: t('actions.close'),
+                                      },
+                                      onRun: deleteMessages,
+                                  },
+                              ],
+                          }
+                        : undefined
+                }
                 rowActions={{
                     label: (row) =>
                         t('admin.contact.rowActionsLabel', { name: row.name }),

@@ -11,12 +11,13 @@ export type NativeInputFieldProps = {
     name: string;
     label: string;
     value: string;
-    onChange: (value: string) => void;
+    onChange?: (value: string) => void;
     onBlur?: () => void;
     description?: string;
     error?: string;
     required?: boolean;
     disabled?: boolean;
+    readOnly?: boolean;
     placeholder?: string;
     min?: number | string;
     max?: number | string;
@@ -37,6 +38,7 @@ export function NativeInputField({
     error,
     required = false,
     disabled = false,
+    readOnly = false,
     placeholder,
     min,
     max,
@@ -46,6 +48,7 @@ export function NativeInputField({
     ref,
 }: NativeInputFieldProps) {
     const reactId = useId();
+    const isRequired = required && !readOnly;
     const inputId = id ?? `${reactId}-input`;
     const descriptionId = description ? `${reactId}-description` : undefined;
     const errorId = error ? `${reactId}-error` : undefined;
@@ -56,12 +59,12 @@ export function NativeInputField({
         <div className="flex flex-col gap-1.5">
             <label
                 htmlFor={inputId}
-                className="text-sm leading-none font-medium"
+                className="text-sm leading-snug font-medium"
             >
                 {label}
-                {required && (
+                {isRequired && (
                     <span
-                        className="text-destructive ml-0.5"
+                        className="text-status-danger ml-0.5"
                         aria-hidden="true"
                     >
                         *
@@ -74,7 +77,7 @@ export function NativeInputField({
                 name={name}
                 type={type}
                 value={value}
-                onChange={(event) => onChange(event.target.value)}
+                onChange={(event) => onChange?.(event.target.value)}
                 onBlur={onBlur}
                 placeholder={placeholder}
                 min={min}
@@ -82,13 +85,15 @@ export function NativeInputField({
                 step={step}
                 inputMode={inputMode}
                 disabled={disabled}
-                required={required}
+                readOnly={readOnly}
+                required={isRequired}
                 aria-describedby={describedBy}
                 aria-invalid={error ? true : undefined}
                 className={cn(
                     'border-input placeholder:text-muted-foreground flex h-11 w-full min-w-0 rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none',
                     'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                     'disabled:pointer-events-none disabled:opacity-50',
+                    readOnly && 'bg-surface-subtle cursor-default',
                     error &&
                         'border-destructive focus-visible:ring-destructive/20',
                 )}
@@ -102,7 +107,7 @@ export function NativeInputField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

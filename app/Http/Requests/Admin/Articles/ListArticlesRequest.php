@@ -24,7 +24,8 @@ class ListArticlesRequest extends FormRequest
      * Single source of the article list contract. Every row is described by the
      * translation in the selected content `locale` (default: the admin
      * language when it is a public locale, otherwise the default public
-     * locale); search, status filter and title sort apply to that translation.
+     * locale); search, status filter (`published` = visible now, `scheduled` = published
+     * with a future date) and title sort apply to that translation.
      */
     public function listQuery(): ListQuery
     {
@@ -44,10 +45,16 @@ class ListArticlesRequest extends FormRequest
                         ->where('article_translations.locale', '=', $locale);
                 });
             })
-            ->filter('status', ['all', 'draft', 'published'], default: 'all', apply: function (Builder $query, string $value): void {
+            ->filter('status', ['all', 'draft', 'published', 'scheduled'], default: 'all', apply: function (Builder $query, string $value): void {
                 match ($value) {
                     'draft' => $query->where('article_translations.status', PublicationStatus::Draft->value),
-                    'published' => $query->where('article_translations.status', PublicationStatus::Published->value),
+                    'published' => $query->where('article_translations.status', PublicationStatus::Published->value)
+                        ->where('article_translations.published_at', '<=', now()),
+                    'scheduled' => $query->where('article_translations.status', PublicationStatus::Published->value)
+                        ->where(function (Builder $query): void {
+                            $query->whereNull('article_translations.published_at')
+                                ->orWhere('article_translations.published_at', '>', now());
+                        }),
                     default => null,
                 };
             })

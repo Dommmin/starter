@@ -18,7 +18,7 @@ class ArticleListFiltersData extends Data
         public string $sort,
         #[LiteralTypeScriptType("'asc' | 'desc'")]
         public string $direction,
-        #[LiteralTypeScriptType("'all' | 'draft' | 'published'")]
+        #[LiteralTypeScriptType("'all' | 'draft' | 'published' | 'scheduled'")]
         public string $status,
         public string $locale,
     ) {}

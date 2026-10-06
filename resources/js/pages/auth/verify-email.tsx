@@ -1,55 +1,75 @@
-// Components
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { Head, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import { Alert, AuthHeading, Button, Stack } from '@/design-system/primitives';
+import { useTranslation } from '@/i18n';
 import {
     getLocalizedLogoutRoute,
     getLocalizedVerificationSendForm,
 } from '@/lib/localized-routes';
-import { useTranslation } from '@/i18n';
 
 export default function VerifyEmail({ status }: { status?: string }) {
     const { t, locale, defaultLocale } = useTranslation();
+    const resendForm = useForm({});
+    const logoutForm = useForm({});
 
-    setLayoutProps({
-        title: t('auth.verifyEmail.heading'),
-        description: t('auth.verifyEmail.subheading'),
-    });
+    function resend(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault();
+
+        if (resendForm.processing) {
+            return;
+        }
+
+        const { method, action } = getLocalizedVerificationSendForm(
+            locale,
+            defaultLocale,
+        );
+
+        resendForm.submit(method, action);
+    }
+
+    function logout(): void {
+        if (logoutForm.processing) {
+            return;
+        }
+
+        logoutForm.submit(getLocalizedLogoutRoute(locale, defaultLocale));
+    }
 
     return (
         <>
             <Head title={t('auth.verifyEmail.title')} />
 
-            {status === 'verification-link-sent' && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {t('auth.verifyEmail.linkSent')}
-                </div>
-            )}
+            <AuthHeading
+                title={t('auth.verifyEmail.heading')}
+                description={t('auth.verifyEmail.subheading')}
+            />
 
-            <Form
-                {...getLocalizedVerificationSendForm(locale, defaultLocale)}
-                className="space-y-6 text-center"
-            >
-                {({ processing }) => (
-                    <>
-                        <Button disabled={processing} variant="secondary">
-                            {processing && <Spinner />}
-                            {t('auth.verifyEmail.resend')}
-                        </Button>
-
-                        <TextLink
-                            href={getLocalizedLogoutRoute(
-                                locale,
-                                defaultLocale,
-                            )}
-                            className="mx-auto block text-sm"
-                        >
-                            {t('auth.verifyEmail.logout')}
-                        </TextLink>
-                    </>
+            <Stack gap="default" align="center">
+                {status === 'verification-link-sent' && (
+                    <Alert
+                        tone="success"
+                        title={t('auth.verifyEmail.linkSent')}
+                    />
                 )}
-            </Form>
+
+                <form onSubmit={resend}>
+                    <Button
+                        type="submit"
+                        variant="secondary"
+                        isPending={resendForm.processing}
+                    >
+                        {t('auth.verifyEmail.resend')}
+                    </Button>
+                </form>
+
+                <Button
+                    variant="link"
+                    onClick={logout}
+                    isPending={logoutForm.processing}
+                >
+                    {t('auth.verifyEmail.logout')}
+                </Button>
+            </Stack>
         </>
     );
 }

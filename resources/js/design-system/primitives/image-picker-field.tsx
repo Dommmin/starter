@@ -2,6 +2,7 @@ import { ImageIcon } from 'lucide-react';
 import { lazy, Suspense, useId, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { Inline } from './inline';
 import type { RichTextImagePicker } from './rich-text-document';
 
 export type ImagePickerFieldLabels = {
@@ -85,20 +86,20 @@ export function ImagePickerField({
             tabIndex={-1}
             aria-labelledby={labelId}
             aria-describedby={describedBy}
-            className="focus-visible:ring-ring/50 flex flex-col gap-1.5 rounded-md outline-none focus-visible:ring-[3px]"
+            className="focus-visible:ring-ring/50 @container flex flex-col gap-1.5 rounded-md outline-none focus-visible:ring-[3px]"
         >
-            <span id={labelId} className="text-sm leading-none font-medium">
+            <span id={labelId} className="text-sm leading-snug font-medium">
                 {label}
                 {required && (
                     <span
-                        className="text-destructive ml-0.5"
+                        className="text-status-danger ml-0.5"
                         aria-hidden="true"
                     >
                         *
                     </span>
                 )}
             </span>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 @sm:flex-row @sm:items-center">
                 <div
                     className={cn(
                         'bg-surface-subtle text-muted-foreground flex aspect-square w-40 shrink-0 items-center justify-center overflow-hidden rounded-md border',
@@ -118,7 +119,7 @@ export function ImagePickerField({
                         />
                     )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <Inline gap="tight" align="stretch" wrap>
                     <Button
                         variant="outline"
                         onClick={open}
@@ -135,7 +136,7 @@ export function ImagePickerField({
                             {labels.remove}
                         </Button>
                     )}
-                </div>
+                </Inline>
             </div>
             <input type="hidden" name={name} value={value} />
             {hint && (
@@ -147,7 +148,7 @@ export function ImagePickerField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

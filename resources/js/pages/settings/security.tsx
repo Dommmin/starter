@@ -1,139 +1,150 @@
-import { Form, Head } from '@inertiajs/react';
-import { useRef } from 'react';
+import { Head, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { edit } from '@/routes/security';
 import type { Props as ManagePasskeysProps } from '@/components/manage-passkeys';
 import ManagePasskeys from '@/components/manage-passkeys';
 import type { Props as ManageTwoFactorProps } from '@/components/manage-two-factor';
 import ManageTwoFactor from '@/components/manage-two-factor';
+import {
+    Button,
+    Heading,
+    PasswordField,
+    Stack,
+    Text,
+} from '@/design-system/primitives';
+import { useTranslation } from '@/i18n';
+import { focusFirstError } from '@/lib/focus-first-error';
+import { describePasswordRules } from '@/lib/password-rules';
+import { edit } from '@/routes/security';
 
-// oxfmt-ignore
 type Props = {
     passwordRules: string;
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
+const FIELD_ORDER = [
+    'current_password',
+    'password',
+    'password_confirmation',
+] as const;
+
 export default function Security(props: Props) {
-    const passwordInput = useRef<HTMLInputElement>(null);
-    const currentPasswordInput = useRef<HTMLInputElement>(null);
+    const { t } = useTranslation();
+    const form = useForm({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+    });
+    const passwordLabels = {
+        showPasswordLabel: t('auth.passwordField.show'),
+        hidePasswordLabel: t('auth.passwordField.hide'),
+    };
+
+    function submit(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault();
+
+        if (form.processing) {
+            return;
+        }
+
+        form.submit(SecurityController.update(), {
+            preserveScroll: true,
+            onSuccess: () => form.reset(),
+            onError: (errors) => {
+                form.reset();
+                focusFirstError(errors, FIELD_ORDER);
+            },
+        });
+    }
 
     return (
         <>
-            <Head title="Security settings" />
+            <Head title={t('settings.security.pageTitle')} />
 
-            <h1 className="sr-only">Security settings</h1>
+            <Stack gap="relaxed">
+                <Stack gap="default">
+                    <Stack gap="tight">
+                        <Heading level={1} variant="group">
+                            {t('settings.security.password')}
+                        </Heading>
+                        <Text tone="muted">
+                            {t('settings.security.passwordDescription')}
+                        </Text>
+                    </Stack>
 
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    <form onSubmit={submit} noValidate>
+                        <Stack gap="default">
+                            <PasswordField
+                                id="current_password"
+                                name="current_password"
+                                label={t('settings.security.currentPassword')}
+                                value={form.data.current_password}
+                                onChange={(value) =>
+                                    form.setData('current_password', value)
+                                }
+                                error={form.errors.current_password}
+                                autoComplete="current-password"
+                                {...passwordLabels}
+                                required
+                            />
+
+                            <PasswordField
+                                id="password"
+                                name="password"
+                                label={t('settings.security.newPassword')}
+                                value={form.data.password}
+                                onChange={(value) =>
+                                    form.setData('password', value)
+                                }
+                                error={form.errors.password}
+                                description={describePasswordRules(
+                                    props.passwordRules,
+                                    t,
+                                )}
+                                autoComplete="new-password"
+                                passwordRules={props.passwordRules}
+                                {...passwordLabels}
+                                required
+                            />
+
+                            <PasswordField
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                label={t('settings.security.confirmPassword')}
+                                value={form.data.password_confirmation}
+                                onChange={(value) =>
+                                    form.setData('password_confirmation', value)
+                                }
+                                error={form.errors.password_confirmation}
+                                autoComplete="new-password"
+                                passwordRules={props.passwordRules}
+                                {...passwordLabels}
+                                required
+                            />
+
+                            <Stack gap="none" align="start">
+                                <Button
+                                    type="submit"
+                                    isPending={form.processing}
+                                >
+                                    {t('settings.security.save')}
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    </form>
+                </Stack>
+
+                <ManageTwoFactor
+                    canManageTwoFactor={props.canManageTwoFactor}
+                    requiresConfirmation={props.requiresConfirmation}
+                    twoFactorEnabled={props.twoFactorEnabled}
                 />
 
-                <Form
-                    {...SecurityController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    resetOnError={[
-                        'password',
-                        'password_confirmation',
-                        'current_password',
-                    ]}
-                    resetOnSuccess
-                    onError={(errors) => {
-                        if (errors.password) {
-                            passwordInput.current?.focus();
-                        }
-
-                        if (errors.current_password) {
-                            currentPasswordInput.current?.focus();
-                        }
-                    }}
-                    className="space-y-6"
-                >
-                    {({ errors, processing }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="current_password">
-                                    Current password
-                                </Label>
-
-                                <PasswordInput
-                                    id="current_password"
-                                    ref={currentPasswordInput}
-                                    name="current_password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="current-password"
-                                    placeholder="Current password"
-                                />
-
-                                <InputError message={errors.current_password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">New password</Label>
-
-                                <PasswordInput
-                                    id="password"
-                                    ref={passwordInput}
-                                    name="password"
-                                    className="mt-1 block w-full"
-                                    autoComplete="new-password"
-                                    placeholder="New password"
-                                    passwordrules={props.passwordRules}
-                                />
-
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
-
-                                <PasswordInput
-                                    id="password_confirmation"
-                                    name="password_confirmation"
-                                    className="mt-1 block w-full"
-                                    autoComplete="new-password"
-                                    placeholder="Confirm password"
-                                    passwordrules={props.passwordRules}
-                                />
-
-                                <InputError
-                                    message={errors.password_confirmation}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="update-password-button"
-                                >
-                                    Save
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
-
-            <ManageTwoFactor
-                canManageTwoFactor={props.canManageTwoFactor}
-                requiresConfirmation={props.requiresConfirmation}
-                twoFactorEnabled={props.twoFactorEnabled}
-            />
-
-            <ManagePasskeys
-                canManagePasskeys={props.canManagePasskeys}
-                passkeys={props.passkeys}
-            />
+                <ManagePasskeys
+                    canManagePasskeys={props.canManagePasskeys}
+                    passkeys={props.passkeys}
+                />
+            </Stack>
         </>
     );
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\Articles\ArticleController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
+use App\Http\Controllers\Admin\Content\ContentPreviewController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
@@ -67,6 +68,10 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/pages/{page}/edit', [PageController::class, 'edit'])
             ->name('pages.edit')
             ->can('update', 'page');
+        Route::get('/pages/{page}/preview/{contentLocale}', [ContentPreviewController::class, 'page'])
+            ->name('pages.preview')
+            ->middleware('signed')
+            ->can('preview', 'page');
         Route::put('/pages/{page}', [PageController::class, 'update'])
             ->name('pages.update')
             ->can('update', 'page');
@@ -86,6 +91,10 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])
             ->name('articles.edit')
             ->can('update', 'article');
+        Route::get('/articles/{article}/preview/{contentLocale}', [ContentPreviewController::class, 'article'])
+            ->name('articles.preview')
+            ->middleware('signed')
+            ->can('preview', 'article');
         Route::put('/articles/{article}', [ArticleController::class, 'update'])
             ->name('articles.update')
             ->can('update', 'article');
@@ -139,6 +148,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
 
         Route::get('/contact', [ContactMessageController::class, 'index'])
             ->name('contact.index')
+            ->can('viewAny', ContactMessage::class);
+        Route::delete('/contact', [ContactMessageController::class, 'destroyMany'])
+            ->name('contact.destroy-many')
             ->can('viewAny', ContactMessage::class);
         Route::get('/contact/{contactMessage}', [ContactMessageController::class, 'show'])
             ->name('contact.show')

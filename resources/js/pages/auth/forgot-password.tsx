@@ -1,84 +1,86 @@
-// Components
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
-import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Head, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import {
+    Alert,
+    AuthHeading,
+    Button,
+    Link,
+    Stack,
+    Text,
+    TextField,
+} from '@/design-system/primitives';
+import { useTranslation } from '@/i18n';
+import { focusFirstError } from '@/lib/focus-first-error';
 import {
     getLocalizedForgotPasswordForm,
     getLocalizedLoginRoute,
 } from '@/lib/localized-routes';
-import { useTranslation } from '@/i18n';
+
+const FIELD_ORDER = ['email'] as const;
 
 export default function ForgotPassword({ status }: { status?: string }) {
     const { t, locale, defaultLocale } = useTranslation();
+    const form = useForm({ email: '' });
 
-    setLayoutProps({
-        title: t('auth.forgotPassword.heading'),
-        description: t('auth.forgotPassword.subheading'),
-    });
+    function submit(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault();
+
+        if (form.processing) {
+            return;
+        }
+
+        const { method, action } = getLocalizedForgotPasswordForm(
+            locale,
+            defaultLocale,
+        );
+
+        form.submit(method, action, {
+            onError: (errors) => focusFirstError(errors, FIELD_ORDER),
+        });
+    }
 
     return (
         <>
             <Head title={t('auth.forgotPassword.title')} />
 
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+            <AuthHeading
+                title={t('auth.forgotPassword.heading')}
+                description={t('auth.forgotPassword.subheading')}
+            />
 
-            <div className="space-y-6">
-                <Form
-                    {...getLocalizedForgotPasswordForm(locale, defaultLocale)}
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">
-                                    {t('auth.forgotPassword.email')}
-                                </Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    autoComplete="off"
-                                    autoFocus
-                                    placeholder={t(
-                                        'auth.forgotPassword.emailPlaceholder',
-                                    )}
-                                />
+            <Stack gap="default">
+                {status && <Alert tone="success" title={status} />}
 
-                                <InputError message={errors.email} />
-                            </div>
+                <form onSubmit={submit} noValidate>
+                    <Stack gap="default">
+                        <TextField
+                            id="email"
+                            name="email"
+                            type="email"
+                            label={t('auth.forgotPassword.email')}
+                            value={form.data.email}
+                            onChange={(value) => form.setData('email', value)}
+                            error={form.errors.email}
+                            autoComplete="email"
+                            placeholder={t(
+                                'auth.forgotPassword.emailPlaceholder',
+                            )}
+                            required
+                        />
 
-                            <div className="my-6 flex items-center justify-start">
-                                <Button
-                                    className="w-full"
-                                    disabled={processing}
-                                    data-test="email-password-reset-link-button"
-                                >
-                                    {processing && (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    )}
-                                    {t('auth.forgotPassword.submit')}
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
+                        <Button type="submit" isPending={form.processing}>
+                            {t('auth.forgotPassword.submit')}
+                        </Button>
+                    </Stack>
+                </form>
 
-                <div className="text-muted-foreground space-x-1 text-center text-sm">
-                    <span>{t('auth.forgotPassword.returnTo')}</span>
-                    <TextLink
-                        href={getLocalizedLoginRoute(locale, defaultLocale)}
-                    >
+                <Text variant="caption" align="center">
+                    {t('auth.forgotPassword.returnTo')}{' '}
+                    <Link href={getLocalizedLoginRoute(locale, defaultLocale)}>
                         {t('auth.forgotPassword.logIn')}
-                    </TextLink>
-                </div>
-            </div>
+                    </Link>
+                </Text>
+            </Stack>
         </>
     );
 }

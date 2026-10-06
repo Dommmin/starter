@@ -220,8 +220,15 @@ describe('PublicChrome', () => {
     });
 
     it('offers the theme switcher in the footer to guests only', async () => {
+        // Icon switcher: named by aria-label; inline one: by its caption.
         const themeButton = (root: Element | null | undefined) =>
-            root?.querySelector('button[aria-label^="a11y.themeSwitcher"]');
+            Array.from(root?.querySelectorAll('button') ?? []).find(
+                (button) =>
+                    button
+                        .getAttribute('aria-label')
+                        ?.startsWith('a11y.themeSwitcher') ||
+                    button.textContent?.startsWith('theme.label'),
+            ) ?? null;
 
         const guest = await render(
             <PublicChrome>
@@ -358,6 +365,17 @@ describe('BrandLogo', () => {
         expect(link?.getAttribute('aria-label')).toBe('Panel Name');
         expect(link?.textContent).toBe('Panel Name');
         expect(link?.querySelectorAll('span span')).toHaveLength(0);
+    });
+
+    it('keeps the full name of a truncated long brand available', async () => {
+        const longName = 'Studio Test Kowalski & Partnerzy Sp. z o.o.';
+        const container = await render(<BrandLogo name={longName} />);
+
+        const link = container.querySelector('a');
+        expect(link?.getAttribute('aria-label')).toBe(longName);
+        expect(
+            link?.querySelector(`span[title="${longName}"]`)?.textContent,
+        ).toBe(longName);
     });
 
     it('renders the two-tone catalog brand without a name', async () => {

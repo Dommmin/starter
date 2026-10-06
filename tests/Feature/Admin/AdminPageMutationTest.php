@@ -169,6 +169,16 @@ test('slugs must be lowercase kebab case and not a reserved path', function (str
     expect(Page::query()->count())->toBe(0);
 })->with(['About-Us', 'about us', 'about--us', '-about', 'über', 'login', 'admin', 'settings', 'articles', 'pl']);
 
+test('about is not a reserved slug', function () {
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->post(route('admin.pages.store'), [
+        'translations' => ['en' => translationInput('About', 'about')],
+    ])->assertSessionHasNoErrors();
+
+    expect(PageTranslation::query()->where('slug', 'about')->exists())->toBeTrue();
+});
+
 test('slugs are unique per locale but may repeat across locales', function () {
     $editor = User::factory()->editor()->create();
     PageTranslation::factory()->create(['slug' => 'contact']);

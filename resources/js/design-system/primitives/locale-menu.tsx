@@ -16,6 +16,7 @@ export type LocaleMenuOption = {
 
 export type LocaleMenuProps = {
     trigger: ReactElement;
+    align: 'start' | 'end';
     options: LocaleMenuOption[];
     open: boolean;
     openedWithKeyboard: boolean;
@@ -29,6 +30,7 @@ export type LocaleMenuProps = {
  */
 export default function LocaleMenu({
     trigger,
+    align,
     options,
     open,
     openedWithKeyboard,
@@ -39,7 +41,7 @@ export default function LocaleMenu({
     return (
         <DropdownMenu open={open} onOpenChange={onOpenChange}>
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onFocus={focusFirstItemOnce}>
+            <DropdownMenuContent align={align} onFocus={focusFirstItemOnce}>
                 {options.map((option) => (
                     <DropdownMenuItem key={option.code} asChild>
                         <a

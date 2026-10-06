@@ -16,6 +16,7 @@ import {
 } from '@/design-system/primitives';
 import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import {
     destroy as mediaDestroy,
@@ -242,6 +243,7 @@ export default function AdminMediaIndex() {
                     searchable
                     labels={{
                         caption: t('admin.media.tableCaption'),
+                        sort: tableSortLabels(t),
                         searchLabel: t('admin.media.searchLabel'),
                         searchPlaceholder: t('admin.media.searchPlaceholder'),
                         searchClear: t('admin.media.searchClear'),
@@ -300,6 +302,7 @@ export default function AdminMediaIndex() {
                     columns={[
                         {
                             key: 'preview',
+                            priority: 'optional',
                             label: t('admin.media.columnPreview'),
                             render: (row) => (
                                 <MediaThumbnail
@@ -313,6 +316,7 @@ export default function AdminMediaIndex() {
                         },
                         {
                             key: 'original_name',
+                            priority: 'primary',
                             label: t('admin.media.columnName'),
                             sortable: true,
                             render: (row) => (
@@ -338,6 +342,7 @@ export default function AdminMediaIndex() {
                         },
                         {
                             key: 'status',
+                            priority: 'status',
                             label: t('admin.media.columnStatus'),
                             render: (row) => (
                                 <Stack gap="none">
@@ -358,6 +363,7 @@ export default function AdminMediaIndex() {
                         },
                         {
                             key: 'type',
+                            priority: 'secondary',
                             label: t('admin.media.columnType'),
                             render: (row) =>
                                 t(
@@ -368,12 +374,14 @@ export default function AdminMediaIndex() {
                         },
                         {
                             key: 'size',
+                            priority: 'optional',
                             label: t('admin.media.columnSize'),
                             sortable: true,
                             render: (row) => formatSize(row.size),
                         },
                         {
                             key: 'created_at',
+                            priority: 'optional',
                             label: t('admin.media.columnCreatedAt'),
                             sortable: true,
                             render: (row) =>

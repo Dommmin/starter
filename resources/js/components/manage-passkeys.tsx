@@ -1,31 +1,23 @@
 import { router } from '@inertiajs/react';
 import { KeyRound } from 'lucide-react';
+import { Fragment } from 'react';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
-import Heading from '@/components/heading';
 import PasskeyItem from '@/components/passkey-item';
 import PasskeyRegistration from '@/components/passkey-register';
-import type { Passkey } from '@/types/auth';
+import {
+    EmptyState,
+    Heading,
+    Separator,
+    Stack,
+    Surface,
+    Text,
+} from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import type { Passkey } from '@/types/auth';
 
 export type Props = {
     canManagePasskeys?: boolean;
     passkeys?: Passkey[];
-};
-
-const EmptyState = () => {
-    const { t } = useTranslation();
-
-    return (
-        <div className="p-8 text-center">
-            <div className="bg-muted mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
-                <KeyRound className="text-muted-foreground h-7 w-7" />
-            </div>
-            <p className="font-medium">{t('auth.passkey.emptyTitle')}</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-                {t('auth.passkey.emptyDescription')}
-            </p>
-        </div>
-    );
 };
 
 export default function ManagePasskeys(props: Props) {
@@ -48,28 +40,37 @@ export default function ManagePasskeys(props: Props) {
     }
 
     return (
-        <div className="space-y-6">
-            <Heading
-                variant="small"
-                title={t('auth.passkey.manageTitle')}
-                description={t('auth.passkey.manageDescription')}
-            />
+        <Stack gap="default">
+            <Stack gap="tight">
+                <Heading level={2} variant="group">
+                    {t('auth.passkey.manageTitle')}
+                </Heading>
+                <Text tone="muted">{t('auth.passkey.manageDescription')}</Text>
+            </Stack>
 
-            <div className="border-border overflow-hidden rounded-lg border">
+            <Surface padding="compact" border>
                 {passkeys.length > 0 ? (
-                    passkeys.map((passkey) => (
-                        <PasskeyItem
-                            key={passkey.id}
-                            passkey={passkey}
-                            onDelete={handleDelete}
-                        />
-                    ))
+                    <Stack gap="default">
+                        {passkeys.map((passkey, index) => (
+                            <Fragment key={passkey.id}>
+                                {index > 0 && <Separator />}
+                                <PasskeyItem
+                                    passkey={passkey}
+                                    onDelete={handleDelete}
+                                />
+                            </Fragment>
+                        ))}
+                    </Stack>
                 ) : (
-                    <EmptyState />
+                    <EmptyState
+                        icon={KeyRound}
+                        title={t('auth.passkey.emptyTitle')}
+                        description={t('auth.passkey.emptyDescription')}
+                    />
                 )}
-            </div>
+            </Surface>
 
             <PasskeyRegistration onSuccess={handleRegisterSuccess} />
-        </div>
+        </Stack>
     );
 }

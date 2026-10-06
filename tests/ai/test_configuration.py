@@ -39,6 +39,14 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('npx lefthook run pre-commit', pre_commit)
         self.assertNotIn('--no-verify', pre_commit)
 
+        commit_msg = (ROOT / ".githooks/commit-msg").read_text()
+        app_run = ROOT / ".githooks/app-run"
+        self.assertIn('/app-run" npx lefthook run pre-commit', pre_commit)
+        self.assertIn('/app-run" npx lefthook run commit-msg', commit_msg)
+        self.assertTrue(os.access(app_run, os.X_OK))
+        self.assertIn('export LOCAL_UID LOCAL_GID', app_run.read_text())
+        self.assertIn('--volume "$common_dir:$common_dir"', app_run.read_text())
+
     def test_ci_covers_develop_main_and_manual_deploy(self):
         package = json.loads((ROOT / "package.json").read_text())
         self.assertEqual(
@@ -746,6 +754,24 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn("--exclude=./.git", script)
         self.assertIn("app:make-resource", script)
         self.assertIn("check-ui-contract.mjs --files", script)
+
+    def test_pest_also_runs_on_postgresql_in_ci_and_locally(self):
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("\n  tests-pgsql:\n    name: tests-pgsql\n", ci)
+        job = ci[ci.index("\n  tests-pgsql:\n"):ci.index("\n  generator-smoke:\n")]
+        compose = (ROOT / "compose.yaml").read_text()
+        self.assertIn("image: postgres:18-bookworm", compose)
+        self.assertIn("image: postgres:18-bookworm", job)
+        self.assertIn("DB_CONNECTION: pgsql", job)
+        self.assertIn("run: php artisan test --compact", job)
+        self.assertNotIn("continue-on-error", job)
+        self.assertNotIn("secrets.", job)
+
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("test-pgsql: local-guard ##", makefile)
+        self.assertIn("PGSQL_TEST_DATABASE ?= starter_testing", makefile)
+        self.assertIn('"$$TEST_DB" = "$$POSTGRES_DB"', makefile)
+        self.assertIn("-e DB_DATABASE=$(PGSQL_TEST_DATABASE)", makefile)
 
     def test_ci_runs_browser_e2e_against_the_docker_stack(self):
         ci = (ROOT / ".github/workflows/ci.yml").read_text()

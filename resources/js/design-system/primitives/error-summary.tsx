@@ -65,7 +65,7 @@ export function ErrorSummary({
                     >
                         <a
                             href={`#${item.fieldId}`}
-                            className="text-primary underline underline-offset-4 hover:no-underline"
+                            className="text-foreground underline underline-offset-4 hover:no-underline"
                             onClick={(event) => {
                                 event.preventDefault();
                                 document.getElementById(item.fieldId)?.focus();

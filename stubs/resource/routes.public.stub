@@ -1,0 +1,4 @@
+Route::get('/{{ kebabPlural }}', [Public{{ Model }}Controller::class, 'index'])->name('{{ kebabPlural }}.index');
+Route::get('/{{ kebabPlural }}/{slug}', [Public{{ Model }}Controller::class, 'show'])
+    ->where('slug', PageTranslationRules::SLUG_ROUTE_PATTERN)
+    ->name('{{ kebabPlural }}.show');

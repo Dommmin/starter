@@ -6,7 +6,6 @@ use App\Data\Content\ArticleSummaryData;
 use App\Data\Content\PublicArticleData;
 use App\Data\Content\PublicArticleListData;
 use App\Data\Listing\ListPaginationData;
-use App\Data\Media\MediaImageData;
 use App\Http\Controllers\Controller;
 use App\Repositories\Content\ArticleRepository;
 use App\Services\Content\RichTextRenderer;
@@ -101,20 +100,11 @@ class PublicArticleController extends Controller
 
         Inertia::share('i18n.alternateUrls', $alternates);
 
-        $cover = $translation->article->cover;
-
-        return Inertia::render('articles/show', new PublicArticleData(
-            title: $translation->title,
-            excerpt: $translation->excerpt,
-            metaDescription: $translation->meta_description ?? $translation->excerpt,
-            bodyHtml: $this->richText->toHtml($translation->body),
-            locale: $translation->locale,
-            publishedAt: $translation->published_at?->toIso8601String(),
-            updatedAt: $translation->updated_at?->toIso8601String(),
-            cover: $cover === null ? null : MediaImageData::fromAsset($cover),
-            coverAlt: $cover->alt ?? '',
-            listUrl: $this->urls->url('articles.index', [], $locale),
-            alternates: $alternates,
+        return Inertia::render('articles/show', PublicArticleData::fromTranslation(
+            $translation,
+            $this->richText->toHtml($translation->body),
+            $this->urls->url('articles.index', [], $locale),
+            $alternates,
         ));
     }
 }

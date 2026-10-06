@@ -11,6 +11,7 @@ import {
     Text,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import {
     create as articlesCreate,
@@ -71,6 +72,13 @@ export default function AdminArticlesIndex() {
                         </Button>
                     ) : undefined,
                 }}
+                emptyAction={
+                    can.create ? (
+                        <Button href={articlesCreate()}>
+                            {t('admin.articles.create')}
+                        </Button>
+                    ) : undefined
+                }
                 rows={items}
                 rowKey={(row) => row.id}
                 pagination={pagination}
@@ -78,6 +86,7 @@ export default function AdminArticlesIndex() {
                 searchable
                 labels={{
                     caption: t('admin.articles.tableCaption'),
+                    sort: tableSortLabels(t),
                     searchLabel: t('admin.articles.searchLabel'),
                     searchPlaceholder: t('admin.articles.searchPlaceholder'),
                     searchClear: t('admin.articles.searchClear'),
@@ -113,6 +122,10 @@ export default function AdminArticlesIndex() {
                                 value: 'published',
                                 label: t('admin.articles.status.published'),
                             },
+                            {
+                                value: 'scheduled',
+                                label: t('admin.articles.status.scheduled'),
+                            },
                         ],
                     },
                     {
@@ -128,6 +141,7 @@ export default function AdminArticlesIndex() {
                 columns={[
                     {
                         key: 'title',
+                        priority: 'primary',
                         label: t('admin.articles.columnTitle'),
                         sortable: true,
                         render: (row) => (
@@ -148,6 +162,7 @@ export default function AdminArticlesIndex() {
                     },
                     {
                         key: 'status',
+                        priority: 'status',
                         label: t('admin.articles.columnStatus'),
                         render: (row) => (
                             <Badge
@@ -167,18 +182,21 @@ export default function AdminArticlesIndex() {
                     },
                     {
                         key: 'published_at',
+                        priority: 'secondary',
                         label: t('admin.articles.columnPublishedAt'),
                         render: (row) =>
                             row.publishedAt ? formatDate(row.publishedAt) : '—',
                     },
                     {
                         key: 'locales',
+                        priority: 'card',
                         label: t('admin.articles.columnLocales'),
                         render: (row) =>
                             row.locales.map(localeName).join(', ') || '—',
                     },
                     {
                         key: 'updated_at',
+                        priority: 'optional',
                         label: t('admin.articles.columnUpdatedAt'),
                         sortable: true,
                         render: (row) =>

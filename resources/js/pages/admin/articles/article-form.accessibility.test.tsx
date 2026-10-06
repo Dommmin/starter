@@ -116,6 +116,7 @@ function makeEditor(
         },
         locales,
         can: { create: true, publish: true, delete: false, ...can },
+        previewUrls: {},
     };
 }
 

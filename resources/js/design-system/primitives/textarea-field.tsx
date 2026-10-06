@@ -1,11 +1,11 @@
 import { useId, type Ref } from 'react';
 import { cn } from '@/lib/utils';
+import type { FieldValueProps } from './field-value';
 
-export type TextareaFieldProps = {
+export type TextareaFieldProps = FieldValueProps & {
     name: string;
     label: string;
     value: string;
-    onChange: (value: string) => void;
     onBlur?: () => void;
     description?: string;
     /** Server or client validation message; presence marks the field invalid. */
@@ -34,12 +34,14 @@ export function TextareaField({
     error,
     required = false,
     disabled = false,
+    readOnly = false,
     placeholder,
     rows = 4,
     id,
     ref,
 }: TextareaFieldProps) {
     const reactId = useId();
+    const isRequired = required && !readOnly;
     const inputId = id ?? `${reactId}-input`;
     const descriptionId = description ? `${reactId}-description` : undefined;
     const errorId = error ? `${reactId}-error` : undefined;
@@ -50,12 +52,12 @@ export function TextareaField({
         <div className="flex flex-col gap-1.5">
             <label
                 htmlFor={inputId}
-                className="text-sm leading-none font-medium"
+                className="text-sm leading-snug font-medium"
             >
                 {label}
-                {required && (
+                {isRequired && (
                     <span
-                        className="text-destructive ml-0.5"
+                        className="text-status-danger ml-0.5"
                         aria-hidden="true"
                     >
                         *
@@ -67,11 +69,12 @@ export function TextareaField({
                 id={inputId}
                 name={name}
                 value={value}
-                onChange={(event) => onChange(event.target.value)}
+                onChange={(event) => onChange?.(event.target.value)}
                 onBlur={onBlur}
                 placeholder={placeholder}
                 disabled={disabled}
-                required={required}
+                readOnly={readOnly}
+                required={isRequired}
                 rows={rows}
                 aria-describedby={describedBy}
                 aria-invalid={error ? true : undefined}
@@ -79,6 +82,7 @@ export function TextareaField({
                     'border-input placeholder:text-muted-foreground w-full resize-y rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none',
                     'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                     'disabled:pointer-events-none disabled:opacity-50',
+                    readOnly && 'bg-surface-subtle cursor-default',
                     error &&
                         'border-destructive focus-visible:ring-destructive/20',
                 )}
@@ -92,7 +96,7 @@ export function TextareaField({
                 <p
                     id={errorId}
                     role="alert"
-                    className="text-destructive text-xs"
+                    className="text-status-danger text-xs"
                 >
                     {error}
                 </p>

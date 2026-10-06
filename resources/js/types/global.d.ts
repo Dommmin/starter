@@ -20,6 +20,8 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             /** Public area only (lazy shared prop). */
             navigation?: App.Data.Navigation.NavigationData;
+            /** Admin area in the local environment only (design-system showcase). */
+            designSystemUrl?: string;
             [key: string]: unknown;
         };
     }

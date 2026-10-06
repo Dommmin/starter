@@ -230,6 +230,56 @@ describe('ResourceTable', () => {
         expect(buttonByText(container, 'Clear filters')).toBeUndefined();
     });
 
+    it('offers the empty-list call to action when there are no records', async () => {
+        const container = await render(
+            <ResourceTable<Row>
+                {...props({
+                    rows: [],
+                    header: undefined,
+                    emptyAction: <a href="/admin/things/create">Add thing</a>,
+                })}
+            />,
+        );
+
+        expect(container.textContent).toContain('No things yet');
+        expect(
+            container.querySelector('a[href="/admin/things/create"]')
+                ?.textContent,
+        ).toBe('Add thing');
+        expect(container.querySelector('h1')).toBeNull();
+    });
+
+    it('hides the empty-list call to action for an empty filter result', async () => {
+        const emptyAction = <a href="/admin/things/create">Add thing</a>;
+        const filtered = await render(
+            <ResourceTable<Row>
+                {...props({
+                    rows: [],
+                    filters: { ...defaultFilters, status: 'active' },
+                    emptyAction,
+                })}
+            />,
+        );
+
+        expect(filtered.textContent).toContain('No matching things');
+        expect(buttonByText(filtered, 'Clear filters')).toBeDefined();
+        expect(filtered.textContent).not.toContain('Add thing');
+
+        const withoutNoResultsLabels = await render(
+            <ResourceTable<Row>
+                {...props({
+                    rows: [],
+                    filters: { ...defaultFilters, search: 'zzz' },
+                    labels: { ...props().labels, noResultsTitle: undefined },
+                    emptyAction,
+                })}
+            />,
+        );
+
+        expect(withoutNoResultsLabels.textContent).toContain('No things yet');
+        expect(withoutNoResultsLabels.textContent).not.toContain('Add thing');
+    });
+
     it('marks the table busy while a visit is in flight and shows a retry panel on failure', async () => {
         const container = await render(<ResourceTable<Row> {...props()} />);
 

@@ -110,8 +110,10 @@ async function waitForDialogGrid(): Promise<HTMLElement> {
 beforeAll(async () => {
     // Warm the lazily imported picker dialog so the interaction test measures
     // the field, not the cold module transform of the first dynamic import.
+    // The transform can outlast the default hook timeout when the pre-commit
+    // checks run in parallel, so it gets an explicit budget.
     await import('./rich-text-image-dialog');
-});
+}, 30_000);
 
 afterEach(async () => {
     await act(async () => {

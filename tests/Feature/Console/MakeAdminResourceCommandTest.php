@@ -19,6 +19,9 @@ beforeEach(function () {
     $this->files->makeDirectory($this->sandbox.'/routes', 0755, true);
     $this->files->copy(base_path('routes/admin.php'), $this->sandbox.'/routes/admin.php');
 
+    $this->files->makeDirectory($this->sandbox.'/resources/js/layouts', 0755, true);
+    $this->files->copy(base_path('resources/js/layouts/admin-layout.tsx'), $this->sandbox.'/resources/js/layouts/admin-layout.tsx');
+
     foreach (ResourceGenerator::LOCALES as $locale) {
         $this->files->makeDirectory($this->sandbox."/lang/{$locale}", 0755, true);
         $this->files->copy(lang_path("{$locale}/admin.php"), $this->sandbox."/lang/{$locale}/admin.php");
@@ -129,6 +132,13 @@ test('generation writes plain files and extends routes and catalogs', function (
         ->toContain("->name('products.destroy')")
         ->toContain("->can('delete', 'product');");
 
+    $layout = $this->files->get("{$this->sandbox}/resources/js/layouts/admin-layout.tsx");
+    expect($layout)->toContain("import { index as productsIndex } from '@/routes/admin/products';")
+        ->toContain("t('admin.products.navLabel'),\n                    productsIndex(),")
+        ->toContain("    Boxes,\n")
+        ->toContain('// app:make-resource: new navigation items');
+    expect(strpos($layout, "'products',"))->toBeLessThan(strpos($layout, '// app:make-resource: new navigation items'));
+
     foreach (ResourceGenerator::LOCALES as $locale) {
         $catalog = require "{$this->sandbox}/lang/{$locale}/admin.php";
         $original = require lang_path("{$locale}/admin.php");
@@ -175,6 +185,13 @@ test('an existing route, catalog key or migration blocks the whole generation', 
             $files->put($path, str_replace("    'users' => [", "    'products' => [],\n    'users' => [", $files->get($path)));
         },
         'lang/de/admin.php already contains the [products] key.',
+    ],
+    'navigation marker' => [
+        function (Filesystem $files, string $sandbox): void {
+            $path = "{$sandbox}/resources/js/layouts/admin-layout.tsx";
+            $files->put($path, str_replace('// app:make-resource: new navigation items', '', $files->get($path)));
+        },
+        'the navigation marker',
     ],
     'migration' => [
         function (Filesystem $files, string $sandbox): void {
@@ -407,7 +424,11 @@ test('relation, image, rich text, badge tones and export generate the expected f
     $keys = [];
     foreach (ResourceGenerator::LOCALES as $locale) {
         $catalog = require "{$this->sandbox}/lang/{$locale}/admin.php";
-        $keys[$locale] = array_keys(Arr::dot($catalog['products']));
+        // Plural groups differ per language (Polish adds few/many); compare them as one key.
+        $keys[$locale] = array_values(array_unique(array_map(
+            fn (string $key): string => (string) preg_replace('/\.(zero|one|two|few|many|other)$/', '', $key),
+            array_keys(Arr::dot($catalog['products'])),
+        )));
 
         expect($catalog['products']['exportTooLarge'])->toContain(':max')
             ->and($catalog['products']['exportFilename'])->toBe('products-:date.csv')
@@ -469,9 +490,225 @@ test('relations, rich text and badge tones are validated before planning', funct
     'rich text searchable' => [['--fields' => 'name:string,body:richtext', '--searchable' => 'body'], 'Searchable column [body] must be a string or text field.'],
     'rich text sortable' => [['--fields' => 'name:string,body:richtext', '--sortable' => 'body'], 'Sortable column [body] must be a non-text field'],
     'relation sortable' => [['--fields' => 'name:string,faq:belongsTo(Faq.question)', '--sortable' => 'faq'], 'Sortable column [faq] must be a non-text field'],
-    'image filter' => [['--fields' => 'name:string,cover:image', '--filters' => 'cover'], 'Filter [cover] must be a boolean or enum field'],
+    'image filter' => [['--fields' => 'name:string,cover:image', '--filters' => 'cover'], 'Filter [cover] must be a boolean or enum field. A belongsTo relation or a date (range filter) is accepted as well.'],
     'unknown badge tone' => [['--fields' => 'status:enum(draft|published:rainbow)'], 'Enum tone [rainbow] of value [published] of field [status] must be one of: neutral, primary, success, danger, outline.'],
+    'singular many relation' => [['--fields' => 'name:string,faq:belongsToMany(Faq.question)'], 'belongsToMany field name [faq] must be plural'],
+    'many relation to a missing model' => [['--fields' => 'name:string,tags:belongsToMany(Tag.name)'], 'model app/Models/Tag.php does not exist.'],
+    'many relation to users' => [['--fields' => 'name:string,owners:belongsToMany(User.name)'], 'cannot reference [User]'],
+    'many relation to itself' => [['--fields' => 'name:string,products:belongsToMany(Product.name)'], 'a belongsToMany relation to the resource itself is not supported'],
+    'only many relations' => [['--fields' => 'faqs:belongsToMany(Faq.question)'], 'At least one column field is required besides belongsToMany relations.'],
+    'many relation as a filter' => [['--fields' => 'name:string,faqs:belongsToMany(Faq.question)', '--filters' => 'faqs'], 'Filter [faqs] must be a boolean or enum field'],
+    'owned resource with a user field' => [['--fields' => 'name:string,user:string', '--owned' => true], 'Field [user] collides with the owner relation added by --owned'],
+    'public resource with its own slug' => [['--fields' => 'name:string,slug:string', '--public' => true], 'Field [slug] is added by --public (slug, published); remove it from --fields.'],
+    'public resource without a title' => [['--fields' => 'rank:integer', '--public' => true], '--public needs a string field'],
 ]);
+
+/**
+ * Copy the files a `--public` resource extends into the sandbox.
+ */
+function copyPublicTargetsIntoSandbox(Filesystem $files, string $sandbox): void
+{
+    $files->copy(base_path('routes/front.php'), "{$sandbox}/routes/front.php");
+    $files->ensureDirectoryExists("{$sandbox}/app/Providers");
+    $files->copy(app_path('Providers/SitemapServiceProvider.php'), "{$sandbox}/app/Providers/SitemapServiceProvider.php");
+
+    foreach (ResourceGenerator::LOCALES as $locale) {
+        $files->copy(lang_path("{$locale}/public.php"), "{$sandbox}/lang/{$locale}/public.php");
+        $files->copy(lang_path("{$locale}/common.php"), "{$sandbox}/lang/{$locale}/common.php");
+    }
+}
+
+test('a public resource gets SSR list and detail pages, public routes, catalog texts and a sitemap source', function () {
+    copyPublicTargetsIntoSandbox($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,description:text,body:richtext',
+        '--public' => true,
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+
+    expect($migration)->toContain("\$table->string('slug')->unique();")
+        ->toContain("\$table->boolean('published')->default(false);");
+
+    expect($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))
+        ->toContain("Rule::unique(Product::class, 'slug')->ignore(\$product)")
+        ->toContain('$this->merge(self::defaultSlug($this->all()));')
+        ->and($read('app/Http/Requests/Admin/Products/UpdateProductRequest.php'))
+        ->toContain('...StoreProductRequest::fieldRules($record instanceof Product ? $record : null),');
+
+    expect($read('routes/front.php'))
+        ->toContain('use App\Http\Controllers\Content\PublicProductController;')
+        ->toContain("Route::get('/products', [PublicProductController::class, 'index'])->name('products.index');")
+        ->and(strpos($read('routes/front.php'), "->name('products.show')"))->toBeLessThan(strpos($read('routes/front.php'), '// app:make-resource: public routes'));
+
+    expect($read('app/Providers/SitemapServiceProvider.php'))
+        ->toContain('use App\Actions\Seo\ProductsSitemapSource;')
+        ->toContain('ProductsSitemapSource::class,');
+
+    expect($read('app/Http/Controllers/Content/PublicProductController.php'))
+        ->toContain("->where('published', true)")
+        ->toContain('$this->richText->toHtml($product->body)')
+        ->toContain('$this->config->getPublicDefault()');
+
+    expect($read('resources/js/pages/public/products/index.tsx'))->toContain('<PublicChrome>')->toContain("robots={pagination.page > 1 ? 'noindex,follow' : undefined}")
+        ->and($read('resources/js/pages/public/products/show.tsx'))->toContain('canonical={canonical}');
+
+    foreach (ResourceGenerator::LOCALES as $locale) {
+        $catalog = require "{$this->sandbox}/lang/{$locale}/public.php";
+        expect($catalog['products'])->toHaveKeys(['title', 'description', 'empty', 'backToList', 'updatedOn', 'paginationSummary']);
+    }
+
+    expect($read('tests/Feature/Content/PublicProductTest.php'))->toContain("test('unpublished and unknown products are the same 404'")
+        ->and($read('tests/Feature/Admin/ProductCrudTest.php'))->toContain("test('a blank slug is derived from the name and a malformed or taken slug is rejected'");
+});
+
+test('a public resource whose routes already exist writes nothing', function () {
+    copyPublicTargetsIntoSandbox($this->files, $this->sandbox);
+    $front = $this->files->get("{$this->sandbox}/routes/front.php");
+    $this->files->put("{$this->sandbox}/routes/front.php", $front."\nRoute::get('/products', fn () => 'taken')->name('products.index');\n");
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required',
+        '--public' => true,
+        '--no-format' => true,
+    ])
+        ->expectsOutputToContain('routes/front.php already defines products routes.')
+        ->assertFailed();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+});
+
+test('an owned resource stores its owner server-side and lets only the owner reach a record', function () {
+    $this->artisan('app:make-resource', [...$this->productArguments, '--owned' => true])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+    $model = $read('app/Models/Product.php');
+    $policy = $read('app/Policies/ProductPolicy.php');
+    $controller = $read('app/Http/Controllers/Admin/Products/ProductController.php');
+
+    expect($migration)->toContain("\$table->foreignId('user_id')->index()->constrained('users')->cascadeOnDelete();")
+        ->and($model)->toContain('return $this->belongsTo(User::class);')
+        ->and($model)->not->toContain("'user_id'")
+        ->and($read('database/factories/ProductFactory.php'))->toContain("'user_id' => User::factory(),")
+        ->and($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))->not->toContain('user_id');
+
+    expect($policy)->toContain('return $user->canAccessAdminPanel() && $user->id === $product->user_id;')
+        ->not->toContain('isAdmin()');
+
+    expect($controller)
+        ->toContain("Product::query()->where('user_id', \$request->user()?->id)")
+        ->toContain('$product->user()->associate($request->user());')
+        ->toContain(': ($user?->canAccessAdminPanel() ?? false),');
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('another user cannot open, change or delete a product, administrators included'")
+        ->toContain("test('a new product belongs to its creator whatever user_id is submitted'")
+        ->toContain('Product::factory()->for($admin)->create();');
+});
+
+test('every list gets a confirmed bulk delete that authorizes each record', function () {
+    $this->artisan('app:make-resource', $this->productArguments)->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+
+    expect($read('routes/admin.php'))
+        ->toContain("Route::delete('/products', [ProductController::class, 'destroyMany'])")
+        ->toContain("->name('products.destroy-many')");
+
+    expect($read('app/Http/Requests/Admin/Products/DestroyProductsRequest.php'))
+        ->toContain("'ids' => ['required', 'array', 'list', 'min:1', 'max:'.self::MAX_IDS],");
+
+    expect($read('app/Http/Controllers/Admin/Products/ProductController.php'))
+        ->toContain("Gate::forUser(\$request->user())->authorize('delete', \$record);")
+        ->toContain('lockForUpdate()');
+
+    expect($read('resources/js/pages/admin/products/index.tsx'))
+        ->toContain('bulkActions={')
+        ->toContain('router.delete(destroyMany.url(), {');
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('a bulk delete including a product the user may not delete removes nothing'");
+});
+
+test('a date filter becomes an inclusive range filter of the list', function () {
+    $this->artisan('app:make-resource', [...$this->productArguments, '--filters' => 'launched_on,status'])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+
+    expect($read('app/Http/Requests/Admin/Products/ListProductsRequest.php'))->toContain("->dateRange('launched_on', 'launched_on')");
+    expect($read('app/Data/Admin/Products/ProductListFiltersData.php'))
+        ->toContain('public string $launched_on_from,')
+        ->toContain('public string $launched_on_to,');
+    expect($read('resources/js/pages/admin/products/index.tsx'))
+        ->toContain("kind: 'dateRange',")
+        ->toContain("from: t('admin.products.dateFrom'),");
+    expect($read('lang/pl/admin.php'))->toContain("'dateFrom' => 'Od',");
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('the launched_on range filter keeps both days and rejects an inverted range'");
+});
+
+test('a resource without --owned keeps the panel-wide policy', function () {
+    $this->artisan('app:make-resource', $this->productArguments)->assertSuccessful();
+
+    expect($this->files->get("{$this->sandbox}/app/Policies/ProductPolicy.php"))->toContain('return $user->isAdmin();')
+        ->and($this->files->get("{$this->sandbox}/app/Models/Product.php"))->not->toContain('user_id');
+});
+
+test('a belongsToMany relation gets a pivot table, a synced multi-select and its own tests', function () {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,faqs:belongsToMany(Faq.question):required',
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_products_table.php")[0]);
+
+    expect($migration)
+        ->toContain("Schema::create('faq_product', function (Blueprint \$table) {")
+        ->toContain("\$table->foreignId('product_id')->constrained('products')->cascadeOnDelete();")
+        ->toContain("\$table->foreignId('faq_id')->index()->constrained('faqs')->cascadeOnDelete();")
+        ->toContain("\$table->primary(['product_id', 'faq_id']);")
+        ->and(strpos($migration, "Schema::dropIfExists('faq_product');"))->toBeLessThan(strpos($migration, "Schema::dropIfExists('products');"));
+
+    expect($read('app/Models/Product.php'))
+        ->toContain("return \$this->belongsToMany(Faq::class, 'faq_product');")
+        ->toContain('@property-read Collection<int, Faq> $faqs')
+        ->not->toContain("'faq_ids'");
+
+    expect($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))
+        ->toContain("'faq_ids' => ['required', 'array', 'list', 'max:'.RecordOptionData::LIMIT],")
+        ->toContain("'faq_ids.*' => ['integer', 'distinct', Rule::exists(Faq::class, 'id')],")
+        ->toContain("return \$this->safe()->except(['faq_ids']);")
+        ->toContain("'faqs' => self::ids(\$validated['faq_ids'] ?? []),");
+
+    expect($read('app/Http/Controllers/Admin/Products/ProductController.php'))
+        ->toContain('$product = DB::transaction(function () use ($request): Product {')
+        ->toContain("\$product->faqs()->sync(\$relationIds['faqs']);")
+        ->toContain('$request->expectedUpdatedAt(), $request->relationIds());');
+
+    expect($read('app/Actions/Products/UpdateProduct.php'))
+        ->toContain("\$locked->faqs()->sync(\$relationIds['faqs']);");
+
+    expect($read('resources/js/pages/admin/products/form.tsx'))
+        ->toContain("type: 'multiSelect',")
+        ->toContain("name: 'faq_ids',")
+        ->toContain('labels: multiSelectLabels(t),')
+        ->toContain('faq_ids: record.faqIds.map(String),');
+
+    expect($read('tests/Feature/Admin/ProductCrudTest.php'))
+        ->toContain("test('the faqs are synced on create, replaced on update and unlinked with their record'")
+        ->toContain("test('unknown or repeated faqs ids are rejected without linking anything'");
+});
 
 test('enum badge tones are parsed per value and default to neutral', function () {
     $status = ResourceBlueprint::parse('Product', 'status:enum(draft|published:success|archived:danger)')->field('status');

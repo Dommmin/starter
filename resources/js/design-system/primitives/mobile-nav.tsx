@@ -19,6 +19,11 @@ export type MobileNavProps = {
     closeLabel: string;
     /** Rendered at the bottom of the panel, e.g. login/register actions. */
     footer?: ReactNode;
+    /**
+     * Controls shown in the panel only below `sm` (e.g. theme and locale
+     * switchers that the header shows inline from `sm` up).
+     */
+    utilities?: ReactNode;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 };
@@ -36,6 +41,7 @@ export function MobileNav({
     openLabel,
     closeLabel,
     footer,
+    utilities,
     open,
     onOpenChange,
 }: MobileNavProps) {
@@ -77,6 +83,7 @@ export function MobileNav({
             items={items}
             closeLabel={closeLabel}
             footer={footer}
+            utilities={utilities}
             open={isOpen}
             onOpenChange={setOpen}
         />

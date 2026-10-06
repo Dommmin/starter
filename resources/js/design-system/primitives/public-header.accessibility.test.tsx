@@ -263,21 +263,21 @@ describe('PublicHeader', () => {
             />,
         );
 
-        const trigger = Array.from(
-            container.querySelectorAll<HTMLButtonElement>('button'),
-        ).find((button) => button.textContent === 'Services');
+        // A parent with its own href is a link next to the toggle.
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="nav.submenu"]',
+        );
 
         await act(async () => {
             trigger?.click();
         });
 
-        // A parent with its own href is listed first inside the submenu.
         const links = container.querySelectorAll(
             'ul[aria-label="nav.submenu"] a',
         );
         expect(
             Array.from(links).map((link) => link.getAttribute('href')),
-        ).toEqual(['/services', '/services/design']);
+        ).toEqual(['/services/design']);
 
         await act(async () => {
             trigger?.dispatchEvent(
@@ -375,5 +375,51 @@ describe('PublicHeader', () => {
         ).map((item) => item.textContent);
 
         expect(items).toEqual(['theme.light', 'theme.dark', 'theme.system']);
+    });
+
+    it('keeps a linked parent out of its own submenu', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                        children: [
+                            {
+                                id: 'docs',
+                                kind: 'external',
+                                label: 'Docs',
+                                href: 'https://docs.example.test',
+                            },
+                        ],
+                    },
+                ]}
+            />,
+        );
+
+        const nav = container.querySelector(
+            'nav[aria-label="a11y.mainNavigation"]',
+        );
+        const toggle = nav?.querySelector<HTMLButtonElement>(
+            'button[aria-label="nav.submenu"]',
+        );
+
+        expect(nav?.querySelector('a[href="/articles"]')?.textContent).toBe(
+            'Articles',
+        );
+        expect(toggle).not.toBeNull();
+
+        await act(async () => {
+            toggle?.click();
+        });
+
+        const submenu = nav?.querySelector('ul[aria-label="nav.submenu"]');
+        expect(
+            Array.from(submenu?.querySelectorAll('a') ?? []).map((link) =>
+                link.getAttribute('href'),
+            ),
+        ).toEqual(['https://docs.example.test']);
     });
 });

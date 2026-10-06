@@ -41,26 +41,29 @@ export type PublicHeaderProps = {
 
 const topLinkClasses =
     'text-muted-foreground hover:text-foreground hover:bg-surface-subtle aria-[current=page]:text-foreground inline-flex min-h-[44px] items-center rounded-md px-2 text-sm font-medium transition-colors duration-150 focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
+const parentLinkClasses =
+    'text-muted-foreground hover:text-foreground hover:bg-surface-subtle aria-[current=page]:text-foreground inline-flex min-h-[44px] items-center rounded-md pl-2 pr-1 text-sm font-medium transition-colors duration-150 focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
 const submenuLinkClasses =
     'text-foreground hover:bg-surface-subtle aria-[current=page]:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2 text-sm whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none';
 
 /**
- * Disclosure submenu (button + list of links), deliberately not an ARIA
- * `menu`: links stay in the Tab order, Escape closes and returns focus to the
- * trigger, and focus leaving the item closes it.
+ * Disclosure submenu, deliberately not an ARIA `menu`: links stay in the Tab
+ * order, Escape closes and returns focus to the trigger, and focus leaving
+ * the item closes it. An entry with its own `href` renders as a link next to
+ * a chevron toggle, so the submenu lists only its children; a `group` is a
+ * labelled toggle.
  */
 function DesktopSubmenu({ item }: { item: NavItem }) {
     const { t, locale } = useTranslation();
     const { url } = usePage();
     const [open, setOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
-    const links = [
-        ...(isNavLink(item) ? [{ ...item, children: undefined }] : []),
-        ...(item.children ?? []),
-    ].filter(isNavLink);
+    const parent = isNavLink(item) ? { ...item, children: undefined } : null;
+    const links = (item.children ?? []).filter(isNavLink);
     const hasCurrent = links.some((link) =>
         isCurrentNavItem(link, url, locale),
     );
+    const submenuLabel = t('nav.submenu', { label: item.label });
 
     return (
         <CollapsiblePrimitive.Root
@@ -84,27 +87,38 @@ function DesktopSubmenu({ item }: { item: NavItem }) {
                 }
             }}
         >
-            <CollapsiblePrimitive.Trigger
-                ref={triggerRef}
-                data-current={hasCurrent ? 'true' : undefined}
-                className="text-muted-foreground hover:text-foreground data-[current=true]:text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
-            >
-                {item.label}
-                <ChevronDown
-                    className="text-muted-foreground size-4 shrink-0 transition-transform"
-                    aria-hidden="true"
-                />
-            </CollapsiblePrimitive.Trigger>
+            {parent ? (
+                <div className="flex items-center">
+                    <NavItemLink item={parent} classes={parentLinkClasses} />
+                    <CollapsiblePrimitive.Trigger
+                        ref={triggerRef}
+                        aria-label={submenuLabel}
+                        data-current={hasCurrent ? 'true' : undefined}
+                        className="text-muted-foreground hover:text-foreground data-[current=true]:text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
+                    >
+                        <ChevronDown
+                            className="size-4 shrink-0 transition-transform"
+                            aria-hidden="true"
+                        />
+                    </CollapsiblePrimitive.Trigger>
+                </div>
+            ) : (
+                <CollapsiblePrimitive.Trigger
+                    ref={triggerRef}
+                    data-current={hasCurrent ? 'true' : undefined}
+                    className="text-muted-foreground hover:text-foreground data-[current=true]:text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
+                >
+                    {item.label}
+                    <ChevronDown
+                        className="text-muted-foreground size-4 shrink-0 transition-transform"
+                        aria-hidden="true"
+                    />
+                </CollapsiblePrimitive.Trigger>
+            )}
             <CollapsiblePrimitive.Content className="bg-background border-border-subtle absolute top-full left-0 z-20 mt-2 min-w-48 rounded-lg border p-2 shadow-lg">
-                <ul aria-label={t('nav.submenu', { label: item.label })}>
-                    {links.map((link, index) => (
-                        <li
-                            key={
-                                index === 0 && isNavLink(item)
-                                    ? 'self'
-                                    : link.id
-                            }
-                        >
+                <ul aria-label={submenuLabel}>
+                    {links.map((link) => (
+                        <li key={link.id}>
                             <NavItemLink
                                 item={link}
                                 classes={submenuLinkClasses}

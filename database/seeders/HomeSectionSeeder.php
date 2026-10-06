@@ -87,8 +87,8 @@ class HomeSectionSeeder extends Seeder
                 title: $t('public.landing.heroTitle'),
                 eyebrow: $t('public.landing.badge'),
                 description: $t('public.landing.heroDescription'),
-                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Register),
-                secondaryAction: new HomeActionData(label: $t('common.nav.login'), target: HomeLinkTarget::Login),
+                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Contact),
+                secondaryAction: new HomeActionData(label: $t('public.landing.ctaSecondary'), target: HomeLinkTarget::Articles),
             ),
             HomeSectionType::Features => new FeaturesContentData(
                 items: [
@@ -110,8 +110,7 @@ class HomeSectionSeeder extends Seeder
             HomeSectionType::Cta => new CtaContentData(
                 title: $t('public.landing.ctaBottomTitle'),
                 description: $t('public.landing.ctaBottomDescription'),
-                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Register),
-                secondaryAction: new HomeActionData(label: $t('common.nav.login'), target: HomeLinkTarget::Login),
+                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Contact),
             ),
         };
     }

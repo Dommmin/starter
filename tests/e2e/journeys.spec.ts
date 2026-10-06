@@ -23,7 +23,7 @@ test.describe('public website', () => {
         expect(html).toMatch(/<title[^>]*>[^<]*Punkt Startowy[^<]*<\/title>/);
         expect(html).toMatch(/<meta name="description" content="[^"]+"/);
         expect(html).toMatch(/<link rel="canonical" href="[^"]+"/);
-        expect(html).toContain('Solid foundation for modern digital products');
+        expect(html).toContain('Websites and apps that work for your business');
         expect(html).toContain('Send message');
         expect(html).toContain('aria-label="Select language: English"');
 

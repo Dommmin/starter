@@ -62,4 +62,44 @@ describe('LocaleSwitcher', () => {
             'a11y.languageSelector: Polski',
         );
     });
+
+    it('renders a closed menu trigger before loading the menu and opens it on pointer down', async () => {
+        const container = document.createElement('div');
+        document.body.append(container);
+        const root = createRoot(container);
+        mountedRoots.push(root);
+
+        await act(async () => {
+            root.render(
+                <I18nProvider initialPage={initialPage}>
+                    <LocaleSwitcher />
+                </I18nProvider>,
+            );
+        });
+
+        const trigger = container.querySelector('button');
+        expect(trigger?.getAttribute('aria-haspopup')).toBe('menu');
+        expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(trigger?.getAttribute('data-state')).toBe('closed');
+        expect(document.querySelector('[role="menu"]')).toBeNull();
+
+        await act(async () => {
+            trigger?.dispatchEvent(
+                new MouseEvent('pointerdown', { bubbles: true, button: 0 }),
+            );
+        });
+        await act(async () => {
+            await import('./locale-menu');
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        expect(
+            container.querySelector('button')?.getAttribute('aria-expanded'),
+        ).toBe('true');
+        expect(
+            Array.from(document.querySelectorAll('[role="menuitem"]')).map(
+                (item) => item.getAttribute('href'),
+            ),
+        ).toEqual(['/', '/pl']);
+    });
 });

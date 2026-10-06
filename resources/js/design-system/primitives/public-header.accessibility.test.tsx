@@ -45,6 +45,17 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const mountedRoots: Root[] = [];
 
+/**
+ * Lets a popup module loaded on first opening (see `lazy-popup.ts`) arrive
+ * and mount.
+ */
+async function settleLazyPopup(load: () => Promise<unknown>): Promise<void> {
+    await act(async () => {
+        await load();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+}
+
 const initialPage = {
     props: {
         i18n: {
@@ -116,6 +127,7 @@ describe('PublicHeader', () => {
         await act(async () => {
             trigger?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const dialogNav = document.querySelector(
             'nav[aria-label="nav.menuTitle"]',
@@ -134,6 +146,14 @@ describe('PublicHeader', () => {
         expect(
             document.querySelector('nav[aria-label="nav.menuTitle"]'),
         ).toBeNull();
+
+        // Radix returns focus in a timeout scheduled when the dialog unmounts.
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        expect(document.activeElement).toBe(
+            container.querySelector('button[aria-label="a11y.openMenu"]'),
+        );
     });
 
     it('renders each link kind with the element and attributes it requires', async () => {
@@ -369,12 +389,33 @@ describe('PublicHeader', () => {
                 new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
             );
         });
+        await settleLazyPopup(() => import('./account-menu'));
 
         const items = Array.from(
             document.querySelectorAll('[role="menuitemradio"]'),
         ).map((item) => item.textContent);
 
         expect(items).toEqual(['theme.light', 'theme.dark', 'theme.system']);
+        // Opened from the keyboard: focus starts on the first item, Escape
+        // closes the menu and returns focus to the (now Radix) trigger.
+        expect(document.activeElement?.textContent).toBe('theme.light');
+
+        await act(async () => {
+            document.activeElement?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+            );
+        });
+        // Radix returns focus in a timeout scheduled when the menu unmounts.
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        const radixTrigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.userMenu"]',
+        );
+        expect(document.querySelector('[role="menu"]')).toBeNull();
+        expect(radixTrigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(radixTrigger);
     });
 
     it('keeps a linked parent out of its own submenu', async () => {
@@ -443,6 +484,7 @@ describe('PublicHeader', () => {
         await act(async () => {
             trigger?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const panel = document.querySelector('[role="dialog"]');
         expect(

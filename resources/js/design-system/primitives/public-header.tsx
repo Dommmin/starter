@@ -3,13 +3,6 @@ import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import { ChevronDown, LogIn, UserPlus } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { useTranslation } from '@/i18n';
 import { login, register } from '@/routes';
@@ -17,11 +10,17 @@ import {
     login as localizedLogin,
     register as localizedRegister,
 } from '@/routes/localized';
+import type { User } from '@/types';
 import type { BrandLogoImage } from './brand-logo';
 import { Button } from './button';
 import { HeaderUtility } from './header-utility';
+import {
+    lazyPopupTriggerProps,
+    useLazyMenuState,
+    useLazyModule,
+    type LazyPopupTriggerProps,
+} from './lazy-popup';
 import { MobileNav } from './mobile-nav';
-import { ThemeMenuGroup } from './theme-switcher';
 import type { NavItem } from './nav-item';
 import { isCurrentNavItem, isNavLink, NavItemLink } from './nav-item-link';
 
@@ -132,6 +131,59 @@ function DesktopSubmenu({ item }: { item: NavItem }) {
     );
 }
 
+const loadAccountMenu = () => import('./account-menu');
+
+/**
+ * Avatar trigger of the account menu; the menu itself loads on the first
+ * opening.
+ */
+function AccountMenuTrigger({ user }: { user: User }) {
+    const { t } = useTranslation();
+    const getInitials = useInitials();
+    const menu = useLazyMenuState();
+    const { module, preload } = useLazyModule(loadAccountMenu, menu.open);
+
+    const renderTrigger = (props?: LazyPopupTriggerProps) => (
+        <button
+            type="button"
+            className="hover:bg-surface-subtle focus-visible:ring-ring flex min-h-[44px] cursor-pointer items-center rounded-full py-1 pr-1.5 pl-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:pr-3.5"
+            aria-label={t('a11y.userMenu')}
+            {...props}
+        >
+            <Avatar className="border-border-subtle h-8 w-8 overflow-hidden rounded-full border">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback className="bg-primary text-primary-foreground rounded-full text-xs font-semibold">
+                    {getInitials(user.name ?? '')}
+                </AvatarFallback>
+            </Avatar>
+            <span className="ml-2 hidden max-w-[120px] truncate text-sm font-medium sm:inline sm:max-w-[160px]">
+                {user.name}
+            </span>
+        </button>
+    );
+
+    if (!module) {
+        return renderTrigger(
+            lazyPopupTriggerProps('menu', {
+                open: menu.openFromTrigger,
+                preload,
+            }),
+        );
+    }
+
+    const AccountMenu = module.default;
+
+    return (
+        <AccountMenu
+            trigger={renderTrigger()}
+            user={user}
+            open={menu.open}
+            openedWithKeyboard={menu.openedWithKeyboard}
+            onOpenChange={menu.setOpen}
+        />
+    );
+}
+
 export function PublicHeader({
     navItems = [],
     logo,
@@ -140,7 +192,6 @@ export function PublicHeader({
     const { t, locale, defaultLocale } = useTranslation();
     const page = usePage();
     const { auth } = page.props;
-    const getInitials = useInitials();
 
     const loginUrl =
         locale === defaultLocale ? login.url() : localizedLogin.url({ locale });
@@ -154,33 +205,7 @@ export function PublicHeader({
     const guestActionsInMenu = !auth.user && navItems.length > 0;
 
     const authControls: ReactNode = auth.user ? (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button
-                    type="button"
-                    className="hover:bg-surface-subtle focus-visible:ring-ring flex min-h-[44px] cursor-pointer items-center rounded-full py-1 pr-1.5 pl-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:pr-3.5"
-                    aria-label={t('a11y.userMenu')}
-                >
-                    <Avatar className="border-border-subtle h-8 w-8 overflow-hidden rounded-full border">
-                        <AvatarImage
-                            src={auth.user.avatar}
-                            alt={auth.user.name}
-                        />
-                        <AvatarFallback className="bg-primary text-primary-foreground rounded-full text-xs font-semibold">
-                            {getInitials(auth.user.name ?? '')}
-                        </AvatarFallback>
-                    </Avatar>
-                    <span className="ml-2 hidden max-w-[120px] truncate text-sm font-medium sm:inline sm:max-w-[160px]">
-                        {auth.user.name}
-                    </span>
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-                <ThemeMenuGroup />
-                <DropdownMenuSeparator />
-                <UserMenuContent user={auth.user} />
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <AccountMenuTrigger user={auth.user} />
     ) : (
         <>
             <Button

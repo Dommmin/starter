@@ -306,7 +306,7 @@ function LatestArticlesSection({
                 {content.items.length === 0 ? (
                     <EmptyState title={t('home.latestArticlesEmpty')} />
                 ) : (
-                    <Grid layout="cards">
+                    <Grid layout="cards" align="center">
                         {content.items.map((article) => (
                             <Card key={article.url}>
                                 <Stack gap="tight">

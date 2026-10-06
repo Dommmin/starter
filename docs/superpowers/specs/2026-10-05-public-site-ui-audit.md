@@ -44,7 +44,7 @@ implementacją.
 | 15 | Sekcja „Najnowsze artykuły” nie ma nagłówka, a karty zajmują 2 z 3 kolumn, wyrównane do lewej, mimo że reszta strony jest wyśrodkowana. | Sekcja nie przekazuje tytułu, grid ma stałe 3 kolumny. |
 | 16 | Stopka na krótkich stronach (`/articles`, artykuł, 404) kończy się w połowie ekranu, a pod nią zostaje pusta przestrzeń. | `PublicChrome` nie ma układu `min-h-screen` + `flex-1` dla `main`. |
 | 17 | Stopka jest uboga: tylko „Contact” i e-mail, bez nawigacji ani linków prawnych. | Brak menu `footer` w danych. Do decyzji, czy starter ma je seedować. |
-| 18 | Strony auth: marka „Punkt Startowy” zamiast „Studio Test”, logo Laravel zamiast logo marki i brak powrotu do strony. | Layout auth bierze nazwę z katalogu i18n, a nie z `site_settings`. |
+| 18 | Strony auth: marka „Punkt Startowy” zamiast „Studio Test”, logo Laravel zamiast logo marki i brak powrotu do strony. | Layout auth bierze nazwę z katalogu i18n, a nie z `site_settings`. **Poprawione 2026-10-05:** nowy prymityw `AuthShell` (nagłówek z marką z ustawień, przełącznik języka i motywu, wąska kolumna w `main#main-content`, jedno `h1`, bez logo Laravel). `HeaderUtility` domyślnie bierze markę z `site`. Szablony `layouts/auth/auth-{simple,card,split}-layout.tsx` są nieużywane i do usunięcia razem z ich wyjątkami UI (zmiana rejestru wyjątków wymaga przeglądu człowieka). |
 | 19 | ~~Inny kolor tekstu przycisku na stronie logowania w dark.~~ **Fałszywy alarm:** oba przyciski mają `text-primary-foreground` (ciemny w dark). Różnicę dał zrzut JPEG. | — |
 
 ### P3: treści i dane (nie kod)

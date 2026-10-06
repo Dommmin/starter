@@ -3,6 +3,7 @@ export * from './action-menu';
 export * from './admin-locale-select';
 export * from './admin-shell';
 export * from './alert';
+export * from './auth-shell';
 export * from './avatar';
 export * from './badge';
 export * from './brand-logo';

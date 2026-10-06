@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { BrandLogo } from './brand-logo';
 import { Button, type ButtonProps } from './button';
+import { HeaderUtility } from './header-utility';
 import { PublicChrome } from './public-chrome';
 
 const sharedProps = vi.hoisted(() => ({
@@ -340,6 +341,16 @@ describe('PublicChrome site settings defaults', () => {
 });
 
 describe('BrandLogo', () => {
+    it('shows the saved site brand in a header without brand props (auth pages)', async () => {
+        sharedProps.current = { site: makeSite() };
+        const container = await render(<HeaderUtility />);
+
+        expect(
+            container.querySelector('header a[aria-label="Panel Name"]')
+                ?.textContent,
+        ).toBe('Panel Name');
+    });
+
     it('renders the saved name in one tone', async () => {
         const container = await render(<BrandLogo name="Panel Name" />);
 

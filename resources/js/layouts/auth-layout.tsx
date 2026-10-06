@@ -1,5 +1,4 @@
-import { HeaderUtility, ThemeSwitcher } from '@/design-system/primitives';
-import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
+import { AuthShell } from '@/design-system/primitives';
 
 export default function AuthLayout({
     title = '',
@@ -11,13 +10,8 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <>
-            <HeaderUtility>
-                <ThemeSwitcher />
-            </HeaderUtility>
-            <AuthLayoutTemplate title={title} description={description}>
-                {children}
-            </AuthLayoutTemplate>
-        </>
+        <AuthShell title={title} description={description || undefined}>
+            {children}
+        </AuthShell>
     );
 }

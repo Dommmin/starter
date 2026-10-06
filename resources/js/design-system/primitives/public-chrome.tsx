@@ -5,6 +5,7 @@ import type { BrandLogoImage } from './brand-logo';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
 import type { NavItem } from './nav-item';
 import { PublicHeader } from './public-header';
+import { useSiteBrand } from './site-brand';
 import { ThemeSwitcher } from './theme-switcher';
 
 export type PublicChromeFooter = {
@@ -64,11 +65,9 @@ export function PublicChrome({
     const { auth, navigation, site: sharedSite } = usePage().props;
     const site = sharedSite as App.Data.Settings.SiteSettingsData | undefined;
 
-    const siteLogo: BrandLogoImage | undefined = site?.logo
-        ? { ...site.logo, alt: site.name }
-        : undefined;
-    const resolvedLogo = logo ?? siteLogo;
-    const brandName = site?.isCustomized ? site.name : undefined;
+    const siteBrand = useSiteBrand();
+    const resolvedLogo = logo ?? siteBrand.logo;
+    const brandName = siteBrand.brandName;
     const copyrightHolder = site
         ? (site.footerText ?? site.name)
         : t('brand.name');

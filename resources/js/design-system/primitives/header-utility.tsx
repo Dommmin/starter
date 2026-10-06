@@ -1,6 +1,7 @@
 import { useTranslation } from '@/i18n';
 import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { LocaleSwitcher } from './locale-switcher';
+import { useSiteBrand } from './site-brand';
 
 export type HeaderUtilityProps = {
     /** Right-hand actions (account controls, mobile menu trigger). */
@@ -10,9 +11,9 @@ export type HeaderUtilityProps = {
      * the locale switcher stays with the actions on the right.
      */
     navigation?: React.ReactNode;
-    /** Optional image logo; the text logo otherwise. */
+    /** Image logo; defaults to the logo of the shared `site` settings. */
     logo?: BrandLogoImage;
-    /** One-tone text logo name; the catalog brand otherwise. */
+    /** One-tone text logo name; defaults to the saved site name. */
     brandName?: string;
     className?: never;
     style?: never;
@@ -25,6 +26,7 @@ export function HeaderUtility({
     brandName,
 }: HeaderUtilityProps) {
     const { t } = useTranslation();
+    const siteBrand = useSiteBrand();
 
     return (
         <header className="border-border-subtle bg-background/90 relative z-10 border-b backdrop-blur-md">
@@ -36,7 +38,10 @@ export function HeaderUtility({
             </a>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
                 <div className="flex min-w-0 items-center gap-8">
-                    <BrandLogo image={logo} name={brandName} />
+                    <BrandLogo
+                        image={logo ?? siteBrand.logo}
+                        name={brandName ?? siteBrand.brandName}
+                    />
 
                     {navigation && (
                         <nav

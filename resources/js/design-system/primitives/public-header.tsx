@@ -149,6 +149,10 @@ export function PublicHeader({
             ? register.url()
             : localizedRegister.url({ locale });
 
+    // Below `md` a guest's sign-in and sign-up move into the menu panel, so
+    // the brand keeps one line next to the locale switcher and menu trigger.
+    const guestActionsInMenu = !auth.user && navItems.length > 0;
+
     const authControls: ReactNode = auth.user ? (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -225,7 +229,13 @@ export function PublicHeader({
                 ) : undefined
             }
         >
-            <div className="flex items-center gap-1.5 sm:gap-3">
+            <div
+                className={
+                    guestActionsInMenu
+                        ? 'hidden items-center gap-3 md:flex'
+                        : 'flex items-center gap-1.5 sm:gap-3'
+                }
+            >
                 {authControls}
             </div>
             {navItems.length > 0 && (
@@ -235,6 +245,21 @@ export function PublicHeader({
                         items={navItems}
                         openLabel={t('a11y.openMenu')}
                         closeLabel={t('a11y.closeMenu')}
+                        footer={
+                            guestActionsInMenu ? (
+                                <>
+                                    <Button variant="outline" href={loginUrl}>
+                                        {t('nav.login')}
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        href={registerUrl}
+                                    >
+                                        {t('nav.register')}
+                                    </Button>
+                                </>
+                            ) : undefined
+                        }
                     />
                 </div>
             )}

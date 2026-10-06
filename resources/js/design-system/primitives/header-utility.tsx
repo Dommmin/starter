@@ -36,7 +36,7 @@ export function HeaderUtility({
             >
                 {t('a11y.skipToContent')}
             </a>
-            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
+            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-8">
                 <div className="flex min-w-0 items-center gap-8">
                     <BrandLogo
                         image={logo ?? siteBrand.logo}

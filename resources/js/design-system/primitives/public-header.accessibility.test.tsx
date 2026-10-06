@@ -422,4 +422,33 @@ describe('PublicHeader', () => {
             ),
         ).toEqual(['https://docs.example.test']);
     });
+
+    it('offers a guest sign-in and sign-up inside the mobile menu panel', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                    },
+                ]}
+            />,
+        );
+
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.openMenu"]',
+        );
+        await act(async () => {
+            trigger?.click();
+        });
+
+        const panel = document.querySelector('[role="dialog"]');
+        expect(
+            Array.from(panel?.querySelectorAll('a') ?? []).map(
+                (link) => link.textContent,
+            ),
+        ).toEqual(['Articles', 'nav.login', 'nav.register']);
+    });
 });

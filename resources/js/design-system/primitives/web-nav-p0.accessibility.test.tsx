@@ -27,16 +27,17 @@ const initialPage = {
     },
 } as unknown as Page<PageProps & SharedPageProps>;
 
-async function render(node: ReactNode): Promise<HTMLElement> {
+async function render(
+    node: ReactNode,
+    page: Page<PageProps & SharedPageProps> = initialPage,
+): Promise<HTMLElement> {
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
     mountedRoots.push(root);
 
     await act(async () => {
-        root.render(
-            <I18nProvider initialPage={initialPage}>{node}</I18nProvider>,
-        );
+        root.render(<I18nProvider initialPage={page}>{node}</I18nProvider>);
     });
 
     return container;
@@ -216,7 +217,7 @@ describe('Footer', () => {
         expect(container.textContent).toContain('© 2026 Acme');
     });
 
-    it('lists top-level plain links once in a shared column', async () => {
+    it('gathers top-level plain links in one quick links column', async () => {
         const container = await render(
             <Footer
                 copyright="© 2026 Acme"
@@ -225,7 +226,7 @@ describe('Footer', () => {
                         id: 'privacy',
                         kind: 'internal',
                         label: 'Privacy policy',
-                        href: '/privacy-policy',
+                        href: '/privacy',
                     },
                     {
                         id: 'terms',
@@ -237,18 +238,17 @@ describe('Footer', () => {
             />,
         );
 
-        const lists = container.querySelectorAll('footer ul');
-
-        expect(lists).toHaveLength(1);
-        expect(container.textContent).toContain('footer.links');
+        const headings = Array.from(container.querySelectorAll('p')).map(
+            (heading) => heading.textContent,
+        );
+        expect(headings).toContain('footer.links');
+        expect(headings).not.toContain('Privacy policy');
+        expect(container.querySelectorAll('ul')).toHaveLength(1);
         expect(
-            container.textContent?.match(/Privacy policy/g) ?? [],
-        ).toHaveLength(1);
-        expect(
-            Array.from(lists[0].querySelectorAll('a')).map((link) =>
+            Array.from(container.querySelectorAll('ul a')).map((link) =>
                 link.getAttribute('href'),
             ),
-        ).toEqual(['/privacy-policy', '/terms']);
+        ).toEqual(['/privacy', '/terms']);
     });
 
     it('omits the columns row when there are no groups, contact or social links', async () => {
@@ -289,5 +289,26 @@ describe('BrandLogo', () => {
             'brand.name',
         );
         expect(container.textContent).toContain('brand.firstPart');
+    });
+
+    it('links to the root in the configured default locale, not only in English', async () => {
+        const publicPage = (locale: string) =>
+            ({
+                props: {
+                    i18n: {
+                        locale,
+                        defaultLocale: 'de',
+                        messages: {},
+                        fallback: 'en',
+                        dir: 'ltr',
+                    },
+                },
+            }) as unknown as Page<PageProps & SharedPageProps>;
+
+        const german = await render(<BrandLogo />, publicPage('de'));
+        const polish = await render(<BrandLogo />, publicPage('pl'));
+
+        expect(german.querySelector('a')?.getAttribute('href')).toBe('/');
+        expect(polish.querySelector('a')?.getAttribute('href')).toBe('/pl');
     });
 });

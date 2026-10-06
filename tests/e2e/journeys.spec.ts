@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { e2ePassword, logIn, publishPage, uniqueId } from './support';
+import {
+    e2ePassword,
+    logIn,
+    publishPage,
+    signedInPage,
+    uniqueId,
+} from './support';
 
 /** Mail sink of the local stack (Mailpit API). */
 const mailpitUrl = process.env.E2E_MAILPIT_URL ?? 'http://localhost:8025';
@@ -108,10 +114,10 @@ test.describe('public website', () => {
 
 test.describe('administration', () => {
     test('admin publishes a page that is served on its public URL', async ({
-        page,
+        browser,
         request,
     }) => {
-        await logIn(page, 'admin');
+        const page = await signedInPage(browser, 'admin');
         await page
             .getByRole('link', { name: 'Pages', exact: true })
             .first()
@@ -140,12 +146,13 @@ test.describe('administration', () => {
         expect(html).toMatch(
             new RegExp(`<link rel="canonical" href="[^"]*/${published.slug}"`),
         );
+        await page.close();
     });
 
-    test('editor has no audit or user management and gets 403 on the audit log', async ({
-        page,
+    test('editor has no audit or user management and gets 403 on both screens', async ({
+        browser,
     }) => {
-        await logIn(page, 'editor');
+        const page = await signedInPage(browser, 'editor');
 
         const navigation = page.getByRole('navigation').first();
         await expect(
@@ -157,11 +164,14 @@ test.describe('administration', () => {
         await expect(page.getByRole('link', { name: 'Users' })).toHaveCount(0);
         await expect(navigation).toBeVisible();
 
-        const response = await page.goto('/admin/audit');
-        expect(response?.status()).toBe(403);
-        await expect(page.getByRole('heading', { level: 1 })).toContainText(
-            '403',
-        );
+        for (const path of ['/admin/audit', '/admin/users']) {
+            const response = await page.goto(path);
+            expect(response?.status()).toBe(403);
+            await expect(page.getByRole('heading', { level: 1 })).toContainText(
+                '403',
+            );
+        }
+        await page.close();
     });
 
     test('password confirmation dialog loads on the first 423 and resumes the visit', async ({
@@ -174,6 +184,8 @@ test.describe('administration', () => {
             }
         });
 
+        // A fresh login: confirming the password changes the server-side
+        // session, which must not leak into the shared saved session.
         await logIn(page, 'editor');
         await page.goto('/settings/profile');
         expect(dialogChunks).toHaveLength(0);

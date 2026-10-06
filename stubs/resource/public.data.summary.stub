@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Data\Content;
+
+use App\Models\{{ Model }};
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+/**
+ * One card of the public {{ pluralLower }} list.
+ */
+#[TypeScript]
+class Public{{ Model }}SummaryData extends Data
+{
+    public function __construct(
+        public string $title,
+        public ?string $summary,
+        public string $url,
+        public ?string $updatedAt,
+    ) {}
+
+    public static function fromModel({{ Model }} ${{ variable }}, string $url): self
+    {
+        return new self(
+            title: ${{ variable }}->{{ titleColumn }},
+            summary: {{ summaryValue }},
+            url: $url,
+            updatedAt: ${{ variable }}->updated_at?->toIso8601String(),
+        );
+    }
+}

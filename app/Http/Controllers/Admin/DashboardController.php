@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\BuildDashboardOverview;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -10,11 +12,16 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     /**
-     * Display the administration platform dashboard.
+     * Display the panel dashboard: the content overview first, then the
+     * platform status block.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, BuildDashboardOverview $buildOverview): Response
     {
+        /** @var User $user */
+        $user = $request->user();
+
         return Inertia::render('admin/index', [
+            'overview' => $buildOverview->handle($user),
             'system' => [
                 'appName' => (string) config('app.name'),
                 'environment' => app()->environment(),

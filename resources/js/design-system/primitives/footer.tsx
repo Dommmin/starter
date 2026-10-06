@@ -24,9 +24,10 @@ export type FooterSocialLink = {
 
 export type FooterProps = {
     /**
-     * Link columns: a `group` (or any entry with `children`) titles a column
-     * and lists its children; top-level plain links share one "Information"
-     * column, placed where the first of them appears.
+     * Link columns: a `group` (or any entry with `children`) titles its own
+     * column and lists its children; top-level plain links are gathered in
+     * one "quick links" column placed first, so no column repeats a link's
+     * label as its heading.
      */
     groups?: NavItem[];
     contact?: FooterContact;
@@ -54,7 +55,7 @@ function FooterColumn({
     children: ReactNode;
 }) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3 wrap-anywhere">
             <Text variant="label" as="p">
                 {title}
             </Text>
@@ -81,20 +82,12 @@ export function Footer({
         contact?.email || contact?.phone || contact?.address,
     );
     const hasColumns = groups.length > 0 || hasContact || social.length > 0;
-    const plainLinks = groups.filter(
-        (item) => (item.children ?? []).length === 0 && isNavLink(item),
+    const groupColumns = groups.filter(
+        (group) => (group.children ?? []).length > 0,
     );
-    const columns = groups.flatMap((item) => {
-        if ((item.children ?? []).length > 0) {
-            return [
-                { id: item.id, title: item.label, links: item.children ?? [] },
-            ];
-        }
-
-        return item === plainLinks[0]
-            ? [{ id: 'links', title: t('footer.links'), links: plainLinks }]
-            : [];
-    });
+    const looseLinks = groups
+        .filter((group) => (group.children ?? []).length === 0)
+        .filter(isNavLink);
 
     return (
         <footer className="border-border-subtle border-t">
@@ -102,12 +95,24 @@ export function Footer({
                 <div className="flex flex-col gap-8 py-10 sm:py-12">
                     {hasColumns && (
                         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-                            {columns.map((column) => (
+                            {looseLinks.length > 0 && (
+                                <FooterColumn title={t('footer.links')}>
+                                    {looseLinks.map((link) => (
+                                        <li key={link.id}>
+                                            <NavItemLink
+                                                item={link}
+                                                classes={linkClasses}
+                                            />
+                                        </li>
+                                    ))}
+                                </FooterColumn>
+                            )}
+                            {groupColumns.map((group) => (
                                 <FooterColumn
-                                    key={column.id}
-                                    title={column.title}
+                                    key={group.id}
+                                    title={group.label}
                                 >
-                                    {column.links
+                                    {(group.children ?? [])
                                         .filter(isNavLink)
                                         .map((link) => (
                                             <li key={link.id}>

@@ -8,13 +8,17 @@ import { PublicHeader } from './public-header';
 const currentPage = vi.hoisted(() => ({
     url: '/',
     user: null as Record<string, unknown> | null,
+    canRegister: true,
 }));
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
         url: currentPage.url,
         props: {
-            auth: { user: currentPage.user },
+            auth: {
+                user: currentPage.user,
+                canRegister: currentPage.canRegister,
+            },
             i18n: { alternateUrls: {} },
         },
     }),
@@ -54,7 +58,10 @@ const initialPage = {
             messages: {},
             fallback: 'en',
             dir: 'ltr',
-            availableLocales: [],
+            availableLocales: [
+                { code: 'en', name: 'English', native: 'English', dir: 'ltr' },
+                { code: 'pl', name: 'Polish', native: 'Polski', dir: 'ltr' },
+            ],
         },
     },
 } as unknown as Page<PageProps & SharedPageProps>;
@@ -77,6 +84,7 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 afterEach(async () => {
     currentPage.url = '/';
     currentPage.user = null;
+    currentPage.canRegister = true;
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -84,11 +92,51 @@ afterEach(async () => {
 });
 
 describe('PublicHeader', () => {
-    it('renders no mobile menu trigger when no nav items are supplied', async () => {
+    it('offers the register action only while sign-up is enabled', async () => {
+        const hasRegister = async (canRegister: boolean) => {
+            currentPage.canRegister = canRegister;
+            const container = await render(<PublicHeader />);
+            const found = Array.from(container.querySelectorAll('a')).some(
+                (link) => link.getAttribute('href') === '/register',
+            );
+            await act(async () => {
+                mountedRoots.splice(0).forEach((root) => root.unmount());
+            });
+            document.body.replaceChildren();
+
+            return found;
+        };
+
+        expect(await hasRegister(true)).toBe(true);
+        expect(await hasRegister(false)).toBe(false);
+    });
+
+    it('keeps the theme and language switchers reachable in the mobile menu without nav items', async () => {
         const container = await render(<PublicHeader />);
 
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.openMenu"]',
+        );
+        expect(trigger).not.toBeNull();
+
+        await act(async () => {
+            trigger?.click();
+        });
+
+        const dialog = document.querySelector('[role="dialog"]');
+        const utilityNames = Array.from(
+            dialog?.querySelectorAll('button[aria-haspopup="menu"]') ?? [],
+        ).map((button) => ({
+            ariaLabel: button.getAttribute('aria-label'),
+            text: button.textContent,
+        }));
+        // Visible captions name the switchers; no icon-only aria-label.
+        expect(utilityNames).toEqual([
+            { ariaLabel: null, text: 'theme.label: theme.system' },
+            { ariaLabel: null, text: 'language.label: English' },
+        ]);
         expect(
-            container.querySelector('button[aria-label="a11y.openMenu"]'),
+            document.querySelector('nav[aria-label="nav.menuTitle"]'),
         ).toBeNull();
     });
 

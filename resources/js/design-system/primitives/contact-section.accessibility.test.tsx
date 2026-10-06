@@ -1,4 +1,4 @@
-import { act, type ReactNode } from 'react';
+import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ContactSection } from './contact-section';
@@ -159,6 +159,65 @@ describe('ContactSection', () => {
         expect(container.textContent).toContain('Thanks, we will reply soon.');
     });
 
+    it('moves focus to the announced success message after a submission', async () => {
+        function SendingForm() {
+            const [isSent, setSent] = useState(false);
+
+            return (
+                <ContactSection
+                    title="Get in touch"
+                    labels={{
+                        name: 'Name',
+                        email: 'Email',
+                        message: 'Message',
+                    }}
+                    errorSummaryTitle="Please fix the following"
+                    values={{
+                        name: 'Ada',
+                        email: 'ada@example.com',
+                        message: 'Hello there',
+                    }}
+                    onChange={vi.fn()}
+                    onSubmit={() => setSent(true)}
+                    submitLabel="Send"
+                    success={
+                        isSent ? <p>Thanks, we will reply soon.</p> : undefined
+                    }
+                />
+            );
+        }
+
+        const container = await render(<SendingForm />);
+        const submit = container.querySelector<HTMLButtonElement>(
+            'button[type="submit"]',
+        );
+        submit?.focus();
+
+        await act(async () => submit?.click());
+
+        const message = container.querySelector('[role="status"]');
+        expect(message?.textContent).toBe('Thanks, we will reply soon.');
+        expect(message?.getAttribute('tabindex')).toBe('-1');
+        expect(document.activeElement).toBe(message);
+    });
+
+    it('does not take focus for a success message present on first render', async () => {
+        await render(
+            <ContactSection
+                title="Get in touch"
+                labels={{ name: 'Name', email: 'Email', message: 'Message' }}
+                errorSummaryTitle="Please fix the following"
+                values={{ name: '', email: '', message: '' }}
+                onChange={vi.fn()}
+                onSubmit={vi.fn()}
+                submitLabel="Send"
+                success={<p>Thanks, we will reply soon.</p>}
+            />,
+        );
+
+        expect(document.activeElement).toBe(document.body);
+    });
+
     it('renders a form-level error as an alert', async () => {
         const container = await render(
             <ContactSection
@@ -215,5 +274,61 @@ describe('ContactSection', () => {
                 .querySelector('input[name="name"]')
                 ?.getAttribute('autocomplete'),
         ).toBe('name');
+    });
+
+    it('focuses the first invalid field after every failed submit', async () => {
+        let resolveRequest: (errors: Record<string, string>) => void = () => {};
+
+        function Page() {
+            const [errors, setErrors] = useState<Record<string, string>>({});
+            const [isPending, setPending] = useState(false);
+            resolveRequest = (next) => {
+                setErrors(next);
+                setPending(false);
+            };
+
+            return (
+                <ContactSection
+                    title="Get in touch"
+                    labels={{
+                        name: 'Name',
+                        email: 'Email',
+                        message: 'Message',
+                    }}
+                    errorSummaryTitle="Please fix the following"
+                    values={{ name: '', email: 'ada', message: '' }}
+                    onChange={vi.fn()}
+                    onSubmit={() => setPending(true)}
+                    errors={errors}
+                    isPending={isPending}
+                    submitLabel="Send"
+                />
+            );
+        }
+
+        const container = await render(<Page />);
+        const form = container.querySelector('form')!;
+        const submit = container.querySelector<HTMLButtonElement>(
+            'button[type="submit"]',
+        )!;
+
+        const failedResponses: Record<string, string>[] = [
+            { email: 'Email is invalid.', message: 'Message is required.' },
+            { email: 'Email is invalid.' },
+        ];
+
+        for (const errors of failedResponses) {
+            submit.focus();
+            await act(async () => {
+                form.dispatchEvent(
+                    new Event('submit', { bubbles: true, cancelable: true }),
+                );
+            });
+            await act(async () => resolveRequest(errors));
+
+            expect(
+                (document.activeElement as HTMLInputElement | null)?.name,
+            ).toBe('email');
+        }
     });
 });

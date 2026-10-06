@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-type SplitLayoutRatio = 'even' | 'primary-wide' | 'primary-narrow';
+type SplitLayoutRatio = 'even' | 'primary-wide' | 'primary-narrow' | 'sidebar';
 type SplitLayoutGap = 'tight' | 'default' | 'relaxed';
 
 export type SplitLayoutProps = {
@@ -19,6 +19,8 @@ const ratioMap: Record<SplitLayoutRatio, string> = {
     even: 'lg:grid-cols-2',
     'primary-wide': 'lg:grid-cols-[2fr_1fr]',
     'primary-narrow': 'lg:grid-cols-[1fr_2fr]',
+    /** Fixed 14 rem `primary` column (section navigation) beside a fluid `secondary`. */
+    sidebar: 'lg:grid-cols-[14rem_minmax(0,1fr)]',
 };
 
 const gapMap: Record<SplitLayoutGap, string> = {

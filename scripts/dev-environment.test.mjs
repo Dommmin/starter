@@ -141,20 +141,22 @@ await test('testing environment isolates application dependencies', () => {
     );
 });
 
-for (const env of [
-    'APP_ENV=production\nDB_HOST=postgres\n',
-    'APP_ENV=local\nDB_HOST=external.example\n',
-]) {
-    await test(`setup refuses unsafe configuration: ${env.trim().replaceAll('\n', ', ')}`, () => {
-        fixture((cwd) => {
-            writeFileSync(join(cwd, '.env'), env);
-            const result = spawnSync('make', ['setup'], {
-                cwd,
-                encoding: 'utf8',
+for (const target of ['setup', 'seed', 'fresh', 'test-pgsql']) {
+    for (const env of [
+        'APP_ENV=production\nDB_HOST=postgres\n',
+        'APP_ENV=local\nDB_HOST=external.example\n',
+    ]) {
+        await test(`${target} refuses unsafe configuration: ${env.trim().replaceAll('\n', ', ')}`, () => {
+            fixture((cwd) => {
+                writeFileSync(join(cwd, '.env'), env);
+                const result = spawnSync('make', [target], {
+                    cwd,
+                    encoding: 'utf8',
+                });
+                assert.notEqual(result.status, 0);
+                assert.match(result.stdout, /Ta komenda wymaga/);
+                assert.doesNotMatch(result.stdout, /docker compose/);
             });
-            assert.notEqual(result.status, 0);
-            assert.match(result.stdout, /Setup wymaga/);
-            assert.doesNotMatch(result.stdout, /docker compose/);
         });
-    });
+    }
 }

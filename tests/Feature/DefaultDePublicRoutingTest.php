@@ -82,11 +82,11 @@ test('public default DE renders reset password screen in German', function () {
     expect(app()->getLocale())->toBe('de');
 });
 
-test('public default DE generates accurate alternate urls for home and the front.php articles route', function () {
-    // 'articles.index' is a route actually registered in routes/front.php (not one
-    // registered ad hoc inside this test), so this exercises the real
-    // default+prefix wiring from routes/web.php for every route defined in
-    // front.php, not just 'home'. Route *structure* (which locale is
+test('public default DE generates accurate alternate urls for home and a front.php route', function () {
+    // 'articles.index' is a route actually registered in routes/front.php
+    // (not one registered ad hoc inside this test), so this exercises the
+    // real default+prefix wiring from routes/web.php for every route defined
+    // in front.php, not just 'home'. Route *structure* (which locale is
     // unprefixed) is fixed once at boot from the real .env config, so it
     // still reflects the actual default locale here — only the alternate
     // URLs below are generated from this test's overridden ['de'] default.
@@ -106,7 +106,7 @@ test('public default DE generates accurate alternate urls for home and the front
         ->and($homeAlternates)->toHaveKey('pl')
         ->and($homeAlternates['pl'])->toBe(url('/pl'));
 
-    // Test alternate urls for the front route 'articles.index'
+    // Test alternate urls for the front.php 'articles.index' route
     $articlesAlternates = $generator->getAlternateUrls('articles.index');
     expect($articlesAlternates)->toHaveKey('de')
         ->and($articlesAlternates['de'])->toBe(url('/articles'))

@@ -38,6 +38,13 @@
         'deleteTitle' => 'Delete this {{ singularLower }}?',
         'deleteDescription' => 'The {{ singularLower }} will be permanently deleted. This cannot be undone.',
         'deleteConfirm' => 'Delete permanently',
+        'bulkDelete' => 'Delete selected',
+        'bulkDeleteTitle' => 'Delete the selected {{ pluralLower }}?',
+        'bulkDeleteDescription' => [
+            'one' => ':count {{ singularLower }} will be permanently deleted. This cannot be undone.',
+            'other' => ':count {{ pluralLower }} will be permanently deleted. This cannot be undone.',
+        ],
+        'deletedMany' => 'Deleted {{ pluralLower }}: :count.',
         'errorSummaryTitle' => 'Please correct the highlighted fields',
         'unsavedChanges' => 'You have unsaved changes. Leave this page anyway?',
         'conflictTitle' => 'This {{ singularLower }} was changed by someone else',

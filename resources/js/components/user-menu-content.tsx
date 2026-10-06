@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
@@ -12,7 +12,7 @@ import { useTranslation } from '@/i18n';
 import { logout } from '@/routes';
 import { index as adminIndex } from '@/routes/admin';
 import { edit } from '@/routes/profile';
-import type { User } from '@/types';
+import type { Auth, User } from '@/types';
 
 type Props = {
     user: User;
@@ -21,6 +21,8 @@ type Props = {
 export function UserMenuContent({ user }: Props) {
     const { t } = useTranslation();
     const cleanup = useMobileNavigation();
+    const canAccessAdminPanel =
+        usePage<{ auth?: Auth }>().props.auth?.can?.accessAdminPanel ?? false;
 
     const handleLogout = () => {
         cleanup();
@@ -36,17 +38,19 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                    <Link
-                        className="block w-full cursor-pointer"
-                        href={adminIndex()}
-                        prefetch
-                        onClick={cleanup}
-                    >
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        {t('nav.openAdmin')}
-                    </Link>
-                </DropdownMenuItem>
+                {canAccessAdminPanel && (
+                    <DropdownMenuItem asChild>
+                        <Link
+                            className="block w-full cursor-pointer"
+                            href={adminIndex()}
+                            prefetch
+                            onClick={cleanup}
+                        >
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            {t('nav.openAdmin')}
+                        </Link>
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"

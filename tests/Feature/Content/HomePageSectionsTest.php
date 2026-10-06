@@ -11,6 +11,7 @@ use App\Models\ArticleTranslation;
 use App\Models\Faq;
 use App\Models\HomeSection;
 use App\Models\PageTranslation;
+use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('the home page renders only enabled sections of its locale in position order', function () {
@@ -82,6 +83,39 @@ test('actions are resolved to URLs of the locale and unavailable ones are droppe
             ->where('sections.0.content.secondaryAction', null)
             ->where('sections.1.content.primaryAction', ['label' => 'Napisz', 'url' => '#contact'])
             ->where('sections.1.content.secondaryAction', ['label' => 'Artykuły', 'url' => url('/pl/articles')])
+        );
+});
+
+test('guest-only actions follow the viewer: log in for guests, the panel for its users, nothing for others', function () {
+    HomeSection::factory()->ofType(HomeSectionType::Cta)->enabled()->create([
+        'content' => new CtaContentData(
+            title: 'CTA',
+            primaryAction: new HomeActionData(label: 'Join', target: HomeLinkTarget::Register),
+            secondaryAction: new HomeActionData(label: 'Sign in', target: HomeLinkTarget::Login),
+        ),
+    ]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('sections.0.content.primaryAction', ['label' => 'Join', 'url' => url('/register')])
+            ->where('sections.0.content.secondaryAction', ['label' => 'Sign in', 'url' => url('/login')])
+        );
+
+    $this->actingAs(User::factory()->editor()->create())
+        ->get('/')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('sections.0.content.primaryAction', null)
+            ->where('sections.0.content.secondaryAction', ['label' => 'Open admin panel', 'url' => route('admin.index')])
+        );
+
+    $this->actingAs(User::factory()->create())
+        ->get('/')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('sections.0.content.primaryAction', null)
+            ->where('sections.0.content.secondaryAction', null)
         );
 });
 

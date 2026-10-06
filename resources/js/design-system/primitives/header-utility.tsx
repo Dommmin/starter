@@ -1,4 +1,5 @@
 import { useTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { LocaleSwitcher } from './locale-switcher';
 import { useSiteBrand } from './site-brand';
@@ -15,6 +16,12 @@ export type HeaderUtilityProps = {
     logo?: BrandLogoImage;
     /** One-tone text logo name; defaults to the saved site name. */
     brandName?: string;
+    /**
+     * Hide the locale switcher below `sm`; the caller then renders it in its
+     * mobile menu (see `MobileNav` `utilities`), so a typical site name fits
+     * next to the remaining controls at 360 px.
+     */
+    switchersInMobileMenu?: boolean;
     className?: never;
     style?: never;
 };
@@ -24,6 +31,7 @@ export function HeaderUtility({
     navigation,
     logo,
     brandName,
+    switchersInMobileMenu = false,
 }: HeaderUtilityProps) {
     const { t } = useTranslation();
     const siteBrand = useSiteBrand();
@@ -54,7 +62,14 @@ export function HeaderUtility({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-                    <LocaleSwitcher />
+                    <div
+                        className={cn(
+                            'items-center',
+                            switchersInMobileMenu ? 'hidden sm:flex' : 'flex',
+                        )}
+                    >
+                        <LocaleSwitcher />
+                    </div>
                     {children}
                 </div>
             </div>

@@ -2,12 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Content\DeleteArticle;
 use App\Actions\Content\DeletePage;
+use App\Actions\Home\EnsureHomeSections;
 use App\Actions\Users\AssignUserRole;
+use App\Actions\Users\DeleteUser;
 use App\Enums\UserRole;
+use App\Models\Article;
 use App\Models\ContactMessage;
 use App\Models\Page;
 use App\Models\User;
+use Database\Seeders\HomeSectionSeeder;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -22,7 +27,7 @@ class PrepareE2eCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(AssignUserRole $assignUserRole, DeletePage $deletePage): int
+    public function handle(AssignUserRole $assignUserRole, DeletePage $deletePage, DeleteArticle $deleteArticle, DeleteUser $deleteUser, EnsureHomeSections $ensureHomeSections): int
     {
         if (! app()->environment(['local', 'testing'])) {
             $this->error('E2E data may be prepared only in the local or testing environment.');
@@ -51,17 +56,24 @@ class PrepareE2eCommand extends Command
         $assignUserRole->handle($editor, UserRole::Editor, actor: null);
 
         $deletedPages = $this->deletePreviousPages($deletePage, $admin);
+        $deletedArticles = $this->deletePreviousArticles($deleteArticle, $admin);
+        $deletedUsers = $this->deletePreviousUsers($deleteUser, $admin);
         $deletedMessages = ContactMessage::query()
             ->where('email', 'like', config('e2e.slug_prefix').'%@example.test')
             ->delete();
 
+        $createdSections = $this->ensureHomeSections($ensureHomeSections);
+
         $this->resetContactRateLimit();
 
         $this->info(sprintf(
-            'E2E accounts ready (%s, %s); removed %d page(s) and %d contact message(s) of previous runs.',
+            'E2E accounts ready (%s, %s); created %d home section(s); removed %d page(s), %d article(s), %d user(s) and %d contact message(s) of previous runs.',
             $admin->email,
             $editor->email,
+            $createdSections,
             $deletedPages,
+            $deletedArticles,
+            $deletedUsers,
             $deletedMessages,
         ));
 
@@ -96,6 +108,49 @@ class PrepareE2eCommand extends Command
         }
 
         return $pages->count();
+    }
+
+    /**
+     * The home journeys expect the demo landing sections (hero, features,
+     * contact form, CTA). A freshly migrated database (CI) has none; existing
+     * sections are never changed (EnsureHomeSections is idempotent).
+     */
+    private function ensureHomeSections(EnsureHomeSections $ensureHomeSections): int
+    {
+        return $ensureHomeSections->handle(
+            HomeSectionSeeder::landingContent(...),
+            HomeSectionSeeder::ENABLED_TYPES,
+        );
+    }
+
+    private function deletePreviousArticles(DeleteArticle $deleteArticle, User $actor): int
+    {
+        $articles = Article::query()
+            ->whereHas('translations', fn ($query) => $query->where('slug', 'like', config('e2e.slug_prefix').'%'))
+            ->get();
+
+        foreach ($articles as $article) {
+            $deleteArticle->handle($article, $actor);
+        }
+
+        return $articles->count();
+    }
+
+    /**
+     * Accounts invited by the user management journey (`e2e-user-*`); the
+     * prepared admin and editor accounts never match the pattern.
+     */
+    private function deletePreviousUsers(DeleteUser $deleteUser, User $actor): int
+    {
+        $users = User::query()
+            ->where('email', 'like', config('e2e.slug_prefix').'user-%@example.test')
+            ->get();
+
+        foreach ($users as $user) {
+            $deleteUser->handle($actor, $user);
+        }
+
+        return $users->count();
     }
 
     /**

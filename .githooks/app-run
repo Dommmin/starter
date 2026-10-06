@@ -1,0 +1,20 @@
+#!/bin/sh
+# Run a command in a one-off app container the way `make` does. Without the
+# host user ids the entrypoint chowns storage to UID 1000 and the running
+# app answers 500 wherever the host UID differs (e.g. 501 on macOS). In a
+# linked worktree `.git` is a file pointing at the main repository's git
+# directory by its host path, so that directory is mounted at the same path.
+set -eu
+
+LOCAL_UID="$(id -u)"
+LOCAL_GID="$(id -g)"
+export LOCAL_UID LOCAL_GID
+
+git_dir="$(git rev-parse --path-format=absolute --git-dir)"
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+
+if [ "$git_dir" != "$common_dir" ]; then
+    exec docker compose run --rm --no-deps --volume "$common_dir:$common_dir" app "$@"
+fi
+
+exec docker compose run --rm --no-deps app "$@"

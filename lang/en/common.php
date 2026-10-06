@@ -50,6 +50,9 @@ return [
         'dark' => 'Dark',
         'system' => 'System',
     ],
+    'language' => [
+        'label' => 'Language',
+    ],
     'actions' => [
         'save' => 'Save',
         'cancel' => 'Cancel',
@@ -70,5 +73,28 @@ return [
         'added' => ':label added',
         'removed' => ':label removed',
         'limit' => ':count of :max items',
+    ],
+    'multiSelect' => [
+        'noResults' => 'No matching options',
+        'remove' => 'Remove :label',
+        'selected' => [
+            'zero' => 'No options selected',
+            'one' => ':count option selected',
+            'other' => ':count options selected',
+        ],
+    ],
+    'table' => [
+        'bulkActions' => 'Bulk actions',
+        'selectAll' => 'Select all rows on this page',
+        'selectRow' => 'Select :label',
+        'clearSelection' => 'Clear selection',
+        'selected' => [
+            'zero' => 'No rows selected',
+            'one' => ':count selected',
+            'other' => ':count selected',
+        ],
+        'sortBy' => 'Sort by',
+        'sortAscending' => ':column (ascending)',
+        'sortDescending' => ':column (descending)',
     ],
 ];

@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  */
 final readonly class ResourceField
 {
-    public const array TYPES = ['string', 'text', 'integer', 'decimal', 'boolean', 'date', 'enum', 'belongsTo', 'image', 'richtext'];
+    public const array TYPES = ['string', 'text', 'integer', 'decimal', 'boolean', 'date', 'enum', 'belongsTo', 'belongsToMany', 'image', 'richtext'];
 
     /**
      * Tones of the `Badge` primitive (`BadgeProps['tone']` in
@@ -24,7 +24,7 @@ final readonly class ResourceField
     /**
      * @param  list<string>  $enumValues
      * @param  array<string, string>  $enumTones  Badge tone per enum value (unlisted values are neutral).
-     * @param  string|null  $relatedModel  Short class name in App\Models of a belongsTo target.
+     * @param  string|null  $relatedModel  Short class name in App\Models of a belongsTo or belongsToMany target.
      * @param  string|null  $relatedLabel  Column of the related model shown as its label.
      */
     public function __construct(
@@ -44,15 +44,38 @@ final readonly class ResourceField
 
     /**
      * Database column and request key, e.g. `category` (belongsTo) -> `category_id`,
-     * `cover` (image) -> `cover_media_id`.
+     * `cover` (image) -> `cover_media_id`. A belongsToMany field has no column
+     * on the resource table; its request key lists the related ids, e.g.
+     * `tags` -> `tag_ids`.
      */
     public function column(): string
     {
         return match ($this->type) {
             'belongsTo' => $this->name.'_id',
+            'belongsToMany' => Str::singular($this->name).'_ids',
             'image' => $this->name.'_media_id',
             default => $this->name,
         };
+    }
+
+    /**
+     * Pivot table of a belongsToMany field, Laravel's default name: both
+     * singular snake_case model names in alphabetical order, e.g. `product_tag`.
+     */
+    public function pivotTable(string $model): string
+    {
+        $names = [Str::snake($model), Str::snake((string) $this->relatedModel)];
+        sort($names);
+
+        return implode('_', $names);
+    }
+
+    /**
+     * Table of the related model (no custom table names are supported).
+     */
+    public function relatedTable(): string
+    {
+        return $this->type === 'image' ? 'media_assets' : Str::snake(Str::pluralStudly($this->relatedClass()));
     }
 
     /**

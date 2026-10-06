@@ -34,14 +34,23 @@ export default defineConfig({
         video: 'off',
     },
     projects: [
+        // Signs in the admin and the editor once and saves their sessions
+        // (support.ts `authStatePath`) for the projects below.
+        {
+            name: 'setup',
+            testMatch: /auth\.setup\.ts$/,
+            use: { ...devices['Desktop Chrome'] },
+        },
         {
             name: 'chromium',
-            testIgnore: /perf\.spec\.ts$/,
+            testIgnore: [/perf\.spec\.ts$/, /auth\.setup\.ts$/],
+            dependencies: ['setup'],
             use: { ...devices['Desktop Chrome'] },
         },
         {
             name: 'web-vitals',
             testMatch: /perf\.spec\.ts$/,
+            dependencies: ['setup'],
             use: { ...devices['Moto G4'] },
         },
     ],

@@ -1,23 +1,27 @@
 import { Head } from '@inertiajs/react';
 import AppearanceTabs from '@/components/appearance-tabs';
-import Heading from '@/components/heading';
+import { Heading, Stack, Text } from '@/design-system/primitives';
+import { useTranslation } from '@/i18n';
 import { edit as editAppearance } from '@/routes/appearance';
 
 export default function Appearance() {
+    const { t } = useTranslation();
+
     return (
         <>
-            <Head title="Appearance settings" />
+            <Head title={t('settings.appearance.pageTitle')} />
 
-            <h1 className="sr-only">Appearance settings</h1>
-
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Appearance settings"
-                    description="Update the appearance settings for your account"
-                />
+            <Stack gap="default">
+                <Stack gap="tight">
+                    <Heading level={1} variant="group">
+                        {t('settings.appearance.heading')}
+                    </Heading>
+                    <Text tone="muted">
+                        {t('settings.appearance.subheading')}
+                    </Text>
+                </Stack>
                 <AppearanceTabs />
-            </div>
+            </Stack>
         </>
     );
 }

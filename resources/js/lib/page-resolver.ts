@@ -3,15 +3,18 @@ import type { ComponentType, ReactNode } from 'react';
 
 type PageModule = { default: ResolvedComponent };
 type LayoutComponent = ComponentType<{ children: ReactNode }>;
-type LayoutGroup = 'none' | 'auth' | 'settings' | 'admin' | 'app';
+type LayoutGroup = 'none' | 'auth' | 'settings' | 'admin';
 
 /**
  * Page modules, lazy-loaded per visit. Tests colocated with pages
- * (`*.test.tsx`) are excluded so they never reach the client or SSR bundle.
+ * (`*.test.tsx`) are excluded so they never reach the client or SSR bundle;
+ * design-system showcase sections are modules of their page, not pages.
  */
 const pages = import.meta.glob<PageModule>([
     '../pages/**/*.tsx',
     '!../pages/**/*.test.tsx',
+    '!../pages/admin/design-system/sections/**',
+    '!../pages/design-system/sections/**',
 ]);
 
 /**
@@ -33,17 +36,24 @@ const layoutLoaders: Record<
         return [publicLayout.default, settings.default];
     },
     admin: async () => [(await import('@/layouts/admin-layout')).default],
-    app: async () => [(await import('@/layouts/app-layout')).default],
 };
 
 const loadedLayouts = new Map<LayoutGroup, LayoutComponent[]>();
 
+/**
+ * Every page belongs to an explicit group. An unknown prefix fails fast so a
+ * new page area cannot silently render without its frame; add the prefix here
+ * (and to `surfaceFor`/app.blade.php when it needs a surface).
+ */
 function layoutGroup(name: string): LayoutGroup {
     switch (true) {
         case name === 'welcome':
         case name.startsWith('pages/'):
         case name.startsWith('articles/'):
+        // Public pages of generated modules (`app:make-resource --public`).
+        case name.startsWith('public/'):
         case name.startsWith('errors/'):
+        case name.startsWith('design-system/'):
             return 'none';
         case name.startsWith('auth/'):
             return 'auth';
@@ -52,7 +62,7 @@ function layoutGroup(name: string): LayoutGroup {
         case name.startsWith('admin/'):
             return 'admin';
         default:
-            return 'app';
+            throw new Error(`No layout group for page: ${name}`);
     }
 }
 

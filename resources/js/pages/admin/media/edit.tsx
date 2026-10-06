@@ -20,6 +20,7 @@ import {
     Surface,
     Text,
     TextareaField,
+    TextField,
 } from '@/design-system/primitives';
 import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
@@ -190,16 +191,15 @@ export default function AdminMediaEdit() {
                                         ? formatDate(asset.createdAt)
                                         : null,
                                 },
-                                {
-                                    id: 'checksum',
-                                    label: t('admin.media.fields.checksum'),
-                                    value: (
-                                        <Text variant="code" as="span">
-                                            {asset.checksum}
-                                        </Text>
-                                    ),
-                                },
                             ]}
+                        />
+
+                        <TextField
+                            name="checksum"
+                            label={t('admin.media.fields.checksum')}
+                            description={t('admin.media.fields.checksumHelp')}
+                            value={asset.checksum}
+                            readOnly
                         />
 
                         {asset.downloadUrl && (
@@ -297,6 +297,7 @@ export default function AdminMediaEdit() {
                             columns={[
                                 {
                                     key: 'format',
+                                    priority: 'primary',
                                     header: t('admin.media.variantFormat'),
                                     render: (variant) => (
                                         <Link
@@ -310,6 +311,7 @@ export default function AdminMediaEdit() {
                                 },
                                 {
                                     key: 'dimensions',
+                                    priority: 'secondary',
                                     header: t('admin.media.variantDimensions'),
                                     render: (variant) =>
                                         t(
@@ -322,6 +324,7 @@ export default function AdminMediaEdit() {
                                 },
                                 {
                                     key: 'size',
+                                    priority: 'secondary',
                                     header: t('admin.media.variantSize'),
                                     align: 'end',
                                     render: (variant) =>

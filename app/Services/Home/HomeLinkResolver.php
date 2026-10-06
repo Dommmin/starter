@@ -7,6 +7,7 @@ use App\Data\Home\HomeLinkData;
 use App\Enums\HomeLinkTarget;
 use App\Enums\HomeSectionAnchor;
 use App\Models\PageTranslation;
+use App\Models\User;
 use App\Services\Localization\LocalizedUrlGenerator;
 use Illuminate\Support\Facades\Route;
 
@@ -45,12 +46,22 @@ class HomeLinkResolver
      * Resolve a stored action to a link in the locale, or null when the
      * target is unavailable (disabled route, page not published in it).
      *
+     * Guest-only targets depend on the viewer: a signed-in user sees no
+     * "Register" action, and "Log in" becomes the administration panel link
+     * for a user who may open it or disappears for anyone else.
+     *
      * @param  array<int, PageTranslation>  $publishedPages  Published translations of the locale keyed by page id.
      */
-    public function resolve(?HomeActionData $action, string $locale, array $publishedPages): ?HomeLinkData
+    public function resolve(?HomeActionData $action, string $locale, array $publishedPages, ?User $viewer = null): ?HomeLinkData
     {
         if ($action === null || ! in_array($action->target, $this->availableTargets(), true)) {
             return null;
+        }
+
+        if ($viewer !== null && in_array($action->target, [HomeLinkTarget::Login, HomeLinkTarget::Register], true)) {
+            return $action->target === HomeLinkTarget::Login && $viewer->canAccessAdminPanel()
+                ? new HomeLinkData(label: __('common.nav.openAdmin', [], $locale), url: route('admin.index'))
+                : null;
         }
 
         $url = match ($action->target) {

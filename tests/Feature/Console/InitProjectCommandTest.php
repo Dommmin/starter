@@ -10,7 +10,10 @@ use App\Enums\MenuLocation;
 use App\Enums\UserRole;
 use App\Models\Article;
 use App\Models\AuditLog;
+use App\Models\ContactMessage;
+use App\Models\Faq;
 use App\Models\HomeSection;
+use App\Models\MediaAsset;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
@@ -19,7 +22,9 @@ use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\ArticleSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoContent;
+use Database\Seeders\DemoMediaSeeder;
 use Database\Seeders\HomeSectionSeeder;
 use Database\Seeders\NavigationMenuSeeder;
 use Database\Seeders\PageSeeder;
@@ -28,6 +33,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
 const INIT_ENV = "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=en,pl,de\nAPP_ENV=local\n";
 
@@ -221,11 +227,29 @@ test('without --write-env the language lines are only printed', function () {
         ->and(glob($this->envPath.'.backup-*'))->toBe([]);
 });
 
+test('sign-up is switched off unless --enable-registration is given', function () {
+    $this->app['env'] = 'local';
+
+    [, $default] = runInit();
+    [, $enabled] = runInit(['--enable-registration' => true]);
+
+    expect($default)->toContain('APP_REGISTRATION_ENABLED=false')
+        ->and($enabled)->toContain('APP_REGISTRATION_ENABLED=true');
+});
+
+test('the chosen accent is printed as APP_ACCENT', function () {
+    $this->app['env'] = 'local';
+
+    [, $output] = runInit(['--accent' => 'blue']);
+
+    expect($output)->toContain('APP_ACCENT=blue');
+});
+
 test('declining the confirmation leaves .env untouched', function () {
     $this->app['env'] = 'local';
 
     $this->artisan('app:init-project', [...initOptions(['--write-env' => true]), '--no-interaction' => false])
-        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK to .env?', 'no')
+        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED, APP_ACCENT to .env?', 'no')
         ->assertSuccessful();
 
     expect(file_get_contents($this->envPath))->toBe(INIT_ENV)
@@ -236,7 +260,7 @@ test('a confirmed write backs up .env and changes only the language keys', funct
     $this->app['env'] = 'local';
 
     $this->artisan('app:init-project', [...initOptions(['--write-env' => true]), '--no-interaction' => false])
-        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK to .env?', 'yes')
+        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED, APP_ACCENT to .env?', 'yes')
         ->expectsOutputToContain('make restart')
         ->assertSuccessful();
 
@@ -246,7 +270,7 @@ test('a confirmed write backs up .env and changes only the language keys', funct
         ->and(file_get_contents($backups[0]))->toBe(INIT_ENV)
         ->and(fileperms($backups[0]) & 0777)->toBe(0600)
         ->and(file_get_contents($this->envPath))->toBe(
-            "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=pl,en\nAPP_ENV=local\nAPP_PUBLIC_DEFAULT=pl\nAPP_PUBLIC_FALLBACK=pl\n",
+            "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=pl,en\nAPP_ENV=local\nAPP_PUBLIC_DEFAULT=pl\nAPP_PUBLIC_FALLBACK=pl\nAPP_REGISTRATION_ENABLED=false\nAPP_ACCENT=default\n",
         );
 });
 
@@ -470,4 +494,49 @@ test('a dry run leaves sample menus and home sections untouched', function () {
         ->and(MenuItem::query()->orderBy('id')->get()->toArray())->toBe($menu)
         ->and(HomeSection::query()->orderBy('id')->get()->toArray())->toBe($sections)
         ->and(AuditLog::query()->count())->toBe($audit);
+});
+
+test('--remove-demo removes the whole local sample data set', function () {
+    $this->app['env'] = 'local';
+    Queue::fake();
+    Storage::fake('media');
+    Storage::fake((string) config('media.public_disk'));
+    test()->seed(DatabaseSeeder::class);
+
+    [$exitCode, $output] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(substr_count($output, 'kept'))->toBe(2)
+        ->and(substr_count($output, 'Demo media: "'))->toBe(2)
+        ->and(User::query()->pluck('email')->all())->toBe(['owner@example.test'])
+        ->and(Page::query()->exists())->toBeFalse()
+        ->and(Article::query()->exists())->toBeFalse()
+        ->and(MediaAsset::query()->pluck('id')->sort()->values()->all())->toBe(collect([SiteSetting::query()->value('logo_media_id'), SiteSetting::query()->value('og_image_media_id')])->sort()->values()->all())
+        ->and(Faq::query()->exists())->toBeFalse()
+        ->and(ContactMessage::query()->exists())->toBeFalse()
+        ->and(MenuItem::query()->exists())->toBeFalse()
+        ->and(HomeSection::query()->where('enabled', true)->exists())->toBeFalse();
+});
+
+test('--remove-demo keeps sample media still used by kept content or the site settings', function () {
+    Queue::fake();
+    Storage::fake('media');
+    Storage::fake((string) config('media.public_disk'));
+    test()->seed(DemoMediaSeeder::class);
+    $cover = DemoMediaSeeder::assetId('landscape');
+    $logo = DemoMediaSeeder::assetId('square');
+    $inBody = DemoMediaSeeder::assetId('portrait');
+    Article::factory()->published()->create(['cover_media_id' => $cover]);
+    PageTranslation::factory()->published()->create(['body' => [
+        'type' => 'doc',
+        'content' => [['type' => 'image', 'attrs' => ['mediaId' => $inBody, 'alt' => '']]],
+    ]]);
+    SiteSetting::query()->insert(['id' => SiteSetting::SINGLETON_ID, 'site_name' => 'Owner site', 'logo_media_id' => $logo]);
+
+    [$exitCode] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(MediaAsset::query()->pluck('id')->sort()->values()->all())->toBe(collect([$cover, $logo, $inBody])->sort()->values()->all())
+        ->and(Article::query()->value('cover_media_id'))->toBe($cover)
+        ->and(SiteSetting::query()->value('logo_media_id'))->toBe($logo);
 });

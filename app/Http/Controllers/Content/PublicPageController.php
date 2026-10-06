@@ -64,13 +64,10 @@ class PublicPageController extends Controller
 
         Inertia::share('i18n.alternateUrls', $alternates);
 
-        return Inertia::render('pages/show', new PublicPageData(
-            title: $translation->title,
-            metaDescription: $translation->meta_description,
-            bodyHtml: $this->richText->toHtml($translation->body),
-            locale: $translation->locale,
-            publishedAt: $translation->published_at?->toIso8601String(),
-            alternates: $alternates,
+        return Inertia::render('pages/show', PublicPageData::fromTranslation(
+            $translation,
+            $this->richText->toHtml($translation->body),
+            $alternates,
         ));
     }
 }

@@ -15,6 +15,7 @@ use App\Services\Navigation\PublicNavigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
+use Laravel\Fortify\Features;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -70,7 +71,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'canRegister' => Features::enabled(Features::registration()),
                 'can' => [
+                    'accessAdminPanel' => $request->user()?->canAccessAdminPanel() ?? false,
                     'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,
                     'viewAudit' => $request->user()?->can('viewAny', AuditLog::class) ?? false,
                     'manageSiteSettings' => $request->user()?->can('update', SiteSetting::class) ?? false,
@@ -82,7 +85,24 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'site' => fn () => $this->siteSettings->current(),
             ...$this->publicNavigation($i18n['area'], $i18n['locale']),
+            ...$this->designSystemShowcase($i18n['area']),
         ];
+    }
+
+    /**
+     * URL of the local-only design-system showcase for the panel sidebar.
+     * The route exists only in the `local` environment, so the link (and
+     * this prop) is absent everywhere else.
+     *
+     * @return array{designSystemUrl?: string}
+     */
+    protected function designSystemShowcase(string $area): array
+    {
+        if ($area !== 'admin' || ! Route::has('admin.design-system')) {
+            return [];
+        }
+
+        return ['designSystemUrl' => route('admin.design-system', absolute: false)];
     }
 
     /**

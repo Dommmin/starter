@@ -3,6 +3,9 @@ import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { useReturnFocus } from './return-focus';
+
+type FormDialogTone = 'default' | 'destructive';
 
 export type FormDialogProps = {
     open: boolean;
@@ -15,6 +18,8 @@ export type FormDialogProps = {
     /** Translated accessible label for the corner close control. */
     closeLabel: string;
     onSubmit: () => void;
+    /** `destructive` renders the submit button in the danger tone, like `ConfirmDialog`. */
+    tone?: FormDialogTone;
     isPending?: boolean;
     /** Server-side error to surface above the actions, e.g. after a failed submit. */
     error?: string;
@@ -30,9 +35,11 @@ export function FormDialog({
     cancelLabel,
     closeLabel,
     onSubmit,
+    tone = 'default',
     isPending = false,
     error,
 }: FormDialogProps) {
+    const returnFocus = useReturnFocus();
     return (
         <DialogPrimitive.Root
             open={open}
@@ -50,6 +57,8 @@ export function FormDialog({
                     )}
                 />
                 <DialogPrimitive.Content
+                    onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                    onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                     onEscapeKeyDown={(event) => {
                         if (isPending) {
                             event.preventDefault();
@@ -66,7 +75,7 @@ export function FormDialog({
                         }
                     }}
                     className={cn(
-                        'bg-background border-border-subtle fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg',
+                        'bg-background border-border-subtle fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border p-6 shadow-lg',
                         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
                     )}
                 >
@@ -85,7 +94,7 @@ export function FormDialog({
                         className="flex flex-col gap-4"
                     >
                         <div>
-                            <DialogPrimitive.Title className="text-foreground text-lg font-semibold">
+                            <DialogPrimitive.Title className="text-foreground pr-8 text-lg font-semibold">
                                 {title}
                             </DialogPrimitive.Title>
                             {description && (
@@ -111,7 +120,11 @@ export function FormDialog({
                             </DialogPrimitive.Close>
                             <Button
                                 type="submit"
-                                variant="primary"
+                                variant={
+                                    tone === 'destructive'
+                                        ? 'destructive'
+                                        : 'primary'
+                                }
                                 isPending={isPending}
                             >
                                 {submitLabel}

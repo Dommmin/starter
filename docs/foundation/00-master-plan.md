@@ -78,7 +78,7 @@ Uzupełnienie wymagań 2026-09-10: szybkie tworzenie CRUD-ów w Inertia + React,
 
 | Kit           | Must have na start — P0                                                                                            | Opcjonalnie — P1                              | Świadomie odłożone — P2                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | -------------------------------------------- |
-| Laravel Core  | Auth ze starter kitu, MFA/2FA admina, policies, migracje, błędy, logi, Redis + Horizon i scheduler                 | Integracje, dynamiczny RBAC                   | Multi-tenancy, event sourcing, mikroserwisy  |
+| Laravel Core  | Auth ze starter kitu, MFA/2FA admina, policies, migracje, błędy, logi, Redis + Horizon i scheduler                 | Integracje                                    | Multi-tenancy, dynamiczny RBAC, event sourcing, mikroserwisy |
 | Admin Kit     | Shell panelu, CRUD stron i artykułów, stałe role admin/editor, prywatny DAM                                        | Ustawienia, zarządzanie rolami                | Uniwersalny generator CRUD i workflow engine |
 | Website Kit   | Home, strony i artykuły SSR, kontakt, meta, sitemap, redirects, wielojęzyczność                                                     | Sekcje, integracja analityki | Własny page builder i rozbudowany CMS        |
 | App Kit       | Wyłącznie wzorzec użycia actions/policies z CRUD-u                                                                 | Pierwszy rzeczywisty moduł klienta            | CRM/ERP „na zapas”, płatności                |
@@ -97,7 +97,7 @@ Rozszerzenie wymagań 2026-09-10: [11 — katalog komponentów panelu, aplikacji
 2. D1: zatwierdzić ADR-y stacku, hostingu, danych i kontroli produkcji.
 3. P0-A: szkielet + lokalne środowisko + podstawowe CI + i18n i strategia URL; dopiero potem funkcje.
 4. P0-B: auth/MFA/policies + wzorcowy CRUD + minimalny design system i Website Kit.
-5. P0-C: testy, staging, monitoring, backup/restore, próba odtworzenia i wydania.
+5. P0-C: testy, monitoring, backup/restore, próba odtworzenia i wydania; staging tylko na zamówienie klienta ([08](08-implementation-roadmap.md#zakres-małych-aplikacji--decyzja-właściciela-2026-09-30)).
 6. Bramka pierwszego klienta: review i odbiór operacyjny przez człowieka.
 7. P1: tylko moduły wynikające z podpisanego zakresu klienta.
 8. P2: uogólnienia po co najmniej dwóch wdrożeniach i pomiarze powtarzalnych problemów.

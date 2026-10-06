@@ -7,8 +7,9 @@
 # supervisors only for configured environments).
 #
 # The suite never touches the developer's data: app and queue use their own
-# database (`<DB_DATABASE>_e2e`, rebuilt with migrate:fresh --seed by
-# `make e2e`) and their own Redis prefixes for cache, sessions and queues.
+# database (`<DB_DATABASE>_e2e`, rebuilt empty with migrate:fresh by
+# `make e2e`, with its cache cleared; app:e2e-prepare then creates the
+# accounts and the demo home sections) and their own Redis prefixes for cache, sessions and queues.
 # `make e2e` switches app and queue back to the local ones afterwards.
 services:
     app:

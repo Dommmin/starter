@@ -1,6 +1,8 @@
+import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '@/i18n';
 import { Button } from './button';
 
 vi.mock('@inertiajs/react', () => ({
@@ -17,6 +19,7 @@ vi.mock('@inertiajs/react', () => ({
             {children}
         </a>
     ),
+    router: { on: () => () => {} },
 }));
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -69,5 +72,50 @@ describe('Button href', () => {
         expect(link?.getAttribute('href')).toBe('/articles');
         expect(link?.hasAttribute('data-inertia-link')).toBe(true);
         expect(link?.className).toContain('border-border-subtle');
+    });
+
+    it('opens an external href in a new tab and says so in its accessible name', async () => {
+        const initialPage = {
+            props: {
+                i18n: {
+                    area: 'admin',
+                    locale: 'en',
+                    defaultLocale: 'en',
+                    fallback: 'en',
+                    dir: 'ltr',
+                    availableLocales: [],
+                    messages: { a11y: { opensInNewTab: 'opens in a new tab' } },
+                },
+            },
+        } as unknown as Page<PageProps & SharedPageProps>;
+
+        const container = await render(
+            <I18nProvider initialPage={initialPage}>
+                <Button
+                    href="/admin/pages/5/preview/en"
+                    variant="outline"
+                    external
+                >
+                    Preview
+                </Button>
+            </I18nProvider>,
+        );
+
+        const link = container.querySelector('a');
+        expect(link?.getAttribute('href')).toBe('/admin/pages/5/preview/en');
+        expect(link?.getAttribute('target')).toBe('_blank');
+        expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+        expect(link?.hasAttribute('data-inertia-link')).toBe(false);
+        expect(link?.className).toContain('border-border-subtle');
+        expect(link?.textContent).toBe('Preview (opens in a new tab)');
+    });
+
+    it('accepts external only together with href (type contract)', () => {
+        const withoutHref = (
+            // @ts-expect-error `external` is only valid together with `href`.
+            <Button external>Broken</Button>
+        );
+
+        expect(withoutHref).toBeTruthy();
     });
 });

@@ -38,6 +38,13 @@
         'deleteTitle' => 'Diesen Eintrag löschen?',
         'deleteDescription' => 'Der Eintrag wird dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.',
         'deleteConfirm' => 'Endgültig löschen',
+        'bulkDelete' => 'Ausgewählte löschen',
+        'bulkDeleteTitle' => 'Ausgewählte Einträge löschen?',
+        'bulkDeleteDescription' => [
+            'one' => ':count Eintrag wird dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.',
+            'other' => ':count Einträge werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.',
+        ],
+        'deletedMany' => 'Gelöschte Einträge: :count.',
         'errorSummaryTitle' => 'Bitte korrigieren Sie die markierten Felder',
         'unsavedChanges' => 'Sie haben ungespeicherte Änderungen. Seite trotzdem verlassen?',
         'conflictTitle' => 'Dieser Eintrag wurde von jemand anderem geändert',

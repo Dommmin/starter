@@ -1,7 +1,8 @@
-import { act, type ReactNode } from 'react';
+import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ActionMenu } from './action-menu';
+import { ConfirmDialog } from './confirm-dialog';
 import { FormDialog } from './form-dialog';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -78,6 +79,84 @@ describe('ActionMenu', () => {
             document.querySelectorAll('[role="menuitem"]'),
         ).find((node) => node.textContent === 'Edit');
         expect(item).toBeDefined();
+    });
+});
+
+/** Row action menu whose "Delete" item opens a controlled confirmation. */
+function RowWithDeleteConfirmation() {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <>
+            <ActionMenu
+                triggerLabel="Row actions"
+                items={[
+                    {
+                        id: 'delete',
+                        label: 'Delete',
+                        tone: 'destructive',
+                        onSelect: () => setIsOpen(true),
+                    },
+                ]}
+            />
+            <ConfirmDialog
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                title="Delete this page?"
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                closeLabel="Close"
+                tone="destructive"
+                onConfirm={() => setIsOpen(false)}
+            />
+        </>
+    );
+}
+
+function pressKey(target: Element | null, key: string) {
+    target?.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+}
+
+describe('ActionMenu with a confirmation dialog', () => {
+    it('traps focus in the dialog and returns it to the row trigger on Escape', async () => {
+        const container = await render(<RowWithDeleteConfirmation />);
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="Row actions"]',
+        );
+
+        await act(async () => {
+            trigger?.focus();
+            pressKey(trigger, 'Enter');
+        });
+
+        const deleteItem = Array.from(
+            document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+        ).find((node) => node.textContent === 'Delete');
+
+        await act(async () => {
+            deleteItem?.focus();
+            pressKey(deleteItem ?? null, 'Enter');
+        });
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+
+        const dialog = document.querySelector('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.contains(document.activeElement)).toBe(true);
+
+        await act(async () => {
+            pressKey(document.activeElement, 'Escape');
+        });
+        // Radix restores focus in a timeout scheduled by the unmount effect.
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+        expect(document.activeElement).toBe(trigger);
     });
 });
 

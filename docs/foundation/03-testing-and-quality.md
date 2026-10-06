@@ -10,7 +10,7 @@ Mały zestaw szybkich, wiarygodnych testów ma wykrywać błędy biznesowe i bez
 
 Status: proponowany. PHPUnit 12.5 jako punkt wyjścia zgodny z ocenionym oficjalnym starterem; PHP 8.5 spełnia jego wymagania. PHPUnit 13 jest alternatywą po teście integracji. Pest opcjonalny wybór zespołu, nie drugi zestaw testów. Feature/integration stanowią główną warstwę, jednostkowe dla reguł, a Playwright dla kilku podróży użytkownika. [PHPUnit support](https://phpunit.de/supported-versions.html), [Playwright](https://playwright.dev/docs/intro).
 
-Nie mockować Eloquent po to, żeby testy były „unit”. Testować wynik biznesowy i odmowę dostępu. DB w CI tej samej rodziny i majora co produkcja; SQLite tylko dla testów, których semantyka nie zależy od SQL, nie jako substytut wszystkich integracji.
+Nie mockować Eloquent po to, żeby testy były „unit”. Testować wynik biznesowy i odmowę dostępu. DB w CI tej samej rodziny i majora co produkcja; SQLite tylko dla testów, których semantyka nie zależy od SQL, nie jako substytut wszystkich integracji. Pełny Pest działa też na PostgreSQL 18: lokalnie `make test-pgsql` (osobna baza `starter_testing`), w CI job `tests-pgsql`; szybki przebieg SQLite zostaje w `quality`.
 
 ## Macierz testów
 

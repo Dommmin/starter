@@ -102,6 +102,8 @@ jobs:
           git diff --exit-code -- resources/js/types/generated.d.ts
       - name: Check AI and deployment configuration
         run: python3 -m unittest discover -s tests/ai -v
+      - name: Test local environment bootstrap
+        run: node --test scripts/dev-environment.test.mjs
       - name: Enforce localization catalog contract
         run: composer check:i18n
       - name: Enforce UI contract on changed source
@@ -123,6 +125,58 @@ jobs:
         run: npm run check:budget
       - name: Run quality checks
         run: composer ci:check
+
+  tests-pgsql:
+    name: tests-pgsql
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The full Pest suite against PostgreSQL, the production database family,
+    # while `quality` keeps the fast in-memory SQLite run. A service container
+    # uses the same image as compose.yaml without building the runtime image;
+    # the credentials exist only inside this throwaway container.
+    services:
+      postgres:
+        image: postgres:18-bookworm
+        env:
+          POSTGRES_DB: starter_testing
+          POSTGRES_USER: starter
+          POSTGRES_PASSWORD: ci-testing-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U starter -d starter_testing"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: starter_testing
+      DB_USERNAME: starter
+      DB_PASSWORD: ci-testing-only
+      DB_URL: ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql
+          tools: composer:v2
+          coverage: none
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force --no-interaction
+      # Job-level DB_* variables take precedence over .env.testing (SQLite).
+      - name: Run Pest on PostgreSQL
+        run: php artisan test --compact
 
   generator-smoke:
     name: generator-smoke

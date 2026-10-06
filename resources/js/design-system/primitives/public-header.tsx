@@ -20,8 +20,9 @@ import {
 import type { BrandLogoImage } from './brand-logo';
 import { Button } from './button';
 import { HeaderUtility } from './header-utility';
+import { LocaleSwitcher } from './locale-switcher';
 import { MobileNav } from './mobile-nav';
-import { ThemeMenuGroup } from './theme-switcher';
+import { ThemeMenuGroup, ThemeSwitcher } from './theme-switcher';
 import type { NavItem } from './nav-item';
 import { isCurrentNavItem, isNavLink, NavItemLink } from './nav-item-link';
 
@@ -193,16 +194,18 @@ export function PublicHeader({
                 <LogIn className="h-4 w-4" aria-hidden="true" />
                 <span>{t('nav.login')}</span>
             </Button>
-            <Button
-                variant="primary"
-                size="default"
-                href={registerUrl}
-                ariaLabel={t('nav.register')}
-                responsiveLabel
-            >
-                <UserPlus className="h-4 w-4" aria-hidden="true" />
-                <span>{t('nav.register')}</span>
-            </Button>
+            {auth.canRegister && (
+                <Button
+                    variant="primary"
+                    size="default"
+                    href={registerUrl}
+                    ariaLabel={t('nav.register')}
+                    responsiveLabel
+                >
+                    <UserPlus className="h-4 w-4" aria-hidden="true" />
+                    <span>{t('nav.register')}</span>
+                </Button>
+            )}
         </>
     );
 
@@ -210,6 +213,7 @@ export function PublicHeader({
         <HeaderUtility
             logo={logo}
             brandName={brandName}
+            switchersInMobileMenu
             navigation={
                 navItems.length > 0 ? (
                     <ul className="flex items-center gap-1">
@@ -238,31 +242,39 @@ export function PublicHeader({
             >
                 {authControls}
             </div>
-            {navItems.length > 0 && (
-                <div className="lg:hidden">
-                    <MobileNav
-                        title={t('nav.menuTitle')}
-                        items={navItems}
-                        openLabel={t('a11y.openMenu')}
-                        closeLabel={t('a11y.closeMenu')}
-                        footer={
-                            guestActionsInMenu ? (
-                                <>
-                                    <Button variant="outline" href={loginUrl}>
-                                        {t('nav.login')}
-                                    </Button>
+            {/* Below `sm` the menu also holds the theme and locale switchers,
+                so it is rendered there even without navigation items. */}
+            <div className={navItems.length > 0 ? 'lg:hidden' : 'sm:hidden'}>
+                <MobileNav
+                    title={t('nav.menuTitle')}
+                    items={navItems}
+                    openLabel={t('a11y.openMenu')}
+                    closeLabel={t('a11y.closeMenu')}
+                    utilities={
+                        <>
+                            <ThemeSwitcher variant="labelled" />
+                            <LocaleSwitcher variant="labelled" />
+                        </>
+                    }
+                    footer={
+                        guestActionsInMenu ? (
+                            <>
+                                <Button variant="outline" href={loginUrl}>
+                                    {t('nav.login')}
+                                </Button>
+                                {auth.canRegister && (
                                     <Button
                                         variant="primary"
                                         href={registerUrl}
                                     >
                                         {t('nav.register')}
                                     </Button>
-                                </>
-                            ) : undefined
-                        }
-                    />
-                </div>
-            )}
+                                )}
+                            </>
+                        ) : undefined
+                    }
+                />
+            </div>
         </HeaderUtility>
     );
 }

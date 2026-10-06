@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Data\Content;
+
+use App\Data\Listing\ListPaginationData;
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+/**
+ * Props of the public `public/{{ kebabPlural }}/index` screen.
+ */
+#[TypeScript]
+class Public{{ Model }}ListData extends Data
+{
+    /**
+     * @param  list<Public{{ Model }}SummaryData>  $items
+     */
+    public function __construct(
+        public array $items,
+        public ListPaginationData $pagination,
+        public string $locale,
+    ) {}
+}

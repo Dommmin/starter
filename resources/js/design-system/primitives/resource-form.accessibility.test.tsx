@@ -1,4 +1,4 @@
-import { act, type ReactNode } from 'react';
+import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -231,5 +231,112 @@ describe('ResourceForm', () => {
         });
 
         expect(onChange).toHaveBeenCalledWith('price', '12.50');
+    });
+
+    it('focuses the first invalid field after every failed submit, not only the first one', async () => {
+        let resolveRequest: (errors: Record<string, string>) => void = () => {};
+
+        function Page() {
+            const [errors, setErrors] = useState<Record<string, string>>({});
+            const [isPending, setPending] = useState(false);
+            resolveRequest = (next) => {
+                setErrors(next);
+                setPending(false);
+            };
+
+            return (
+                <ResourceForm<Values>
+                    {...props({
+                        errors,
+                        isPending,
+                        onSubmit: () => setPending(true),
+                    })}
+                />
+            );
+        }
+
+        const container = await render(<Page />);
+        const form = container.querySelector('form')!;
+        const submit = container.querySelector<HTMLButtonElement>(
+            'button[type="submit"]',
+        )!;
+        const name =
+            container.querySelector<HTMLInputElement>('input[name="name"]')!;
+
+        for (const message of ['Name is required.', 'Name is taken.']) {
+            submit.focus();
+            await act(async () => {
+                form.dispatchEvent(
+                    new Event('submit', { bubbles: true, cancelable: true }),
+                );
+            });
+            expect(document.activeElement).toBe(submit);
+
+            await act(async () => resolveRequest({ name: message }));
+
+            expect(document.activeElement).toBe(name);
+        }
+    });
+});
+
+describe('ResourceForm multiSelect field', () => {
+    type TagValues = { tag_ids: string[] };
+
+    const tagSections: ResourceFormSection<TagValues>[] = [
+        {
+            id: 'tags',
+            title: 'Tags',
+            fields: [
+                {
+                    type: 'multiSelect',
+                    name: 'tag_ids',
+                    label: 'Tags',
+                    options: [
+                        { value: '1', label: 'News' },
+                        { value: '2', label: 'Events' },
+                    ],
+                    labels: {
+                        noResults: 'No tags',
+                        remove: (label) => `Remove ${label}`,
+                        selected: (count) => `${count} selected`,
+                    },
+                },
+            ],
+        },
+    ];
+
+    it('renders the selected values as chips, reports removals and shows item errors', async () => {
+        const onChange = vi.fn();
+        await render(
+            <ResourceForm<TagValues>
+                sections={tagSections}
+                values={{ tag_ids: ['2'] }}
+                errors={{ 'tag_ids.0': 'The selected tag is invalid.' }}
+                onChange={onChange}
+                onSubmit={() => {}}
+                labels={{ submit: 'Save', errorSummaryTitle: 'Fix' }}
+            />,
+        );
+
+        const input = document.querySelector<HTMLInputElement>(
+            'input[role="combobox"]',
+        );
+        expect(
+            document.querySelector(`label[for="${input?.id}"]`)?.textContent,
+        ).toBe('Tags');
+        expect(input?.getAttribute('aria-invalid')).toBe('true');
+        expect(document.body.textContent).toContain(
+            'The selected tag is invalid.',
+        );
+
+        await act(async () => {
+            document
+                .querySelector<HTMLButtonElement>(
+                    'button[aria-label="Remove Events"]',
+                )
+                ?.click();
+        });
+
+        expect(onChange).toHaveBeenCalledWith('tag_ids', []);
     });
 });

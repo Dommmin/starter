@@ -109,7 +109,9 @@ export function PublicChrome({
                 social={social}
                 logo={resolvedLogo}
                 brandName={brandName}
-                trailing={auth?.user ? undefined : <ThemeSwitcher withLabel />}
+                trailing={
+                    auth?.user ? undefined : <ThemeSwitcher variant="inline" />
+                }
             />
         </div>
     );

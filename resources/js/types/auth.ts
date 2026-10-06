@@ -14,6 +14,7 @@ export type User = {
 };
 
 export type AuthAbilities = {
+    accessAdminPanel: boolean;
     manageUsers: boolean;
     viewAudit: boolean;
     manageSiteSettings: boolean;
@@ -22,6 +23,8 @@ export type AuthAbilities = {
 export type Auth = {
     user: User;
     can: AuthAbilities;
+    /** Self-service sign-up is switched on (`APP_REGISTRATION_ENABLED`). */
+    canRegister: boolean;
 };
 
 export type Passkey = {

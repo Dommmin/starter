@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Media;
 
+use App\Enums\MediaStatus;
 use App\Models\MediaAsset;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -56,5 +57,13 @@ class MediaAssetRepository
             ->whereIn('id', $ids)
             ->get()
             ->keyBy('id');
+    }
+
+    /**
+     * Number of uploads still waiting for the malware scan result.
+     */
+    public function quarantinedCount(): int
+    {
+        return MediaAsset::query()->where('status', MediaStatus::Quarantine->value)->count();
     }
 }

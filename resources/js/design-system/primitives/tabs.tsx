@@ -20,6 +20,11 @@ export type TabsProps = {
     style?: never;
 };
 
+/**
+ * Tab triggers wrap onto further rows instead of scrolling, so every language
+ * or section stays visible on narrow screens and the list never grows a
+ * scrollbar.
+ */
 export function Tabs({
     items,
     value,
@@ -36,7 +41,7 @@ export function Tabs({
         >
             <TabsPrimitive.List
                 aria-label={ariaLabel}
-                className="border-border-subtle flex gap-1 overflow-x-auto border-b"
+                className="border-border-subtle flex flex-wrap gap-x-1 border-b"
             >
                 {items.map((item) => (
                     <TabsPrimitive.Trigger
@@ -44,7 +49,7 @@ export function Tabs({
                         value={item.value}
                         disabled={item.disabled}
                         className={cn(
-                            'text-muted-foreground data-[state=active]:text-foreground data-[state=active]:border-primary -mb-px shrink-0 border-b-2 border-transparent px-3 py-2 text-sm font-medium whitespace-nowrap',
+                            'text-muted-foreground data-[state=active]:text-foreground data-[state=active]:border-primary -mb-px min-h-11 shrink-0 border-b-2 border-transparent px-3 py-2 text-sm font-medium whitespace-nowrap',
                             'focus-visible:ring-ring rounded-t-sm focus-visible:ring-2 focus-visible:outline-none',
                             'disabled:pointer-events-none disabled:opacity-50',
                         )}

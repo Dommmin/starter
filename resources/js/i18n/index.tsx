@@ -1,6 +1,5 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
-import { createInstance, type i18n as I18nInstance } from 'i18next';
 import React, {
     createContext,
     useContext,
@@ -8,58 +7,22 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import {
-    I18nextProvider,
-    initReactI18next,
-    useTranslation as useI18nextTranslation,
-} from 'react-i18next';
-import { transformLaravelMessagesToI18next } from './adapter';
+import { createTranslator } from './translator';
 import type {
     I18nPayload,
     TranslationFunction,
-    TranslationParams,
     UseTranslationReturn,
 } from './types';
 
-export * from './adapter';
+export * from './translator';
 export * from './types';
 
-const I18nContext = createContext<I18nPayload | null>(null);
-
-export function createI18nInstance(
-    locale: string,
-    messages: Record<string, unknown>,
-    fallback = 'en',
-): I18nInstance {
-    const instance = createInstance();
-    const transformed = transformLaravelMessagesToI18next(messages);
-
-    void instance.use(initReactI18next).init({
-        lng: locale,
-        fallbackLng: fallback,
-        resources: {
-            [locale]: {
-                translation: transformed,
-            },
-            ...(fallback !== locale
-                ? {
-                      [fallback]: {
-                          translation: transformed,
-                      },
-                  }
-                : {}),
-        },
-        interpolation: {
-            escapeValue: false,
-        },
-        returnNull: false,
-        returnEmptyString: false,
-        keySeparator: '.',
-        nsSeparator: false,
-    });
-
-    return instance;
+interface I18nContextValue {
+    payload: I18nPayload;
+    t: TranslationFunction;
 }
+
+const I18nContext = createContext<I18nContextValue | null>(null);
 
 /**
  * Wraps the Inertia app via `withApp` (see createInertiaApp in app.tsx), so it
@@ -67,13 +30,9 @@ export function createI18nInstance(
  * available here because this component renders outside the Inertia page
  * context that <App> establishes around its children.
  *
- * The i18next instance is created once per provider mount (once per request
- * on SSR, once per browser session on the client) and updated in place on
- * navigation via addResourceBundle/changeLanguage, rather than replaced with
- * a new instance. react-i18next's useTranslation() caches its snapshot by
- * language + revision, not by instance identity — swapping in a new instance
- * while the language stays the same (e.g. two 'de' pages in a row) would
- * leave it serving a stale, cached translator bound to the old instance.
+ * The translator is a pure function of the shared `i18n` payload: it is
+ * rebuilt whenever navigation brings a new payload, so SSR and the first
+ * client render produce the same strings.
  */
 export function I18nProvider({
     initialPage,
@@ -84,10 +43,6 @@ export function I18nProvider({
 }) {
     const [payload, setPayload] = useState<I18nPayload>(
         () => initialPage.props.i18n,
-    );
-
-    const [instance] = useState<I18nInstance>(() =>
-        createI18nInstance(payload.locale, payload.messages, payload.fallback),
     );
 
     useEffect(() => {
@@ -112,33 +67,15 @@ export function I18nProvider({
         };
     }, []);
 
-    const { locale, messages, fallback, dir } = payload;
+    const { locale, dir } = payload;
 
-    useEffect(() => {
-        const transformed = transformLaravelMessagesToI18next(messages);
-        instance.addResourceBundle(
-            locale,
-            'translation',
-            transformed,
-            true,
-            true,
-        );
-        if (fallback !== locale) {
-            instance.addResourceBundle(
-                fallback,
-                'translation',
-                transformed,
-                true,
-                true,
-            );
-        }
-        // Always re-run changeLanguage, even when the locale string is
-        // unchanged: it's what emits 'languageChanged', which is what tells
-        // react-i18next's useTranslation() to drop its cached translator and
-        // pick up the resource bundle we just replaced above (see the
-        // I18nProvider doc comment).
-        void instance.changeLanguage(locale);
-    }, [instance, locale, messages, fallback]);
+    const value = useMemo<I18nContextValue>(
+        () => ({
+            payload,
+            t: createTranslator(payload.locale, payload.messages),
+        }),
+        [payload],
+    );
 
     useEffect(() => {
         if (typeof document !== 'undefined') {
@@ -152,41 +89,20 @@ export function I18nProvider({
     }, [locale, dir]);
 
     return (
-        <I18nContext.Provider value={payload}>
-            <I18nextProvider i18n={instance}>{children}</I18nextProvider>
-        </I18nContext.Provider>
+        <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
     );
 }
 
 export function useTranslation(): UseTranslationReturn {
-    const payload = useContext(I18nContext);
+    const context = useContext(I18nContext);
 
-    if (!payload) {
+    if (!context) {
         throw new Error(
             'useTranslation() musi być wywołane wewnątrz <I18nProvider>. Sprawdź, czy I18nProvider opakowuje aplikację w app.tsx.',
         );
     }
 
-    const { t: i18nT } = useI18nextTranslation();
-
-    const t: TranslationFunction = useMemo(() => {
-        return (
-            key: string,
-            params?: TranslationParams,
-            count?: number,
-        ): string => {
-            let options: Record<string, unknown> | undefined = undefined;
-            if (params || count !== undefined) {
-                options = {
-                    ...params,
-                    ...(count !== undefined ? { count } : {}),
-                };
-            }
-
-            const result = options ? i18nT(key, options) : i18nT(key);
-            return typeof result === 'string' ? result : key;
-        };
-    }, [i18nT]);
+    const { payload, t } = context;
 
     const formatNumber = useMemo(() => {
         return (value: number, options?: Intl.NumberFormatOptions): string => {

@@ -1,5 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { router, useForm } from '@inertiajs/react';
+import { ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
     Alert,
@@ -10,6 +11,7 @@ import {
     ResourceForm,
     Stack,
     Tabs,
+    Text,
     type RichTextDocument,
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
@@ -128,6 +130,10 @@ export function ArticleForm({ editor }: ArticleFormProps) {
     });
 
     const [activeLocale, setActiveLocale] = useState(locales.default);
+    const previewUrl: string | undefined = editor.previewUrls[activeLocale];
+    const activeLanguage =
+        locales.available.find((locale) => locale.code === activeLocale)
+            ?.native ?? activeLocale;
     const [manualSlugs, setManualSlugs] = useState<Record<string, boolean>>(
         () =>
             Object.fromEntries(
@@ -369,16 +375,49 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                 }
                 description={t('admin.articles.description')}
                 actions={
-                    articleId !== null && can.delete ? (
-                        <Button
-                            variant="destructive"
-                            onClick={() => setIsDeleteOpen(true)}
-                        >
-                            {t('admin.articles.delete')}
-                        </Button>
+                    articleId !== null ? (
+                        <>
+                            {previewUrl ? (
+                                <Button
+                                    variant="outline"
+                                    href={previewUrl}
+                                    external
+                                >
+                                    <ExternalLink aria-hidden="true" />
+                                    {t('admin.articles.preview', {
+                                        language: activeLanguage,
+                                    })}
+                                </Button>
+                            ) : (
+                                <Button variant="outline" disabled>
+                                    <ExternalLink aria-hidden="true" />
+                                    {t('admin.articles.preview', {
+                                        language: activeLanguage,
+                                    })}
+                                </Button>
+                            )}
+                            {can.delete && (
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setIsDeleteOpen(true)}
+                                >
+                                    {t('admin.articles.delete')}
+                                </Button>
+                            )}
+                        </>
                     ) : undefined
                 }
             />
+
+            {articleId !== null && (
+                <Text variant="caption" tone="muted">
+                    {!previewUrl
+                        ? t('admin.articles.previewUnavailable')
+                        : form.isDirty
+                          ? t('admin.articles.previewUnsaved')
+                          : t('admin.articles.previewHint')}
+                </Text>
+            )}
 
             {generalErrors.length > 0 && (
                 <Alert
@@ -457,9 +496,11 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                 label: t(
                                                     'admin.articles.fields.title',
                                                 ),
-                                                hint: t(
-                                                    'admin.articles.fields.titleHelp',
-                                                ),
+                                                hint: isDefault
+                                                    ? undefined
+                                                    : t(
+                                                          'admin.articles.fields.titleHelp',
+                                                      ),
                                                 required: isDefault,
                                             },
                                             {

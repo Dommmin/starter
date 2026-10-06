@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { BrandLogo } from './brand-logo';
 import { Button, type ButtonProps } from './button';
+import { HeaderUtility } from './header-utility';
 import { PublicChrome } from './public-chrome';
 
 const sharedProps = vi.hoisted(() => ({
@@ -218,6 +219,41 @@ describe('PublicChrome', () => {
         ).toBeNull();
     });
 
+    it('offers the theme switcher in the footer to guests only', async () => {
+        // Icon switcher: named by aria-label; inline one: by its caption.
+        const themeButton = (root: Element | null | undefined) =>
+            Array.from(root?.querySelectorAll('button') ?? []).find(
+                (button) =>
+                    button
+                        .getAttribute('aria-label')
+                        ?.startsWith('a11y.themeSwitcher') ||
+                    button.textContent?.startsWith('theme.label'),
+            ) ?? null;
+
+        const guest = await render(
+            <PublicChrome>
+                <p>Page body</p>
+            </PublicChrome>,
+        );
+
+        expect(themeButton(guest.querySelector('footer'))).not.toBeNull();
+        expect(themeButton(guest.querySelector('header'))).toBeNull();
+
+        sharedProps.current = {
+            auth: {
+                user: { id: 1, name: 'Ada Admin', email: 'ada@example.test' },
+            },
+        };
+        const signedIn = await render(
+            <PublicChrome>
+                <p>Page body</p>
+            </PublicChrome>,
+        );
+
+        expect(themeButton(signedIn.querySelector('footer'))).toBeNull();
+        expect(themeButton(signedIn.querySelector('header'))).toBeNull();
+    });
+
     it('uses the copyright line the page passes', async () => {
         const container = await render(
             <PublicChrome footer={{ copyright: '© 2026 Custom' }}>
@@ -312,6 +348,16 @@ describe('PublicChrome site settings defaults', () => {
 });
 
 describe('BrandLogo', () => {
+    it('shows the saved site brand in a header without brand props (auth pages)', async () => {
+        sharedProps.current = { site: makeSite() };
+        const container = await render(<HeaderUtility />);
+
+        expect(
+            container.querySelector('header a[aria-label="Panel Name"]')
+                ?.textContent,
+        ).toBe('Panel Name');
+    });
+
     it('renders the saved name in one tone', async () => {
         const container = await render(<BrandLogo name="Panel Name" />);
 

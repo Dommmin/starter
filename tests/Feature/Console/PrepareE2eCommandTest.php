@@ -86,6 +86,7 @@ test('the command creates the demo home sections on an empty database once', fun
     expect($enabled->pluck('type')->all())->toEqualCanonicalizing([
         HomeSectionType::Hero,
         HomeSectionType::Features,
+        HomeSectionType::LatestArticles,
         HomeSectionType::Contact,
         HomeSectionType::Cta,
     ])

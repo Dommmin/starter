@@ -5,6 +5,9 @@ export LOCAL_UID := $(shell id -u)
 export LOCAL_GID := $(shell id -g)
 COMPOSE := docker compose
 E2E_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.e2e.yaml --profile e2e
+# One-off artisan with the E2E database and Redis prefixes of the app
+# service in compose.e2e.yaml, but APP_ENV=local for the local-only commands.
+E2E_RUN := $(E2E_COMPOSE) run --rm --no-deps -e APP_ENV=local -e E2E_PASSWORD app
 RUN := $(COMPOSE) run --rm --no-deps app
 ARGS ?=
 SERVICE ?=
@@ -122,7 +125,10 @@ e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymu
 	$(RUN) npm run build:ssr
 	$(E2E_COMPOSE) up -d --wait --wait-timeout 180 web queue ssr playwright
 	@E2E_PASSWORD="$${E2E_PASSWORD:-$$(od -An -tx1 -N18 /dev/urandom | tr -d ' \n')}"; export E2E_PASSWORD; \
-	$(COMPOSE) run --rm --no-deps -e E2E_PASSWORD app php artisan app:e2e-prepare --client-host=playwright --no-interaction \
+	$(COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$${POSTGRES_DB}_e2e" -tAc "SELECT 1" >/dev/null 2>&1 || createdb -U "$$POSTGRES_USER" "$${POSTGRES_DB}_e2e"' \
+	&& $(E2E_RUN) php artisan migrate:fresh --force --no-interaction \
+	&& $(E2E_RUN) php artisan cache:clear --no-interaction \
+	&& $(E2E_RUN) php artisan app:e2e-prepare --client-host=playwright --no-interaction \
 	&& $(E2E_COMPOSE) exec -T -e E2E_PASSWORD playwright npx playwright test $(ARGS); \
 	status=$$?; $(E2E_COMPOSE) rm --stop --force ssr playwright; \
 	$(COMPOSE) up -d --wait --wait-timeout 180 web queue; \

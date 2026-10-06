@@ -47,11 +47,17 @@ export function FeatureGrid({
                 {items.map((item) => (
                     <Stack key={item.id} gap="tight">
                         {item.icon && (
-                            <Icon icon={item.icon} size="lg" tone="primary" />
+                            <span className="bg-brand-glow mb-1 inline-flex size-10 items-center justify-center self-start rounded-lg">
+                                <Icon
+                                    icon={item.icon}
+                                    size="lg"
+                                    tone="primary"
+                                />
+                            </span>
                         )}
-                        <Text variant="label" as="p">
+                        <Heading level={title ? 3 : 2} variant="group">
                             {item.title}
-                        </Text>
+                        </Heading>
                         <Text variant="body" tone="muted">
                             {item.description}
                         </Text>

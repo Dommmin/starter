@@ -78,12 +78,13 @@ describe('ThemeSwitcher', () => {
 });
 
 describe('LocaleSwitcher', () => {
-    it('stays a globe button named by aria-label by default', async () => {
+    it('shows the language code and names the language by aria-label by default', async () => {
         const trigger = await renderTrigger(<LocaleSwitcher />);
 
         expect(trigger.getAttribute('aria-label')).toBe(
-            'a11y.languageSelector',
+            'a11y.languageSelector: English',
         );
+        expect(trigger.textContent).toBe('EN');
     });
 
     it('is named by its visible caption in the labelled variant', async () => {

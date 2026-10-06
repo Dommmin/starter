@@ -312,11 +312,13 @@ function LatestArticlesSection({
     return (
         <Section id={id} spacing="default" container="wide">
             <Stack gap="relaxed">
-                <SectionHeading title={content.title} />
+                <SectionHeading
+                    title={content.title ?? t('home.latestArticlesTitle')}
+                />
                 {content.items.length === 0 ? (
                     <EmptyState title={t('home.latestArticlesEmpty')} />
                 ) : (
-                    <Grid layout="cards">
+                    <Grid layout="cards" align="center">
                         {content.items.map((article) => (
                             <Card key={article.url}>
                                 <CardContent>

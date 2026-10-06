@@ -35,7 +35,7 @@ const toneMap: Record<TextTone, string> = {
     muted: 'text-muted-foreground',
     subtle: 'text-text-subtle',
     primary: 'text-primary',
-    inverted: 'text-surface-inverted-foreground',
+    inverted: 'text-surface-emphasis-foreground',
     success: 'text-status-success',
     danger: 'text-destructive',
 };

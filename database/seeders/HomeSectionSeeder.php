@@ -24,11 +24,11 @@ use Spatie\LaravelData\Data;
 /**
  * Demo content of the home page: the former static landing page rebuilt from
  * `lang/{locale}/public.php` (`landing.*`) for every public locale. Hero,
- * features, contact and CTA start enabled; FAQ, testimonials and latest
- * articles start disabled. The local environment, where the sample FAQs and
- * articles exist, uses the copy of the demo studio (self::BRAND) for hero,
- * features and CTA and a per-locale order and visibility (self::LOCAL_LAYOUT).
- * Idempotent: existing sections are kept as edited.
+ * features, latest articles, contact and CTA start enabled; FAQ and
+ * testimonials start disabled. The local environment, where the sample FAQs
+ * and articles exist, uses the copy of the demo studio (self::BRAND) for
+ * hero, features and CTA and a per-locale order and visibility
+ * (self::LOCAL_LAYOUT). Idempotent: existing sections are kept as edited.
  */
 class HomeSectionSeeder extends Seeder
 {
@@ -40,6 +40,7 @@ class HomeSectionSeeder extends Seeder
     public const array ENABLED_TYPES = [
         HomeSectionType::Hero,
         HomeSectionType::Features,
+        HomeSectionType::LatestArticles,
         HomeSectionType::Contact,
         HomeSectionType::Cta,
     ];
@@ -217,8 +218,8 @@ class HomeSectionSeeder extends Seeder
                 title: $t('public.landing.heroTitle'),
                 eyebrow: $t('public.landing.badge'),
                 description: $t('public.landing.heroDescription'),
-                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Register),
-                secondaryAction: new HomeActionData(label: $t('common.nav.login'), target: HomeLinkTarget::Login),
+                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Contact),
+                secondaryAction: new HomeActionData(label: $t('public.landing.ctaSecondary'), target: HomeLinkTarget::Articles),
             ),
             HomeSectionType::Features => new FeaturesContentData(
                 items: [
@@ -253,8 +254,7 @@ class HomeSectionSeeder extends Seeder
             HomeSectionType::Cta => new CtaContentData(
                 title: $t('public.landing.ctaBottomTitle'),
                 description: $t('public.landing.ctaBottomDescription'),
-                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Register),
-                secondaryAction: new HomeActionData(label: $t('common.nav.login'), target: HomeLinkTarget::Login),
+                primaryAction: new HomeActionData(label: $t('public.landing.ctaPrimaryGuest'), target: HomeLinkTarget::Contact),
             ),
         };
     }

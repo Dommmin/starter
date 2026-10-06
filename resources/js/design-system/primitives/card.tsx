@@ -12,9 +12,9 @@ export type CardProps = {
 };
 
 const paddingMap: Record<CardPadding, string> = {
-    default: 'gap-6 py-6',
-    compact: 'gap-4 py-4',
-    none: 'gap-0 py-0',
+    default: 'gap-6 p-6',
+    compact: 'gap-4 p-4',
+    none: 'gap-0 p-0',
 };
 
 export function Card({ children, padding = 'default' }: CardProps) {
@@ -35,7 +35,7 @@ export type CardHeaderProps = {
 };
 
 export function CardHeader({ children }: CardHeaderProps) {
-    return <div className="flex flex-col gap-1.5 px-6">{children}</div>;
+    return <div className="flex flex-col gap-1.5">{children}</div>;
 }
 
 export type CardTitleProps = {
@@ -64,7 +64,7 @@ export type CardContentProps = {
 };
 
 export function CardContent({ children }: CardContentProps) {
-    return <div className="px-6">{children}</div>;
+    return <div>{children}</div>;
 }
 
 export type CardFooterProps = {
@@ -73,10 +73,8 @@ export type CardFooterProps = {
 
 export function CardFooter({ children }: CardFooterProps) {
     return (
-        <div className="px-6">
-            <Inline gap="tight" align="center">
-                {children}
-            </Inline>
-        </div>
+        <Inline gap="tight" align="center">
+            {children}
+        </Inline>
     );
 }

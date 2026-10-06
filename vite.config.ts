@@ -118,7 +118,9 @@ export default defineConfig({
     },
     test: {
         // Playwright specs run through `make e2e`, never under vitest.
-        exclude: ['**/node_modules/**', 'tests/e2e/**'],
+        // `.claude/worktrees/*` are agent checkouts of other branches, not
+        // tests of this one.
+        exclude: ['**/node_modules/**', 'tests/e2e/**', '.claude/**'],
     },
     fmt: {
         printWidth: 80,

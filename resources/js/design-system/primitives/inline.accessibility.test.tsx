@@ -83,7 +83,10 @@ describe('Inline', () => {
             </CardFooter>,
         );
 
-        expect(container.querySelector('.px-6 > .flex-row')).not.toBeNull();
+        // Card owns the padding, so the footer is the Inline row itself.
+        expect(
+            container.firstElementChild?.classList.contains('flex-row'),
+        ).toBe(true);
     });
 
     it('rejects arbitrary styling (ADR-019)', () => {

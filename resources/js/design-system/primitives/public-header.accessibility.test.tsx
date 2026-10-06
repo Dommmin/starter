@@ -5,12 +5,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n';
 import { PublicHeader } from './public-header';
 
-const authState = vi.hoisted(() => ({ canRegister: true }));
+const currentPage = vi.hoisted(() => ({
+    url: '/',
+    user: null as Record<string, unknown> | null,
+    canRegister: true,
+}));
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
+        url: currentPage.url,
         props: {
-            auth: { user: null, canRegister: authState.canRegister },
+            auth: {
+                user: currentPage.user,
+                canRegister: currentPage.canRegister,
+            },
             i18n: { alternateUrls: {} },
         },
     }),
@@ -74,6 +82,9 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 }
 
 afterEach(async () => {
+    currentPage.url = '/';
+    currentPage.user = null;
+    currentPage.canRegister = true;
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -83,7 +94,7 @@ afterEach(async () => {
 describe('PublicHeader', () => {
     it('offers the register action only while sign-up is enabled', async () => {
         const hasRegister = async (canRegister: boolean) => {
-            authState.canRegister = canRegister;
+            currentPage.canRegister = canRegister;
             const container = await render(<PublicHeader />);
             const found = Array.from(container.querySelectorAll('a')).some(
                 (link) => link.getAttribute('href') === '/register',
@@ -300,21 +311,21 @@ describe('PublicHeader', () => {
             />,
         );
 
-        const trigger = Array.from(
-            container.querySelectorAll<HTMLButtonElement>('button'),
-        ).find((button) => button.textContent === 'Services');
+        // A parent with its own href is a link next to the toggle.
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="nav.submenu"]',
+        );
 
         await act(async () => {
             trigger?.click();
         });
 
-        // A parent with its own href is listed first inside the submenu.
         const links = container.querySelectorAll(
             'ul[aria-label="nav.submenu"] a',
         );
         expect(
             Array.from(links).map((link) => link.getAttribute('href')),
-        ).toEqual(['/services', '/services/design']);
+        ).toEqual(['/services/design']);
 
         await act(async () => {
             trigger?.dispatchEvent(
@@ -326,5 +337,166 @@ describe('PublicHeader', () => {
         });
 
         expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('marks only the link of the current section as the current page', async () => {
+        currentPage.url = '/articles/launch?page=2';
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'features',
+                        kind: 'anchor',
+                        label: 'Features',
+                        href: '/#features',
+                    },
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: 'http://localhost/articles',
+                    },
+                    {
+                        id: 'home',
+                        kind: 'internal',
+                        label: 'Home',
+                        href: '/',
+                    },
+                ]}
+            />,
+        );
+
+        const current = container.querySelectorAll('[aria-current="page"]');
+
+        expect(current).toHaveLength(1);
+        expect(current[0].textContent).toBe('Articles');
+    });
+
+    it('keeps only the main menu inside the navigation landmark', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                    },
+                ]}
+            />,
+        );
+
+        const landmarks = container.querySelectorAll('nav');
+        const main = container.querySelector(
+            'nav[aria-label="a11y.mainNavigation"]',
+        );
+
+        expect(landmarks).toHaveLength(1);
+        expect(main?.querySelector('a[href="/articles"]')).not.toBeNull();
+        expect(main?.querySelectorAll('button')).toHaveLength(0);
+        expect(main?.textContent).not.toContain('nav.login');
+    });
+
+    it('offers the theme choice in the account menu of a signed-in user', async () => {
+        currentPage.user = {
+            id: 1,
+            name: 'Ada Admin',
+            email: 'ada@example.test',
+        };
+        const container = await render(<PublicHeader />);
+
+        expect(
+            container.querySelector('button[aria-label^="a11y.themeSwitcher"]'),
+        ).toBeNull();
+
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.userMenu"]',
+        );
+        await act(async () => {
+            trigger?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+
+        const items = Array.from(
+            document.querySelectorAll('[role="menuitemradio"]'),
+        ).map((item) => item.textContent);
+
+        expect(items).toEqual(['theme.light', 'theme.dark', 'theme.system']);
+    });
+
+    it('keeps a linked parent out of its own submenu', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                        children: [
+                            {
+                                id: 'docs',
+                                kind: 'external',
+                                label: 'Docs',
+                                href: 'https://docs.example.test',
+                            },
+                        ],
+                    },
+                ]}
+            />,
+        );
+
+        const nav = container.querySelector(
+            'nav[aria-label="a11y.mainNavigation"]',
+        );
+        const toggle = nav?.querySelector<HTMLButtonElement>(
+            'button[aria-label="nav.submenu"]',
+        );
+
+        expect(nav?.querySelector('a[href="/articles"]')?.textContent).toBe(
+            'Articles',
+        );
+        expect(toggle).not.toBeNull();
+
+        await act(async () => {
+            toggle?.click();
+        });
+
+        const submenu = nav?.querySelector('ul[aria-label="nav.submenu"]');
+        expect(
+            Array.from(submenu?.querySelectorAll('a') ?? []).map((link) =>
+                link.getAttribute('href'),
+            ),
+        ).toEqual(['https://docs.example.test']);
+    });
+
+    it('offers a guest sign-in and sign-up inside the mobile menu panel', async () => {
+        const container = await render(
+            <PublicHeader
+                navItems={[
+                    {
+                        id: 'articles',
+                        kind: 'internal',
+                        label: 'Articles',
+                        href: '/articles',
+                    },
+                ]}
+            />,
+        );
+
+        const trigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.openMenu"]',
+        );
+        await act(async () => {
+            trigger?.click();
+        });
+
+        const panel = document.querySelector('[role="dialog"]');
+        expect(
+            Array.from(panel?.querySelectorAll('a') ?? []).map(
+                (link) => link.textContent,
+            ),
+        ).toEqual(['Articles', 'nav.login', 'nav.register']);
     });
 });

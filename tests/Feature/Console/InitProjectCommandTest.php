@@ -441,7 +441,7 @@ test('sample menu items are removed through the audited menu action', function (
 
 test('an edited or added menu item is kept', function () {
     test()->seed(NavigationMenuSeeder::class);
-    $edited = MenuItem::query()->where('locale', 'en')->where('type', MenuItemType::ArticleIndex)->sole();
+    $edited = MenuItem::query()->where('location', MenuLocation::Header)->where('locale', 'en')->where('type', MenuItemType::ArticleIndex)->sole();
     $this->travel(1)->minutes();
     $edited->update(['label' => 'Our news']);
     $own = MenuItem::factory()->create(['location' => MenuLocation::Header, 'locale' => 'en', 'position' => 3]);

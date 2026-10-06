@@ -5,6 +5,8 @@ import type { BrandLogoImage } from './brand-logo';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
 import type { NavItem } from './nav-item';
 import { PublicHeader } from './public-header';
+import { useSiteBrand } from './site-brand';
+import { ThemeSwitcher } from './theme-switcher';
 
 export type PublicChromeFooter = {
     /**
@@ -42,9 +44,10 @@ function withoutNull<Value>(
 }
 
 /**
- * Frame of every public page: header (brand, theme and locale switchers,
- * auth controls, navigation), the `main` landmark targeted by the skip link,
- * and the footer. Menus come from the shared `navigation` prop (managed in
+ * Frame of every public page: header (brand, menu, locale switcher, auth
+ * controls with the theme choice for signed-in users), the `main` landmark
+ * targeted by the skip link, and the footer with the theme switcher for
+ * guests. Menus come from the shared `navigation` prop (managed in
  * the admin panel) unless the page passes its own items.
  *
  * Brand, logo, copyright, contact details and social links default to the
@@ -59,14 +62,12 @@ export function PublicChrome({
     children,
 }: PublicChromeProps) {
     const { t } = useTranslation();
-    const { navigation, site: sharedSite } = usePage().props;
+    const { auth, navigation, site: sharedSite } = usePage().props;
     const site = sharedSite as App.Data.Settings.SiteSettingsData | undefined;
 
-    const siteLogo: BrandLogoImage | undefined = site?.logo
-        ? { ...site.logo, alt: site.name }
-        : undefined;
-    const resolvedLogo = logo ?? siteLogo;
-    const brandName = site?.isCustomized ? site.name : undefined;
+    const siteBrand = useSiteBrand();
+    const resolvedLogo = logo ?? siteBrand.logo;
+    const brandName = siteBrand.brandName;
     const copyrightHolder = site
         ? (site.footerText ?? site.name)
         : t('brand.name');
@@ -90,14 +91,16 @@ export function PublicChrome({
         }));
 
     return (
-        <>
+        <div className="flex min-h-svh flex-col">
             <PublicHeader
                 navItems={navItems ?? navigation?.header}
                 logo={resolvedLogo}
                 brandName={brandName}
             />
 
-            <main id="main-content">{children}</main>
+            <main id="main-content" className="flex-1">
+                {children}
+            </main>
 
             <Footer
                 copyright={copyright}
@@ -106,7 +109,10 @@ export function PublicChrome({
                 social={social}
                 logo={resolvedLogo}
                 brandName={brandName}
+                trailing={
+                    auth?.user ? undefined : <ThemeSwitcher variant="inline" />
+                }
             />
-        </>
+        </div>
     );
 }

@@ -2,6 +2,7 @@
 
 use App\Actions\Home\EnsureHomeSections;
 use App\Data\Home\HeroContentData;
+use App\Enums\HomeLinkTarget;
 use App\Enums\HomeSectionType;
 use App\Models\HomeSection;
 use Database\Seeders\HomeSectionSeeder;
@@ -49,10 +50,12 @@ test('the demo seeder rebuilds the former landing page and is idempotent', funct
     expect(HomeSection::query()->count())->toBe(21);
 
     $enabled = HomeSection::query()->where('locale', 'en')->where('enabled', true)->orderBy('position')->pluck('type')->all();
-    expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::Contact, HomeSectionType::Cta]);
+    expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::LatestArticles, HomeSectionType::Contact, HomeSectionType::Cta]);
 
     $plHero = HomeSection::query()->where('locale', 'pl')->where('type', HomeSectionType::Hero)->sole();
     expect($plHero->content->title)->toBe(__('public.landing.heroTitle', [], 'pl'));
+    expect($plHero->content->primaryAction?->target)->toBe(HomeLinkTarget::Contact)
+        ->and($plHero->content->secondaryAction?->target)->toBe(HomeLinkTarget::Articles);
 });
 
 test('the demo definition covers every type and recognises untouched demo sections', function () {

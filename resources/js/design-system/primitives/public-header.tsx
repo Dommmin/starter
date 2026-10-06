@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserMenuContent } from '@/components/user-menu-content';
@@ -21,9 +22,9 @@ import { Button } from './button';
 import { HeaderUtility } from './header-utility';
 import { LocaleSwitcher } from './locale-switcher';
 import { MobileNav } from './mobile-nav';
+import { ThemeMenuGroup, ThemeSwitcher } from './theme-switcher';
 import type { NavItem } from './nav-item';
-import { isNavLink, NavItemLink } from './nav-item-link';
-import { ThemeSwitcher } from './theme-switcher';
+import { isCurrentNavItem, isNavLink, NavItemLink } from './nav-item-link';
 
 export type PublicHeaderProps = {
     /**
@@ -40,23 +41,30 @@ export type PublicHeaderProps = {
 };
 
 const topLinkClasses =
-    'text-foreground decoration-border rounded-sm underline underline-offset-4 transition-colors duration-150 hover:decoration-current focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
+    'text-muted-foreground hover:text-foreground hover:bg-surface-subtle aria-[current=page]:text-foreground inline-flex min-h-[44px] items-center rounded-md px-2 text-sm font-medium transition-colors duration-150 focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
+const parentLinkClasses =
+    'text-muted-foreground hover:text-foreground hover:bg-surface-subtle aria-[current=page]:text-foreground inline-flex min-h-[44px] items-center rounded-md pl-2 pr-1 text-sm font-medium transition-colors duration-150 focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
 const submenuLinkClasses =
-    'text-foreground hover:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2 text-sm whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none';
+    'text-foreground hover:bg-surface-subtle aria-[current=page]:bg-surface-subtle focus-visible:ring-ring block rounded-md px-3 py-2 text-sm whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none';
 
 /**
- * Disclosure submenu (button + list of links), deliberately not an ARIA
- * `menu`: links stay in the Tab order, Escape closes and returns focus to the
- * trigger, and focus leaving the item closes it.
+ * Disclosure submenu, deliberately not an ARIA `menu`: links stay in the Tab
+ * order, Escape closes and returns focus to the trigger, and focus leaving
+ * the item closes it. An entry with its own `href` renders as a link next to
+ * a chevron toggle, so the submenu lists only its children; a `group` is a
+ * labelled toggle.
  */
 function DesktopSubmenu({ item }: { item: NavItem }) {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
+    const { url } = usePage();
     const [open, setOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
-    const links = [
-        ...(isNavLink(item) ? [{ ...item, children: undefined }] : []),
-        ...(item.children ?? []),
-    ].filter(isNavLink);
+    const parent = isNavLink(item) ? { ...item, children: undefined } : null;
+    const links = (item.children ?? []).filter(isNavLink);
+    const hasCurrent = links.some((link) =>
+        isCurrentNavItem(link, url, locale),
+    );
+    const submenuLabel = t('nav.submenu', { label: item.label });
 
     return (
         <CollapsiblePrimitive.Root
@@ -80,26 +88,38 @@ function DesktopSubmenu({ item }: { item: NavItem }) {
                 }
             }}
         >
-            <CollapsiblePrimitive.Trigger
-                ref={triggerRef}
-                className="text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
-            >
-                {item.label}
-                <ChevronDown
-                    className="text-muted-foreground size-4 shrink-0 transition-transform"
-                    aria-hidden="true"
-                />
-            </CollapsiblePrimitive.Trigger>
+            {parent ? (
+                <div className="flex items-center">
+                    <NavItemLink item={parent} classes={parentLinkClasses} />
+                    <CollapsiblePrimitive.Trigger
+                        ref={triggerRef}
+                        aria-label={submenuLabel}
+                        data-current={hasCurrent ? 'true' : undefined}
+                        className="text-muted-foreground hover:text-foreground data-[current=true]:text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
+                    >
+                        <ChevronDown
+                            className="size-4 shrink-0 transition-transform"
+                            aria-hidden="true"
+                        />
+                    </CollapsiblePrimitive.Trigger>
+                </div>
+            ) : (
+                <CollapsiblePrimitive.Trigger
+                    ref={triggerRef}
+                    data-current={hasCurrent ? 'true' : undefined}
+                    className="text-muted-foreground hover:text-foreground data-[current=true]:text-foreground hover:bg-surface-subtle focus-visible:ring-ring inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&[data-state=open]>svg]:rotate-180"
+                >
+                    {item.label}
+                    <ChevronDown
+                        className="text-muted-foreground size-4 shrink-0 transition-transform"
+                        aria-hidden="true"
+                    />
+                </CollapsiblePrimitive.Trigger>
+            )}
             <CollapsiblePrimitive.Content className="bg-background border-border-subtle absolute top-full left-0 z-20 mt-2 min-w-48 rounded-lg border p-2 shadow-lg">
-                <ul aria-label={t('nav.submenu', { label: item.label })}>
-                    {links.map((link, index) => (
-                        <li
-                            key={
-                                index === 0 && isNavLink(item)
-                                    ? 'self'
-                                    : link.id
-                            }
-                        >
+                <ul aria-label={submenuLabel}>
+                    {links.map((link) => (
+                        <li key={link.id}>
                             <NavItemLink
                                 item={link}
                                 classes={submenuLinkClasses}
@@ -130,6 +150,10 @@ export function PublicHeader({
             ? register.url()
             : localizedRegister.url({ locale });
 
+    // Below `md` a guest's sign-in and sign-up move into the menu panel, so
+    // the brand keeps one line next to the locale switcher and menu trigger.
+    const guestActionsInMenu = !auth.user && navItems.length > 0;
+
     const authControls: ReactNode = auth.user ? (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -153,6 +177,8 @@ export function PublicHeader({
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
+                <ThemeMenuGroup />
+                <DropdownMenuSeparator />
                 <UserMenuContent user={auth.user} />
             </DropdownMenuContent>
         </DropdownMenu>
@@ -160,7 +186,7 @@ export function PublicHeader({
         <>
             <Button
                 variant="ghost"
-                size="sm"
+                size="default"
                 href={loginUrl}
                 ariaLabel={t('nav.login')}
                 responsiveLabel
@@ -171,7 +197,7 @@ export function PublicHeader({
             {auth.canRegister && (
                 <Button
                     variant="primary"
-                    size="sm"
+                    size="default"
                     href={registerUrl}
                     ariaLabel={t('nav.register')}
                     responsiveLabel
@@ -184,24 +210,36 @@ export function PublicHeader({
     );
 
     return (
-        <HeaderUtility logo={logo} brandName={brandName} switchersInMobileMenu>
-            {navItems.length > 0 && (
-                <ul className="hidden items-center gap-4 lg:flex">
-                    {navItems.map((item) => (
-                        <li key={item.id}>
-                            {(item.children ?? []).length > 0 ? (
-                                <DesktopSubmenu item={item} />
-                            ) : isNavLink(item) ? (
-                                <NavItemLink
-                                    item={item}
-                                    classes={topLinkClasses}
-                                />
-                            ) : null}
-                        </li>
-                    ))}
-                </ul>
-            )}
-            <div className="flex items-center gap-1.5 sm:gap-3">
+        <HeaderUtility
+            logo={logo}
+            brandName={brandName}
+            switchersInMobileMenu
+            navigation={
+                navItems.length > 0 ? (
+                    <ul className="flex items-center gap-1">
+                        {navItems.map((item) => (
+                            <li key={item.id}>
+                                {(item.children ?? []).length > 0 ? (
+                                    <DesktopSubmenu item={item} />
+                                ) : isNavLink(item) ? (
+                                    <NavItemLink
+                                        item={item}
+                                        classes={topLinkClasses}
+                                    />
+                                ) : null}
+                            </li>
+                        ))}
+                    </ul>
+                ) : undefined
+            }
+        >
+            <div
+                className={
+                    guestActionsInMenu
+                        ? 'hidden items-center gap-3 md:flex'
+                        : 'flex items-center gap-1.5 sm:gap-3'
+                }
+            >
                 {authControls}
             </div>
             {/* Below `sm` the menu also holds the theme and locale switchers,
@@ -217,6 +255,23 @@ export function PublicHeader({
                             <ThemeSwitcher variant="labelled" />
                             <LocaleSwitcher variant="labelled" />
                         </>
+                    }
+                    footer={
+                        guestActionsInMenu ? (
+                            <>
+                                <Button variant="outline" href={loginUrl}>
+                                    {t('nav.login')}
+                                </Button>
+                                {auth.canRegister && (
+                                    <Button
+                                        variant="primary"
+                                        href={registerUrl}
+                                    >
+                                        {t('nav.register')}
+                                    </Button>
+                                )}
+                            </>
+                        ) : undefined
                     }
                 />
             </div>

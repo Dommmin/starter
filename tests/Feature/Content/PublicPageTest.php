@@ -58,10 +58,11 @@ test('drafts and unknown slugs are not found', function () {
 });
 
 test('the content catch-all does not shadow system routes', function () {
-    PageTranslation::factory()->published()->create(['slug' => 'about']);
+    PageTranslation::factory()->published()->create(['slug' => 'articles']);
 
     $this->get('/login')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia->component('auth/login'));
     $this->get('/admin')->assertRedirect(route('login'));
+    $this->get('/articles')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia->component('articles/index', false));
     $this->get('/pl/admin')->assertNotFound();
 });
 

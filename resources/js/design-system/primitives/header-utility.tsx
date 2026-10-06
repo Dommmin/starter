@@ -2,18 +2,24 @@ import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { LocaleSwitcher } from './locale-switcher';
-import { ThemeSwitcher } from './theme-switcher';
+import { useSiteBrand } from './site-brand';
 
 export type HeaderUtilityProps = {
+    /** Right-hand actions (account controls, mobile menu trigger). */
     children?: React.ReactNode;
-    /** Optional image logo; the text logo otherwise. */
+    /**
+     * Main navigation, placed next to the logo in its own `nav` landmark;
+     * the locale switcher stays with the actions on the right.
+     */
+    navigation?: React.ReactNode;
+    /** Image logo; defaults to the logo of the shared `site` settings. */
     logo?: BrandLogoImage;
-    /** One-tone text logo name; the catalog brand otherwise. */
+    /** One-tone text logo name; defaults to the saved site name. */
     brandName?: string;
     /**
-     * Hide the theme and locale switchers below `sm`; the caller then
-     * renders them in its mobile menu (see `MobileNav` `utilities`), so a
-     * typical site name fits next to the remaining controls at 360 px.
+     * Hide the locale switcher below `sm`; the caller then renders it in its
+     * mobile menu (see `MobileNav` `utilities`), so a typical site name fits
+     * next to the remaining controls at 360 px.
      */
     switchersInMobileMenu?: boolean;
     className?: never;
@@ -22,11 +28,13 @@ export type HeaderUtilityProps = {
 
 export function HeaderUtility({
     children,
+    navigation,
     logo,
     brandName,
     switchersInMobileMenu = false,
 }: HeaderUtilityProps) {
     const { t } = useTranslation();
+    const siteBrand = useSiteBrand();
 
     return (
         <header className="border-border-subtle bg-background/90 relative z-10 border-b backdrop-blur-md">
@@ -36,24 +44,34 @@ export function HeaderUtility({
             >
                 {t('a11y.skipToContent')}
             </a>
-            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:h-20 sm:px-6 lg:px-8">
-                <BrandLogo image={logo} name={brandName} />
+            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-8">
+                <div className="flex min-w-0 items-center gap-8">
+                    <BrandLogo
+                        image={logo ?? siteBrand.logo}
+                        name={brandName ?? siteBrand.brandName}
+                    />
 
-                <nav
-                    aria-label={t('a11y.mainNavigation')}
-                    className="flex shrink-0 items-center gap-1.5 sm:gap-3"
-                >
+                    {navigation && (
+                        <nav
+                            aria-label={t('a11y.mainNavigation')}
+                            className="hidden lg:block"
+                        >
+                            {navigation}
+                        </nav>
+                    )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
                     <div
                         className={cn(
-                            'items-center gap-1.5 sm:gap-3',
+                            'items-center',
                             switchersInMobileMenu ? 'hidden sm:flex' : 'flex',
                         )}
                     >
-                        <ThemeSwitcher />
                         <LocaleSwitcher />
                     </div>
                     {children}
-                </nav>
+                </div>
             </div>
         </header>
     );

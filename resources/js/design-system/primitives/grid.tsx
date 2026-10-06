@@ -3,11 +3,17 @@ import { cn } from '@/lib/utils';
 
 type GridLayout = 'single' | 'split' | 'cards' | 'features';
 type GridGap = 'tight' | 'default' | 'relaxed';
+type GridAlign = 'start' | 'center';
 
 export type GridProps = {
     children: ReactNode;
     layout?: GridLayout;
     gap?: GridGap;
+    /**
+     * `center` (cards layout only): cards keep their width and an incomplete
+     * row is centred, for centred sections with one or two cards.
+     */
+    align?: GridAlign;
     className?: never;
     style?: never;
 };
@@ -29,9 +35,15 @@ export function Grid({
     children,
     layout = 'cards',
     gap = 'default',
+    align = 'start',
 }: GridProps) {
+    const columns =
+        align === 'center' && layout === 'cards'
+            ? 'grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),20rem))] justify-center'
+            : layoutMap[layout];
+
     return (
-        <div className={cn('grid w-full', layoutMap[layout], gapMap[gap])}>
+        <div className={cn('grid w-full', columns, gapMap[gap])}>
             {children}
         </div>
     );

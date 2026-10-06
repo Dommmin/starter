@@ -75,6 +75,12 @@ describe('FeatureGrid', () => {
         expect(container.textContent).toContain('Fast');
         expect(container.textContent).toContain('Safe');
         expect(container.querySelectorAll('svg')).toHaveLength(1);
+        expect(container.querySelector('h2')?.textContent).toBe('Why us');
+        expect(
+            Array.from(container.querySelectorAll('h3')).map(
+                (heading) => heading.textContent,
+            ),
+        ).toEqual(['Fast', 'Safe']);
     });
 });
 

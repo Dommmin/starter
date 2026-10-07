@@ -16,6 +16,17 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const mountedRoots: Root[] = [];
 
+/**
+ * Lets a popup module loaded on first opening (see `lazy-popup.ts`) arrive
+ * and mount.
+ */
+async function settleLazyPopup(load: () => Promise<unknown>): Promise<void> {
+    await act(async () => {
+        await load();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+}
+
 const initialPage = {
     props: {
         i18n: {
@@ -81,6 +92,7 @@ describe('MobileNav', () => {
         await act(async () => {
             trigger?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const nav = document.querySelector('nav[aria-label="Menu"]');
         expect(nav?.textContent).toContain('Pricing');
@@ -130,6 +142,7 @@ describe('MobileNav nesting', () => {
                 )
                 ?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const nav = document.querySelector('nav[aria-label="Menu"]');
         const heading = nav?.querySelector('li > p');

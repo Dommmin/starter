@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import type { BrandLogoImage } from './brand-logo';
+import { CookieConsent, useCookieConsent } from './cookie-consent';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
 import type { NavItem } from './nav-item';
 import { PublicHeader } from './public-header';
@@ -62,8 +63,9 @@ export function PublicChrome({
     children,
 }: PublicChromeProps) {
     const { t } = useTranslation();
-    const { auth, navigation, site: sharedSite } = usePage().props;
+    const { auth, navigation, consent, site: sharedSite } = usePage().props;
     const site = sharedSite as App.Data.Settings.SiteSettingsData | undefined;
+    const cookieConsent = useCookieConsent(consent);
 
     const siteBrand = useSiteBrand();
     const resolvedLogo = logo ?? siteBrand.logo;
@@ -98,6 +100,10 @@ export function PublicChrome({
                 brandName={brandName}
             />
 
+            {consent && (
+                <CookieConsent consent={consent} state={cookieConsent} />
+            )}
+
             <main id="main-content" className="flex-1">
                 {children}
             </main>
@@ -112,6 +118,14 @@ export function PublicChrome({
                 description={withoutNull(site?.tagline)}
                 trailing={
                     auth?.user ? undefined : <ThemeSwitcher variant="inline" />
+                }
+                cookieSettings={
+                    cookieConsent.isActive
+                        ? {
+                              label: t('cookies.footerLink'),
+                              onOpen: cookieConsent.openSettings,
+                          }
+                        : undefined
                 }
             />
         </div>

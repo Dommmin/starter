@@ -529,6 +529,21 @@ declare namespace App {
                 };
             }
         }
+        namespace Consent {
+            export type ConsentData = {
+                version: number;
+                cookieName: string;
+                lifetimeDays: number;
+                categories: App.Enums.ConsentCategory[];
+                granted: App.Enums.ConsentCategory[] | null;
+                policyUrl: string | null;
+                plausible: App.Data.Consent.PlausibleData | null;
+            };
+            export type PlausibleData = {
+                domain: string;
+                scriptUrl: string;
+            };
+        }
         namespace Contact {
             export type ContactFormData = {
                 token: string;
@@ -823,6 +838,7 @@ declare namespace App {
             | 'home_section.updated'
             | 'home_section.toggled'
             | 'home_section.reordered';
+        export type ConsentCategory = 'analytics' | 'marketing';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type ContentPreviewState = 'draft' | 'scheduled' | 'published';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';

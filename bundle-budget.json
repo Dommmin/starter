@@ -27,6 +27,7 @@
     ],
     "lazyModules": [
         "resources/js/components/password-confirmation-dialog.tsx",
-        "resources/js/pages/design-system/index.tsx"
+        "resources/js/pages/design-system/index.tsx",
+        "resources/js/design-system/primitives/cookie-settings-dialog.tsx"
     ]
 }

@@ -35,6 +35,33 @@ return [
         'menuTitle' => 'Menü',
         'submenu' => 'Untermenü: :label',
     ],
+    'cookies' => [
+        'title' => 'Wir respektieren Ihre Privatsphäre',
+        'description' => 'Notwendige Cookies sorgen dafür, dass die Website funktioniert. Mit Ihrer Einwilligung nutzen wir zusätzlich Tools, die uns helfen, sie zu verbessern. Ihre Auswahl können Sie jederzeit im Seitenfuß ändern.',
+        'policy' => 'Mehr erfahren',
+        'acceptAll' => 'Alle akzeptieren',
+        'rejectAll' => 'Ablehnen',
+        'settings' => 'Einstellungen',
+        'dialogTitle' => 'Cookie-Einstellungen',
+        'dialogDescription' => 'Wählen Sie, welche Kategorien Sie erlauben. Notwendige Cookies sind immer aktiv.',
+        'save' => 'Auswahl speichern',
+        'close' => 'Schließen',
+        'footerLink' => 'Cookie-Einstellungen',
+        'categories' => [
+            'necessary' => [
+                'label' => 'Notwendig',
+                'description' => 'Sie halten Ihre Sitzung aufrecht, schützen Formulare und merken sich das Farbschema. Ohne sie funktioniert die Website nicht richtig.',
+            ],
+            'analytics' => [
+                'label' => 'Statistik',
+                'description' => 'Sie helfen uns zu verstehen, welche Inhalte gelesen werden. Die Statistiken sind anonym und verfolgen Sie nicht über andere Websites.',
+            ],
+            'marketing' => [
+                'label' => 'Marketing',
+                'description' => 'Sie messen die Wirkung von Werbung und zeigen passende Inhalte auf anderen Websites.',
+            ],
+        ],
+    ],
     'footer' => [
         'links' => 'Informationen',
         'contact' => 'Kontakt',

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { Container } from './container';
 import type { NavItem } from './nav-item';
@@ -42,6 +43,8 @@ export type FooterProps = {
     copyright: string;
     /** Rendered after the copyright line, e.g. a LocaleSwitcher. */
     trailing?: ReactNode;
+    /** Reopens the cookie choice; shown next to the copyright line. */
+    cookieSettings?: { label: string; onOpen: () => void };
     className?: never;
     style?: never;
 };
@@ -79,6 +82,7 @@ export function Footer({
     description,
     copyright,
     trailing,
+    cookieSettings,
 }: FooterProps) {
     const { t } = useTranslation();
     // Contact details lead the brand block (the e-mail as the main way to
@@ -180,9 +184,23 @@ export function Footer({
                         )}
                     </div>
                     <div className="border-border-subtle flex flex-col items-start justify-between gap-4 border-t pt-6 sm:flex-row sm:items-center">
-                        <Text variant="caption" tone="muted">
-                            {copyright}
-                        </Text>
+                        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-6">
+                            <Text variant="caption" tone="muted">
+                                {copyright}
+                            </Text>
+                            {cookieSettings && (
+                                <button
+                                    type="button"
+                                    onClick={cookieSettings.onOpen}
+                                    className={cn(
+                                        linkClasses,
+                                        'min-h-11 text-xs sm:min-h-0',
+                                    )}
+                                >
+                                    {cookieSettings.label}
+                                </button>
+                            )}
+                        </div>
                         {trailing}
                     </div>
                 </div>

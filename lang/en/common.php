@@ -35,6 +35,33 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => ':label submenu',
     ],
+    'cookies' => [
+        'title' => 'We respect your privacy',
+        'description' => 'Necessary cookies keep the site working. With your consent we also use tools that help us improve it. You can change your choice at any time in the page footer.',
+        'policy' => 'Learn more',
+        'acceptAll' => 'Accept all',
+        'rejectAll' => 'Reject',
+        'settings' => 'Settings',
+        'dialogTitle' => 'Cookie settings',
+        'dialogDescription' => 'Choose which categories you allow. Necessary cookies are always on.',
+        'save' => 'Save choice',
+        'close' => 'Close',
+        'footerLink' => 'Cookie settings',
+        'categories' => [
+            'necessary' => [
+                'label' => 'Necessary',
+                'description' => 'They keep your session, protect forms and remember the theme. The site does not work properly without them.',
+            ],
+            'analytics' => [
+                'label' => 'Analytics',
+                'description' => 'They help us understand which content is read. The statistics are anonymous and do not track you across sites.',
+            ],
+            'marketing' => [
+                'label' => 'Marketing',
+                'description' => 'They measure how well ads work and show relevant content on other sites.',
+            ],
+        ],
+    ],
     'footer' => [
         'links' => 'Information',
         'contact' => 'Contact',

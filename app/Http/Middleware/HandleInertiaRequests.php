@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Consent\ConsentData;
 use App\Data\Navigation\NavigationData;
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
@@ -9,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Repositories\Settings\SiteSettingsRepository;
+use App\Services\Consent\CookieConsent;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
 use App\Services\Navigation\PublicNavigation;
@@ -40,6 +42,7 @@ class HandleInertiaRequests extends Middleware
         protected LocalizedUrlGenerator $urlGenerator,
         protected SiteSettingsRepository $siteSettings,
         protected PublicNavigation $navigation,
+        protected CookieConsent $consent,
     ) {}
 
     /**
@@ -85,6 +88,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'site' => fn () => $this->siteSettings->current(),
             ...$this->publicNavigation($i18n['area'], $i18n['locale']),
+            ...$this->cookieConsent($request, $i18n['area'], $i18n['locale']),
             ...$this->designSystemShowcase($i18n['area']),
         ];
     }
@@ -117,6 +121,21 @@ class HandleInertiaRequests extends Middleware
         }
 
         return ['navigation' => fn () => $this->navigation->shared($locale)];
+    }
+
+    /**
+     * Lazily resolved cookie consent state, shared only with public pages
+     * (the banner and the scripts it allows).
+     *
+     * @return array<string, \Closure(): ConsentData>
+     */
+    protected function cookieConsent(Request $request, string $area, string $locale): array
+    {
+        if ($area !== 'public') {
+            return [];
+        }
+
+        return ['consent' => fn () => $this->consent->forRequest($request, $locale)];
     }
 
     /**

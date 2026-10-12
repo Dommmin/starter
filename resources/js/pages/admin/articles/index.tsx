@@ -148,7 +148,7 @@ export default function AdminArticlesIndex() {
                             <Stack gap="none">
                                 <Link
                                     href={articlesEdit(row.id)}
-                                    tone="primary"
+                                    tone="default"
                                 >
                                     {rowTitle(row)}
                                 </Link>

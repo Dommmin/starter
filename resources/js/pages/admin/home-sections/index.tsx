@@ -137,7 +137,7 @@ export default function AdminHomeSectionsIndex() {
                                             can.update ? (
                                                 <Link
                                                     href={edit(row.id)}
-                                                    tone="primary"
+                                                    tone="default"
                                                     ariaLabel={t(
                                                         'admin.homeSections.editLabel',
                                                         {

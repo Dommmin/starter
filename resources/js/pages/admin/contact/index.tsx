@@ -96,7 +96,7 @@ export default function AdminContactIndex() {
                         priority: 'primary',
                         label: t('admin.contact.fields.name'),
                         render: (row) => (
-                            <Link href={show(row.id)} tone="primary">
+                            <Link href={show(row.id)} tone="default">
                                 {row.name}
                             </Link>
                         ),

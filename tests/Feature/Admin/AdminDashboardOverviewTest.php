@@ -47,12 +47,25 @@ test('the dashboard summarises content, contact messages, media and recent activ
             ->where('overview.contentLocale', $default)
             ->where('overview.articles', ['published' => 2, 'drafts' => 1, 'scheduled' => 1])
             ->where('overview.pages', ['published' => 1, 'drafts' => 2, 'scheduled' => 0])
-            ->where('overview.contact', ['recent' => 2, 'failed' => 1, 'recentDays' => 7])
+            ->where('overview.contact.recent', 2)
+            ->where('overview.contact.failed', 1)
+            ->where('overview.contact.recentDays', 7)
+            ->where('overview.contact.previous', 1)
+            ->has('overview.contact.daily', 30)
+            ->where('overview.contact.daily.29', ['date' => now()->toDateString(), 'delivered' => 0, 'undelivered' => 2])
             ->where('overview.quarantinedMedia', 2)
-            ->has('overview.recentActivity', 5)
+            ->where('overview.attention.failedMessages', 1)
+            ->where('overview.attention.quarantinedMedia', 2)
+            ->where('overview.attention.adminsWithoutTwoFactor', 1)
+            ->has('overview.publishing', fn (Assert $publishing) => $publishing
+                ->where('days', 30)
+                ->has('recent')
+                ->has('previous')
+                ->whereNot('nextScheduledAt', null))
+            ->has('overview.recentActivity', 6)
             ->has('overview.recentActivity.0', fn (Assert $entry) => $entry
                 ->hasAll(['id', 'createdAt', 'actorName', 'action', 'subjectType', 'subjectId', 'changedFields']))
-            ->has('system'),
+            ->missing('system'),
         );
 });
 
@@ -88,7 +101,8 @@ test('an editor sees the content overview without the audit log', function () {
             ->has('overview.articles')
             ->has('overview.pages')
             ->has('overview.contact')
-            ->where('overview.recentActivity', null),
+            ->where('overview.recentActivity', null)
+            ->where('overview.attention.adminsWithoutTwoFactor', null),
         );
 });
 
@@ -103,6 +117,21 @@ test('an empty site reports zero counts', function () {
             ->where('overview.pages', ['published' => 0, 'drafts' => 0, 'scheduled' => 0])
             ->where('overview.quarantinedMedia', 0)
             ->has('overview.recentActivity', 0),
+        );
+});
+
+test('drafts nobody touched for two weeks need attention', function () {
+    $admin = User::factory()->admin()->withTwoFactor()->create();
+    $stale = Article::factory()->create();
+    ArticleTranslation::factory()->for($stale)->draft()->create(['updated_at' => now()->subDays(20)]);
+    Article::factory()->draft()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('overview.attention.staleDrafts', 1)
+            ->where('overview.attention.adminsWithoutTwoFactor', 0),
         );
 });
 

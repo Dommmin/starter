@@ -66,4 +66,9 @@ class MediaAssetRepository
     {
         return MediaAsset::query()->where('status', MediaStatus::Quarantine->value)->count();
     }
+
+    public function rejectedCount(): int
+    {
+        return MediaAsset::query()->where('status', MediaStatus::Rejected->value)->count();
+    }
 }

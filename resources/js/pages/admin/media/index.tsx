@@ -323,7 +323,7 @@ export default function AdminMediaIndex() {
                                 <Stack gap="none">
                                     <Link
                                         href={mediaEdit(row.id)}
-                                        tone="primary"
+                                        tone="default"
                                     >
                                         {row.originalName}
                                     </Link>

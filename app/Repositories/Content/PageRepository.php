@@ -142,4 +142,17 @@ class PageRepository
             scheduled: (int) ($row->scheduled ?? 0),
         );
     }
+
+    /**
+     * Pages in one language going live within the next `$hours` hours.
+     */
+    public function scheduledWithin(string $locale, CarbonInterface $now, int $hours): int
+    {
+        return PageTranslation::query()
+            ->where('locale', $locale)
+            ->where('status', PublicationStatus::Published->value)
+            ->where('published_at', '>', $now)
+            ->where('published_at', '<=', $now->toImmutable()->addHours($hours))
+            ->count();
+    }
 }

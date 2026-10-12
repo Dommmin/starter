@@ -127,10 +127,28 @@ declare namespace App {
                 };
             }
             namespace Dashboard {
+                export type AttentionData = {
+                    failedMessages: number | null;
+                    quarantinedMedia: number | null;
+                    rejectedMedia: number | null;
+                    scheduledSoon: number | null;
+                    staleDrafts: number | null;
+                    adminsWithoutTwoFactor: number | null;
+                    soonHours: number;
+                    staleDays: number;
+                };
                 export type ContactCountsData = {
                     recent: number;
                     failed: number;
                     recentDays: number;
+                    previous: number;
+                    daily: App.Data.Admin.Dashboard.ContactDayData[];
+                    chartDays: number;
+                };
+                export type ContactDayData = {
+                    date: string;
+                    delivered: number;
+                    undelivered: number;
                 };
                 export type ContentStatusCountsData = {
                     published: number;
@@ -147,6 +165,14 @@ declare namespace App {
                     recentActivity:
                         | App.Data.Admin.Audit.AuditLogListItemData[]
                         | null;
+                    publishing: App.Data.Admin.Dashboard.PublishingData | null;
+                    attention: App.Data.Admin.Dashboard.AttentionData | null;
+                };
+                export type PublishingData = {
+                    recent: number;
+                    previous: number;
+                    days: number;
+                    nextScheduledAt: string | null;
                 };
             }
             namespace Faqs {

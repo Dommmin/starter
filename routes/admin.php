@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\Settings\SiteSettingsController;
+use App\Http\Controllers\Admin\SystemStatusController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
@@ -31,6 +32,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
+        Route::get('/system', [SystemStatusController::class, 'index'])
+            ->name('system.index')
+            ->can('view', SiteSetting::class);
         Route::get('/users', [UserIndexController::class, 'index'])
             ->name('users.index')
             ->can('viewAny', User::class);

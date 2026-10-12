@@ -11,6 +11,7 @@ import {
     ListTree,
     Mail,
     Settings,
+    ServerCog,
     SlidersHorizontal,
     Users,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ import { index as mediaIndex } from '@/routes/admin/media';
 import { index as navigationIndex } from '@/routes/admin/navigation';
 import { index as pagesIndex } from '@/routes/admin/pages';
 import { edit as siteSettingsEdit } from '@/routes/admin/site-settings';
+import { index as systemIndex } from '@/routes/admin/system';
 import { index as usersIndex } from '@/routes/admin/users';
 import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem } from '@/types';
@@ -163,6 +165,12 @@ export default function AdminLayout({
                               t('admin.nav.siteSettings'),
                               siteSettingsEdit(),
                               SlidersHorizontal,
+                          ),
+                          section(
+                              'system',
+                              t('admin.platformBadge'),
+                              systemIndex(),
+                              ServerCog,
                           ),
                       ]
                     : []),

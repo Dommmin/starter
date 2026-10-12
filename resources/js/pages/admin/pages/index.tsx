@@ -136,7 +136,7 @@ export default function AdminPagesIndex() {
                         sortable: true,
                         render: (row) => (
                             <Stack gap="none">
-                                <Link href={pagesEdit(row.id)} tone="primary">
+                                <Link href={pagesEdit(row.id)} tone="default">
                                     {rowTitle(row)}
                                 </Link>
                                 {row.locale !== filters.locale && (

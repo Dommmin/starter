@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\ArticleSeeder;
+use Database\Seeders\ContactMessageSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoContent;
 use Database\Seeders\DemoMediaSeeder;
@@ -516,6 +517,21 @@ test('--remove-demo removes the whole local sample data set', function () {
         ->and(ContactMessage::query()->exists())->toBeFalse()
         ->and(MenuItem::query()->exists())->toBeFalse()
         ->and(HomeSection::query()->where('enabled', true)->exists())->toBeFalse();
+});
+
+test('--remove-demo keeps real contact messages that resemble the generated sample enquiries', function () {
+    test()->seed(ContactMessageSeeder::class);
+    $real = collect([
+        ContactMessage::factory()->create(['email' => 'lead-001@example.org', 'locale' => 'pl', 'message' => 'Prawdziwe zapytanie od klienta.']),
+        ContactMessage::factory()->create(['email' => 'lead-1@example.org', 'locale' => 'pl', 'message' => 'Proszę o wycenę strony firmowej.']),
+        ContactMessage::factory()->create(['email' => 'lead-002@example.com', 'locale' => 'pl', 'message' => 'Proszę o wycenę strony firmowej.']),
+        ContactMessage::factory()->create(['email' => 'client@firma.pl']),
+    ]);
+
+    [$exitCode] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(ContactMessage::query()->pluck('id')->sort()->values()->all())->toBe($real->pluck('id')->sort()->values()->all());
 });
 
 test('--remove-demo keeps sample media still used by kept content or the site settings', function () {

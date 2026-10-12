@@ -3,10 +3,12 @@
 namespace App\Repositories\Content;
 
 use App\Data\Admin\Dashboard\ContentStatusCountsData;
+use App\Data\Admin\Dashboard\PublishingData;
 use App\Enums\PublicationStatus;
 use App\Models\Article;
 use App\Models\ArticleSlugRedirect;
 use App\Models\ArticleTranslation;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -157,5 +159,56 @@ class ArticleRepository
             drafts: (int) ($row->drafts ?? 0),
             scheduled: (int) ($row->scheduled ?? 0),
         );
+    }
+
+    /**
+     * Publishing pace in one language: articles that went live in the last
+     * `$days` days, in the window before, and the next scheduled one.
+     */
+    public function publishing(string $locale, CarbonInterface $now, int $days): PublishingData
+    {
+        $now = $now->toImmutable();
+        $published = PublicationStatus::Published->value;
+        $translations = ArticleTranslation::query()->where('locale', $locale)->where('status', $published);
+
+        /** @var object{recent: int|string, previous: int|string}|null $row */
+        $row = (clone $translations)
+            ->toBase()
+            ->selectRaw('count(case when published_at > ? and published_at <= ? then 1 end) as recent', [$now->subDays($days), $now])
+            ->selectRaw('count(case when published_at > ? and published_at <= ? then 1 end) as previous', [$now->subDays($days * 2), $now->subDays($days)])
+            ->first();
+        $next = (clone $translations)->where('published_at', '>', $now)->min('published_at');
+
+        return new PublishingData(
+            recent: (int) ($row->recent ?? 0),
+            previous: (int) ($row->previous ?? 0),
+            days: $days,
+            nextScheduledAt: $next === null ? null : CarbonImmutable::parse((string) $next)->toIso8601String(),
+        );
+    }
+
+    /**
+     * Articles in one language going live within the next `$hours` hours.
+     */
+    public function scheduledWithin(string $locale, CarbonInterface $now, int $hours): int
+    {
+        return ArticleTranslation::query()
+            ->where('locale', $locale)
+            ->where('status', PublicationStatus::Published->value)
+            ->where('published_at', '>', $now)
+            ->where('published_at', '<=', $now->toImmutable()->addHours($hours))
+            ->count();
+    }
+
+    /**
+     * Article drafts in one language nobody changed for `$days` days.
+     */
+    public function staleDrafts(string $locale, CarbonInterface $now, int $days): int
+    {
+        return ArticleTranslation::query()
+            ->where('locale', $locale)
+            ->where('status', PublicationStatus::Draft->value)
+            ->where('updated_at', '<', $now->toImmutable()->subDays($days))
+            ->count();
     }
 }

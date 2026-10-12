@@ -33,6 +33,8 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('git diff --cached --check', lefthook)
         self.assertIn('npx commitlint --edit {1}', lefthook)
         self.assertNotIn('stage_fixed: true', lefthook)
+        # In lefthook `dir/**/*` skips files directly in `dir`; use `dir/**`.
+        self.assertNotIn('/**/*', lefthook)
 
         pre_commit = (ROOT / ".githooks/pre-commit").read_text()
         self.assertIn('gitleaks git --staged --redact', pre_commit)
@@ -46,6 +48,7 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertTrue(os.access(app_run, os.X_OK))
         self.assertIn('export LOCAL_UID LOCAL_GID', app_run.read_text())
         self.assertIn('--volume "$common_dir:$common_dir"', app_run.read_text())
+        self.assertEqual(app_run.read_text().count('docker compose run --rm --no-deps --env GIT_OPTIONAL_LOCKS=0 '), 2)
 
     def test_ci_covers_develop_main_and_manual_deploy(self):
         package = json.loads((ROOT / "package.json").read_text())

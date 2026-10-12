@@ -11,30 +11,30 @@ pre-commit:
             run: npm run check -- {staged_files}
         ui-contract:
             glob:
-                - 'resources/js/**/*.{ts,tsx,js,jsx}'
-                - 'resources/css/**/*.css'
+                - 'resources/js/**.{ts,tsx,js,jsx}'
+                - 'resources/css/**.css'
             run: node scripts/check-ui-contract.mjs --staged
         i18n-contract:
             glob:
-                - 'lang/**/*.php'
+                - 'lang/**.php'
                 - 'config/localization.php'
-                - 'app/Services/Localization/**/*.php'
-                - 'app/**/*.php'
-                - 'routes/**/*.php'
-                - 'resources/js/**/*.{ts,tsx,js,jsx}'
+                - 'app/Services/Localization/**.php'
+                - 'app/**.php'
+                - 'routes/**.php'
+                - 'resources/js/**.{ts,tsx,js,jsx}'
             run: composer check:i18n
         ai-configuration:
             glob:
-                - '.agents/**/*'
-                - '.claude/**/*'
-                - '.codex/**/*'
+                - '.agents/**'
+                - '.claude/**'
+                - '.codex/**'
                 - 'AGENTS.md'
                 - 'CLAUDE.md'
                 - 'GEMINI.md'
-                - 'tests/ai/**/*'
+                - 'tests/ai/**'
                 - 'lefthook.yml'
                 - 'commitlint.config.mjs'
-                - '.github/workflows/**/*'
+                - '.github/workflows/**'
                 - 'deploy.php'
             run: python3 -m unittest discover -s tests/ai -v
 

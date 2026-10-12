@@ -19,7 +19,7 @@ test('every public locale gets one section of every type and a second run create
     $hero->save();
 
     expect($ensure->handle())->toBe(0)
-        ->and(HomeSection::query()->count())->toBe(21)
+        ->and(HomeSection::query()->count())->toBe(3 * count(HomeSectionType::cases()))
         ->and($hero->fresh()?->content->title)->toBe('Edited')
         ->and($hero->fresh()?->enabled)->toBeTrue()
         ->and(HomeSection::query()->where('locale', 'en')->orderBy('position')->pluck('type')->all())
@@ -47,7 +47,7 @@ test('the demo seeder rebuilds the former landing page and is idempotent', funct
     $this->seed(HomeSectionSeeder::class);
     $this->seed(HomeSectionSeeder::class);
 
-    expect(HomeSection::query()->count())->toBe(21);
+    expect(HomeSection::query()->count())->toBe(3 * count(HomeSectionType::cases()));
 
     $enabled = HomeSection::query()->where('locale', 'en')->where('enabled', true)->orderBy('position')->pluck('type')->all();
     expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::LatestArticles, HomeSectionType::Contact, HomeSectionType::Cta]);

@@ -25,6 +25,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     ." | { type: 'latest_articles'; content: %latestArticles% }"
     ." | { type: 'contact'; content: %contact% }"
     ." | { type: 'cta'; content: %cta% }"
+    ." | { type: 'portfolio'; content: %portfolio% }"
+    ." | { type: 'team'; content: %team% }"
+    ." | { type: 'pricing'; content: %pricing% }"
     .')',
     references: [
         'anchor' => HomeSectionAnchor::class,
@@ -35,6 +38,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
         'latestArticles' => HomeLatestArticlesData::class,
         'contact' => ContactContentData::class,
         'cta' => HomeCtaData::class,
+        'portfolio' => HomePortfolioData::class,
+        'team' => HomeTeamData::class,
+        'pricing' => HomePricingData::class,
     ],
 )]
 class HomeSectionData extends Data
@@ -43,6 +49,6 @@ class HomeSectionData extends Data
         public int $id,
         public HomeSectionType $type,
         public HomeSectionAnchor $anchor,
-        public HomeHeroData|FeaturesContentData|HomeFaqData|TestimonialsContentData|HomeLatestArticlesData|ContactContentData|HomeCtaData $content,
+        public HomeHeroData|FeaturesContentData|HomeFaqData|TestimonialsContentData|HomeLatestArticlesData|ContactContentData|HomeCtaData|HomePortfolioData|HomeTeamData|HomePricingData $content,
     ) {}
 }

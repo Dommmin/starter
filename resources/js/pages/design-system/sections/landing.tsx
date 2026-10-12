@@ -8,7 +8,10 @@ import {
     Hero,
     Image,
     Stack,
+    StatList,
+    Text,
     type FeatureGridItem,
+    type StatListItem,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import {
@@ -20,7 +23,7 @@ import { demoImage, demoMediaImage } from './demo-data';
 
 type HomeSection = App.Data.Home.HomeSectionData;
 
-/** WEB-02 — landing: hero, feature grid, call to action, home sections. */
+/** WEB-02 — landing: hero, key figures, feature grid, call to action, home sections. */
 function LandingSection() {
     const { t } = useTranslation();
     const demo = (key: string) => t(`admin.designSystem.web.landing.${key}`);
@@ -64,6 +67,13 @@ function LandingSection() {
             title: longName,
             description: longText,
         },
+    ];
+
+    const stats: StatListItem[] = [
+        { id: 'projects', value: '120+', label: demo('statProjects') },
+        { id: 'clients', value: '45', label: demo('statClients') },
+        { id: 'years', value: '12', label: demo('statYears') },
+        { id: 'support', value: '24/7', label: demo('statSupport') },
     ];
 
     const homeSections: HomeSection[] = [
@@ -115,6 +125,7 @@ function LandingSection() {
             type: 'testimonials',
             content: {
                 title: demo('testimonialsTitle'),
+                stats: [],
                 items: isHomeEmpty
                     ? []
                     : [
@@ -204,6 +215,37 @@ function LandingSection() {
                         actions={actions}
                         align="center"
                     />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="StatList"
+                layout="full"
+                notApplicable={['loading', 'error', 'disabled']}
+            >
+                <ShowcaseState state="default" detail="align=center · 4" fill>
+                    <StatList items={stats} />
+                </ShowcaseState>
+                <ShowcaseState state="variants" detail="align=start · 3" fill>
+                    <StatList items={stats.slice(0, 3)} align="start" />
+                </ShowcaseState>
+                <ShowcaseState state="variants" detail="align=center · 2" fill>
+                    <StatList items={stats.slice(0, 2)} />
+                </ShowcaseState>
+                <ShowcaseState state="longContent" detail="align=start" fill>
+                    <StatList
+                        align="start"
+                        items={[
+                            { id: 'long', value: '1 250+', label: longText },
+                            ...stats.slice(1, 3),
+                        ]}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="empty" fill>
+                    <StatList items={[]} />
+                    <Text variant="caption" tone="muted">
+                        {demo('statsEmptyNote')}
+                    </Text>
                 </ShowcaseState>
             </ShowcaseComponent>
 

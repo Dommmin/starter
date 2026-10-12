@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
     Button,
     FileDropzone,
@@ -10,26 +10,24 @@ import {
     Stack,
     Text,
     UploadQueue,
-    type ImagePickerFieldLabels,
     type MediaGridItem,
     type RichTextDocument,
     type RichTextFieldLabels,
-    type RichTextImageOption,
-    type RichTextImagePicker,
     type UploadQueueItem,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as mediaIndex } from '@/routes/admin/media';
 import {
+    demoBrokenSrc,
+    demoImageSrc,
+    demoVectorSrc,
+    useDemoImagePicker,
+} from './demo-image-picker';
+import {
     ShowcaseComponent,
     ShowcaseState,
     type ShowcaseFamily,
 } from './showcase';
-
-/** Existing public assets stand in for DAM variants; nothing is uploaded. */
-const demoImageSrc = '/apple-touch-icon.png';
-const demoVectorSrc = '/favicon.svg';
-const demoBrokenSrc = '/design-system-demo-missing-image.png';
 
 const richTextLabelKeys = [
     'toolbar',
@@ -55,28 +53,6 @@ const richTextLabelKeys = [
     'linkInvalid',
 ] as const satisfies readonly (keyof RichTextFieldLabels)[];
 
-const imageLabelKeys = {
-    image: 'image',
-    dialogTitle: 'imageDialogTitle',
-    dialogDescription: 'imageDialogDescription',
-    searchLabel: 'imageSearchLabel',
-    searchPlaceholder: 'imageSearchPlaceholder',
-    searchClear: 'imageSearchClear',
-    listLabel: 'imageListLabel',
-    loading: 'imageLoading',
-    empty: 'imageEmpty',
-    error: 'imageError',
-    retry: 'imageRetry',
-    selectRequired: 'imageSelectRequired',
-    altLabel: 'imageAltLabel',
-    altHint: 'imageAltHint',
-    submit: 'imageSubmit',
-    cancel: 'imageCancel',
-    close: 'imageClose',
-} as const;
-
-type DemoPickerMode = 'ready' | 'slow' | 'empty' | 'failing';
-
 function paragraph(text: string): RichTextDocument {
     return {
         type: 'doc',
@@ -94,81 +70,7 @@ function ContentMediaSection() {
         richTextLabelKeys.map((key) => [key, t(`admin.richText.${key}`)]),
     ) as RichTextFieldLabels;
 
-    const demoImages = useMemo<RichTextImageOption[]>(() => {
-        const option = (
-            id: number,
-            nameKey: string,
-            thumbnailUrl: string,
-            size: number,
-        ): RichTextImageOption => ({
-            id,
-            name: t(`admin.designSystem.contentMedia.imageNames.${nameKey}`),
-            alt: t('admin.designSystem.contentMedia.imageAlt'),
-            thumbnailUrl,
-            width: size,
-            height: size,
-        });
-
-        return [
-            option(1, 'logo', demoImageSrc, 180),
-            option(2, 'vector', demoVectorSrc, 48),
-            option(3, 'long', demoImageSrc, 180),
-        ];
-    }, [t]);
-
-    const pickers = useMemo(() => {
-        const labels = Object.fromEntries(
-            Object.entries(imageLabelKeys).map(([key, translationKey]) => [
-                key,
-                t(`admin.richText.${translationKey}`),
-            ]),
-        ) as RichTextImagePicker['labels'];
-
-        const create = (mode: DemoPickerMode): RichTextImagePicker => ({
-            load: (search) => {
-                if (mode === 'failing') {
-                    return Promise.reject(
-                        new Error('Synthetic picker failure'),
-                    );
-                }
-
-                const matching =
-                    mode === 'empty'
-                        ? []
-                        : demoImages.filter((image) =>
-                              image.name
-                                  .toLocaleLowerCase()
-                                  .includes(search.toLocaleLowerCase()),
-                          );
-
-                return new Promise((resolve) =>
-                    window.setTimeout(
-                        () => resolve(matching),
-                        mode === 'slow' ? 4000 : 150,
-                    ),
-                );
-            },
-            previewUrl: (mediaId) =>
-                demoImages.find((image) => image.id === mediaId)
-                    ?.thumbnailUrl ?? demoImageSrc,
-            labels,
-        });
-
-        return {
-            ready: create('ready'),
-            slow: create('slow'),
-            empty: create('empty'),
-            failing: create('failing'),
-        };
-    }, [t, demoImages]);
-
-    const pickerLabels: ImagePickerFieldLabels = {
-        choose: demo('picker.choose'),
-        change: demo('picker.change'),
-        remove: demo('picker.remove'),
-        empty: demo('picker.empty'),
-        preview: demo('picker.preview'),
-    };
+    const { demoImages, pickers, pickerLabels } = useDemoImagePicker();
 
     const [richText, setRichText] = useState<RichTextDocument>(() =>
         paragraph(demo('richTextValue')),
@@ -490,6 +392,24 @@ function ContentMediaSection() {
                         height={48}
                         alt={demo('imageAlt')}
                         fit="cover"
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="variants" detail="frame=wide" fill>
+                    <Image
+                        src={demoImageSrc}
+                        width={180}
+                        height={180}
+                        alt={demo('imageAlt')}
+                        frame="wide"
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="variants" detail="frame=square" fill>
+                    <Image
+                        src={demoImageSrc}
+                        width={180}
+                        height={180}
+                        alt={demo('imageAlt')}
+                        frame="square"
                     />
                 </ShowcaseState>
                 <ShowcaseState state="decorative" detail='alt=""'>

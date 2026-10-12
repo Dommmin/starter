@@ -244,7 +244,7 @@ test('invalid structures are rejected without saving', function (Closure $payloa
     'protocol-relative url' => [fn (array $items) => ['url' => '//evil.com'], 'url'],
     'other scheme' => [fn (array $items) => ['url' => 'ftp://example.com/file'], 'url'],
     'invalid anchor' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'Bad Anchor!'], 'anchor'],
-    'home anchor outside the home sections' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'team'], 'anchor'],
+    'home anchor outside the home sections' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'careers'], 'anchor'],
     'anchor without label' => [fn (array $items) => ['type' => 'anchor', 'url' => null, 'anchor' => 'features', 'label' => ''], 'label'],
     'page without page' => [fn (array $items) => ['type' => 'page', 'url' => null], 'page_id'],
     'url on a group' => [fn (array $items) => ['type' => 'group'], 'url'],

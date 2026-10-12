@@ -11,6 +11,8 @@ enum HomeLinkTarget: string
 {
     /** The contact section of the same page (`#contact`). */
     case Contact = 'contact';
+    /** The portfolio section of the same page (`#portfolio`). */
+    case Portfolio = 'portfolio';
     case Articles = 'articles';
     case Login = 'login';
     case Register = 'register';

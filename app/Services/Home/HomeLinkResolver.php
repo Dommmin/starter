@@ -37,7 +37,7 @@ class HomeLinkResolver
                 HomeLinkTarget::Login => Route::has('login'),
                 HomeLinkTarget::Register => Route::has('register'),
                 HomeLinkTarget::Articles => Route::has('articles.index'),
-                HomeLinkTarget::Contact, HomeLinkTarget::Page => true,
+                HomeLinkTarget::Contact, HomeLinkTarget::Portfolio, HomeLinkTarget::Page => true,
             },
         ));
     }
@@ -66,6 +66,7 @@ class HomeLinkResolver
 
         $url = match ($action->target) {
             HomeLinkTarget::Contact => '#'.HomeSectionAnchor::Contact->value,
+            HomeLinkTarget::Portfolio => '#'.HomeSectionAnchor::Portfolio->value,
             HomeLinkTarget::Articles => $this->urls->url('articles.index', [], $locale),
             HomeLinkTarget::Login => $this->urls->url('login', [], $locale),
             HomeLinkTarget::Register => $this->urls->url('register', [], $locale),

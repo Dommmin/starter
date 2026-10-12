@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Alert, ContactSection } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { store as contactStore } from '@/routes/contact';
@@ -8,9 +8,15 @@ import { store as localizedContactStore } from '@/routes/localized/contact';
 type ContactFormProps = {
     /** Server-issued form state (encrypted render-time token). */
     contactForm: App.Data.Contact.ContactFormData;
+    /** Short label above the heading. */
+    eyebrow?: string;
     /** Section heading; the translated default when omitted. */
     title?: string;
     description?: string | null;
+    /** Supporting content beside the form, see `ContactSection`. */
+    aside?: ReactNode;
+    /** Band background, see `ContactSection`. */
+    tone?: 'default' | 'subtle';
 };
 
 type ContactFormFields = {
@@ -31,8 +37,11 @@ const HONEYPOT_FIELD = 'website';
  */
 export function ContactForm({
     contactForm,
+    eyebrow,
     title,
     description,
+    aside,
+    tone,
 }: ContactFormProps) {
     const { t, locale, defaultLocale } = useTranslation();
     const [isSent, setIsSent] = useState(false);
@@ -79,6 +88,7 @@ export function ContactForm({
 
     return (
         <ContactSection
+            eyebrow={eyebrow}
             title={title ?? t('contact.title')}
             description={
                 description === undefined
@@ -112,6 +122,8 @@ export function ContactForm({
                 value: form.data.website,
                 onChange: (value) => form.setData('website', value),
             }}
+            aside={aside}
+            tone={tone}
             submitLabel={t('contact.submit')}
             isPending={form.processing}
             success={

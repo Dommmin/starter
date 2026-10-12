@@ -256,6 +256,15 @@ declare namespace App {
                           content: App.Data.Home.ContactContentData;
                       }
                     | { type: 'cta'; content: App.Data.Home.CtaContentData }
+                    | {
+                          type: 'portfolio';
+                          content: App.Data.Home.PortfolioContentData;
+                      }
+                    | { type: 'team'; content: App.Data.Home.TeamContentData }
+                    | {
+                          type: 'pricing';
+                          content: App.Data.Home.PricingContentData;
+                      }
                 );
                 export type HomeSectionIndexData = {
                     items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
@@ -643,6 +652,12 @@ declare namespace App {
                 description: string | null;
                 primaryAction: App.Data.Home.HomeActionData | null;
                 secondaryAction: App.Data.Home.HomeActionData | null;
+                imageId: number | null;
+                stats: App.Data.Home.HeroStatData[];
+            };
+            export type HeroStatData = {
+                value: string;
+                label: string;
             };
             export type HomeActionData = {
                 label: string;
@@ -671,6 +686,9 @@ declare namespace App {
                 description: string | null;
                 primaryAction: App.Data.Home.HomeLinkData | null;
                 secondaryAction: App.Data.Home.HomeLinkData | null;
+                image: App.Data.Media.MediaImageData | null;
+                imageAlt: string;
+                stats: App.Data.Home.HeroStatData[];
             };
             export type HomeLatestArticlesData = {
                 title: string | null;
@@ -680,6 +698,36 @@ declare namespace App {
             export type HomeLinkData = {
                 label: string;
                 url: string;
+            };
+            export type HomePortfolioData = {
+                title: string | null;
+                description: string | null;
+                items: App.Data.Home.HomePortfolioItemData[];
+            };
+            export type HomePortfolioItemData = {
+                title: string;
+                category: string | null;
+                description: string | null;
+                image: App.Data.Media.MediaImageData | null;
+                imageAlt: string;
+                url: string | null;
+            };
+            export type HomePricingData = {
+                title: string | null;
+                description: string | null;
+                items: App.Data.Home.HomePricingPlanData[];
+                note: string | null;
+            };
+            export type HomePricingPlanData = {
+                name: string;
+                priceMinor: number | null;
+                currency: string;
+                priceFrom: boolean;
+                period: string | null;
+                description: string | null;
+                features: string[];
+                highlighted: boolean;
+                action: App.Data.Home.HomeLinkData | null;
             };
             export type HomeSectionData = {
                 id: number;
@@ -701,10 +749,70 @@ declare namespace App {
                   }
                 | { type: 'contact'; content: App.Data.Home.ContactContentData }
                 | { type: 'cta'; content: App.Data.Home.HomeCtaData }
+                | {
+                      type: 'portfolio';
+                      content: App.Data.Home.HomePortfolioData;
+                  }
+                | { type: 'team'; content: App.Data.Home.HomeTeamData }
+                | { type: 'pricing'; content: App.Data.Home.HomePricingData }
             );
+            export type HomeTeamData = {
+                title: string | null;
+                description: string | null;
+                items: App.Data.Home.HomeTeamMemberData[];
+            };
+            export type HomeTeamMemberData = {
+                name: string;
+                role: string;
+                bio: string | null;
+                photo: App.Data.Media.MediaImageData | null;
+                photoAlt: string;
+                skills: string[];
+            };
             export type LatestArticlesContentData = {
                 limit: number;
                 title: string | null;
+            };
+            export type PortfolioContentData = {
+                items: App.Data.Home.PortfolioItemData[];
+                title: string | null;
+                description: string | null;
+            };
+            export type PortfolioItemData = {
+                title: string;
+                category: string | null;
+                description: string | null;
+                imageId: number | null;
+                url: string | null;
+            };
+            export type PricingContentData = {
+                items: App.Data.Home.PricingPlanData[];
+                title: string | null;
+                description: string | null;
+                note: string | null;
+            };
+            export type PricingPlanData = {
+                name: string;
+                priceMinor: number | null;
+                currency: string;
+                priceFrom: boolean;
+                period: string | null;
+                description: string | null;
+                features: string[];
+                highlighted: boolean;
+                action: App.Data.Home.HomeActionData | null;
+            };
+            export type TeamContentData = {
+                items: App.Data.Home.TeamMemberData[];
+                title: string | null;
+                description: string | null;
+            };
+            export type TeamMemberData = {
+                name: string;
+                role: string;
+                bio: string | null;
+                photoId: number | null;
+                skills: string[];
             };
             export type TestimonialItemData = {
                 author: string;
@@ -714,6 +822,7 @@ declare namespace App {
             export type TestimonialsContentData = {
                 items: App.Data.Home.TestimonialItemData[];
                 title: string | null;
+                stats: App.Data.Home.HeroStatData[];
             };
         }
         namespace Listing {
@@ -854,6 +963,7 @@ declare namespace App {
             | 'globe';
         export type HomeLinkTarget =
             | 'contact'
+            | 'portfolio'
             | 'articles'
             | 'login'
             | 'register'
@@ -865,7 +975,10 @@ declare namespace App {
             | 'testimonials'
             | 'latest-articles'
             | 'contact'
-            | 'cta';
+            | 'cta'
+            | 'portfolio'
+            | 'team'
+            | 'pricing';
         export type HomeSectionType =
             | 'hero'
             | 'features'
@@ -873,7 +986,10 @@ declare namespace App {
             | 'testimonials'
             | 'latest_articles'
             | 'contact'
-            | 'cta';
+            | 'cta'
+            | 'portfolio'
+            | 'team'
+            | 'pricing';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type MenuItemType =
             | 'page'

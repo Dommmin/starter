@@ -247,6 +247,27 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(int(fields["maxTurns"]), 6)
         self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
 
+    def test_designer_is_read_only_and_follows_the_craft_standard(self):
+        agent = tomllib.loads((ROOT / ".codex/agents/foundation-designer.toml").read_text())
+        self.assertEqual(agent["sandbox_mode"], "read-only")
+        self.assertEqual(agent["approval_policy"], "never")
+        self.assertFalse(agent["agents"]["enabled"])
+        self.assertFalse(agent["mcp_servers"]["laravel-boost"]["enabled"])
+        self.assertNotIn("model", agent)
+        text = (ROOT / ".claude/agents/foundation-designer.md").read_text()
+        front, body = text.split("---", 2)[1:]
+        fields = dict(line.split(": ", 1) for line in front.strip().splitlines())
+        self.assertEqual(set(fields["tools"].split(", ")), {"Read", "Glob", "Grep", "WebSearch", "WebFetch"})
+        self.assertEqual(fields["model"], "inherit")
+        self.assertLessEqual(int(fields["maxTurns"]), 10)
+        self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+        craft = ".agents/skills/foundation-ui/references/design-craft.md"
+        self.assertIn(craft, body)
+        self.assertIn(craft, (ROOT / ".agents/skills/foundation-ui/references/workflow.md").read_text())
+        standard = (ROOT / craft).read_text()
+        for section in ("Anty-wzorce", "Pętla krytyki", "prefers-reduced-motion", "ADR-019"):
+            self.assertIn(section, standard)
+
     def test_parent_keeps_boost_and_delegation_ceiling(self):
         config = tomllib.loads((ROOT / ".codex/config.toml").read_text())
         self.assertEqual(config["agents"]["max_concurrent_threads_per_session"], 2)

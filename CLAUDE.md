@@ -20,7 +20,7 @@ Domyślnie FAST: jeden agent, lokalny odczyt → poprawka → adekwatna weryfika
 
 Po dwóch nieudanych próbach lub przekroczeniu celu FAST nazwij przeszkodę i zmień podejście; nie powtarzaj automatycznie pełnego workflow. Nie obcinaj required CI/review człowieka dla oszczędności czasu. Nowy wariant DS nadal najpierw proponuj. [Szczegóły i konfiguracja](docs/foundation/09-agents-skills-and-workflows.md).
 
-Na start główna sesja realizuje backend/frontend; skonfigurowany `foundation-reviewer` służy do jawnie zleconego review gotowego diffu. Przekaż cel, pliki, AC, patch, raport testów, budżet i warunek zakończenia. Reviewer ma tylko Read/Glob/Grep, nie uruchamia testów i nie deleguje dalej. Wspólny kontrakt znajduje się w sekcji „Kontrakt wykonawczy reviewera” dokumentu 09. Już udzielonej zgody na konkretny zakres nie uzyskuj ponownie.
+Na start główna sesja realizuje backend/frontend; skonfigurowany `foundation-reviewer` służy do jawnie zleconego review gotowego diffu. Przekaż cel, pliki, AC, patch, raport testów, budżet i warunek zakończenia. Reviewer ma tylko Read/Glob/Grep, nie uruchamia testów i nie deleguje dalej. Wspólny kontrakt znajduje się w sekcji „Kontrakt wykonawczy reviewera” dokumentu 09. Już udzielonej zgody na konkretny zakres nie uzyskuj ponownie. Przy nowym ekranie, sekcji publicznej lub redesignie stosuj standard [design-craft](.agents/skills/foundation-ui/references/design-craft.md) (brief → implementacja → pętla krytyki ze screenshotami); read-only `foundation-designer` (Read/Glob/Grep/WebSearch/WebFetch) przygotowuje brief i krytykę, ale nie implementuje ani nie zastępuje akceptacji wizualnej człowieka.
 
 ## Git, commity i hooki
 

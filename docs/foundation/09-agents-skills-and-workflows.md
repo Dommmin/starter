@@ -59,7 +59,7 @@ Pełne obowiązki security/release pozostają w [04](04-ai-sdlc.md). Każdy dele
 | QA/security `foundation-reviewer`   | Konkretne ryzyko albo niezależny przegląd STANDARD/HIGH-RISK | AC, diff i raport testów → findings z reprodukcją/plikami                     | Domyślnie read-only; nie poprawia własnych findings i nie zatwierdza za człowieka |
 | Release `foundation-release`        | Przygotowanie rzeczywistego wydania                          | Manifest i suma archiwum, CI, staging, migracje → checklisty i plan rollbacku | Read-only do artefaktów; bez credentiali i działań produkcyjnych                  |
 
-Nie trzeba tworzyć sześciu procesów ani nawet sześciu plików w P0. Na start główna sesja realizuje backend/frontend zależnie od taska; skonfigurować jednego `foundation-reviewer`. Pozostałe definicje dodawać po powtarzalnym użyciu. Nazwy nie są mechanizmem izolacji: zakaz zapisu wymaga ograniczenia narzędzi/sandboxa, a zakaz dostępu do danych — tożsamości i uprawnień.
+Nie trzeba tworzyć sześciu procesów ani nawet sześciu plików w P0. Na start główna sesja realizuje backend/frontend zależnie od taska; skonfigurować jednego `foundation-reviewer`. Pozostałe definicje dodawać po powtarzalnym użyciu. 2026-10-10: dodano read-only `foundation-designer` (art director: brief i krytyka screenshotów według `.agents/skills/foundation-ui/references/design-craft.md`) po powtarzalnych zastrzeżeniach do jakości UI. Nazwy nie są mechanizmem izolacji: zakaz zapisu wymaga ograniczenia narzędzi/sandboxa, a zakaz dostępu do danych — tożsamości i uprawnień.
 
 ### Delegacja, która ma sens
 

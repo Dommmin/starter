@@ -18,6 +18,13 @@ gotowym diffie wykonawca uruchamia kontrole, a `foundation-reviewer` może
 jednorazowo wykonać read-only review wskazanych AC i plików. Findings wracają
 do tego samego wykonawcy; druga runda review tylko przy nowym ryzyku.
 
+Jakość wizualną i UX określa `.agents/skills/foundation-ui/references/design-craft.md`.
+Przy nowym ekranie, sekcji lub redesignie zapisz najpierw krótki brief
+(charakter, referencje, moment „wow”, mapa sekcji, luki DS) i przejdź pętlę
+krytyki ze screenshotami przed raportem. Przy większym zakresie zleć
+`foundation-designer` brief przed kodem i krytykę screenshotów po nim.
+Lokalna poprawka nie wymaga briefu; wystarczy lista anty-wzorców.
+
 Składaj ekran przez semantyczne props i zamknięte warianty. Motyw obsługują
 tokeny; ekran nie wybiera kolorów ani dark: ręcznie. Uwzględnij loading,
 empty, error, pending i success oraz klawiaturę, focus i etykiety.

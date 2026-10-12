@@ -129,6 +129,16 @@ describe('Login', () => {
         ).toBe(true);
     });
 
+    it('posts to the login endpoint even before hydration, never as a GET', async () => {
+        const container = await render(<Login canResetPassword />);
+        const form = container.querySelector<HTMLFormElement>(
+            'form:has(input[type="password"])',
+        );
+
+        expect(form?.getAttribute('method')).toBe('post');
+        expect(form?.getAttribute('action')).toBe('/login');
+    });
+
     it('moves focus to the first invalid field after a rejected submit', async () => {
         Object.assign(serverErrors, { password: 'Required.', email: 'Bad.' });
         const container = await render(<Login canResetPassword />);

@@ -1,4 +1,5 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import PasskeyVerify from '@/components/passkey-verify';
 import {
@@ -23,16 +24,36 @@ import {
 type Props = {
     status?: string;
     canResetPassword: boolean;
+    /** Local-only one-click administrator login; null in other environments. */
+    devLoginUrl?: string | null;
 };
 
 const FIELD_ORDER = ['email', 'password'] as const;
 
-export default function Login({ status, canResetPassword }: Props) {
+export default function Login({
+    status,
+    canResetPassword,
+    devLoginUrl = null,
+}: Props) {
     const canRegister =
         usePage<{ auth?: { canRegister?: boolean } }>().props.auth
             ?.canRegister ?? false;
     const { t, locale, defaultLocale } = useTranslation();
     const form = useForm({ email: '', password: '', remember: false });
+    const [isDevLoginPending, setIsDevLoginPending] = useState(false);
+
+    function loginAsAdministrator(): void {
+        if (devLoginUrl === null || isDevLoginPending) {
+            return;
+        }
+
+        router.post(
+            devLoginUrl,
+            {},
+            { onFinish: () => setIsDevLoginPending(false) },
+        );
+        setIsDevLoginPending(true);
+    }
 
     function submit(event: FormEvent<HTMLFormElement>): void {
         event.preventDefault();
@@ -49,6 +70,10 @@ export default function Login({ status, canResetPassword }: Props) {
         });
     }
 
+    // Also on the <form>: a submit before hydration posts to the same
+    // endpoint instead of a GET that would put the password in the URL.
+    const formTarget = getLocalizedLoginForm(locale, defaultLocale);
+
     return (
         <>
             <Head title={t('auth.login.title')} />
@@ -63,7 +88,12 @@ export default function Login({ status, canResetPassword }: Props) {
 
                 <PasskeyVerify />
 
-                <form onSubmit={submit} noValidate>
+                <form
+                    method={formTarget.method}
+                    action={formTarget.action}
+                    onSubmit={submit}
+                    noValidate
+                >
                     <Stack gap="default">
                         <TextField
                             id="email"
@@ -121,6 +151,16 @@ export default function Login({ status, canResetPassword }: Props) {
                         </Button>
                     </Stack>
                 </form>
+
+                {devLoginUrl !== null && (
+                    <Button
+                        variant="outline"
+                        isPending={isDevLoginPending}
+                        onClick={loginAsAdministrator}
+                    >
+                        {t('auth.login.devLogin')}
+                    </Button>
+                )}
 
                 {canRegister && (
                     <Text variant="caption" align="center">

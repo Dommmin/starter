@@ -35,6 +35,10 @@ export default function VerifyEmail({ status }: { status?: string }) {
         logoutForm.submit(getLocalizedLogoutRoute(locale, defaultLocale));
     }
 
+    // Also on the <form>: a submit before hydration posts to the same
+    // endpoint instead of falling back to a GET of the current page.
+    const formTarget = getLocalizedVerificationSendForm(locale, defaultLocale);
+
     return (
         <>
             <Head title={t('auth.verifyEmail.title')} />
@@ -52,7 +56,11 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     />
                 )}
 
-                <form onSubmit={resend}>
+                <form
+                    method={formTarget.method}
+                    action={formTarget.action}
+                    onSubmit={resend}
+                >
                     <Button
                         type="submit"
                         variant="secondary"

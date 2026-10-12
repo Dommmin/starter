@@ -39,6 +39,10 @@ export default function ConfirmPassword() {
         });
     }
 
+    // Also on the <form>: a submit before hydration posts to the same
+    // endpoint instead of a GET that would put the password in the URL.
+    const formTarget = getLocalizedPasswordConfirmForm(locale, defaultLocale);
+
     return (
         <>
             <Head title={t('auth.confirmPassword.title')} />
@@ -59,7 +63,12 @@ export default function ConfirmPassword() {
                     separator={t('auth.passkey.orPassword')}
                 />
 
-                <form onSubmit={submit} noValidate>
+                <form
+                    method={formTarget.method}
+                    action={formTarget.action}
+                    onSubmit={submit}
+                    noValidate
+                >
                     <Stack gap="default">
                         <PasswordField
                             id="password"

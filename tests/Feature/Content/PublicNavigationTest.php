@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MenuItemType;
 use App\Enums\MenuLocation;
 use App\Models\Article;
 use App\Models\ArticleTranslation;
@@ -241,15 +242,16 @@ test('the seeder creates default menus once per public locale', function () {
     $this->seed(NavigationMenuSeeder::class);
     $this->seed(NavigationMenuSeeder::class);
 
-    expect(NavigationMenuSeeder::defaults('de', NavigationMenuSeeder::privacyPolicyPageId()))->not->toHaveKey('footer')
-        ->and(NavigationMenuSeeder::defaults('pl', $privacy->id)['footer'][0]['page_id'] ?? null)->toBe($privacy->id);
+    expect(array_column(NavigationMenuSeeder::defaults('de', NavigationMenuSeeder::privacyPolicyPageId())['footer'], 'type'))->toBe([MenuItemType::ArticleIndex])
+        ->and(NavigationMenuSeeder::defaults('pl', $privacy->id)['footer'][1]['page_id'] ?? null)->toBe($privacy->id);
 
     expect(MenuItem::query()->where('location', 'header')->count())->toBe(6)
-        ->and(MenuItem::query()->where('location', 'footer')->pluck('locale')->sort()->values()->all())->toBe(['en', 'pl']);
+        ->and(MenuItem::query()->where('location', 'footer')->pluck('locale')->sort()->values()->all())->toBe(['de', 'en', 'en', 'pl', 'pl']);
 
     $this->get('/pl')->assertInertia(fn (Assert $inertia) => $inertia
         ->where('navigation.header.0.label', __('common.nav.features', [], 'pl'))
         ->where('navigation.header.1.href', url('/pl/articles'))
-        ->where('navigation.footer.0.label', 'privacy pl')
+        ->where('navigation.footer.0.href', url('/pl/articles'))
+        ->where('navigation.footer.1.label', 'privacy pl')
     );
 });

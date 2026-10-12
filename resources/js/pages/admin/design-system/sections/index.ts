@@ -1,6 +1,7 @@
 import { actionsFamily } from './actions';
 import { choiceFieldsFamily } from './choice-fields';
 import { contentMediaFamily } from './content-media';
+import { datesFamily } from './dates';
 import { feedbackFamily } from './feedback';
 import { formsFamily } from './forms';
 import { foundationsFamily } from './foundations';
@@ -21,6 +22,7 @@ export const showcaseFamilies: ShowcaseFamily[] = [
     layoutsFamily,
     textFieldsFamily,
     choiceFieldsFamily,
+    datesFamily,
     contentMediaFamily,
     formsFamily,
     tablesFamily,

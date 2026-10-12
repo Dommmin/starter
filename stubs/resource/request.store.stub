@@ -35,18 +35,20 @@ class Store{{ Model }}Request extends FormRequest
     {
         return {{ storeFieldValues }};
     }
+{{ relationIdsMethod }}
 
     /**
      * Validation of the editable fields, shared with Update{{ Model }}Request.
      *
      * @return array<string, list<mixed>>
      */
-    public static function fieldRules(): array
+    public static function fieldRules({{ ruleParameter }}): array
     {
         return [
 {{ rules }}
         ];
     }
 {{ blankInputsMethod }}
+{{ slugMethod }}
 {{ sanitizeMethod }}
 }

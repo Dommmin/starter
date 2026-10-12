@@ -132,7 +132,9 @@ test('literal React translation keys exist in the English catalog schema', funct
         $messages = array_replace_recursive($messages, $catalog);
     }
 
-    $keys = flattenArray($messages);
+    // Leaf keys plus whole plural groups: `t('group.key', params, count)`
+    // resolves a plural group by count, so the group itself is a valid key.
+    $keys = flattenArray($messages) + flattenTranslationKeys($messages);
 
     foreach (File::allFiles(resource_path('js')) as $sourceFile) {
         if (! in_array($sourceFile->getExtension(), ['ts', 'tsx', 'js', 'jsx'], true)) {
@@ -403,7 +405,6 @@ function reactModuleScopes(): array
         "{$base}/layouts/auth-layout.tsx" => ['auth'],
         "{$base}/layouts/admin-layout.tsx" => ['admin'],
         "{$base}/layouts/settings/layout.tsx" => ['admin'],
-        "{$base}/layouts/app-layout.tsx" => ['admin'],
         // Loaded on the first 423 response of a password-confirmed route.
         "{$base}/components/password-confirmation-dialog.tsx" => ['admin'],
     ];
@@ -418,7 +419,7 @@ function reactModuleScopes(): array
         $name = substr(str_replace("{$base}/pages/", '', $path), 0, -4);
 
         $roots[$path] = match (true) {
-            $name === 'welcome', str_starts_with($name, 'pages/'), str_starts_with($name, 'articles/') => ['public'],
+            $name === 'welcome', str_starts_with($name, 'pages/'), str_starts_with($name, 'articles/'), str_starts_with($name, 'public/') => ['public'],
             str_starts_with($name, 'errors/') => $allScopes,
             str_starts_with($name, 'design-system/') => ['design-system'],
             // Unprefixed /user/confirm-password belongs to the admin area.

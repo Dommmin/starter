@@ -11,6 +11,7 @@ use App\Enums\UserRole;
 use App\Models\User;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\DemoContent;
+use Database\Seeders\DemoUserSeeder;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -22,7 +23,8 @@ use Illuminate\Validation\Rule;
     {--name= : Site name stored in the application settings}
     {--locales= : Comma-separated public languages, e.g. en,pl}
     {--default-locale= : Default public language (one of --locales)}
-    {--accent= : Accent colour (default)}
+    {--enable-registration : Keep self-service sign-up on (it is turned off by default)}
+    {--accent= : Accent colour: default, blue, violet, rose or green}
     {--admin-email= : E-mail address of the first administrator}
     {--admin-name= : Name of the first administrator}
     {--remove-demo : Remove unedited sample content and the sample account}
@@ -37,7 +39,7 @@ class InitProjectCommand extends Command
     /**
      * @var list<string>
      */
-    private const array LOCALE_KEYS = ['APP_PUBLIC_LOCALES', 'APP_PUBLIC_DEFAULT', 'APP_PUBLIC_FALLBACK'];
+    private const array LOCALE_KEYS = ['APP_PUBLIC_LOCALES', 'APP_PUBLIC_DEFAULT', 'APP_PUBLIC_FALLBACK', 'APP_REGISTRATION_ENABLED', 'APP_ACCENT'];
 
     /**
      * Execute the console command.
@@ -65,6 +67,8 @@ class InitProjectCommand extends Command
             'APP_PUBLIC_LOCALES' => implode(',', $input['locales']),
             'APP_PUBLIC_DEFAULT' => $input['default_locale'],
             'APP_PUBLIC_FALLBACK' => $input['default_locale'],
+            'APP_REGISTRATION_ENABLED' => $this->option('enable-registration') ? 'true' : 'false',
+            'APP_ACCENT' => $input['accent']->value,
         ];
 
         $emailOwner = $existingAdministrator === null
@@ -87,7 +91,7 @@ class InitProjectCommand extends Command
         $this->table(['Step', 'State', 'Planned change', 'Action'], [
             $this->brandRow($siteName, $input['name']),
             $this->localeRow($envChanges),
-            ['accent', AccentColor::Default->value, 'default — no change', self::SKIP],
+            ['accent', $input['accent']->value, 'APP_ACCENT (with the other .env lines)', self::SKIP],
             $existingAdministrator !== null
                 ? ['admin', 'an administrator exists', 'none', self::SKIP]
                 : ['admin', 'no administrator', 'create '.$input['admin_email'].' (admin) + invitation', 'create 1'],
@@ -102,7 +106,7 @@ class InitProjectCommand extends Command
 
         $this->applyBrand($siteName, $input['name']);
         $this->applyLocales($envFile, $envValues, $envChanges);
-        $this->line('Accent: default — no change.');
+        $this->line('Accent: '.$input['accent']->value.' (APP_ACCENT, written with the other .env lines).');
 
         $administrator = $existingAdministrator;
 
@@ -241,13 +245,13 @@ class InitProjectCommand extends Command
     }
 
     /**
-     * An administrator other than the seeded sample account.
+     * An administrator other than the seeded sample accounts.
      */
     private function existingAdministrator(): ?User
     {
         return User::query()
             ->where('role', UserRole::Admin->value)
-            ->where('email', '!=', DemoContent::USER_EMAIL)
+            ->whereNotIn('email', [DemoContent::USER_EMAIL, ...array_keys(DemoUserSeeder::USERS)])
             ->orderBy('id')
             ->first();
     }

@@ -11,6 +11,20 @@ make doctor
 
 `setup` tworzy `.env` tylko przy jego braku, buduje obraz, instaluje `composer.lock` i `package-lock.json`, generuje brakujący APP_KEY, wykonuje migracje, wgrywa idempotentne dane demo (`db:seed`: konto `test@example.com` / `password`, konta, media, strony, artykuły, FAQ, wiadomości, menu, sekcje strony głównej) i uruchamia cały stack. Kolejne wykonanie zachowuje klucz i dane, nie duplikując demo. Pierwsze pobranie obrazów wymaga internetu i może potrwać kilka minut. Setup nie importuje starego SQLite.
 
+### Konta i dane demo (tylko `APP_ENV=local`)
+
+Wszystkie konta demo mają lokalne hasło `password`; adresy są syntetyczne (`example.com`) i działają tylko w lokalnym stacku.
+
+| Konto | Rola | Do czego |
+| --- | --- | --- |
+| `test@example.com` | admin | Pełny panel, ustawienia, użytkownicy |
+| `mfa@example.com` | admin z 2FA | Logowanie z kodem TOTP: sekret `JBSWY3DPEHPK3PXP` (np. `oathtool --totp -b JBSWY3DPEHPK3PXP`) lub kod odzyskiwania `demo-recovery-01`…`04` |
+| `editor@example.com` | editor | Treści bez zarządzania użytkownikami i ustawieniami |
+| `user@example.com` | bez roli | Ustawienia konta, brak dostępu do panelu |
+| `piotr.zak@example.com` | bez roli, niezweryfikowane | Ekran weryfikacji e-maila |
+
+Seed wypełnia każdy ekran: co najmniej 16 rekordów na listach panelu (2 strony), statusy szkic/zaplanowany/opublikowany, media quarantine/clean/rejected, wiadomości pending/sent/failed, treści en/pl/de z brakującymi tłumaczeniami, długie tytuły i znaki wielobajtowe, przekierowania 301 starych slugów (`PageSeeder::REDIRECTS`, `ArticleSeeder::REDIRECTS`), menu z podmenu w trzech językach, sekcje strony głównej w innej kolejności (en) i z ukrytymi sekcjami (de) oraz dziennik zdarzeń. Sekret 2FA i kody są syntetyczne; `app:init-project --remove-demo` usuwa nieedytowane dane demo.
+
 Domyślne adresy: aplikacja `http://localhost:8080`, Vite/HMR `http://localhost:5173`, skrzynka Mailpit `http://localhost:8025`. Używaj `localhost`, aby origin HMR i cookies były spójne. Lokalny HTTP na localhost obsługuje secure-context APIs przeglądarki; certyfikaty i domeny Herda nie są potrzebne.
 
 ## Start nowego projektu
@@ -20,7 +34,7 @@ make init-project ARGS='--dry-run'
 make init-project ARGS='--name="Acme" --locales=pl,en --default-locale=pl --admin-email=owner@example.test --admin-name="Owner" --remove-demo --write-env'
 ```
 
-`app:init-project` (tylko `local`/`testing`) pyta o brakujące wartości, a z `--no-interaction` kończy się błędem bez zmian. Kolejno: nazwa strony trafia do ustawień aplikacji (bez zapisu `APP_NAME`), `APP_PUBLIC_LOCALES/DEFAULT/FALLBACK` są wypisywane do wklejenia albo — z `--write-env` i potwierdzeniem (`--force` je pomija) — zapisywane w `.env` po kopii `.env.backup-*` (0600); następnie `make restart`. Pierwszy administrator dostaje zaproszenie mailem (kolejka), `--remove-demo` usuwa nieedytowane treści przykładowe i konto `test@example.com`. `--dry-run` pokazuje plan bez żadnych zapisów; ponowne uruchomienie pomija wykonane kroki.
+`app:init-project` (tylko `local`/`testing`) pyta o brakujące wartości, a z `--no-interaction` kończy się błędem bez zmian. Kolejno: nazwa strony trafia do ustawień aplikacji (bez zapisu `APP_NAME`), `APP_PUBLIC_LOCALES/DEFAULT/FALLBACK` są wypisywane do wklejenia albo — z `--write-env` i potwierdzeniem (`--force` je pomija) — zapisywane w `.env` po kopii `.env.backup-*` (0600); następnie `make restart`. Pierwszy administrator dostaje zaproszenie mailem (kolejka), `--remove-demo` usuwa nieedytowane treści przykładowe i konto `test@example.com`. Kolor akcentu (`--accent=default|blue|violet|rose|green`) trafia do `.env` jako `APP_ACCENT` i działa po `make restart` oraz przebudowie assetów; presety (tokeny light/dark obu powierzchni) żyją w `resources/css/app.css`, a `tests/Unit/AccentContrastTest.php` pilnuje kontrastu AA. Samodzielna rejestracja użytkowników jest domyślnie wyłączana (`APP_REGISTRATION_ENABLED=false` trafia do tych samych linii `.env`; `--enable-registration` zostawia ją włączoną): bez roli konto nie ma dostępu do panelu, więc strona firmowa nie powinna jej oferować. `--dry-run` pokazuje plan bez żadnych zapisów; ponowne uruchomienie pomija wykonane kroki.
 
 ## Codzienna praca
 
@@ -58,7 +72,7 @@ Nie uruchamiaj równolegle starego `composer dev`, Herda ani hostowego Vite dla 
 
 ## Commity, CI i deploy
 
-Przed pierwszym commitem zainstaluj hostowy [Gitleaks 8.30.1](https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1), następnie uruchom `make hooks`. Hooki są wersjonowane w `.githooks`, a PHP/Node uruchamiają w kontenerze; nie wykonują automatycznego formatowania ani stagingu. Commit i tytuł PR mają format `type(scope): opis`, z małymi literami typu i limitem 72 znaków. Dozwolone typy: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`, `revert`.
+Przed pierwszym commitem zainstaluj hostowy [Gitleaks 8.30.1](https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1), następnie uruchom `make hooks`. Hooki są wersjonowane w `.githooks`, a PHP/Node uruchamiają w kontenerze (`.githooks/app-run`: z UID/GID hosta jak `make`, a w worktree z zamontowanym katalogiem `.git` głównego repo); nie wykonują automatycznego formatowania ani stagingu. Commit i tytuł PR mają format `type(scope): opis`, z małymi literami typu i limitem 72 znaków. Dozwolone typy: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`, `revert`.
 
 Push pozostaje ręczny. GitHub Actions uruchamia CI dla pushy i PR do `develop` oraz `main`; wymagane checki to `commit-convention`, `secrets` i `quality`. Workflow **Deploy** uruchamia wyłącznie człowiek ręcznie. Buduje, testuje i przekazuje do Deployer jeden artefakt z manifestem SHA-256. Nie dodawaj do niego sekretów.
 

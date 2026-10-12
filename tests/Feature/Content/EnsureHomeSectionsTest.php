@@ -2,6 +2,7 @@
 
 use App\Actions\Home\EnsureHomeSections;
 use App\Data\Home\HeroContentData;
+use App\Enums\HomeLinkTarget;
 use App\Enums\HomeSectionType;
 use App\Models\HomeSection;
 use Database\Seeders\HomeSectionSeeder;
@@ -18,7 +19,7 @@ test('every public locale gets one section of every type and a second run create
     $hero->save();
 
     expect($ensure->handle())->toBe(0)
-        ->and(HomeSection::query()->count())->toBe(21)
+        ->and(HomeSection::query()->count())->toBe(3 * count(HomeSectionType::cases()))
         ->and($hero->fresh()?->content->title)->toBe('Edited')
         ->and($hero->fresh()?->enabled)->toBeTrue()
         ->and(HomeSection::query()->where('locale', 'en')->orderBy('position')->pluck('type')->all())
@@ -46,13 +47,15 @@ test('the demo seeder rebuilds the former landing page and is idempotent', funct
     $this->seed(HomeSectionSeeder::class);
     $this->seed(HomeSectionSeeder::class);
 
-    expect(HomeSection::query()->count())->toBe(21);
+    expect(HomeSection::query()->count())->toBe(3 * count(HomeSectionType::cases()));
 
     $enabled = HomeSection::query()->where('locale', 'en')->where('enabled', true)->orderBy('position')->pluck('type')->all();
-    expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::Contact, HomeSectionType::Cta]);
+    expect($enabled)->toBe([HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::LatestArticles, HomeSectionType::Contact, HomeSectionType::Cta]);
 
     $plHero = HomeSection::query()->where('locale', 'pl')->where('type', HomeSectionType::Hero)->sole();
     expect($plHero->content->title)->toBe(__('public.landing.heroTitle', [], 'pl'));
+    expect($plHero->content->primaryAction?->target)->toBe(HomeLinkTarget::Contact)
+        ->and($plHero->content->secondaryAction?->target)->toBe(HomeLinkTarget::Articles);
 });
 
 test('the demo definition covers every type and recognises untouched demo sections', function () {

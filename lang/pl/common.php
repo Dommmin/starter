@@ -35,6 +35,33 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => 'Podmenu: :label',
     ],
+    'cookies' => [
+        'title' => 'Szanujemy Twoją prywatność',
+        'description' => 'Niezbędne pliki cookie pozwalają stronie działać. Za Twoją zgodą użyjemy też narzędzi, które pomagają nam ulepszać serwis. Decyzję zmienisz w każdej chwili w stopce strony.',
+        'policy' => 'Dowiedz się więcej',
+        'acceptAll' => 'Akceptuj wszystkie',
+        'rejectAll' => 'Odrzuć',
+        'settings' => 'Ustawienia',
+        'dialogTitle' => 'Ustawienia plików cookie',
+        'dialogDescription' => 'Wybierz, na które kategorie się zgadzasz. Niezbędne pliki cookie są zawsze włączone.',
+        'save' => 'Zapisz wybór',
+        'close' => 'Zamknij',
+        'footerLink' => 'Ustawienia cookies',
+        'categories' => [
+            'necessary' => [
+                'label' => 'Niezbędne',
+                'description' => 'Utrzymują sesję, chronią formularze i zapamiętują motyw. Bez nich strona nie działa poprawnie.',
+            ],
+            'analytics' => [
+                'label' => 'Analityczne',
+                'description' => 'Pomagają nam zrozumieć, które treści są czytane. Statystyki są anonimowe i nie śledzą Cię między stronami.',
+            ],
+            'marketing' => [
+                'label' => 'Marketingowe',
+                'description' => 'Pozwalają mierzyć skuteczność reklam i pokazywać dopasowane treści w innych serwisach.',
+            ],
+        ],
+    ],
     'footer' => [
         'links' => 'Informacje',
         'contact' => 'Kontakt',
@@ -77,7 +104,29 @@ return [
         'removed' => 'Usunięto :label',
         'limit' => ':count z :max elementów',
     ],
+    'multiSelect' => [
+        'noResults' => 'Brak pasujących opcji',
+        'remove' => 'Usuń :label',
+        'selected' => [
+            'zero' => 'Nie wybrano żadnej opcji',
+            'one' => 'Wybrano :count opcję',
+            'few' => 'Wybrano :count opcje',
+            'many' => 'Wybrano :count opcji',
+            'other' => 'Wybrano :count opcji',
+        ],
+    ],
     'table' => [
+        'bulkActions' => 'Akcje zbiorcze',
+        'selectAll' => 'Zaznacz wszystkie wiersze na tej stronie',
+        'selectRow' => 'Zaznacz: :label',
+        'clearSelection' => 'Wyczyść zaznaczenie',
+        'selected' => [
+            'zero' => 'Nie zaznaczono żadnego wiersza',
+            'one' => 'Zaznaczono :count',
+            'few' => 'Zaznaczono :count',
+            'many' => 'Zaznaczono :count',
+            'other' => 'Zaznaczono :count',
+        ],
         'sortBy' => 'Sortuj według',
         'sortAscending' => ':column (rosnąco)',
         'sortDescending' => ':column (malejąco)',

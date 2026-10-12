@@ -18,6 +18,7 @@ return [
         'noAccount' => 'Nie masz konta?',
         'signUp' => 'Zarejestruj się',
         'usePasskey' => 'Zaloguj się kluczem dostępu (Passkey)',
+        'devLogin' => 'Zaloguj jako administrator (dev)',
     ],
     'register' => [
         'title' => 'Rejestracja',

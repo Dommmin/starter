@@ -148,7 +148,7 @@ export default function AdminArticlesIndex() {
                             <Stack gap="none">
                                 <Link
                                     href={articlesEdit(row.id)}
-                                    tone="primary"
+                                    tone="default"
                                 >
                                     {rowTitle(row)}
                                 </Link>
@@ -189,7 +189,7 @@ export default function AdminArticlesIndex() {
                     },
                     {
                         key: 'locales',
-                        priority: 'optional',
+                        priority: 'card',
                         label: t('admin.articles.columnLocales'),
                         render: (row) =>
                             row.locales.map(localeName).join(', ') || '—',

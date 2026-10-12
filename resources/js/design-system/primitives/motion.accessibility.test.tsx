@@ -175,6 +175,23 @@ describe('BackToTop', () => {
         expect(wrapper.hasAttribute('inert')).toBe(false);
     });
 
+    it('rises above a bottom bar covering the viewport bottom', async () => {
+        const bar = document.createElement('section');
+        bar.setAttribute('data-bottom-bar', '');
+        vi.spyOn(bar, 'getBoundingClientRect').mockReturnValue({
+            top: window.innerHeight - 200,
+        } as DOMRect);
+        document.body.append(bar);
+        const container = await render(<BackToTop />);
+        const wrapper = container.firstElementChild as HTMLElement;
+
+        expect(wrapper.style.bottom).toContain('200px');
+
+        bar.remove();
+        await scrollTo(window.innerHeight * 2);
+        expect(wrapper.style.bottom).toBe('');
+    });
+
     it('scrolls up and moves focus to the start of the content', async () => {
         const main = document.createElement('main');
         main.id = 'main-content';

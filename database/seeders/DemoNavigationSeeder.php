@@ -12,10 +12,11 @@ use Illuminate\Database\Seeder;
 
 /**
  * Local sample menu items appended after the default menus of
- * {@see NavigationMenuSeeder}: a group with a nested submenu (page, article
- * and external link), an external link opened in a new tab and a footer
- * link to an article. Idempotent: an item already present (same menu,
- * top level, type and label) is skipped with its children.
+ * {@see NavigationMenuSeeder} in every public language: a page link, a
+ * group with a nested submenu (pages, article and external link), an
+ * external link opened in a new tab and a footer column of links; German
+ * gets shorter menus of its own. Idempotent: an item already present (same
+ * menu, top level, type and label) is skipped with its children.
  */
 class DemoNavigationSeeder extends Seeder
 {
@@ -24,7 +25,7 @@ class DemoNavigationSeeder extends Seeder
      *
      * @var list<string>
      */
-    public const array LOCALES = ['en', 'pl'];
+    public const array LOCALES = ['en', 'pl', 'de'];
 
     /**
      * Seeded top-level items of one locale keyed by location. `page` and
@@ -34,24 +35,59 @@ class DemoNavigationSeeder extends Seeder
      */
     public static function definitions(string $locale): array
     {
-        $polish = $locale === 'pl';
+        $label = fn (string $en, string $pl): string => $locale === 'pl' ? $pl : $en;
+
+        if ($locale === 'de') {
+            return [
+                MenuLocation::Header->value => [
+                    ['type' => MenuItemType::Page, 'label' => 'Leistungen', 'page' => 'services'],
+                    [
+                        'type' => MenuItemType::Group,
+                        'label' => 'Mehr',
+                        'children' => [
+                            ['type' => MenuItemType::Page, 'label' => 'Über uns', 'page' => 'about'],
+                            ['type' => MenuItemType::Article, 'label' => 'Versionshinweise', 'article' => 'release-notes'],
+                        ],
+                    ],
+                ],
+                MenuLocation::Footer->value => [
+                    [
+                        'type' => MenuItemType::Group,
+                        'label' => 'Unternehmen',
+                        'children' => [
+                            ['type' => MenuItemType::Page, 'label' => 'Leistungen', 'page' => 'services'],
+                            ['type' => MenuItemType::Page, 'label' => 'Impressum', 'page' => 'imprint'],
+                        ],
+                    ],
+                ],
+            ];
+        }
 
         return [
             MenuLocation::Header->value => [
+                ['type' => MenuItemType::Page, 'label' => $label('Services', 'Usługi'), 'page' => 'services'],
                 [
                     'type' => MenuItemType::Group,
-                    'label' => $polish ? 'Więcej' : 'More',
+                    'label' => $label('More', 'Więcej'),
                     'children' => [
-                        ['type' => MenuItemType::Page, 'label' => $polish ? 'O nas' : 'About us', 'page' => 'about'],
-                        ['type' => MenuItemType::Article, 'label' => $polish ? 'Studium przypadku' : 'Case study', 'article' => 'case-study'],
+                        ['type' => MenuItemType::Page, 'label' => $label('About us', 'O nas'), 'page' => 'about'],
+                        ['type' => MenuItemType::Page, 'label' => $label('Pricing', 'Cennik'), 'page' => 'pricing'],
+                        ['type' => MenuItemType::Article, 'label' => $label('Case study', 'Studium przypadku'), 'article' => 'case-study'],
                         ['type' => MenuItemType::External, 'label' => 'Laravel', 'url' => 'https://laravel.com', 'open_in_new_tab' => true],
                     ],
                 ],
                 ['type' => MenuItemType::External, 'label' => 'GitHub', 'url' => 'https://github.com', 'open_in_new_tab' => true],
             ],
             MenuLocation::Footer->value => [
-                ['type' => MenuItemType::Page, 'label' => $polish ? 'Regulamin' : 'Terms of service', 'page' => 'terms'],
-                ['type' => MenuItemType::Article, 'label' => $polish ? 'Nasza historia' : 'Our history', 'article' => 'history'],
+                [
+                    'type' => MenuItemType::Group,
+                    'label' => $label('Company', 'Firma'),
+                    'children' => [
+                        ['type' => MenuItemType::Page, 'label' => $label('Terms of service', 'Regulamin'), 'page' => 'terms'],
+                        ['type' => MenuItemType::Article, 'label' => $label('Our history', 'Nasza historia'), 'article' => 'history'],
+                        ['type' => MenuItemType::Page, 'label' => $label('How we work', 'Jak pracujemy'), 'page' => 'how-we-work'],
+                    ],
+                ],
             ],
         ];
     }

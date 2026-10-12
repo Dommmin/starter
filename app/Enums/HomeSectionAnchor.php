@@ -15,4 +15,7 @@ enum HomeSectionAnchor: string
     case LatestArticles = 'latest-articles';
     case Contact = 'contact';
     case Cta = 'cta';
+    case Portfolio = 'portfolio';
+    case Team = 'team';
+    case Pricing = 'pricing';
 }

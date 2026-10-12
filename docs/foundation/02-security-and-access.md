@@ -52,7 +52,7 @@ Stosujemy aktualną edycję [OWASP Top 10:2025](https://owasp.org/Top10/2025/). 
 
 ## Auth, sesje i urządzenia
 
-- Hasła: minimum 15 i maksimum 128 znaków, z małą i wielką literą, cyfrą oraz symbolem; menedżery haseł i wklejanie są dozwolone. Produkcja odrzuca hasło obecne w wycieku przez `Password::uncompromised()`; zapytanie korzysta z modelu k-anonimowości. Nie wymuszać sztucznych cyklicznych zmian; zmiana przy kompromitacji. Używać hashera Laravel, parametry sprawdzić pomiarem obciążenia. Nie implementować własnej kryptografii.
+- Hasła: minimum 8 i maksimum 128 znaków (decyzja właściciela D11 z 2026-10-12, zgodna z `Password::defaults()`), z małą i wielką literą, cyfrą oraz symbolem; menedżery haseł i wklejanie są dozwolone. Produkcja odrzuca hasło obecne w wycieku przez `Password::uncompromised()`; zapytanie korzysta z modelu k-anonimowości. Nie wymuszać sztucznych cyklicznych zmian; zmiana przy kompromitacji. Używać hashera Laravel, parametry sprawdzić pomiarem obciążenia. Nie implementować własnej kryptografii.
 - Rate limiting startowo: login 5 prób/min dla kombinacji znormalizowany identyfikator + IP oraz limit IP; reset 3/15 min dla identyfikatora i limit globalny; TOTP 5/min dla wyzwania/sesji; kontakt 5/10 min/IP plus budżet globalny. To propozycje do testu NAT/DoS, nie domyślne wartości Laravel.
 - Unikać trwałej blokady po kilku próbach, bo umożliwia DoS na cudze konto. Stosować narastające opóźnienie i czasowe ograniczenia; ręczne zawieszenie konta osobną operacją z audytem.
 - Reset/rejestracja zwracają ogólny komunikat i zbliżone zachowanie czasowe dla istniejącego i nieistniejącego adresu. Dostarczenie asynchroniczne nie powinno ujawniać istnienia konta. Token resetu jednorazowy, wygasa; po resecie unieważnienie pozostałych sesji.

@@ -25,5 +25,7 @@ class DashboardOverviewData extends Data
         public ?ContactCountsData $contact,
         public ?int $quarantinedMedia,
         public ?array $recentActivity,
+        public ?PublishingData $publishing = null,
+        public ?AttentionData $attention = null,
     ) {}
 }

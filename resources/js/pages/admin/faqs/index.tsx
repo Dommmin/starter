@@ -107,7 +107,7 @@ export default function AdminFaqsIndex() {
                         label: t('admin.faqs.fields.question'),
                         sortable: true,
                         render: (row) => (
-                            <Link href={edit(row.id)} tone="primary">
+                            <Link href={edit(row.id)} tone="default">
                                 {rowTitle(row)}
                             </Link>
                         ),

@@ -1,9 +1,14 @@
 import { usePasskeyRegister } from '@laravel/passkeys/react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+    Alert,
+    Button,
+    Inline,
+    Stack,
+    Surface,
+    Text,
+    TextField,
+} from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 
 type Props = {
@@ -59,56 +64,56 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
     };
 
     if (!isSupported) {
-        return (
-            <div className="text-muted-foreground text-sm">
-                {t('auth.passkey.notSupported')}
-            </div>
-        );
+        return <Text tone="muted">{t('auth.passkey.notSupported')}</Text>;
     }
 
     if (!showForm) {
         return (
-            <Button onClick={() => setShowForm(true)}>
-                {t('auth.passkey.addPasskey')}
-            </Button>
+            <Stack gap="none" align="start">
+                <Button onClick={() => setShowForm(true)}>
+                    {t('auth.passkey.addPasskey')}
+                </Button>
+            </Stack>
         );
     }
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="border-border bg-muted/50 space-y-4 rounded-lg border p-4"
-        >
-            <div className="grid gap-2">
-                <Label htmlFor="passkey-name">
-                    {t('auth.passkey.nameLabel')}
-                </Label>
-                <Input
-                    id="passkey-name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t('auth.passkey.namePlaceholder')}
-                    className="border-foreground/20 mt-1 block w-full"
-                    autoFocus
-                />
-                <p className="text-muted-foreground text-xs">
-                    {t('auth.passkey.nameHelp')}
-                </p>
-            </div>
+        <Surface tone="subtle" padding="compact" border>
+            <form onSubmit={handleSubmit}>
+                <Stack gap="default">
+                    <TextField
+                        id="passkey-name"
+                        name="passkey-name"
+                        label={t('auth.passkey.nameLabel')}
+                        value={name}
+                        onChange={setName}
+                        placeholder={t('auth.passkey.namePlaceholder')}
+                        description={t('auth.passkey.nameHelp')}
+                        autoFocus
+                    />
 
-            {error && <InputError message={error} />}
+                    {error && <Alert tone="danger" title={error} />}
 
-            <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading || !name.trim()}>
-                    {isLoading
-                        ? t('auth.passkey.registering')
-                        : t('auth.passkey.registerPasskey')}
-                </Button>
-                <Button type="button" variant="ghost" onClick={handleCancel}>
-                    {t('auth.passkey.cancel')}
-                </Button>
-            </div>
-        </form>
+                    <Inline gap="tight">
+                        <Button
+                            type="submit"
+                            isPending={isLoading}
+                            disabled={!name.trim()}
+                        >
+                            {isLoading
+                                ? t('auth.passkey.registering')
+                                : t('auth.passkey.registerPasskey')}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={handleCancel}
+                        >
+                            {t('auth.passkey.cancel')}
+                        </Button>
+                    </Inline>
+                </Stack>
+            </form>
+        </Surface>
     );
 }

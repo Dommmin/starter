@@ -5,10 +5,24 @@ namespace Database\Seeders;
 /**
  * Rich text documents (the editor's JSON) for sample pages and articles:
  * a short one-paragraph body or a long one with headings, lists and a quote,
- * in Polish or English (other locales use English copy).
+ * in Polish, German or English (other locales use English copy).
  */
 final class DemoDocument
 {
+    /**
+     * Body of a sample translation: the long document when requested or when
+     * there is no summary to show (so no body merely repeats its title),
+     * otherwise one paragraph with the summary.
+     *
+     * @return array<string, mixed>
+     */
+    public static function for(string $locale, string $title, ?string $summary, bool $long): array
+    {
+        return $long || $summary === null
+            ? self::long($locale, $summary ?? $title)
+            : self::short($summary);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -22,7 +36,11 @@ final class DemoDocument
      */
     public static function long(string $locale, string $lead): array
     {
-        $copy = $locale === 'pl' ? self::POLISH : self::ENGLISH;
+        $copy = match ($locale) {
+            'pl' => self::POLISH,
+            'de' => self::GERMAN,
+            default => self::ENGLISH,
+        };
 
         return [
             'type' => 'doc',
@@ -77,6 +95,21 @@ final class DemoDocument
         'summary' => 'Summary',
         'summaryText' => 'Come back to this article when you prepare the next publication.',
         'bold' => 'Find more in the documentation:',
+    ];
+
+    /**
+     * @var array{why: string, whyText: string, bullets: list<string>, how: string, steps: list<string>, quote: string, summary: string, summaryText: string, bold: string}
+     */
+    private const array GERMAN = [
+        'why' => 'Warum es wichtig ist',
+        'whyText' => 'Gut vorbereitete Inhalte helfen Besuchern, schnell Antworten zu finden. Das zeigt die Erfahrung eines Teams, das seit Jahren kleine Websites für Kunden in ganz Europa umsetzt.',
+        'bullets' => ['Kurze Absätze und klare Zwischenüberschriften', 'Bilder mit Alternativtext', 'Links, die ihr Ziel beschreiben statt „hier klicken“'],
+        'how' => 'So fangen Sie an',
+        'steps' => ['Seitenstruktur planen', 'Texte in allen Sprachen vorbereiten', 'Veröffentlichen und die Vorschau auf dem Handy prüfen'],
+        'quote' => '„Die beste Website ist eine, die keine Erklärung braucht“ — Małgorzata Źdźbło, Redakteurin',
+        'summary' => 'Zusammenfassung',
+        'summaryText' => 'Kommen Sie auf diesen Artikel zurück, wenn Sie die nächste Veröffentlichung vorbereiten.',
+        'bold' => 'Mehr dazu in der Dokumentation:',
     ];
 
     /**

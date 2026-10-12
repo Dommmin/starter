@@ -16,6 +16,7 @@ return new class extends Migration
 {{ columns }}
             $table->timestamps();
         });
+{{ pivotTables }}
     }
 
     /**
@@ -23,6 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+{{ dropPivotTables }}
         Schema::dropIfExists('{{ table }}');
     }
 };

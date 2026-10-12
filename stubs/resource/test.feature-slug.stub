@@ -1,0 +1,13 @@
+test('a blank slug is derived from the {{ titleField }} and a malformed or taken slug is rejected', function () {
+    $editor = User::factory()->editor()->create();
+    {{ Model }}::factory(){{ ownedByEditor }}->create(['slug' => 'taken-slug']);
+
+    $this->actingAs($editor)->post(route('admin.{{ kebabPlural }}.store'), {{ variable }}Payload(['{{ titleColumn }}' => 'Spring Sale 2026', 'slug' => '']))
+        ->assertSessionHasNoErrors();
+    expect({{ Model }}::query()->where('slug', 'spring-sale-2026')->exists())->toBeTrue();
+
+    $this->actingAs($editor)->post(route('admin.{{ kebabPlural }}.store'), {{ variable }}Payload(['slug' => 'Not A Slug']))
+        ->assertSessionHasErrors(['slug']);
+    $this->actingAs($editor)->post(route('admin.{{ kebabPlural }}.store'), {{ variable }}Payload(['slug' => 'taken-slug']))
+        ->assertSessionHasErrors(['slug']);
+});

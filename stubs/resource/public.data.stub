@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Data\Content;
+
+use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+/**
+ * Props of the public `public/{{ kebabPlural }}/show` screen. `bodyHtml` is
+ * sanitized server-side; `canonical` is the default-locale URL.
+ */
+#[TypeScript]
+class Public{{ Model }}Data extends Data
+{
+    public function __construct(
+        public string $title,
+        public ?string $summary,
+        public ?string $bodyHtml,
+        public string $canonical,
+        public string $listUrl,
+        public string $locale,
+        public ?string $updatedAt,
+    ) {}
+}

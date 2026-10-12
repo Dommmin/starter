@@ -64,6 +64,8 @@ return [
         'orManual' => 'albo wpisz klucz konfiguracji ręcznie',
         'setupKey' => 'Klucz konfiguracji',
         'copySetupKey' => 'Kopiuj klucz konfiguracji',
+        'setupKeyCopied' => 'Skopiowano',
+        'loadingSetup' => 'Wczytywanie danych konfiguracji',
         'qrCode' => 'Kod QR dla aplikacji uwierzytelniającej',
         'code' => 'Kod uwierzytelniający',
         'errorTitle' => 'Coś poszło nie tak',

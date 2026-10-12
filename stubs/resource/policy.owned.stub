@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\{{ Model }};
+use App\Models\User;
+
+/**
+ * {{ pluralLabel }} belong to the user who created them: panel roles (admin
+ * and editor) list and create their own records, and only the owner may
+ * open, change or delete one. Administrators are not exempt.
+ */
+class {{ Model }}Policy
+{
+    /**
+     * Determine whether the user can list their own {{ pluralLower }} in the panel.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
+     * Determine whether the user can create {{ pluralLower }}.
+     */
+    public function create(User $user): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
+     * Determine whether the user can edit the {{ singularLower }} (owner only).
+     */
+    public function update(User $user, {{ Model }} ${{ variable }}): bool
+    {
+        return $user->canAccessAdminPanel() && $user->id === ${{ variable }}->user_id;
+    }
+
+    /**
+     * Determine whether the user can permanently delete the {{ singularLower }} (owner only).
+     */
+    public function delete(User $user, {{ Model }} ${{ variable }}): bool
+    {
+        return $user->canAccessAdminPanel() && $user->id === ${{ variable }}->user_id;
+    }
+{{ exportMethod }}
+}

@@ -5,6 +5,7 @@ import {
     Card,
     CardContent,
     ConfirmDialog,
+    PageHeader,
     RecordDetails,
     Stack,
     Text,
@@ -53,11 +54,10 @@ export default function AdminContactShow() {
         <>
             <Head title={t('admin.contact.showTitle')} />
 
-            <Stack gap="default">
-                <RecordDetails
+            <Stack gap="relaxed">
+                <PageHeader
                     title={t('admin.contact.showTitle')}
                     description={t('admin.contact.showDescription')}
-                    emptyValuePlaceholder="—"
                     actions={
                         can.retry || can.delete ? (
                             <>
@@ -81,6 +81,11 @@ export default function AdminContactShow() {
                             </>
                         ) : undefined
                     }
+                />
+
+                <RecordDetails
+                    title={contactMessage.name}
+                    emptyValuePlaceholder="—"
                     items={[
                         {
                             id: 'name',

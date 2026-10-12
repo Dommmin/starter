@@ -61,16 +61,37 @@ test('admin start screen renders with authenticated user context', function () {
             ->where('auth.user.email', $user->email)
             ->where('auth.user.two_factor_enabled', true)
             ->whereNot('auth.user.email_verified_at', null)
-            ->has('system')
-            ->where('system.appName', config('app.name'))
-            ->has('security')
-            ->where('security.requireTwoFactorForAdmin', (bool) config('fortify.require_two_factor_for_admin', false))
-            ->has('modules')
-            ->has('adminSettings')
-            ->has('i18n.messages.admin.platformBadge')
-            ->has('i18n.messages.admin.systemStatus')
-            ->has('i18n.messages.admin.platformSettings')
+            ->missing('system')
+            ->has('systemWarnings')
+            ->has('i18n.messages.admin.overview.attention')
         );
+});
+
+test('administrators find the technical status on its own page', function () {
+    $admin = User::factory()->admin()->withTwoFactor()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.system.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/system')
+            ->where('system.appName', config('app.name'))
+            ->where('security.requireTwoFactorForAdmin', (bool) config('fortify.require_two_factor_for_admin', false))
+            ->has('modules', 4)
+            ->where('modules.2', ['key' => 'media', 'status' => 'active'])
+            ->has('i18n.messages.admin.systemStatus')
+        );
+});
+
+test('editors see neither the technical status nor platform warnings', function () {
+    config(['fortify.require_two_factor_for_admin' => false]);
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->get(route('admin.system.index'))->assertForbidden();
+    $this->actingAs($editor)
+        ->get(route('admin.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('systemWarnings', null));
 });
 
 test('the home page is publicly accessible', function () {

@@ -77,6 +77,30 @@ Liveness: proces żyje; readiness: minimalne zależności gotowe z krótkim time
 
 Wszystkie progi wymagają pomiaru i uzgodnienia godzin dyżuru. Alert musi mieć odbiorcę, link do runbooka, środowisko i release; brak alarmu bez właściciela. Test P0: kontrolowany błąd, zatrzymanie testowego workera i potwierdzenie dostarczenia alertu. APM dodatkowy dopiero gdy logi/metryki nie wyjaśniają problemu.
 
+## Checklista ops dla człowieka (D12)
+
+Wykonuje właściciel repo lub operator, nie agent. Agent nie ma uprawnień administratora repo ani credentiali hostingu. Każdy punkt odhacz z datą i osobą w opisie PR, który aktualizuje ten dokument.
+
+Ochrona gałęzi (GitHub → Settings → Rules → Rulesets, cel `main` i `develop`):
+
+- [ ] Zmiana tylko przez PR; bez force push i usuwania gałęzi; bypass tylko dla jawnie wymienionego właściciela.
+- [ ] Wymagany co najmniej 1 approval, unieważnienie approval po nowym commicie, rozwiązane wątki przed merge.
+- [ ] Required status checks z `.github/workflows/ci.yml` (nazwy jobów): `commit-convention`, `secrets`, `quality`, `tests-pgsql`, `generator-smoke`, `e2e`, a po scaleniu fali 1 także `audit`. Dla `main` włączone „require branches to be up to date”.
+- [ ] Sprawdzone na testowym PR: merge jest zablokowany przy czerwonym checku i bez approval. Sam wpis w ustawieniach nie jest dowodem.
+- [ ] Environment `production` z `deploy.yml` ma required reviewer i prevent self-review, o ile plan GitHub to wspiera; w przeciwnym razie obowiązuje ręczny deploy człowieka (sekcja „GitHub Actions i Deployer”).
+
+Restore drill:
+
+- [ ] Lokalnie: `make backup`, potem `make restore-drill`; zapisany czas odtworzenia, liczby rekordów i wynik logowania testowego.
+- [ ] Na hoście docelowym: odtworzenie kopii spoza hosta do izolowanej bazy i storage; czas porównany z RTO ≤4 h, wiek kopii z RPO ≤24 h.
+- [ ] Wynik (data, rozmiar, czas, odstępstwa) zapisany w runbooku; termin następnego drillu w kalendarzu operatora.
+
+Zewnętrzny uptime monitor:
+
+- [ ] Usługa spoza hostingu aplikacji co 1 min sprawdza stronę główną i `/health/ready`, alarm po 2 nieudanych próbach.
+- [ ] Alert trafia do co najmniej 2 odbiorców kanałem innym niż mail z aplikacji (Q7); dostarczenie potwierdzone kontrolowanym wyłączeniem.
+- [ ] Monitor wygaśnięcia TLS (<14 dni) i wieku backupu (>26 h) skonfigurowany w tym narzędziu lub w hostingu.
+
 ## Checklista przed wdrożeniem
 
 - [ ] Człowiek zatwierdził manifest/sumę archiwum, migracje i automatyczny plan cofnięcia; approval nadal dotyczy tego artefaktu.

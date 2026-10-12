@@ -6,6 +6,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventIndexingOfPrivateAreas;
 use App\Http\Middleware\RequirePasswordConfirmation;
 use App\Http\Middleware\ResolveLocalization;
+use App\Services\Consent\CookieConsent;
 use App\Services\Localization\LocalizationManager;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // hreflang and sitemap URLs always use the configured APP_URL host.
         $middleware->trustHosts();
 
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', CookieConsent::COOKIE]);
 
         $middleware->web(append: [
             HandleAppearance::class,

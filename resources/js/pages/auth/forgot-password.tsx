@@ -39,6 +39,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
         });
     }
 
+    // Also on the <form>: a submit before hydration posts to the same
+    // endpoint instead of a GET that would put the password in the URL.
+    const formTarget = getLocalizedForgotPasswordForm(locale, defaultLocale);
+
     return (
         <>
             <Head title={t('auth.forgotPassword.title')} />
@@ -51,7 +55,12 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <Stack gap="default">
                 {status && <Alert tone="success" title={status} />}
 
-                <form onSubmit={submit} noValidate>
+                <form
+                    method={formTarget.method}
+                    action={formTarget.action}
+                    onSubmit={submit}
+                    noValidate
+                >
                     <Stack gap="default">
                         <TextField
                             id="email"

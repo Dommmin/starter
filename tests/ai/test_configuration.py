@@ -33,11 +33,22 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('git diff --cached --check', lefthook)
         self.assertIn('npx commitlint --edit {1}', lefthook)
         self.assertNotIn('stage_fixed: true', lefthook)
+        # In lefthook `dir/**/*` skips files directly in `dir`; use `dir/**`.
+        self.assertNotIn('/**/*', lefthook)
 
         pre_commit = (ROOT / ".githooks/pre-commit").read_text()
         self.assertIn('gitleaks git --staged --redact', pre_commit)
         self.assertIn('npx lefthook run pre-commit', pre_commit)
         self.assertNotIn('--no-verify', pre_commit)
+
+        commit_msg = (ROOT / ".githooks/commit-msg").read_text()
+        app_run = ROOT / ".githooks/app-run"
+        self.assertIn('/app-run" npx lefthook run pre-commit', pre_commit)
+        self.assertIn('/app-run" npx lefthook run commit-msg', commit_msg)
+        self.assertTrue(os.access(app_run, os.X_OK))
+        self.assertIn('export LOCAL_UID LOCAL_GID', app_run.read_text())
+        self.assertIn('--volume "$common_dir:$common_dir"', app_run.read_text())
+        self.assertEqual(app_run.read_text().count('docker compose run --rm --no-deps --env GIT_OPTIONAL_LOCKS=0 '), 2)
 
     def test_ci_covers_develop_main_and_manual_deploy(self):
         package = json.loads((ROOT / "package.json").read_text())
@@ -235,6 +246,27 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(fields["model"], "inherit")
         self.assertEqual(int(fields["maxTurns"]), 6)
         self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+
+    def test_designer_is_read_only_and_follows_the_craft_standard(self):
+        agent = tomllib.loads((ROOT / ".codex/agents/foundation-designer.toml").read_text())
+        self.assertEqual(agent["sandbox_mode"], "read-only")
+        self.assertEqual(agent["approval_policy"], "never")
+        self.assertFalse(agent["agents"]["enabled"])
+        self.assertFalse(agent["mcp_servers"]["laravel-boost"]["enabled"])
+        self.assertNotIn("model", agent)
+        text = (ROOT / ".claude/agents/foundation-designer.md").read_text()
+        front, body = text.split("---", 2)[1:]
+        fields = dict(line.split(": ", 1) for line in front.strip().splitlines())
+        self.assertEqual(set(fields["tools"].split(", ")), {"Read", "Glob", "Grep", "WebSearch", "WebFetch"})
+        self.assertEqual(fields["model"], "inherit")
+        self.assertLessEqual(int(fields["maxTurns"]), 10)
+        self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+        craft = ".agents/skills/foundation-ui/references/design-craft.md"
+        self.assertIn(craft, body)
+        self.assertIn(craft, (ROOT / ".agents/skills/foundation-ui/references/workflow.md").read_text())
+        standard = (ROOT / craft).read_text()
+        for section in ("Anty-wzorce", "Pętla krytyki", "prefers-reduced-motion", "ADR-019"):
+            self.assertIn(section, standard)
 
     def test_parent_keeps_boost_and_delegation_ceiling(self):
         config = tomllib.loads((ROOT / ".codex/config.toml").read_text())

@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from 'react';
+import { CenteredLayout } from '@/design-system/primitives';
 
 /**
  * Centered auth column. The brand link lives in the header (`BrandLogo`
@@ -6,14 +7,5 @@ import type { PropsWithChildren } from 'react';
  * of the SSR HTML.
  */
 export default function AuthSimpleLayout({ children }: PropsWithChildren) {
-    return (
-        <main
-            id="main-content"
-            className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10"
-        >
-            <div className="flex w-full max-w-sm flex-col gap-8">
-                {children}
-            </div>
-        </main>
-    );
+    return <CenteredLayout>{children}</CenteredLayout>;
 }

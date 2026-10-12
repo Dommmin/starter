@@ -84,7 +84,7 @@ test('validation error on localized login post redirects back to localized login
     $response->assertSessionHasErrors('email');
 });
 
-test('users authenticating from localized login redirect to admin panel', function () {
+test('users authenticating from localized login land on the localized home page', function () {
     $user = User::factory()->create();
 
     $response = $this->post('/pl/login', [
@@ -93,7 +93,7 @@ test('users authenticating from localized login redirect to admin panel', functi
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('admin.index', absolute: false));
+    $response->assertRedirect('/pl');
 });
 
 test('two factor challenge redirects to localized challenge route', function () {

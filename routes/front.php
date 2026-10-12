@@ -13,6 +13,8 @@ Route::get('/articles/{slug}', [PublicArticleController::class, 'show'])
     ->where('slug', PageTranslationRules::SLUG_ROUTE_PATTERN)
     ->name('articles.show');
 
+// app:make-resource: public routes
+
 // Not `/contact`: first path segments of routes are reserved page slugs, and
 // editors should be able to publish a CMS page called "contact".
 Route::post('/contact-messages', [ContactMessageController::class, 'store'])

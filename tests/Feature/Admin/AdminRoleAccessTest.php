@@ -90,3 +90,14 @@ test('creating a user through registration input ignores the role field', functi
 
     expect($user->refresh()->role)->toBeNull();
 });
+
+test('the panel access flag follows the role', function (?string $state, bool $expected) {
+    $user = $state === null ? User::factory()->create() : User::factory()->{$state}()->create();
+
+    $this->actingAs($user)->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page->where('auth.can.accessAdminPanel', $expected));
+})->with([
+    'no role' => [null, false],
+    'editor' => ['editor', true],
+    'admin' => ['admin', true],
+]);

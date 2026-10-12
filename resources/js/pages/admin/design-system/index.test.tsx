@@ -288,4 +288,27 @@ describe('DesignSystemShowcase', () => {
             form?.querySelectorAll('[role="alert"] li').length,
         ).toBeGreaterThanOrEqual(5);
     });
+
+    it('shows the repeater demo with an image field in each item', async () => {
+        const section = await renderFamily('adm-08');
+        const pickers = Array.from(
+            section.querySelectorAll('[role="group"]'),
+        ).filter((group) =>
+            group.textContent?.includes(
+                'admin.designSystem.forms.projectImageLabel',
+            ),
+        );
+
+        expect(pickers).toHaveLength(2);
+        expect(pickers[0].querySelector('img')).not.toBeNull();
+        expect(pickers[1].querySelector('img')).toBeNull();
+    });
+
+    it('shows the wide and square image frames', async () => {
+        const section = await renderFamily('adm-06');
+        const captions = section.textContent ?? '';
+
+        expect(captions).toContain('frame=wide');
+        expect(captions).toContain('frame=square');
+    });
 });

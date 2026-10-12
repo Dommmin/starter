@@ -37,8 +37,10 @@ wykonuje tych operacji na `main` ani `develop`. Push pozostaje ręczną operacj�
 człowieka. Przed zgłoszeniem sukcesu sprawdź SHA, staged diff i status oraz
 podaj wykonane i niewykonane kontrole.
 
-Główna sesja realizuje backend/frontend. Na start dostępny jest tylko
-`foundation-reviewer`, do jawnie zleconego review gotowego diffu.
+Główna sesja realizuje backend/frontend. Delegaci: `foundation-reviewer`
+do jawnie zleconego review gotowego diffu oraz read-only `foundation-designer`
+(art director: brief przed nowym ekranem i krytyka screenshotów po nim;
+standard w `.agents/skills/foundation-ui/references/design-craft.md`).
 Przekaż cel, pliki, AC, patch, dowody testów, budżet i warunek zakończenia;
 nie przekazuj całej historii. Szczegóły i wspólny kontrakt:
 [agenci i przepływy](docs/foundation/09-agents-skills-and-workflows.md).

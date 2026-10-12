@@ -42,7 +42,7 @@ test('email can be verified', function () {
     Event::assertDispatched(Verified::class);
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
-    $response->assertRedirect(route('admin.index', absolute: false).'?verified=1');
+    $response->assertRedirect('/?verified=1');
 });
 
 test('email is not verified with invalid hash', function () {
@@ -87,7 +87,7 @@ test('verified user is redirected to the administration panel from verification 
     $response = $this->actingAs($user)->get(route('verification.notice'));
 
     Event::assertNotDispatched(Verified::class);
-    $response->assertRedirect(route('admin.index', absolute: false));
+    $response->assertRedirect('/');
 });
 
 test('already verified user visiting verification link is redirected without firing event again', function () {
@@ -102,7 +102,7 @@ test('already verified user visiting verification link is redirected without fir
     );
 
     $this->actingAs($user)->get($verificationUrl)
-        ->assertRedirect(route('admin.index', absolute: false).'?verified=1');
+        ->assertRedirect('/?verified=1');
 
     Event::assertNotDispatched(Verified::class);
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();

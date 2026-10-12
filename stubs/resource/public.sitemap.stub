@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Actions\Seo;
+
+use App\Contracts\Seo\SitemapSource;
+use App\Models\{{ Model }};
+use App\Services\Localization\LocalizationConfig;
+use App\Services\Localization\LocalizedUrlGenerator;
+use DateTimeInterface;
+
+/**
+ * Sitemap entries of the public {{ pluralLower }}: the list and every published
+ * record, at their canonical default-locale URLs (one-language content, so no
+ * hreflang alternates).
+ */
+class {{ Plural }}SitemapSource implements SitemapSource
+{
+    public function __construct(
+        private readonly LocalizationConfig $config,
+        private readonly LocalizedUrlGenerator $urls,
+    ) {}
+
+    /**
+     * @return iterable<array{loc: string, alternates: array<string, string>, lastmod: string|null}>
+     */
+    public function entries(): iterable
+    {
+        $locale = $this->config->getPublicDefault();
+
+        yield ['loc' => $this->urls->url('{{ kebabPlural }}.index', [], $locale), 'alternates' => [], 'lastmod' => null];
+
+        foreach ({{ Model }}::query()->where('published', true)->orderBy('id')->lazy(500) as ${{ variable }}) {
+            yield [
+                'loc' => $this->urls->url('{{ kebabPlural }}.show', ['slug' => ${{ variable }}->slug], $locale),
+                'alternates' => [],
+                'lastmod' => ${{ variable }}->updated_at?->format(DateTimeInterface::ATOM),
+            ];
+        }
+    }
+}

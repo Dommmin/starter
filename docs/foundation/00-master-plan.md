@@ -8,7 +8,9 @@ Skrócić drogę od briefu klienta do bezpiecznej, utrzymywalnej aplikacji. Fund
 
 Docelowe mierniki: nowy developer uruchamia projekt w 30 minut z dokumentacji; kolejny projekt osiąga staging w jeden dzień po ustaleniu wymagań; krytyczna aktualizacja dociera do utrzymywanych klientów w uzgodnionym SLA. Są to cele do sprawdzenia na pilotażu, nie wyniki obecnego projektu.
 
-## Fakty z katalogu i ograniczenia analizy
+## Fakty z katalogu i ograniczenia analizy (historyczne, 2026-09-09)
+
+> Sekcja opisuje pusty katalog z dnia powstania planu i nie odpowiada obecnemu repozytorium. Aktualny stan stacku, modułów i komend: [STATE.md](STATE.md).
 
 Sprawdzono `/Users/domin/projects/starter`: `pwd`, pełną listę wpisów `ls -la` oraz `git status --short`. Katalog był pusty; Git odpowiedział, że nie jest to repozytorium. Brak nawet plików ukrytych projektu. Próba wyszukania przez `rg` wykazała też brak tego programu w środowisku; lista katalogu potwierdziła brak materiału do dalszego przeszukiwania.
 

@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { HomeSections } from '@/components/home/home-sections';
-import { PublicChrome, Seo } from '@/design-system/primitives';
+import { BackToTop, PublicChrome, Seo } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 
 type WelcomeProps = App.Data.Content.WelcomePageData;
@@ -48,6 +48,7 @@ export default function Welcome() {
                     contactForm={contactForm}
                     fallbackTitle={seo.siteName}
                 />
+                <BackToTop />
             </PublicChrome>
         </>
     );

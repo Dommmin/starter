@@ -1,0 +1,56 @@
+<?php
+
+use App\Models\{{ Model }};
+use Inertia\Testing\AssertableInertia as Assert;
+
+test('the public list shows only published {{ pluralLower }}, newest first', function () {
+    $older = {{ Model }}::factory()->create(['published' => true]);
+    $newer = {{ Model }}::factory()->create(['published' => true]);
+    {{ Model }}::factory()->create(['published' => false]);
+
+    $this->get(route('{{ kebabPlural }}.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('public/{{ kebabPlural }}/index')
+            ->has('items', 2)
+            ->where('items.0.url', route('{{ kebabPlural }}.show', ['slug' => $newer->slug]))
+            ->where('items.1.url', route('{{ kebabPlural }}.show', ['slug' => $older->slug]))
+            ->where('pagination.total', 2)
+        );
+});
+
+test('a public list page beyond the last page is not found', function () {
+    $this->get(route('{{ kebabPlural }}.index', ['page' => 2]))->assertNotFound();
+});
+
+test('a published {{ singularLower }} renders with its canonical default-locale URL', function () {
+    ${{ variable }} = {{ Model }}::factory()->create(['published' => true, 'slug' => 'visible-record']);
+
+    $this->get(route('{{ kebabPlural }}.show', ['slug' => 'visible-record']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('public/{{ kebabPlural }}/show')
+            ->where('title', ${{ variable }}->{{ titleColumn }})
+            ->where('canonical', route('{{ kebabPlural }}.show', ['slug' => 'visible-record']))
+            ->where('listUrl', route('{{ kebabPlural }}.index'))
+        );
+});
+
+test('unpublished and unknown {{ pluralLower }} are the same 404', function () {
+    {{ Model }}::factory()->create(['published' => false, 'slug' => 'hidden-record']);
+
+    $this->get(route('{{ kebabPlural }}.show', ['slug' => 'hidden-record']))->assertNotFound();
+    $this->get(route('{{ kebabPlural }}.show', ['slug' => 'no-such-record']))->assertNotFound();
+});
+
+test('the sitemap lists the public list and published {{ pluralLower }} but never drafts', function () {
+    {{ Model }}::factory()->create(['published' => true, 'slug' => 'in-sitemap']);
+    {{ Model }}::factory()->create(['published' => false, 'slug' => 'not-in-sitemap']);
+
+    $sitemap = $this->get('/sitemap.xml')->assertOk()->getContent();
+
+    expect($sitemap)
+        ->toContain('<loc>'.route('{{ kebabPlural }}.index').'</loc>')
+        ->toContain('<loc>'.route('{{ kebabPlural }}.show', ['slug' => 'in-sitemap']).'</loc>')
+        ->not->toContain('not-in-sitemap');
+});

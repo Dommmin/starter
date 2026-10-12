@@ -95,9 +95,27 @@ afterEach(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
     document.body.replaceChildren();
+    vi.unstubAllGlobals();
 });
 
 describe('AdminUsersIndex', () => {
+    it('shows the e-mail on the mobile card, where admins tell users apart', async () => {
+        vi.stubGlobal(
+            'matchMedia',
+            vi.fn((query: string) => ({
+                matches: true,
+                media: query,
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+            })),
+        );
+        const container = await render(<AdminUsersIndex />);
+
+        const card = container.querySelector('li > article');
+        expect(card).not.toBeNull();
+        expect(card?.querySelector('dd')?.textContent).toBe('ada@example.com');
+    });
+
     it('clears search and verified filters back to their defaults', async () => {
         const container = await render(<AdminUsersIndex />);
 

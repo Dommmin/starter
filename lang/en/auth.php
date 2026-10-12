@@ -18,6 +18,7 @@ return [
         'noAccount' => "Don't have an account?",
         'signUp' => 'Sign up',
         'usePasskey' => 'Sign in with Passkey',
+        'devLogin' => 'Log in as administrator (dev)',
     ],
     'register' => [
         'title' => 'Register',

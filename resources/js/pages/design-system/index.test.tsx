@@ -225,6 +225,18 @@ describe('PublicDesignSystemShowcase', () => {
         expect(section.textContent).toContain('home.faqEmpty');
     });
 
+    it('shows the key figures demo with 2, 3 and 4 items and renders nothing for an empty list', async () => {
+        const section = await renderFamily('web-02');
+        const counts = Array.from(section.querySelectorAll('dl')).map(
+            (list) => list.querySelectorAll('dt').length,
+        );
+
+        expect(counts).toEqual([4, 3, 2, 3]);
+        expect(section.textContent).toContain(
+            'admin.designSystem.web.landing.statsEmptyNote',
+        );
+    });
+
     it('opens the mobile navigation demo with a submenu and a group heading', async () => {
         const section = await renderFamily('web-01');
         const trigger = section.querySelector<HTMLButtonElement>(

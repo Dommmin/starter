@@ -52,6 +52,10 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
         hidePasswordLabel: t('auth.passwordField.hide'),
     };
 
+    // Also on the <form>: a submit before hydration posts to the same
+    // endpoint instead of a GET that would put the password in the URL.
+    const formTarget = getLocalizedResetPasswordForm(locale, defaultLocale);
+
     return (
         <>
             <Head title={t('auth.resetPassword.title')} />
@@ -61,7 +65,12 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                 description={t('auth.resetPassword.subheading')}
             />
 
-            <form onSubmit={submit} noValidate>
+            <form
+                method={formTarget.method}
+                action={formTarget.action}
+                onSubmit={submit}
+                noValidate
+            >
                 <Stack gap="default">
                     <TextField
                         id="email"

@@ -26,9 +26,10 @@ class Update{{ Model }}Request extends FormRequest
      */
     public function rules(): array
     {
+{{ ruleRecord }}
         return [
             'updated_at' => ['required', 'string', 'date'],
-            ...Store{{ Model }}Request::fieldRules(),
+            ...Store{{ Model }}Request::fieldRules({{ ruleArgument }}),
         ];
     }
 
@@ -41,6 +42,7 @@ class Update{{ Model }}Request extends FormRequest
     {
         return {{ updateFieldValues }};
     }
+{{ relationIdsMethod }}
 
     public function expectedUpdatedAt(): string
     {

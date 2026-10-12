@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'plausible' => [
+        // Privacy-friendly analytics, loaded only after the visitor allows
+        // the analytics category of the cookie banner (config/consent.php).
+        'domain' => env('PLAUSIBLE_DOMAIN'),
+        'script_url' => env('PLAUSIBLE_SCRIPT_URL', 'https://plausible.io/js/script.js'),
+    ],
+
 ];

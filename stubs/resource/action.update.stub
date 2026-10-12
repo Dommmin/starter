@@ -15,12 +15,13 @@ class Update{{ Model }}
     /**
      * @param  array<string, mixed>  $attributes  Validated field values.
      * @param  string  $expectedUpdatedAt  Version the form was loaded with.
+{{ relationParamDoc }}
      *
      * @throws ValidationException When the record changed in the meantime (`conflict`).
      */
-    public function handle({{ Model }} ${{ variable }}, array $attributes, string $expectedUpdatedAt): {{ Model }}
+    public function handle({{ Model }} ${{ variable }}, array $attributes, string $expectedUpdatedAt{{ relationParameter }}): {{ Model }}
     {
-        return DB::transaction(function () use (${{ variable }}, $attributes, $expectedUpdatedAt): {{ Model }} {
+        return DB::transaction(function () use (${{ variable }}, $attributes, $expectedUpdatedAt{{ relationUse }}): {{ Model }} {
             $locked = {{ Model }}::query()->whereKey(${{ variable }}->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->updated_at?->getTimestamp() !== Carbon::parse($expectedUpdatedAt)->getTimestamp()) {
@@ -32,6 +33,7 @@ class Update{{ Model }}
             $locked->fill($attributes)
                 ->forceFill(['updated_at' => $locked->freshTimestamp()])
                 ->save();
+{{ syncRelations }}
 
             return $locked;
         });

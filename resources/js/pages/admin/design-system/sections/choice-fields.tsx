@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import {
     CheckboxField,
+    CheckboxGroupField,
+    MultiSelectField,
     RadioGroupField,
     SelectField,
     Stack,
     SwitchField,
+    type CheckboxGroupOption,
+    type MultiSelectOption,
     type RadioGroupOption,
     type SelectFieldOption,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { multiSelectLabels } from '@/lib/multi-select-labels';
 import {
     ShowcaseComponent,
     ShowcaseState,
@@ -85,6 +90,42 @@ function ChoiceFieldsSection() {
             disabled: true,
         },
     ];
+    const groups = useDemoChoices<string[]>(
+        {
+            groupValue: ['email', 'sms'],
+            groupDisabled: ['email'],
+            groupLong: ['email'],
+        },
+        [],
+    );
+    const channelOptions: CheckboxGroupOption[] = [
+        { value: 'email', label: demo('channelEmail') },
+        {
+            value: 'sms',
+            label: demo('channelSms'),
+            description: demo('channelSmsDescription'),
+        },
+        { value: 'push', label: demo('channelPush'), disabled: true },
+    ];
+    const offices = useDemoChoices<string[]>(
+        {
+            officesValue: ['waw', 'krk'],
+            officesDisabled: ['waw'],
+            officesError: ['waw', 'krk', 'gdn', 'wro'],
+            officesLong: ['long', 'waw'],
+        },
+        [],
+    );
+    const officeOptions: MultiSelectOption[] = [
+        { value: 'waw', label: demo('officeWarsaw') },
+        { value: 'krk', label: demo('officeKrakow') },
+        { value: 'gdn', label: demo('officeGdansk') },
+        { value: 'wro', label: demo('officeWroclaw') },
+        { value: 'poz', label: demo('officePoznan'), disabled: true },
+        { value: 'ber', label: demo('officeBerlin') },
+        { value: 'long', label: demo('officeLong') },
+    ];
+    const officeLabels = multiSelectLabels(t);
     const plainVisibilityOptions: RadioGroupOption[] = visibilityOptions.map(
         (option) => ({ value: option.value, label: option.label }),
     );
@@ -352,6 +393,213 @@ function ChoiceFieldsSection() {
                         options={longRadioOptions}
                         value={choices.value('radioLong')}
                         onChange={choices.onChange('radioLong')}
+                    />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="CheckboxGroupField"
+                layout="wide"
+                notApplicable={[
+                    'placeholder',
+                    'readonly',
+                    'indeterminate',
+                    'pending',
+                    'loading',
+                    'empty',
+                ]}
+            >
+                <ShowcaseState state="default" fill>
+                    <CheckboxGroupField
+                        name="demo-group-default"
+                        label={demo('channelsLabel')}
+                        options={channelOptions}
+                        value={groups.value('groupDefault')}
+                        onChange={groups.onChange('groupDefault')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withValue" fill>
+                    <CheckboxGroupField
+                        name="demo-group-value"
+                        label={demo('channelsLabel')}
+                        options={channelOptions}
+                        value={groups.value('groupValue')}
+                        onChange={groups.onChange('groupValue')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withDescription" fill>
+                    <CheckboxGroupField
+                        name="demo-group-description"
+                        label={demo('channelsLabel')}
+                        description={demo('channelsDescription')}
+                        options={channelOptions}
+                        value={groups.value('groupDescription')}
+                        onChange={groups.onChange('groupDescription')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="error" fill>
+                    <CheckboxGroupField
+                        name="demo-group-error"
+                        label={demo('channelsLabel')}
+                        error={demo('channelsError')}
+                        required
+                        options={channelOptions}
+                        value={groups.value('groupError')}
+                        onChange={groups.onChange('groupError')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="disabled" fill>
+                    <CheckboxGroupField
+                        name="demo-group-disabled"
+                        label={demo('channelsLabel')}
+                        disabled
+                        options={channelOptions}
+                        value={groups.value('groupDisabled')}
+                        onChange={groups.onChange('groupDisabled')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="required" fill>
+                    <CheckboxGroupField
+                        name="demo-group-required"
+                        label={demo('channelsLabel')}
+                        required
+                        options={channelOptions}
+                        value={groups.value('groupRequired')}
+                        onChange={groups.onChange('groupRequired')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="longContent" fill>
+                    <CheckboxGroupField
+                        name="demo-group-long"
+                        label={demo('longChannelsLabel')}
+                        description={demo('longDescription')}
+                        options={channelOptions}
+                        value={groups.value('groupLong')}
+                        onChange={groups.onChange('groupLong')}
+                    />
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="MultiSelectField"
+                layout="wide"
+                notApplicable={[
+                    'readonly',
+                    'indeterminate',
+                    'pending',
+                    'loading',
+                ]}
+            >
+                <ShowcaseState state="default" fill>
+                    <MultiSelectField
+                        name="demo-offices-default"
+                        label={demo('officesLabel')}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesDefault')}
+                        onChange={offices.onChange('officesDefault')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="placeholder" fill>
+                    <MultiSelectField
+                        name="demo-offices-placeholder"
+                        label={demo('officesLabel')}
+                        placeholder={demo('officesPlaceholder')}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesPlaceholder')}
+                        onChange={offices.onChange('officesPlaceholder')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withValue" fill>
+                    <MultiSelectField
+                        name="demo-offices-value"
+                        label={demo('officesLabel')}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesValue')}
+                        onChange={offices.onChange('officesValue')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="withDescription" fill>
+                    <MultiSelectField
+                        name="demo-offices-description"
+                        label={demo('officesLabel')}
+                        description={demo('officesDescription')}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesDescription')}
+                        onChange={offices.onChange('officesDescription')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="error" fill>
+                    <MultiSelectField
+                        name="demo-offices-error"
+                        label={demo('officesLabel')}
+                        error={demo('officesError')}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesError')}
+                        onChange={offices.onChange('officesError')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="disabled" fill>
+                    <MultiSelectField
+                        name="demo-offices-disabled"
+                        label={demo('officesLabel')}
+                        disabled
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesDisabled')}
+                        onChange={offices.onChange('officesDisabled')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="required" fill>
+                    <MultiSelectField
+                        name="demo-offices-required"
+                        label={demo('officesLabel')}
+                        required
+                        max={3}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesRequired')}
+                        onChange={offices.onChange('officesRequired')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState
+                    state="variants"
+                    detail={demo('officesMaxDetail')}
+                    fill
+                >
+                    <MultiSelectField
+                        name="demo-offices-max"
+                        label={demo('officesLabel')}
+                        max={2}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesValue')}
+                        onChange={offices.onChange('officesValue')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="empty" fill>
+                    <MultiSelectField
+                        name="demo-offices-empty"
+                        label={demo('officesLabel')}
+                        options={[]}
+                        labels={officeLabels}
+                        value={offices.value('officesEmpty')}
+                        onChange={offices.onChange('officesEmpty')}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="longContent" fill>
+                    <MultiSelectField
+                        name="demo-offices-long"
+                        label={demo('longOfficesLabel')}
+                        description={demo('longDescription')}
+                        options={officeOptions}
+                        labels={officeLabels}
+                        value={offices.value('officesLong')}
+                        onChange={offices.onChange('officesLong')}
                     />
                 </ShowcaseState>
             </ShowcaseComponent>

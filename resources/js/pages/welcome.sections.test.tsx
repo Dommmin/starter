@@ -47,10 +47,15 @@ const initialPage = {
             availableLocales: [],
             messages: {
                 home: {
+                    latestArticlesTitle: 'Latest articles',
                     latestArticlesEmpty: 'No articles yet.',
                     allArticles: 'All articles',
                     readMore: 'Read article: :title',
                     faqEmpty: 'No questions yet.',
+                    viewProject: 'View project: :title',
+                    priceFrom: 'from :price',
+                    priceOnRequest: 'Quote on request',
+                    recommended: 'Recommended',
                 },
                 contact: {
                     title: 'Default contact title',
@@ -77,6 +82,9 @@ const sections: Section[] = [
             description: 'Hero description',
             primaryAction: { label: 'Write to us', url: '#contact' },
             secondaryAction: null,
+            image: null,
+            imageAlt: '',
+            stats: [],
         },
     },
     {
@@ -108,6 +116,7 @@ const sections: Section[] = [
         content: {
             title: 'People say',
             items: [{ author: 'Ada', role: 'Engineer', quote: 'Great kit.' }],
+            stats: [{ value: '4.9/5', label: 'Average rating' }],
         },
     },
     {
@@ -202,6 +211,8 @@ describe('HomeSections', () => {
             'Why?',
             'Great kit.',
             'Engineer',
+            '4.9/5',
+            'Average rating',
             'Launch',
             'Talk to us',
             'Ready?',
@@ -251,6 +262,11 @@ describe('HomeSections', () => {
 
         expect(container.textContent).toContain('No questions yet.');
         expect(container.textContent).toContain('No articles yet.');
+        expect(
+            Array.from(container.querySelectorAll('h2')).map(
+                (heading) => heading.textContent,
+            ),
+        ).toContain('Latest articles');
 
         const empty = await render([]);
         expect(empty.textContent).toBe('Starter site');
@@ -299,5 +315,194 @@ describe('HomeSections', () => {
         expect(main.className).toContain('bg-primary');
         expect(extra.textContent).toBe('Articles');
         expect(extra.className).not.toContain('bg-primary');
+    });
+
+    it('renders the hero image eagerly beside the copy and its figures below', async () => {
+        const container = await render([
+            {
+                ...sections[0],
+                type: 'hero',
+                content: {
+                    eyebrow: null,
+                    title: 'Hero title',
+                    description: null,
+                    primaryAction: null,
+                    secondaryAction: null,
+                    image: {
+                        sources: [],
+                        src: '/media/hero.jpg',
+                        srcset: '/media/hero.jpg 1200w',
+                        width: 1200,
+                        height: 800,
+                    },
+                    imageAlt: 'Our studio',
+                    stats: [{ value: '300+', label: 'Projects' }],
+                },
+            },
+        ]);
+
+        const image = container.querySelector('#hero img');
+        expect(image?.getAttribute('alt')).toBe('Our studio');
+        expect(image?.getAttribute('loading')).toBe('eager');
+        expect(container.querySelector('#hero dl dt')?.textContent).toBe(
+            'Projects',
+        );
+        // The counting figure keeps its final value readable to assistive technology.
+        expect(container.querySelector('#hero dl dd')?.textContent).toContain(
+            '300+',
+        );
+    });
+
+    it('renders portfolio projects with category, thumbnail and an external link', async () => {
+        const container = await render([
+            {
+                id: 9,
+                type: 'portfolio',
+                anchor: 'portfolio',
+                content: {
+                    title: 'Our work',
+                    description: null,
+                    items: [
+                        {
+                            title: 'Shop',
+                            category: 'E-commerce',
+                            description: 'Online store',
+                            image: {
+                                sources: [],
+                                src: '/media/shop.jpg',
+                                srcset: '/media/shop.jpg 800w',
+                                width: 800,
+                                height: 450,
+                            },
+                            imageAlt: 'Shop home page',
+                            url: 'https://shop.example.com',
+                        },
+                        {
+                            title: 'Logo',
+                            category: null,
+                            description: null,
+                            image: null,
+                            imageAlt: '',
+                            url: null,
+                        },
+                    ],
+                },
+            },
+        ]);
+
+        const section = container.querySelector('#portfolio');
+        expect(section?.querySelector('h2')?.textContent).toBe('Our work');
+        expect(
+            Array.from(section?.querySelectorAll('h3') ?? []).map(
+                (heading) => heading.textContent,
+            ),
+        ).toEqual(['Shop', 'Logo']);
+        const link = section?.querySelector('a');
+        expect(link?.getAttribute('href')).toBe('https://shop.example.com');
+        expect(link?.getAttribute('target')).toBe('_blank');
+        expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+        expect(section?.querySelectorAll('img')).toHaveLength(1);
+        expect(section?.querySelector('img')?.getAttribute('alt')).toBe(
+            'Shop home page',
+        );
+        expect(section?.textContent).toContain('E-commerce');
+    });
+
+    it('renders team members with a square photo, role and skills', async () => {
+        const container = await render([
+            {
+                id: 10,
+                type: 'team',
+                anchor: 'team',
+                content: {
+                    title: 'Team',
+                    description: null,
+                    items: [
+                        {
+                            name: 'Ada Example',
+                            role: 'Developer',
+                            bio: 'Builds things.',
+                            photo: {
+                                sources: [],
+                                src: '/media/ada.jpg',
+                                srcset: '/media/ada.jpg 600w',
+                                width: 600,
+                                height: 600,
+                            },
+                            photoAlt: 'Ada smiling',
+                            skills: ['Laravel', 'React'],
+                        },
+                    ],
+                },
+            },
+        ]);
+
+        const section = container.querySelector('#team');
+        expect(section?.querySelector('h3')?.textContent).toBe('Ada Example');
+        expect(section?.querySelector('img')?.getAttribute('alt')).toBe(
+            'Ada smiling',
+        );
+        expect(section?.querySelector('.aspect-square img')).not.toBeNull();
+        expect(section?.textContent).toContain('Developer');
+        expect(section?.textContent).toContain('Laravel');
+        expect(section?.textContent).toContain('React');
+    });
+
+    it('renders pricing plans with formatted prices, scope and actions', async () => {
+        const plan = {
+            period: null,
+            description: null,
+            features: [],
+            highlighted: false,
+            action: null,
+            currency: 'PLN',
+            priceFrom: false,
+        };
+        const container = await render([
+            {
+                id: 11,
+                type: 'pricing',
+                anchor: 'pricing',
+                content: {
+                    title: 'Pricing',
+                    description: null,
+                    note: 'Prices are net.',
+                    items: [
+                        {
+                            ...plan,
+                            name: 'Business card',
+                            priceMinor: 290000,
+                            priceFrom: true,
+                            features: ['Up to 5 pages', 'Contact form'],
+                            highlighted: true,
+                            action: {
+                                label: 'Ask for a quote',
+                                url: '#contact',
+                            },
+                        },
+                        { ...plan, name: 'Logo', priceMinor: 49950 },
+                        { ...plan, name: 'Shop', priceMinor: null },
+                    ],
+                },
+            },
+        ]);
+
+        const section = container.querySelector('#pricing');
+        // Intl separates the currency with a no-break space.
+        const text = (section?.textContent ?? '').replace(/\u00a0/g, ' ');
+        expect(text).toContain('from PLN 2,900');
+        expect(text).toContain('PLN 499.50');
+        expect(text).toContain('Quote on request');
+        expect(text).toContain('Recommended');
+        expect(text).toContain('Prices are net.');
+        expect(
+            Array.from(section?.querySelectorAll('ul li') ?? []).map(
+                (item) => item.textContent,
+            ),
+        ).toEqual(['Up to 5 pages', 'Contact form']);
+        expect(section?.querySelector('a')?.getAttribute('href')).toBe(
+            '#contact',
+        );
+        expect(section?.querySelectorAll('a')).toHaveLength(1);
     });
 });

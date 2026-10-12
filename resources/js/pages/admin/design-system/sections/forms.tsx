@@ -8,9 +8,11 @@ import {
     ResourceForm,
     Stack,
     TextField,
+    type ResourceFormRepeaterItem,
     type ResourceFormSection,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { useDemoImagePicker } from './demo-image-picker';
 import {
     ShowcaseComponent,
     ShowcaseState,
@@ -274,6 +276,77 @@ function StaticResourceForm({
     );
 }
 
+/**
+ * A repeater whose items carry an `image` field (portfolio projects); the
+ * DAM is the synthetic in-browser picker of ADM-06, nothing is uploaded.
+ */
+function RepeaterImageResourceForm() {
+    const { t } = useTranslation();
+    const demo = (key: string, params?: Record<string, string>) =>
+        t(`admin.designSystem.forms.${key}`, params);
+    const { pickers, pickerLabels } = useDemoImagePicker();
+    const [values, setValues] = useState<{
+        projects: ResourceFormRepeaterItem[];
+    }>(() => ({
+        projects: [
+            { title: demo('projectTitleValue'), image: '1' },
+            { title: demo('longFieldLabel'), image: '' },
+        ],
+    }));
+
+    return (
+        <ResourceForm<{ projects: ResourceFormRepeaterItem[] }>
+            sections={[
+                {
+                    id: 'portfolio',
+                    title: demo('repeaterSection'),
+                    fields: [
+                        {
+                            type: 'repeater',
+                            name: 'projects',
+                            label: demo('repeaterLabel'),
+                            hint: demo('repeaterHint'),
+                            maxItems: 4,
+                            newItem: () => ({ title: '', image: '' }),
+                            labels: {
+                                add: demo('repeaterAdd'),
+                                item: (position) =>
+                                    demo('repeaterItem', {
+                                        position: String(position),
+                                    }),
+                            },
+                            itemFields: [
+                                {
+                                    type: 'text',
+                                    name: 'title',
+                                    label: demo('projectTitleLabel'),
+                                    required: true,
+                                },
+                                {
+                                    type: 'image',
+                                    name: 'image',
+                                    label: demo('projectImageLabel'),
+                                    picker: pickers.ready,
+                                    labels: pickerLabels,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]}
+            values={values}
+            onChange={(name, value) =>
+                setValues((previous) => ({ ...previous, [name]: value }))
+            }
+            onSubmit={() => undefined}
+            labels={{
+                submit: demo('saveProjects'),
+                errorSummaryTitle: demo('errorSummaryTitle'),
+            }}
+        />
+    );
+}
+
 /** ADM-08 — the form as a whole: sections, actions, summary, ResourceForm. */
 function FormsSection() {
     const { t } = useTranslation();
@@ -295,6 +368,13 @@ function FormsSection() {
                     fill
                 >
                     <InteractiveResourceForm />
+                </ShowcaseState>
+                <ShowcaseState
+                    state="withMedia"
+                    detail={demo('repeaterImageDetail')}
+                    fill
+                >
+                    <RepeaterImageResourceForm />
                 </ShowcaseState>
                 <ShowcaseState state="pending" fill>
                     <StaticResourceForm isPending />

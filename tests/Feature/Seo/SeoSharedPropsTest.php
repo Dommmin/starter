@@ -77,3 +77,15 @@ test('the admin panel and account settings are not indexable', function () {
         ->assertOk()
         ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
 });
+
+test('without a configured or saved name the site and organization use the catalog brand', function () {
+    config(['seo.site_name' => null, 'seo.organization.name' => null]);
+
+    $this->get('/pl')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('seo.siteName', __('common.brand.name', [], 'pl'))
+            ->where('seo.organization.name', __('common.brand.name', [], 'pl'))
+            ->where('site.name', __('common.brand.name', [], 'pl'))
+        );
+});

@@ -1,17 +1,13 @@
 import { useForm } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
-import InputError from '@/components/input-error';
 import PasskeyVerify from '@/components/passkey-verify';
-import PasswordInput from '@/components/password-input';
-import { Button, Stack } from '@/design-system/primitives';
 import {
+    Button,
     Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+    PasswordField,
+    Stack,
+} from '@/design-system/primitives';
+import { useTranslation } from '@/i18n';
 import { store } from '@/routes/password/confirm';
 import {
     index as confirmOptions,
@@ -39,6 +35,7 @@ export default function PasswordConfirmationDialog({
     onConfirmed,
     onConfirmingChange,
 }: PasswordConfirmationDialogProps) {
+    const { t } = useTranslation();
     const passwordInput = useRef<HTMLInputElement>(null);
     const form = useForm({ password: '' });
 
@@ -78,61 +75,53 @@ export default function PasswordConfirmationDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && close()}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Confirm password</DialogTitle>
-                    <DialogDescription>
-                        Confirm your password to continue with this action.
-                    </DialogDescription>
-                </DialogHeader>
-
+        <Dialog
+            open={open}
+            onOpenChange={(isOpen) => !isOpen && close()}
+            title={t('auth.confirmPassword.heading')}
+            description={t('auth.confirmPassword.subheading')}
+            closeLabel={t('actions.close')}
+        >
+            <Stack gap="default">
                 <PasskeyVerify
                     routes={{
                         options: confirmOptions(),
                         submit: confirmWithPasskey(),
                     }}
-                    label="Confirm with passkey"
-                    loadingLabel="Confirming..."
-                    separator="Or confirm with password"
+                    label={t('auth.passkey.confirm')}
+                    loadingLabel={t('auth.passkey.confirming')}
+                    separator={t('auth.passkey.orPassword')}
                     onSuccess={confirmed}
                 />
 
                 <form onSubmit={submit}>
                     <Stack gap="default">
-                        <Stack gap="tight">
-                            <Label htmlFor="confirm-password">Password</Label>
-                            <PasswordInput
-                                id="confirm-password"
-                                ref={passwordInput}
-                                name="password"
-                                autoComplete="current-password"
-                                value={form.data.password}
-                                onChange={(event) =>
-                                    form.setData('password', event.target.value)
-                                }
-                                aria-describedby={
-                                    form.errors.password
-                                        ? 'confirm-password-error'
-                                        : undefined
-                                }
-                            />
-                            <InputError
-                                id="confirm-password-error"
-                                message={form.errors.password}
-                            />
-                        </Stack>
+                        <PasswordField
+                            id="confirm-password"
+                            ref={passwordInput}
+                            name="password"
+                            label={t('auth.confirmPassword.password')}
+                            autoComplete="current-password"
+                            value={form.data.password}
+                            onChange={(password) =>
+                                form.setData('password', password)
+                            }
+                            error={form.errors.password}
+                            showPasswordLabel={t('auth.passwordField.show')}
+                            hidePasswordLabel={t('auth.passwordField.hide')}
+                            required
+                        />
 
                         <Button
                             type="submit"
                             isPending={form.processing}
                             disabled={form.processing}
                         >
-                            Confirm password
+                            {t('auth.confirmPassword.submit')}
                         </Button>
                     </Stack>
                 </form>
-            </DialogContent>
+            </Stack>
         </Dialog>
     );
 }

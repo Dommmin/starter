@@ -14,8 +14,8 @@ use Illuminate\Database\Seeder;
 /**
  * Default public menus for every public locale, so a fresh installation
  * has a navigation: header — the home page "features" anchor and the
- * article list; footer — the privacy policy when that sample page exists
- * (PageSeeder, slug `privacy-policy`).
+ * article list; footer — the article list and the privacy policy when that
+ * sample page exists (PageSeeder, slug `privacy-policy`).
  *
  * Idempotent: a menu (location + locale) that already has any item is left
  * untouched, so editor changes are never overwritten. The definition is
@@ -44,8 +44,8 @@ class NavigationMenuSeeder extends Seeder
      * Definition of the default menus of one locale, keyed by location. A
      * demo-content provider can use it to recognize the seeded items
      * (type + anchor / page_id per position) without heuristics. The footer
-     * link is included only when the privacy policy page is translated in
-     * the locale.
+     * privacy link is included only when the privacy policy page is
+     * translated in the locale.
      *
      * @param  int|null  $privacyPageId  See self::privacyPolicyPageId().
      * @return array<string, list<array{type: MenuItemType, anchor?: string, page_id?: int, label?: string}>>
@@ -71,10 +71,15 @@ class NavigationMenuSeeder extends Seeder
             ->where('locale', $locale)
             ->exists();
 
+        $menus[MenuLocation::Footer->value] = [
+            [
+                'type' => MenuItemType::ArticleIndex,
+                'label' => __('common.nav.articles', [], $locale),
+            ],
+        ];
+
         if ($privacyPageId !== null && $hasPrivacyTranslation) {
-            $menus[MenuLocation::Footer->value] = [
-                ['type' => MenuItemType::Page, 'page_id' => $privacyPageId],
-            ];
+            $menus[MenuLocation::Footer->value][] = ['type' => MenuItemType::Page, 'page_id' => $privacyPageId];
         }
 
         return $menus;

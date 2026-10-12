@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import AppearanceTabs from '@/components/appearance-tabs';
-import Heading from '@/components/heading';
+import { Heading, Stack, Text } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { edit as editAppearance } from '@/routes/appearance';
 
@@ -11,16 +11,17 @@ export default function Appearance() {
         <>
             <Head title={t('settings.appearance.pageTitle')} />
 
-            <h1 className="sr-only">{t('settings.appearance.pageTitle')}</h1>
-
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title={t('settings.appearance.heading')}
-                    description={t('settings.appearance.subheading')}
-                />
+            <Stack gap="default">
+                <Stack gap="tight">
+                    <Heading level={1} variant="group">
+                        {t('settings.appearance.heading')}
+                    </Heading>
+                    <Text tone="muted">
+                        {t('settings.appearance.subheading')}
+                    </Text>
+                </Stack>
                 <AppearanceTabs />
-            </div>
+            </Stack>
         </>
     );
 }

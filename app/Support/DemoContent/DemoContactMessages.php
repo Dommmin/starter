@@ -6,12 +6,13 @@ use App\Contracts\DemoContent\DemoContentProvider;
 use App\Models\ContactMessage;
 use App\Models\User;
 use Database\Seeders\ContactMessageSeeder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
 /**
  * Sample contact messages of {@see ContactMessageSeeder}, matched by their
- * sample e-mail address. Messages are never edited (delivery retries only
+ * sample e-mail address (generated enquiries also by their sample text). Messages are never edited (delivery retries only
  * change their status), so every match is removed, like in the admin panel.
  */
 class DemoContactMessages implements DemoContentProvider
@@ -29,9 +30,13 @@ class DemoContactMessages implements DemoContentProvider
     public function records(): array
     {
         return array_values(ContactMessage::query()
-            ->whereIn('email', array_keys(ContactMessageSeeder::MESSAGES))
+            ->where(fn (Builder $query) => $query
+                ->whereIn('email', array_keys(ContactMessageSeeder::MESSAGES))
+                ->orWhere('email', 'like', 'lead-%@example.org'))
             ->orderBy('id')
             ->get()
+            ->filter(fn (ContactMessage $message): bool => array_key_exists($message->email, ContactMessageSeeder::MESSAGES)
+                || ContactMessageSeeder::isStreamMessage($message))
             ->all());
     }
 

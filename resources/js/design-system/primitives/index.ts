@@ -32,6 +32,7 @@ export * from './feature-grid';
 export * from './fieldset';
 export * from './file-dropzone';
 export * from './filter-bar';
+export * from './cookie-consent';
 export * from './footer';
 export * from './form-actions';
 export * from './form-dialog';

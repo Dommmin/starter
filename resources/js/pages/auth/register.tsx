@@ -60,6 +60,10 @@ export default function Register({ passwordRules }: Props) {
         hidePasswordLabel: t('auth.passwordField.hide'),
     };
 
+    // Also on the <form>: a submit before hydration posts to the same
+    // endpoint instead of a GET that would put the password in the URL.
+    const formTarget = getLocalizedRegisterForm(locale, defaultLocale);
+
     return (
         <>
             <Head title={t('auth.register.title')} />
@@ -70,7 +74,12 @@ export default function Register({ passwordRules }: Props) {
             />
 
             <Stack gap="default">
-                <form onSubmit={submit} noValidate>
+                <form
+                    method={formTarget.method}
+                    action={formTarget.action}
+                    onSubmit={submit}
+                    noValidate
+                >
                     <Stack gap="default">
                         <TextField
                             id="name"

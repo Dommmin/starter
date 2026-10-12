@@ -136,7 +136,7 @@ export default function AdminPagesIndex() {
                         sortable: true,
                         render: (row) => (
                             <Stack gap="none">
-                                <Link href={pagesEdit(row.id)} tone="primary">
+                                <Link href={pagesEdit(row.id)} tone="default">
                                     {rowTitle(row)}
                                 </Link>
                                 {row.locale !== filters.locale && (
@@ -175,7 +175,7 @@ export default function AdminPagesIndex() {
                     },
                     {
                         key: 'locales',
-                        priority: 'optional',
+                        priority: 'card',
                         label: t('admin.pages.columnLocales'),
                         render: (row) =>
                             row.locales.map(localeName).join(', ') || '—',

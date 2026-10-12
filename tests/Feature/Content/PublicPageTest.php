@@ -58,10 +58,11 @@ test('drafts and unknown slugs are not found', function () {
 });
 
 test('the content catch-all does not shadow system routes', function () {
-    PageTranslation::factory()->published()->create(['slug' => 'about']);
+    PageTranslation::factory()->published()->create(['slug' => 'articles']);
 
     $this->get('/login')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia->component('auth/login'));
     $this->get('/admin')->assertRedirect(route('login'));
+    $this->get('/articles')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia->component('articles/index', false));
     $this->get('/pl/admin')->assertNotFound();
 });
 
@@ -73,5 +74,26 @@ test('a published page with the about slug is served at /about', function () {
         ->assertInertia(fn (Assert $inertia) => $inertia
             ->component('pages/show', false)
             ->where('title', 'About us')
+        );
+});
+
+test('a page without a meta description describes itself with its first paragraph', function () {
+    PageTranslation::factory()->published()->create([
+        'slug' => 'about',
+        'meta_description' => null,
+        'body' => ['type' => 'doc', 'content' => [
+            ['type' => 'heading', 'attrs' => ['level' => 2], 'content' => [['type' => 'text', 'text' => 'Who we are']]],
+            ['type' => 'paragraph', 'content' => []],
+            ['type' => 'paragraph', 'content' => [
+                ['type' => 'text', 'text' => 'A small studio '],
+                ['type' => 'text', 'text' => 'from Łódź.', 'marks' => [['type' => 'bold']]],
+            ]],
+        ]],
+    ]);
+
+    $this->get('/about')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('metaDescription', 'A small studio from Łódź.')
         );
 });

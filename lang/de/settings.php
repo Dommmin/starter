@@ -64,6 +64,8 @@ return [
         'orManual' => 'oder geben Sie den Einrichtungsschlüssel manuell ein',
         'setupKey' => 'Einrichtungsschlüssel',
         'copySetupKey' => 'Einrichtungsschlüssel kopieren',
+        'setupKeyCopied' => 'Kopiert',
+        'loadingSetup' => 'Einrichtungsdaten werden geladen',
         'qrCode' => 'QR-Code für Ihre Authentifikator-App',
         'code' => 'Authentifizierungscode',
         'errorTitle' => 'Etwas ist schiefgelaufen',

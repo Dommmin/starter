@@ -42,6 +42,11 @@ final class ListQuery
      */
     private array $filters = [];
 
+    /**
+     * @var array<string, literal-string>
+     */
+    private array $dateRanges = [];
+
     private int $perPage = 15;
 
     public static function make(): self
@@ -118,6 +123,27 @@ final class ListQuery
         return $this;
     }
 
+    /**
+     * Register an inclusive date range over one column: the query string
+     * carries `{name}_from` and `{name}_to` as `Y-m-d`, either may be empty.
+     * The column is a literal identifier, never taken from the request.
+     *
+     * @param  literal-string  $column
+     */
+    public function dateRange(string $name, string $column): self
+    {
+        foreach (["{$name}_from", "{$name}_to"] as $key) {
+            if (in_array($key, self::RESERVED_KEYS, true) || array_key_exists($key, $this->filters)) {
+                throw new InvalidArgumentException("Filter name [{$key}] is reserved or already used.");
+            }
+        }
+
+        $this->assertIdentifier($column);
+        $this->dateRanges[$name] = $column;
+
+        return $this;
+    }
+
     public function perPage(int $perPage): self
     {
         if ($perPage < 1 || $perPage > 100) {
@@ -150,6 +176,11 @@ final class ListQuery
             $rules[$name] = ['nullable', 'string', Rule::in($filter['values'])];
         }
 
+        foreach (array_keys($this->dateRanges) as $name) {
+            $rules["{$name}_from"] = ['nullable', 'date_format:Y-m-d'];
+            $rules["{$name}_to"] = ['nullable', 'date_format:Y-m-d', "after_or_equal:{$name}_from"];
+        }
+
         return $rules;
     }
 
@@ -172,6 +203,13 @@ final class ListQuery
             $filters[$name] = is_string($value) && in_array($value, $filter['values'], true)
                 ? $value
                 : $filter['default'];
+        }
+
+        foreach (array_keys($this->dateRanges) as $name) {
+            foreach (["{$name}_from", "{$name}_to"] as $key) {
+                $value = $validated[$key] ?? null;
+                $filters[$key] = is_string($value) && $this->isDate($value) ? $value : '';
+            }
         }
 
         return [
@@ -210,6 +248,18 @@ final class ListQuery
 
         foreach ($this->filters as $name => $filter) {
             ($filter['apply'])($query, $state['filters'][$name]);
+        }
+
+        foreach ($this->dateRanges as $name => $column) {
+            $qualified = $query->qualifyColumn($column);
+
+            if ($state['filters']["{$name}_from"] !== '') {
+                $query->whereDate($qualified, '>=', $state['filters']["{$name}_from"]);
+            }
+
+            if ($state['filters']["{$name}_to"] !== '') {
+                $query->whereDate($qualified, '<=', $state['filters']["{$name}_to"]);
+            }
         }
 
         if ($this->defaultSort !== null) {
@@ -303,6 +353,13 @@ final class ListQuery
         if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $column) !== 1) {
             throw new InvalidArgumentException("Column [{$column}] is not a plain identifier.");
         }
+    }
+
+    private function isDate(string $value): bool
+    {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+        return $date !== false && $date->format('Y-m-d') === $value;
     }
 
     private function escapeLike(string $value): string

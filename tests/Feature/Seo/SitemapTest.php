@@ -1,5 +1,6 @@
 <?php
 
+use App\Contracts\Seo\SitemapSource;
 use App\Models\ArticleTranslation;
 use App\Models\Page;
 use App\Models\PageTranslation;
@@ -18,8 +19,9 @@ test('the sitemap lists the home page and article list in every public locale wi
     $xml->registerXPathNamespace('s', 'http://www.sitemaps.org/schemas/sitemap/0.9');
     $xml->registerXPathNamespace('xhtml', 'http://www.w3.org/1999/xhtml');
 
+    // Built-in entries come first; generated public modules append theirs.
     $locs = array_map('strval', $xml->xpath('//s:url/s:loc'));
-    expect($locs)->toBe([
+    expect(array_slice($locs, 0, 6))->toBe([
         url('/'), url('/pl'), url('/de'),
         url('/articles'), url('/pl/articles'), url('/de/articles'),
     ]);
@@ -103,4 +105,23 @@ test('the sitemap contains visible article translations but never drafts or sche
         ->toContain('<loc>'.url('/articles/company-news').'</loc>')
         ->not->toContain('article-draft')
         ->not->toContain('article-scheduled');
+});
+
+test('registered sitemap sources append their entries after the built-in ones', function () {
+    $this->app->bind('test.sitemap-source', fn () => new class implements SitemapSource
+    {
+        public function entries(): iterable
+        {
+            yield ['loc' => 'https://example.test/things/first', 'alternates' => [], 'lastmod' => '2026-10-01T10:00:00+00:00'];
+        }
+    });
+    $this->app->tag(['test.sitemap-source'], SitemapSource::class);
+
+    $xml = simplexml_load_string($this->get('/sitemap.xml')->assertOk()->getContent());
+    $xml->registerXPathNamespace('s', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+
+    $locs = array_map('strval', $xml->xpath('//s:url/s:loc'));
+    expect(end($locs))->toBe('https://example.test/things/first')
+        ->and(array_map('strval', $xml->xpath('//s:url[s:loc="https://example.test/things/first"]/s:lastmod')))
+        ->toBe(['2026-10-01T10:00:00+00:00']);
 });

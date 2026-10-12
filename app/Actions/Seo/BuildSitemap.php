@@ -2,6 +2,7 @@
 
 namespace App\Actions\Seo;
 
+use App\Contracts\Seo\SitemapSource;
 use App\Models\ArticleTranslation;
 use App\Models\PageTranslation;
 use App\Repositories\Content\ArticleRepository;
@@ -9,21 +10,28 @@ use App\Repositories\Content\PageRepository;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizedUrlGenerator;
 use DateTimeInterface;
+use Illuminate\Container\Attributes\Tag;
 use Illuminate\Support\Collection;
 
 /**
  * Build the XML sitemap of canonical, indexable public URLs: the home page
  * and the article list in every active public locale, and every visible
  * page and article translation, with reciprocal hreflang alternates between
- * language versions.
+ * language versions, followed by the entries of the registered
+ * SitemapSource modules (App\Providers\SitemapServiceProvider).
  */
 class BuildSitemap
 {
+    /**
+     * @param  iterable<SitemapSource>  $sources
+     */
     public function __construct(
         private readonly PageRepository $pages,
         private readonly ArticleRepository $articles,
         private readonly LocalizationConfig $config,
         private readonly LocalizedUrlGenerator $urls,
+        #[Tag(SitemapSource::class)]
+        private readonly iterable $sources = [],
     ) {}
 
     public function handle(): string
@@ -33,6 +41,7 @@ class BuildSitemap
             ...$this->pageEntries(),
             ...$this->staticEntries('articles.index'),
             ...$this->articleEntries(),
+            ...$this->sourceEntries(),
         ];
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
@@ -97,6 +106,22 @@ class BuildSitemap
 
         foreach ($this->articles->publishedForSitemap() as $article) {
             $entries = [...$entries, ...$this->translatedEntries('articles.show', $article->translations, $article->updated_at)];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @return list<array{loc: string, alternates: array<string, string>, lastmod: string|null}>
+     */
+    private function sourceEntries(): array
+    {
+        $entries = [];
+
+        foreach ($this->sources as $source) {
+            foreach ($source->entries() as $entry) {
+                $entries[] = $entry;
+            }
         }
 
         return $entries;

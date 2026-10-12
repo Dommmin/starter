@@ -13,6 +13,7 @@ import {
 } from '@/design-system/primitives';
 {{ pickerImport }}
 import { useTranslation } from '@/i18n';
+{{ multiSelectImport }}
 import {
     destroy,
     edit,

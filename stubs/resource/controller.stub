@@ -11,12 +11,15 @@ use App\Data\Admin\{{ Plural }}\{{ Model }}ListFiltersData;
 use App\Data\Admin\{{ Plural }}\{{ Model }}ListItemData;
 use App\Data\Listing\ListPaginationData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\{{ Plural }}\Destroy{{ Plural }}Request;
 use App\Http\Requests\Admin\{{ Plural }}\List{{ Plural }}Request;
 use App\Http\Requests\Admin\{{ Plural }}\Store{{ Model }}Request;
 use App\Http\Requests\Admin\{{ Plural }}\Update{{ Model }}Request;
 use App\Models\{{ Model }};
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 {{ imports }}
@@ -36,7 +39,7 @@ class {{ Model }}Controller extends Controller
         $listQuery = $request->listQuery();
         $validated = $request->validated();
 
-        $paginator = $listQuery->paginate({{ Model }}::query(){{ with }}, $validated);
+        $paginator = $listQuery->paginate({{ Model }}::query(){{ ownerScope }}{{ with }}, $validated);
 
         $items = [];
         foreach ($paginator->items() as ${{ variable }}) {
@@ -65,7 +68,7 @@ class {{ Model }}Controller extends Controller
      */
     public function store(Store{{ Model }}Request $request): RedirectResponse
     {
-        ${{ variable }} = {{ Model }}::query()->create($request->fieldValues());
+{{ storeStatement }}
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.created')]);
 
@@ -85,7 +88,7 @@ class {{ Model }}Controller extends Controller
      */
     public function update(Update{{ Model }}Request $request, {{ Model }} ${{ variable }}, Update{{ Model }} $update{{ Model }}): RedirectResponse
     {
-        $update{{ Model }}->handle(${{ variable }}, $request->fieldValues(), $request->expectedUpdatedAt());
+        $update{{ Model }}->handle(${{ variable }}, $request->fieldValues(), $request->expectedUpdatedAt(){{ updateRelationArgument }});
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.updated')]);
 
@@ -102,6 +105,28 @@ class {{ Model }}Controller extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.deleted')]);
 
         return to_route('admin.{{ kebabPlural }}.index');
+    }
+
+    /**
+     * Permanently delete the selected {{ pluralLower }} of one list page: every
+     * record is authorized for `delete` before any is removed (all or nothing);
+     * ids that no longer exist are skipped, so a repeated request is harmless.
+     */
+    public function destroyMany(Destroy{{ Plural }}Request $request): RedirectResponse
+    {
+        $deleted = DB::transaction(function () use ($request): int {
+            $records = {{ Model }}::query()->whereKey($request->ids())->lockForUpdate()->get();
+
+            foreach ($records as $record) {
+                Gate::forUser($request->user())->authorize('delete', $record);
+            }
+
+            return {{ Model }}::query()->whereKey($records->modelKeys())->delete();
+        });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.deletedMany', ['count' => $deleted])]);
+
+        return back();
     }
 {{ exportMethods }}
 
@@ -123,7 +148,7 @@ class {{ Model }}Controller extends Controller
             create: $user?->can('create', {{ Model }}::class) ?? false,
             delete: ${{ variable }} !== null
                 ? ($user?->can('delete', ${{ variable }}) ?? false)
-                : ($user?->isAdmin() ?? false),
+                : ({{ listDeleteAbility }}),
 {{ exportAbility }}
         );
     }

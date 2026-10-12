@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Consent\ConsentData;
 use App\Data\Navigation\NavigationData;
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
@@ -9,12 +10,14 @@ use App\Models\AuditLog;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Repositories\Settings\SiteSettingsRepository;
+use App\Services\Consent\CookieConsent;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
 use App\Services\Navigation\PublicNavigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
+use Laravel\Fortify\Features;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -39,6 +42,7 @@ class HandleInertiaRequests extends Middleware
         protected LocalizedUrlGenerator $urlGenerator,
         protected SiteSettingsRepository $siteSettings,
         protected PublicNavigation $navigation,
+        protected CookieConsent $consent,
     ) {}
 
     /**
@@ -70,7 +74,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'canRegister' => Features::enabled(Features::registration()),
                 'can' => [
+                    'accessAdminPanel' => $request->user()?->canAccessAdminPanel() ?? false,
                     'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,
                     'viewAudit' => $request->user()?->can('viewAny', AuditLog::class) ?? false,
                     'manageSiteSettings' => $request->user()?->can('update', SiteSetting::class) ?? false,
@@ -82,6 +88,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'site' => fn () => $this->siteSettings->current(),
             ...$this->publicNavigation($i18n['area'], $i18n['locale']),
+            ...$this->cookieConsent($request, $i18n['area'], $i18n['locale']),
             ...$this->designSystemShowcase($i18n['area']),
         ];
     }
@@ -114,6 +121,21 @@ class HandleInertiaRequests extends Middleware
         }
 
         return ['navigation' => fn () => $this->navigation->shared($locale)];
+    }
+
+    /**
+     * Lazily resolved cookie consent state, shared only with public pages
+     * (the banner and the scripts it allows).
+     *
+     * @return array<string, \Closure(): ConsentData>
+     */
+    protected function cookieConsent(Request $request, string $area, string $locale): array
+    {
+        if ($area !== 'public') {
+            return [];
+        }
+
+        return ['consent' => fn () => $this->consent->forRequest($request, $locale)];
     }
 
     /**
@@ -153,6 +175,19 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Organization name before the settings are saved: `seo.organization.name`,
+     * then the site name.
+     */
+    protected function organizationName(): string
+    {
+        $configured = config('seo.organization.name');
+
+        return is_string($configured) && $configured !== ''
+            ? $configured
+            : $this->siteSettings->siteName();
+    }
+
+    /**
      * Site-wide SEO defaults. The canonical URL is the current URL without
      * the query string; public URLs already carry their locale prefix and
      * the default locale alias (`/{default}/...`) redirects to it.
@@ -173,7 +208,7 @@ class HandleInertiaRequests extends Middleware
             organization: new SeoOrganizationData(
                 name: $this->siteSettings->exists()
                     ? $this->siteSettings->siteName()
-                    : (string) config('seo.organization.name'),
+                    : $this->organizationName(),
                 url: is_string($organizationUrl) && $organizationUrl !== '' ? url($organizationUrl) : $appUrl,
                 logo: $siteLogo !== null
                     ? $siteLogo->src

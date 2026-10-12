@@ -39,6 +39,7 @@ require __DIR__.'/admin.php';
 // Design-system showcase: registered in the local environment only.
 if (app()->environment('local')) {
     require __DIR__.'/design-system.php';
+    require __DIR__.'/dev-login.php';
 }
 
 // Content catch-all routes must stay last: default locale without prefix,

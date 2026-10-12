@@ -109,3 +109,21 @@ test('a page slug named like the article section is rejected', function () {
         'translations' => ['en' => ['title' => 'Articles', 'slug' => 'articles', 'status' => 'draft']],
     ])->assertSessionHasErrors('translations.en.slug');
 });
+
+test('an article without meta description or excerpt is described by its shortened first paragraph', function () {
+    $paragraph = str_repeat('Lorem ipsum dolor sit amet. ', 10);
+    ArticleTranslation::factory()->published()->create([
+        'slug' => 'no-summary',
+        'excerpt' => null,
+        'meta_description' => null,
+        'body' => ['type' => 'doc', 'content' => [
+            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => $paragraph]]],
+        ]],
+    ]);
+
+    $this->get('/articles/no-summary')
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('metaDescription', str_repeat('Lorem ipsum dolor sit amet. ', 5).'Lorem ipsum dolor…')
+        );
+});

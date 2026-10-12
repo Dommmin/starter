@@ -90,11 +90,15 @@ class SiteSettingsRepository
     }
 
     /**
-     * Brand name: the saved setting or `seo.site_name`.
+     * Brand name: the saved setting, then `seo.site_name`, then the
+     * translated catalog brand shown by the text logo.
      */
     public function siteName(): string
     {
-        return $this->snapshot()['site_name'] ?? (string) config('seo.site_name');
+        $configured = config('seo.site_name');
+
+        return $this->snapshot()['site_name']
+            ?? (is_string($configured) && $configured !== '' ? $configured : __('common.brand.name'));
     }
 
     /**

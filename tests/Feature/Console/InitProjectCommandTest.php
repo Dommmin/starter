@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
 use Database\Seeders\ArticleSeeder;
+use Database\Seeders\ContactMessageSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoContent;
 use Database\Seeders\DemoMediaSeeder;
@@ -227,11 +228,29 @@ test('without --write-env the language lines are only printed', function () {
         ->and(glob($this->envPath.'.backup-*'))->toBe([]);
 });
 
+test('sign-up is switched off unless --enable-registration is given', function () {
+    $this->app['env'] = 'local';
+
+    [, $default] = runInit();
+    [, $enabled] = runInit(['--enable-registration' => true]);
+
+    expect($default)->toContain('APP_REGISTRATION_ENABLED=false')
+        ->and($enabled)->toContain('APP_REGISTRATION_ENABLED=true');
+});
+
+test('the chosen accent is printed as APP_ACCENT', function () {
+    $this->app['env'] = 'local';
+
+    [, $output] = runInit(['--accent' => 'blue']);
+
+    expect($output)->toContain('APP_ACCENT=blue');
+});
+
 test('declining the confirmation leaves .env untouched', function () {
     $this->app['env'] = 'local';
 
     $this->artisan('app:init-project', [...initOptions(['--write-env' => true]), '--no-interaction' => false])
-        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK to .env?', 'no')
+        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED, APP_ACCENT to .env?', 'no')
         ->assertSuccessful();
 
     expect(file_get_contents($this->envPath))->toBe(INIT_ENV)
@@ -242,7 +261,7 @@ test('a confirmed write backs up .env and changes only the language keys', funct
     $this->app['env'] = 'local';
 
     $this->artisan('app:init-project', [...initOptions(['--write-env' => true]), '--no-interaction' => false])
-        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK to .env?', 'yes')
+        ->expectsConfirmation('Write APP_PUBLIC_LOCALES, APP_PUBLIC_DEFAULT, APP_PUBLIC_FALLBACK, APP_REGISTRATION_ENABLED, APP_ACCENT to .env?', 'yes')
         ->expectsOutputToContain('make restart')
         ->assertSuccessful();
 
@@ -252,7 +271,7 @@ test('a confirmed write backs up .env and changes only the language keys', funct
         ->and(file_get_contents($backups[0]))->toBe(INIT_ENV)
         ->and(fileperms($backups[0]) & 0777)->toBe(0600)
         ->and(file_get_contents($this->envPath))->toBe(
-            "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=pl,en\nAPP_ENV=local\nAPP_PUBLIC_DEFAULT=pl\nAPP_PUBLIC_FALLBACK=pl\n",
+            "APP_NAME=Laravel\n# keep this comment\nAPP_PUBLIC_LOCALES=pl,en\nAPP_ENV=local\nAPP_PUBLIC_DEFAULT=pl\nAPP_PUBLIC_FALLBACK=pl\nAPP_REGISTRATION_ENABLED=false\nAPP_ACCENT=default\n",
         );
 });
 
@@ -423,7 +442,7 @@ test('sample menu items are removed through the audited menu action', function (
 
 test('an edited or added menu item is kept', function () {
     test()->seed(NavigationMenuSeeder::class);
-    $edited = MenuItem::query()->where('locale', 'en')->where('type', MenuItemType::ArticleIndex)->sole();
+    $edited = MenuItem::query()->where('location', MenuLocation::Header)->where('locale', 'en')->where('type', MenuItemType::ArticleIndex)->sole();
     $this->travel(1)->minutes();
     $edited->update(['label' => 'Our news']);
     $own = MenuItem::factory()->create(['location' => MenuLocation::Header, 'locale' => 'en', 'position' => 3]);
@@ -498,6 +517,21 @@ test('--remove-demo removes the whole local sample data set', function () {
         ->and(ContactMessage::query()->exists())->toBeFalse()
         ->and(MenuItem::query()->exists())->toBeFalse()
         ->and(HomeSection::query()->where('enabled', true)->exists())->toBeFalse();
+});
+
+test('--remove-demo keeps real contact messages that resemble the generated sample enquiries', function () {
+    test()->seed(ContactMessageSeeder::class);
+    $real = collect([
+        ContactMessage::factory()->create(['email' => 'lead-001@example.org', 'locale' => 'pl', 'message' => 'Prawdziwe zapytanie od klienta.']),
+        ContactMessage::factory()->create(['email' => 'lead-1@example.org', 'locale' => 'pl', 'message' => 'Proszę o wycenę strony firmowej.']),
+        ContactMessage::factory()->create(['email' => 'lead-002@example.com', 'locale' => 'pl', 'message' => 'Proszę o wycenę strony firmowej.']),
+        ContactMessage::factory()->create(['email' => 'client@firma.pl']),
+    ]);
+
+    [$exitCode] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(ContactMessage::query()->pluck('id')->sort()->values()->all())->toBe($real->pluck('id')->sort()->values()->all());
 });
 
 test('--remove-demo keeps sample media still used by kept content or the site settings', function () {

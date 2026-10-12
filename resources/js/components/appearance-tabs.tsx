@@ -1,7 +1,8 @@
-import Heading from '@/components/heading';
 import {
     AdminLocaleSelect,
+    Heading,
     Stack,
+    Text,
     ThemeSwitcher,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
@@ -14,11 +15,12 @@ export default function AppearanceToggleTab() {
             <ThemeSwitcher />
 
             <Stack gap="tight">
-                <Heading
-                    variant="small"
-                    title={t('settings.appearance.language')}
-                    description={t('settings.appearance.languageSubheading')}
-                />
+                <Heading level={2} variant="group">
+                    {t('settings.appearance.language')}
+                </Heading>
+                <Text tone="muted">
+                    {t('settings.appearance.languageSubheading')}
+                </Text>
                 <AdminLocaleSelect />
             </Stack>
         </Stack>

@@ -17,6 +17,7 @@ class SeoDefaultsData extends Data
      * @param  string|null  $defaultImage  Absolute URL of the default og:image.
      * @param  string  $defaultTitle  Title of pages without their own (home page): the SEO title of the site settings or the site name.
      * @param  string|null  $defaultDescription  Meta description of pages without their own.
+     * @param  bool  $noindex  The whole site is hidden from search engines (settings switch or coming soon page); overrides the robots value of every page.
      */
     public function __construct(
         public string $siteName,
@@ -25,5 +26,6 @@ class SeoDefaultsData extends Data
         public string $defaultTitle,
         public ?string $defaultDescription,
         public SeoOrganizationData $organization,
+        public bool $noindex = false,
     ) {}
 }

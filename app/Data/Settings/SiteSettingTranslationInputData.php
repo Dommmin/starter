@@ -17,6 +17,7 @@ class SiteSettingTranslationInputData extends Data
         public ?string $footerText,
         public ?string $seoTitle,
         public ?string $seoDescription,
+        public ?string $autoReplyText = null,
     ) {}
 
     public function isEmpty(): bool
@@ -24,6 +25,7 @@ class SiteSettingTranslationInputData extends Data
         return $this->tagline === null
             && $this->footerText === null
             && $this->seoTitle === null
-            && $this->seoDescription === null;
+            && $this->seoDescription === null
+            && $this->autoReplyText === null;
     }
 }

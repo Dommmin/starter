@@ -12,6 +12,12 @@
     @if ($submittedAt)
         <p><strong>{{ __('admin.contact.fields.createdAt') }}:</strong> {{ $submittedAt }}</p>
     @endif
+    @if ($formTitle)
+        <p><strong>{{ __('admin.contact.fields.form') }}:</strong> {{ $formTitle }}</p>
+    @endif
+    @foreach ($extraFields as $row)
+        <p><strong>{{ $row['label'] }}:</strong> {{ $row['value'] }}</p>
+    @endforeach
     <hr>
     <p>{!! nl2br(e($body)) !!}</p>
     <hr>

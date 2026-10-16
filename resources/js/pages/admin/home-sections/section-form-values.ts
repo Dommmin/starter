@@ -48,6 +48,8 @@ export type SectionFormValues = {
     note: string;
     items: ResourceFormRepeaterItem[];
     stats: ResourceFormRepeaterItem[];
+    /** Contact form key of a `contact` section; NONE = the default form. */
+    formKey: string;
 };
 
 const blank: SectionFormValues = {
@@ -65,6 +67,7 @@ const blank: SectionFormValues = {
     note: '',
     items: [],
     stats: [],
+    formKey: NONE,
 };
 
 function actionValues(
@@ -160,6 +163,7 @@ export function toFormValues(section: Section): SectionFormValues {
                 ...blank,
                 title: section.content.title,
                 description: section.content.description ?? '',
+                formKey: section.content.formKey ?? NONE,
             };
         case 'portfolio':
             return {
@@ -353,6 +357,7 @@ export function toContent(
             return {
                 title: values.title,
                 description: orNull(values.description),
+                formKey: values.formKey === NONE ? null : values.formKey,
             };
         case 'portfolio':
             return {

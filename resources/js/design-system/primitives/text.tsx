@@ -29,7 +29,7 @@ const variantMap: Record<TextVariant, string> = {
     caption: 'text-xs font-normal text-muted-foreground',
     code: 'font-mono text-xs sm:text-sm',
     /** A key number (price, statistic): large display type, steady digits. */
-    figure: 'font-serif text-3xl sm:text-4xl font-bold tracking-tight tabular-nums leading-none',
+    figure: 'font-heading text-3xl sm:text-4xl font-bold tracking-tight tabular-nums leading-none',
 };
 
 const toneMap: Record<TextTone, string> = {

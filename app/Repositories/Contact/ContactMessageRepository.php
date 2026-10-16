@@ -5,6 +5,7 @@ namespace App\Repositories\Contact;
 use App\Data\Admin\Dashboard\ContactCountsData;
 use App\Data\Admin\Dashboard\ContactDayData;
 use App\Enums\ContactMessageStatus;
+use App\Enums\ContactWebhookStatus;
 use App\Models\ContactMessage;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -42,6 +43,28 @@ class ContactMessageRepository
                 $query->where('status', ContactMessageStatus::Failed->value)
                     ->orWhere(function (Builder $query) use ($staleBefore): void {
                         $query->where('status', ContactMessageStatus::Pending->value)
+                            ->where('updated_at', '<', $staleBefore);
+                    });
+            })
+            ->orderBy('id')
+            ->lazyById(200);
+    }
+
+    /**
+     * Undelivered webhooks: failed ones and pending ones untouched since
+     * `$staleBefore` (lost job), below the attempt cap.
+     *
+     * @return LazyCollection<int, ContactMessage>
+     */
+    public function webhooksAwaitingRecovery(CarbonInterface $staleBefore, int $maxTotalAttempts): LazyCollection
+    {
+        return ContactMessage::query()
+            ->whereNull('webhook_delivered_at')
+            ->where('webhook_attempts', '<', $maxTotalAttempts)
+            ->where(function (Builder $query) use ($staleBefore): void {
+                $query->where('webhook_status', ContactWebhookStatus::Failed->value)
+                    ->orWhere(function (Builder $query) use ($staleBefore): void {
+                        $query->where('webhook_status', ContactWebhookStatus::Pending->value)
                             ->where('updated_at', '<', $staleBefore);
                     });
             })

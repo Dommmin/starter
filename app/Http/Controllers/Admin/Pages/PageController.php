@@ -149,6 +149,9 @@ class PageController extends Controller
 
         return new PageAbilitiesData(
             create: $user?->can('create', Page::class) ?? false,
+            update: $page !== null
+                ? ($user?->can('update', $page) ?? false)
+                : ($user?->can('create', Page::class) ?? false),
             publish: $user?->can('publish', Page::class) ?? false,
             delete: $page !== null
                 ? ($user?->can('delete', $page) ?? false)

@@ -14,11 +14,11 @@ Stan na 2026-10-12, gałąź `chore/foundation-hygiene-wave2` (develop + scalony
 
 ## Moduły w kodzie
 
-- Treści: strony (`Page`, tłumaczenia, przekierowania slugów), artykuły (`Article`, tłumaczenia, przekierowania), FAQ, sekcje strony głównej (`HomeSection`: m.in. hero ze statystykami, portfolio, zespół, cennik, opinie, FAQ, najnowsze artykuły, CTA, kontakt), menu (`MenuItem`), ustawienia strony (`SiteSetting`).
-- Kontakt: formularz publiczny, kolejka wysyłki z ponowieniami, lista w panelu, retencja (`contact:prune`).
+- Treści: strony (`Page`, tłumaczenia, przekierowania slugów), artykuły (`Article`, tłumaczenia, przekierowania), FAQ, sekcje strony głównej (`HomeSection`: m.in. hero ze statystykami, portfolio, zespół, cennik, opinie, FAQ, najnowsze artykuły, CTA, kontakt), menu (`MenuItem`), ustawienia strony (`SiteSetting`: marka, kontakt, NIP, godziny otwarcia, link do mapy, akcent, preset typografii, domyślny motyw, favicon, token Search Console), szablony stron prawnych (`LegalPageSeeder`, wszystkie środowiska).
+- Kontakt: konfigurowalne formularze (`ContactForm`: `contact`, `quote`, pola text/textarea/select/checkbox), do 5 odbiorców, auto-odpowiedź, podpisany webhook z `.env`, kolejka wysyłki z ponowieniami, lista z eksportem CSV, retencja (`contact:prune`).
 - Media: DAM z kwarantanną, opcjonalny skan ClamAV (`MEDIA_SCANNER_ENABLED`), warianty obrazów.
 - Konta: Fortify z 2FA i passkeys, role statyczne (`UserRole`: admin, editor), zarządzanie użytkownikami, lokalny dev-login tylko przy `APP_ENV=local`.
-- Panel: dashboard z wykresami i stroną System, ResourceTable/ResourceForm, bulk actions, filtry, ⌘K, audit log, generator `make:admin-resource`.
+- Panel: dashboard z wykresami i stroną System (przełączniki „coming soon” i `noindex`, checklista startu, testowy e-mail), ResourceTable/ResourceForm, bulk actions, filtry, ⌘K, audit log, generator `make:admin-resource`.
 - Publicznie: SSR, i18n PL/EN/DE z prefiksem języka, sitemap, robots, cookie consent (Plausible tylko po zgodzie), `/_design-system`.
 - Operacje: `/health/ready`, heartbeat schedulera, kontrola świeżości backupu, alerty `ops.*` mailem.
 

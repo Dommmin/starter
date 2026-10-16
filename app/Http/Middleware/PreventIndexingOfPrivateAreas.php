@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationManager;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,11 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Marks the panel, account settings, authentication flows and the Horizon
  * dashboard as non-indexable with `X-Robots-Tag`, independently of their
- * layouts.
+ * layouts; every response gets it while the site-wide noindex switch or the
+ * coming soon page is on.
  */
 class PreventIndexingOfPrivateAreas
 {
-    public function __construct(protected LocalizationManager $localization) {}
+    public function __construct(
+        protected LocalizationManager $localization,
+        protected SiteSettingsRepository $siteSettings,
+    ) {}
 
     /**
      * @param  Closure(Request): (Response)  $next
@@ -23,7 +28,7 @@ class PreventIndexingOfPrivateAreas
     {
         $response = $next($request);
 
-        if ($this->isPrivate($request)) {
+        if ($this->isPrivate($request) || $this->siteSettings->isNoindex()) {
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         }
 

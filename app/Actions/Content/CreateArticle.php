@@ -7,13 +7,14 @@ use App\Data\Content\ArticleTranslationInputData;
 use App\Enums\AuditAction;
 use App\Enums\PublicationStatus;
 use App\Models\Article;
+use App\Models\Tag;
 use App\Models\User;
 use App\Services\Content\ArticleSlugRedirects;
 use App\Services\Content\RichTextRenderer;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Create an article with its cover and initial translations in one
+ * Create an article with its cover, tags and initial translations in one
  * transaction, together with its audit entries (`article.created`, and
  * `article.published` when any translation starts out published).
  */
@@ -27,10 +28,11 @@ class CreateArticle
 
     /**
      * @param  array<string, ArticleTranslationInputData>  $translations  Keyed by locale.
+     * @param  list<int>  $tagIds
      */
-    public function handle(User $actor, ?int $coverMediaId, array $translations): Article
+    public function handle(User $actor, ?int $coverMediaId, array $translations, array $tagIds = []): Article
     {
-        return DB::transaction(function () use ($actor, $coverMediaId, $translations): Article {
+        return DB::transaction(function () use ($actor, $coverMediaId, $translations, $tagIds): Article {
             $article = Article::query()->create([
                 'cover_media_id' => $coverMediaId,
                 'created_by' => $actor->id,
@@ -42,6 +44,11 @@ class CreateArticle
 
             if ($coverMediaId !== null) {
                 $changes['cover_media_id'] = RecordAuditEvent::change(null, $coverMediaId);
+            }
+
+            if ($tagIds !== []) {
+                $article->tags()->sync($tagIds);
+                $changes['tags'] = RecordAuditEvent::change(null, Tag::slugsOf($tagIds));
             }
 
             foreach ($translations as $locale => $input) {

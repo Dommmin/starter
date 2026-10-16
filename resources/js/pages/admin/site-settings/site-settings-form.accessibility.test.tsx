@@ -86,6 +86,7 @@ function blankTranslation(): App.Data.Admin.Settings.SiteSettingTranslationFormD
         footerText: null,
         seoTitle: null,
         seoDescription: null,
+        autoReplyText: null,
     };
 }
 
@@ -115,6 +116,24 @@ function makeEditor(
                 github: '',
             },
             translations: { en: blankTranslation(), pl: blankTranslation() },
+            accent: null,
+            typography: null,
+            defaultTheme: 'system',
+            faviconMediaId: null,
+            taxId: null,
+            mapUrl: null,
+            openingHours: {
+                monday: { opens: '', closes: '' },
+                tuesday: { opens: '', closes: '' },
+                wednesday: { opens: '', closes: '' },
+                thursday: { opens: '', closes: '' },
+                friday: { opens: '', closes: '' },
+                saturday: { opens: '', closes: '' },
+                sunday: { opens: '', closes: '' },
+            },
+            googleSiteVerification: null,
+            contactRecipients: [],
+            contactAutoReply: false,
             ...settings,
         },
         locales: {
@@ -214,7 +233,19 @@ describe('SiteSettingsForm', () => {
         expect(field(container, 'site_name').value).toBe('Starter');
         expect(field(container, 'social_links.facebook')).not.toBeNull();
         expect(field(container, 'social_links.linkedin')).not.toBeNull();
-        expect(field(container, 'contact_recipient_email').type).toBe('email');
+        expect(field(container, 'auto_reply_text')).not.toBeNull();
+        expect(
+            [...container.querySelectorAll('button')].some(
+                (button) =>
+                    button.textContent ===
+                    'admin.siteSettings.fields.recipientAdd',
+            ),
+        ).toBe(true);
+        expect(
+            container.querySelector(
+                '[role="switch"][id$="contact_auto_reply"]',
+            ),
+        ).not.toBeNull();
         expect(field(container, 'seo_title')).not.toBeNull();
         expect(container.querySelectorAll('[role="tab"]')).toHaveLength(2);
     });

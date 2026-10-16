@@ -1,16 +1,32 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import {
+    lazy,
+    Suspense,
+    useEffect,
+    useId,
+    useRef,
+    type ReactNode,
+} from 'react';
 import { Alert } from './alert';
 import { Button } from './button';
 import { ErrorSummary, type ErrorSummaryItem } from './error-summary';
 import { Grid } from './grid';
 import { Heading } from './heading';
 import { Section } from './section';
+import type { SelectFieldOption } from './select-field';
 import { Stack } from './stack';
 import { Surface } from './surface';
 import { Text } from './text';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
 import { useSubmitErrorFocus } from './use-submit-error-focus';
+
+// Select and checkbox (Radix) load only for forms with extra fields, so the
+// default contact form keeps the public page chunk small (bundle budget).
+const ContactExtraFields = lazy(() =>
+    import('./contact-extra-fields').then((module) => ({
+        default: module.ContactExtraFields,
+    })),
+);
 
 export type ContactSectionValues = {
     name: string;
@@ -27,6 +43,34 @@ export type ContactSectionLabels = {
     email: string;
     message: string;
 };
+
+/**
+ * Configured extra field rendered after the message (e.g. a budget select
+ * of a quote form). Text fields take a string, checkboxes a boolean.
+ */
+export type ContactSectionExtraField =
+    | {
+          name: string;
+          type: 'text' | 'textarea' | 'select';
+          label: string;
+          value: string;
+          onChange: (value: string) => void;
+          required?: boolean;
+          error?: string;
+          /** Select only. */
+          options?: SelectFieldOption[];
+          /** Select only: translated prompt shown before a choice. */
+          placeholder?: string;
+      }
+    | {
+          name: string;
+          type: 'checkbox';
+          label: string;
+          value: boolean;
+          onChange: (value: boolean) => void;
+          required?: boolean;
+          error?: string;
+      };
 
 /**
  * Honeypot field for spam bots: rendered off-screen, hidden from assistive
@@ -67,6 +111,8 @@ export type ContactSectionProps = {
     aside?: ReactNode;
     /** Band background, e.g. to alternate with the neighbouring sections. */
     tone?: 'default' | 'subtle';
+    /** Configured fields after the message, in order. */
+    extraFields?: ContactSectionExtraField[];
 };
 
 export function ContactSection({
@@ -86,6 +132,7 @@ export function ContactSection({
     success,
     aside,
     tone = 'default',
+    extraFields = [],
 }: ContactSectionProps) {
     const reactId = useId();
     const nameFieldId = `${reactId}-name`;
@@ -113,6 +160,17 @@ export function ContactSection({
             label: labels.message,
             message: errors.message,
         });
+    }
+
+    const extraFieldId = (name: string) => `${reactId}-extra-${name}`;
+    for (const field of extraFields) {
+        if (field.error) {
+            summaryItems.push({
+                fieldId: extraFieldId(field.name),
+                label: field.label,
+                message: field.error,
+            });
+        }
     }
 
     const hasSuccess = success !== undefined && success !== null;
@@ -214,6 +272,15 @@ export function ContactSection({
                 disabled={isPending}
                 required
             />
+            {extraFields.length > 0 && (
+                <Suspense fallback={null}>
+                    <ContactExtraFields
+                        fields={extraFields}
+                        fieldId={extraFieldId}
+                        disabled={isPending}
+                    />
+                </Suspense>
+            )}
             {spamTrap && (
                 <div aria-hidden="true" className="sr-only">
                     <label htmlFor={`${reactId}-${spamTrap.name}`}>

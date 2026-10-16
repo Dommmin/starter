@@ -20,15 +20,7 @@ export default function Welcome() {
                 canonical={canonicalUrl}
                 alternates={alternateUrls}
                 jsonLd={[
-                    {
-                        '@context': 'https://schema.org',
-                        '@type': 'Organization',
-                        name: seo.organization.name,
-                        url: seo.organization.url,
-                        ...(seo.organization.logo
-                            ? { logo: seo.organization.logo }
-                            : {}),
-                    },
+                    page.props.organizationJsonLd,
                     {
                         '@context': 'https://schema.org',
                         '@type': 'WebSite',

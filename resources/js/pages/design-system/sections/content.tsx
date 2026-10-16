@@ -1,6 +1,7 @@
 import {
     RichTextContent,
     Stack,
+    TagList,
     Text,
     serializeJsonLd,
 } from '@/design-system/primitives';
@@ -33,29 +34,87 @@ const demoJsonLd = {
     headline: '</script> & „Zażółć”',
 };
 
-/** WEB-04 — content: server-sanitised rich text. */
+/** WEB-04 — content: server-sanitised rich text and article tags. */
 function ContentSection() {
     const { t } = useTranslation();
     const demo = (key: string) => t(`admin.designSystem.web.content.${key}`);
+    const tags = [
+        { id: 'news', label: demo('tagNews'), href: '#web-04' },
+        { id: 'guides', label: demo('tagGuides'), href: '#web-04' },
+    ];
 
     return (
-        <ShowcaseComponent
-            name="RichTextContent"
-            layout="full"
-            notApplicable={['loading', 'error', 'disabled', 'pending']}
-        >
-            <ShowcaseState state="longContent" detail={demo('allowlist')} fill>
-                <RichTextContent html={demoRichTextHtml} />
-            </ShowcaseState>
-            <ShowcaseState state="empty" fill>
-                <Stack gap="tight">
-                    <RichTextContent html="" />
-                    <Text variant="caption" tone="muted">
-                        {demo('emptyNote')}
-                    </Text>
-                </Stack>
-            </ShowcaseState>
-        </ShowcaseComponent>
+        <Stack gap="default">
+            <ShowcaseComponent
+                name="RichTextContent"
+                layout="full"
+                notApplicable={['loading', 'error', 'disabled', 'pending']}
+            >
+                <ShowcaseState
+                    state="longContent"
+                    detail={demo('allowlist')}
+                    fill
+                >
+                    <RichTextContent html={demoRichTextHtml} />
+                </ShowcaseState>
+                <ShowcaseState state="empty" fill>
+                    <Stack gap="tight">
+                        <RichTextContent html="" />
+                        <Text variant="caption" tone="muted">
+                            {demo('emptyNote')}
+                        </Text>
+                    </Stack>
+                </ShowcaseState>
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="TagList"
+                layout="wide"
+                notApplicable={['loading', 'error', 'disabled', 'pending']}
+            >
+                <ShowcaseState state="default" detail="variant=inline">
+                    <TagList label={demo('tagsLabel')} items={tags} />
+                </ShowcaseState>
+                <ShowcaseState state="variants" detail="variant=filter">
+                    <TagList
+                        label={demo('tagsFilterLabel')}
+                        variant="filter"
+                        items={[
+                            {
+                                id: 'all',
+                                label: demo('tagsAll'),
+                                href: '#web-04',
+                            },
+                            ...tags.map((tag) => ({
+                                ...tag,
+                                current: tag.id === 'guides',
+                            })),
+                        ]}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="longContent">
+                    <TagList
+                        label={demo('tagsLabel')}
+                        items={[
+                            ...tags,
+                            {
+                                id: 'long',
+                                label: demo('tagLong'),
+                                href: '#web-04',
+                            },
+                        ]}
+                    />
+                </ShowcaseState>
+                <ShowcaseState state="empty">
+                    <Stack gap="tight">
+                        <TagList label={demo('tagsLabel')} items={[]} />
+                        <Text variant="caption" tone="muted">
+                            {demo('tagsEmptyNote')}
+                        </Text>
+                    </Stack>
+                </ShowcaseState>
+            </ShowcaseComponent>
+        </Stack>
     );
 }
 

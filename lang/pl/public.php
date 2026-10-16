@@ -70,11 +70,17 @@ return [
         'readMore' => 'Czytaj artykuł: :title',
         'publishedOn' => 'Opublikowano :date',
         'backToList' => 'Wszystkie artykuły',
+        'tagsLabel' => 'Tagi',
+        'filterLabel' => 'Filtruj po tagu',
+        'allTags' => 'Wszystkie',
+        'taggedTitle' => 'Artykuły: :tag',
+        'emptyTagged' => 'Brak artykułów z tym tagiem.',
         'previousPage' => 'Poprzednia strona',
         'nextPage' => 'Następna strona',
         'paginationSummary' => 'Strona :page z :total',
     ],
     'contact' => [
+        'selectPlaceholder' => 'Wybierz…',
         'title' => 'Skontaktuj się z nami',
         'description' => 'Wyślij wiadomość, a odpowiemy na podany adres e-mail.',
         'fields' => [
@@ -94,6 +100,16 @@ return [
             'invalidCharacters' => 'To pole zawiera niedozwolone znaki.',
             'formExpired' => 'Formularz wygasł. Odśwież stronę i spróbuj ponownie.',
         ],
+    ],
+    'comingSoon' => [
+        'title' => 'Wkrótce',
+        'heading' => 'Wkrótce startujemy',
+        'description' => 'Nasza nowa strona jest prawie gotowa. Zajrzyj do nas za kilka dni.',
+        'contact' => 'Masz pytania? Napisz na :email.',
+    ],
+    'contactAutoReply' => [
+        'subject' => 'Dziękujemy za wiadomość — :site',
+        'automatic' => 'To automatyczna odpowiedź; odezwiemy się do Ciebie osobiście.',
     ],
     'site' => [
         'defaultTitle' => 'Punkt Startowy — Strony i aplikacje dla małych firm',

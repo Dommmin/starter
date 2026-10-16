@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Content;
 use App\Data\Content\ContentPreviewData;
 use App\Data\Content\PublicArticleData;
 use App\Data\Content\PublicPageData;
+use App\Data\Content\PublicTagData;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Page;
@@ -73,12 +74,15 @@ class ContentPreviewController extends Controller
 
         $this->usePublicContext($request, $contentLocale);
 
+        $listUrl = $this->urls->url('articles.index', [], $contentLocale);
+
         return $this->privateResponse($request, Inertia::render('articles/show', PublicArticleData::fromTranslation(
             $translation,
             $this->richText->toHtml($translation->body),
-            $this->urls->url('articles.index', [], $contentLocale),
+            $listUrl,
             [],
             ContentPreviewData::forArticle($translation, route('admin.articles.edit', $article)),
+            PublicTagData::listOf($translation->article->tags, $contentLocale, $this->config->getPublicFallback(), $listUrl),
         )));
     }
 

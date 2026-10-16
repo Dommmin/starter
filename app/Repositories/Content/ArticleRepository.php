@@ -8,6 +8,7 @@ use App\Enums\PublicationStatus;
 use App\Models\Article;
 use App\Models\ArticleSlugRedirect;
 use App\Models\ArticleTranslation;
+use App\Models\Tag;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -33,24 +34,30 @@ class ArticleRepository
     }
 
     /**
-     * Load an article with every translation and its cover for the editor.
+     * Load an article with every translation, its cover and tags for the
+     * editor.
      */
     public function forEditor(Article $article): Article
     {
-        return $article->load(['translations', 'cover']);
+        return $article->load(['translations', 'cover', 'tags']);
     }
 
     /**
-     * Newest visible translations of the given locale for the public list.
+     * Newest visible translations of the given locale for the public list,
+     * optionally only articles with the given tag; with cover and tags.
      *
      * @return LengthAwarePaginator<int, ArticleTranslation>
      */
-    public function publishedPage(string $locale, int $perPage): LengthAwarePaginator
+    public function publishedPage(string $locale, int $perPage, ?Tag $tag = null): LengthAwarePaginator
     {
         return ArticleTranslation::query()
             ->published()
             ->where('locale', $locale)
-            ->with('article.cover')
+            ->when($tag !== null, fn (Builder $query) => $query->whereHas(
+                'article.tags',
+                fn (Builder $tags) => $tags->whereKey($tag?->id),
+            ))
+            ->with(['article.cover', 'article.tags'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->paginate($perPage);
@@ -84,7 +91,7 @@ class ArticleRepository
     {
         return $article->translations()
             ->where('locale', $locale)
-            ->with('article.cover')
+            ->with(['article.cover', 'article.tags'])
             ->first();
     }
 
@@ -98,7 +105,7 @@ class ArticleRepository
             ->published()
             ->where('locale', $locale)
             ->where('slug', $slug)
-            ->with(['article.cover', 'article.translations' => fn ($query) => $query->published()])
+            ->with(['article.cover', 'article.tags', 'article.translations' => fn ($query) => $query->published()])
             ->first();
     }
 

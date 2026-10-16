@@ -6,8 +6,9 @@ use App\Models\ContactMessage;
 use App\Models\User;
 
 /**
- * Panel roles (admin and editor) read contact messages; only
- * administrators trigger a new delivery or delete a message.
+ * Admins and editors read contact messages; a viewer does not (personal
+ * data of senders). Only administrators trigger a new delivery, delete a
+ * message or export the list.
  */
 class ContactMessagePolicy
 {
@@ -16,7 +17,7 @@ class ContactMessagePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -24,7 +25,7 @@ class ContactMessagePolicy
      */
     public function view(User $user, ContactMessage $contactMessage): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -39,6 +40,14 @@ class ContactMessagePolicy
      * Determine whether the user can permanently delete the message.
      */
     public function delete(User $user, ContactMessage $contactMessage): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can export the filtered list as CSV.
+     */
+    public function export(User $user): bool
     {
         return $user->isAdmin();
     }

@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\ContactMessage;
 use App\Repositories\Settings\SiteSettingsRepository;
+use App\Services\Localization\LocalizationConfig;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -37,6 +38,8 @@ class ContactMessageMail extends Mailable
                 'body' => $this->contactMessage->message,
                 'locale' => $this->contactMessage->locale,
                 'submittedAt' => $this->contactMessage->created_at?->toIso8601String(),
+                'formTitle' => $this->contactMessage->form?->titleIn(app()->getLocale(), app(LocalizationConfig::class)->getPublicFallback()),
+                'extraFields' => $this->contactMessage->extraFieldRows(app()->getLocale(), app(LocalizationConfig::class)->getPublicFallback()),
             ],
         );
     }

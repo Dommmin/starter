@@ -47,6 +47,17 @@ class UpdateArticleRequest extends FormRequest
     }
 
     /**
+     * New tag set, or null when the request does not send `tag_ids` (the
+     * article keeps its tags).
+     *
+     * @return list<int>|null
+     */
+    public function tagIds(): ?array
+    {
+        return $this->has('tag_ids') ? $this->inputRules()->tagIds($this->validated()) : null;
+    }
+
+    /**
      * @return array<string, ArticleTranslationInputData>
      */
     public function translations(): array

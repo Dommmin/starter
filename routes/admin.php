@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\Articles\ArticleController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
+use App\Http\Controllers\Admin\ContactForms\ContactFormController;
 use App\Http\Controllers\Admin\Content\ContentPreviewController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
@@ -10,13 +11,16 @@ use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
+use App\Http\Controllers\Admin\Settings\SitePublicationController;
 use App\Http\Controllers\Admin\Settings\SiteSettingsController;
 use App\Http\Controllers\Admin\SystemStatusController;
+use App\Http\Controllers\Admin\Tags\TagController;
 use App\Http\Controllers\Admin\UserIndexController;
 use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Middleware\EnsureCanAccessAdminPanel;
 use App\Models\Article;
 use App\Models\AuditLog;
+use App\Models\ContactForm;
 use App\Models\ContactMessage;
 use App\Models\Faq;
 use App\Models\HomeSection;
@@ -24,6 +28,7 @@ use App\Models\MediaAsset;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\SiteSetting;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +40,13 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')
             ->can('view', SiteSetting::class);
+        Route::put('/system/publication', [SitePublicationController::class, 'update'])
+            ->name('system.publication.update')
+            ->can('update', SiteSetting::class);
+        Route::post('/system/test-mail', [SitePublicationController::class, 'sendTestMail'])
+            ->name('system.test-mail.store')
+            ->can('update', SiteSetting::class)
+            ->middleware('throttle:3,1');
         Route::get('/users', [UserIndexController::class, 'index'])
             ->name('users.index')
             ->can('viewAny', User::class);
@@ -71,7 +83,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('create', Page::class);
         Route::get('/pages/{page}/edit', [PageController::class, 'edit'])
             ->name('pages.edit')
-            ->can('update', 'page');
+            ->can('view', 'page');
         Route::get('/pages/{page}/preview/{contentLocale}', [ContentPreviewController::class, 'page'])
             ->name('pages.preview')
             ->middleware('signed')
@@ -94,7 +106,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('create', Article::class);
         Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])
             ->name('articles.edit')
-            ->can('update', 'article');
+            ->can('view', 'article');
         Route::get('/articles/{article}/preview/{contentLocale}', [ContentPreviewController::class, 'article'])
             ->name('articles.preview')
             ->middleware('signed')
@@ -105,6 +117,25 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])
             ->name('articles.destroy')
             ->can('delete', 'article');
+
+        Route::get('/tags', [TagController::class, 'index'])
+            ->name('tags.index')
+            ->can('viewAny', Tag::class);
+        Route::get('/tags/create', [TagController::class, 'create'])
+            ->name('tags.create')
+            ->can('create', Tag::class);
+        Route::post('/tags', [TagController::class, 'store'])
+            ->name('tags.store')
+            ->can('create', Tag::class);
+        Route::get('/tags/{tag}/edit', [TagController::class, 'edit'])
+            ->name('tags.edit')
+            ->can('view', 'tag');
+        Route::put('/tags/{tag}', [TagController::class, 'update'])
+            ->name('tags.update')
+            ->can('update', 'tag');
+        Route::delete('/tags/{tag}', [TagController::class, 'destroy'])
+            ->name('tags.destroy')
+            ->can('delete', 'tag');
 
         Route::get('/faqs', [FaqController::class, 'index'])
             ->name('faqs.index')
@@ -117,7 +148,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('create', Faq::class);
         Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
             ->name('faqs.edit')
-            ->can('update', 'faq');
+            ->can('view', 'faq');
         Route::put('/faqs/{faq}', [FaqController::class, 'update'])
             ->name('faqs.update')
             ->can('update', 'faq');
@@ -153,6 +184,28 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/contact', [ContactMessageController::class, 'index'])
             ->name('contact.index')
             ->can('viewAny', ContactMessage::class);
+        Route::get('/contact-forms', [ContactFormController::class, 'index'])
+            ->name('contact-forms.index')
+            ->can('viewAny', ContactForm::class);
+        Route::get('/contact-forms/create', [ContactFormController::class, 'create'])
+            ->name('contact-forms.create')
+            ->can('create', ContactForm::class);
+        Route::post('/contact-forms', [ContactFormController::class, 'store'])
+            ->name('contact-forms.store')
+            ->can('create', ContactForm::class);
+        Route::get('/contact-forms/{contactForm}/edit', [ContactFormController::class, 'edit'])
+            ->name('contact-forms.edit')
+            ->can('update', 'contactForm');
+        Route::put('/contact-forms/{contactForm}', [ContactFormController::class, 'update'])
+            ->name('contact-forms.update')
+            ->can('update', 'contactForm');
+        Route::delete('/contact-forms/{contactForm}', [ContactFormController::class, 'destroy'])
+            ->name('contact-forms.destroy')
+            ->can('delete', 'contactForm');
+        Route::get('/contact/export', [ContactMessageController::class, 'export'])
+            ->name('contact.export')
+            ->can('export', ContactMessage::class)
+            ->middleware('throttle:10,1');
         Route::delete('/contact', [ContactMessageController::class, 'destroyMany'])
             ->name('contact.destroy-many')
             ->can('viewAny', ContactMessage::class);
@@ -186,7 +239,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('reorder', MenuItem::class);
         Route::get('/navigation/{menuItem}/edit', [MenuItemController::class, 'edit'])
             ->name('navigation.edit')
-            ->can('update', 'menuItem');
+            ->can('view', 'menuItem');
         Route::put('/navigation/{menuItem}', [MenuItemController::class, 'update'])
             ->name('navigation.update')
             ->can('update', 'menuItem');
@@ -202,7 +255,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/home-sections/{homeSection}/edit', [HomeSectionController::class, 'edit'])
             ->whereNumber('homeSection')
             ->name('home-sections.edit')
-            ->can('update', 'homeSection');
+            ->can('view', 'homeSection');
         Route::put('/home-sections/{homeSection}', [HomeSectionController::class, 'update'])
             ->whereNumber('homeSection')
             ->name('home-sections.update')

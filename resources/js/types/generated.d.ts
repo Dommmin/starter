@@ -4,6 +4,7 @@ declare namespace App {
             namespace Articles {
                 export type ArticleAbilitiesData = {
                     create: boolean;
+                    update: boolean;
                     publish: boolean;
                     delete: boolean;
                 };
@@ -12,6 +13,8 @@ declare namespace App {
                     locales: App.Data.Content.ContentLocalesData;
                     can: App.Data.Admin.Articles.ArticleAbilitiesData;
                     previewUrls: Record<string, string>;
+                    tagOptions: App.Data.Listing.RecordOptionData[];
+                    maxTags: number;
                 };
                 export type ArticleFormData = {
                     id: number | null;
@@ -21,6 +24,7 @@ declare namespace App {
                         string,
                         App.Data.Admin.Articles.ArticleTranslationFormData
                     >;
+                    tagIds: number[];
                 };
                 export type ArticleIndexData = {
                     items: App.Data.Admin.Articles.ArticleListItemData[];
@@ -96,15 +100,25 @@ declare namespace App {
                     lastError: string | null;
                     sentAt: string | null;
                     createdAt: string | null;
+                    webhookStatus: App.Enums.ContactWebhookStatus | null;
+                    webhookAttempts: number;
+                    formTitle: string | null;
+                    extraFields: App.Data.Admin.Contact.ContactMessageExtraFieldData[];
+                };
+                export type ContactMessageExtraFieldData = {
+                    label: string;
+                    value: string;
                 };
                 export type ContactMessageIndexData = {
                     items: App.Data.Admin.Contact.ContactMessageListItemData[];
                     pagination: App.Data.Listing.ListPaginationData;
                     filters: App.Data.Admin.Contact.ContactMessageListFiltersData;
                     can: App.Data.Admin.Contact.ContactMessageListAbilitiesData;
+                    exportMaxRows: number;
                 };
                 export type ContactMessageListAbilitiesData = {
                     delete: boolean;
+                    export: boolean;
                 };
                 export type ContactMessageListFiltersData = {
                     search: string;
@@ -124,6 +138,41 @@ declare namespace App {
                 export type ContactMessageShowData = {
                     contactMessage: App.Data.Admin.Contact.ContactMessageDetailData;
                     can: App.Data.Admin.Contact.ContactMessageAbilitiesData;
+                };
+            }
+            namespace ContactForms {
+                export type ContactFormEditorData = {
+                    form: App.Data.Admin.ContactForms.ContactFormFormData;
+                    locales: App.Data.Content.ContentLocalesData;
+                    canDelete: boolean;
+                    maxFields: number;
+                    maxOptions: number;
+                };
+                export type ContactFormFieldFormData = {
+                    key: string;
+                    type: App.Enums.ContactFieldType;
+                    required: boolean;
+                    label: Record<string, string>;
+                    options: string;
+                };
+                export type ContactFormFormData = {
+                    id: number | null;
+                    updatedAt: string | null;
+                    key: string;
+                    enabled: boolean;
+                    title: Record<string, string>;
+                    fields: App.Data.Admin.ContactForms.ContactFormFieldFormData[];
+                };
+                export type ContactFormIndexData = {
+                    items: App.Data.Admin.ContactForms.ContactFormListItemData[];
+                    canCreate: boolean;
+                };
+                export type ContactFormListItemData = {
+                    id: number;
+                    key: string;
+                    title: string;
+                    enabled: boolean;
+                    fieldsCount: number;
                 };
             }
             namespace Dashboard {
@@ -167,6 +216,8 @@ declare namespace App {
                         | null;
                     publishing: App.Data.Admin.Dashboard.PublishingData | null;
                     attention: App.Data.Admin.Dashboard.AttentionData | null;
+                    canCreateArticles: boolean;
+                    canCreatePages: boolean;
                 };
                 export type PublishingData = {
                     recent: number;
@@ -178,6 +229,7 @@ declare namespace App {
             namespace Faqs {
                 export type FaqAbilitiesData = {
                     create: boolean;
+                    update: boolean;
                     delete: boolean;
                 };
                 export type FaqEditorData = {
@@ -216,6 +268,10 @@ declare namespace App {
                 };
             }
             namespace HomeSections {
+                export type HomeContactFormOptionData = {
+                    key: string;
+                    title: string;
+                };
                 export type HomePageOptionData = {
                     id: number;
                     title: string;
@@ -230,6 +286,7 @@ declare namespace App {
                     linkTargets: App.Enums.HomeLinkTarget[];
                     pages: App.Data.Admin.HomeSections.HomePageOptionData[];
                     can: App.Data.Admin.HomeSections.HomeSectionAbilitiesData;
+                    contactForms: App.Data.Admin.HomeSections.HomeContactFormOptionData[];
                 };
                 export type HomeSectionFormData = {
                     id: number;
@@ -366,6 +423,7 @@ declare namespace App {
             namespace Navigation {
                 export type MenuAbilitiesData = {
                     create: boolean;
+                    update: boolean;
                     reorder: boolean;
                     delete: boolean;
                 };
@@ -432,6 +490,7 @@ declare namespace App {
             namespace Pages {
                 export type PageAbilitiesData = {
                     create: boolean;
+                    update: boolean;
                     publish: boolean;
                     delete: boolean;
                 };
@@ -487,6 +546,7 @@ declare namespace App {
                     footerText: string | null;
                     seoTitle: string | null;
                     seoDescription: string | null;
+                    autoReplyText: string | null;
                 };
                 export type SiteSettingsEditorData = {
                     settings: App.Data.Admin.Settings.SiteSettingsFormData;
@@ -512,10 +572,61 @@ declare namespace App {
                         string,
                         App.Data.Admin.Settings.SiteSettingTranslationFormData
                     >;
+                    accent: App.Enums.AccentColor | null;
+                    typography: App.Enums.TypographyPreset | null;
+                    defaultTheme: App.Enums.ThemePreference;
+                    faviconMediaId: number | null;
+                    taxId: string | null;
+                    mapUrl: string | null;
+                    openingHours: {
+                        [day in App.Enums.Weekday]: {
+                            opens: string;
+                            closes: string;
+                        };
+                    };
+                    googleSiteVerification: string | null;
+                    contactRecipients: string[];
+                    contactAutoReply: boolean;
                 };
                 export type SocialNetworkOptionData = {
                     network: App.Enums.SocialNetwork;
                     label: string;
+                };
+            }
+            namespace System {
+                export type LaunchCheckData = {
+                    key: App.Enums.LaunchCheck;
+                    done: boolean;
+                };
+                export type SiteLaunchData = {
+                    comingSoon: boolean;
+                    noindex: boolean;
+                    checklist: App.Data.Admin.System.LaunchCheckData[];
+                    testMailRecipient: string;
+                };
+            }
+            namespace Tags {
+                export type TagEditorData = {
+                    tag: App.Data.Admin.Tags.TagFormData;
+                    locales: App.Data.Content.ContentLocalesData;
+                    canDelete: boolean;
+                    canUpdate: boolean;
+                };
+                export type TagFormData = {
+                    id: number | null;
+                    updatedAt: string | null;
+                    slug: string;
+                    name: Record<string, string>;
+                };
+                export type TagIndexData = {
+                    items: App.Data.Admin.Tags.TagListItemData[];
+                    canCreate: boolean;
+                };
+                export type TagListItemData = {
+                    id: number;
+                    slug: string;
+                    name: string;
+                    articlesCount: number;
                 };
             }
             namespace Users {
@@ -556,6 +667,23 @@ declare namespace App {
         namespace Contact {
             export type ContactFormData = {
                 token: string;
+                form: App.Data.Contact.PublicContactFormData | null;
+            };
+            export type PublicContactFieldData = {
+                key: string;
+                type: App.Enums.ContactFieldType;
+                label: string;
+                required: boolean;
+                options: App.Data.Contact.PublicContactFieldOptionData[];
+            };
+            export type PublicContactFieldOptionData = {
+                value: string;
+                label: string;
+            };
+            export type PublicContactFormData = {
+                key: string;
+                title: string;
+                fields: App.Data.Contact.PublicContactFieldData[];
             };
         }
         namespace Content {
@@ -566,6 +694,10 @@ declare namespace App {
                 publishedAt: string | null;
                 cover: App.Data.Media.MediaImageData | null;
                 coverAlt: string;
+                tags: App.Data.Content.PublicTagData[];
+            };
+            export type ComingSoonPageData = {
+                contactEmail: string | null;
             };
             export type ContentLocaleData = {
                 code: string;
@@ -595,11 +727,15 @@ declare namespace App {
                 listUrl: string;
                 alternates: Record<string, string>;
                 preview: App.Data.Content.ContentPreviewData | null;
+                tags: App.Data.Content.PublicTagData[];
             };
             export type PublicArticleListData = {
                 items: App.Data.Content.ArticleSummaryData[];
                 pagination: App.Data.Listing.ListPaginationData;
                 locale: string;
+                listUrl: string;
+                tags: App.Data.Content.PublicTagData[];
+                activeTag: App.Data.Content.PublicTagData | null;
             };
             export type PublicPageData = {
                 title: string;
@@ -610,9 +746,15 @@ declare namespace App {
                 alternates: Record<string, string>;
                 preview: App.Data.Content.ContentPreviewData | null;
             };
+            export type PublicTagData = {
+                slug: string;
+                name: string;
+                url: string;
+            };
             export type WelcomePageData = {
                 contactForm: App.Data.Contact.ContactFormData;
                 sections: App.Data.Home.HomeSectionData[];
+                organizationJsonLd: Record<string, unknown>;
             };
         }
         namespace Errors {
@@ -624,6 +766,7 @@ declare namespace App {
             export type ContactContentData = {
                 title: string;
                 description: string | null;
+                formKey: string | null;
             };
             export type CtaContentData = {
                 title: string;
@@ -882,6 +1025,7 @@ declare namespace App {
                 defaultTitle: string;
                 defaultDescription: string | null;
                 organization: App.Data.Seo.SeoOrganizationData;
+                noindex: boolean;
             };
             export type SeoOrganizationData = {
                 name: string;
@@ -890,10 +1034,18 @@ declare namespace App {
             };
         }
         namespace Settings {
+            export type OpeningHoursDayData = {
+                day: App.Enums.Weekday;
+                opens: string | null;
+                closes: string | null;
+            };
             export type SiteContactData = {
                 email: string | null;
                 phone: string | null;
                 address: string | null;
+                taxId: string | null;
+                mapUrl: string | null;
+                openingHours: App.Data.Settings.OpeningHoursDayData[] | null;
             };
             export type SiteSettingsData = {
                 name: string;
@@ -946,9 +1098,21 @@ declare namespace App {
             | 'navigation.reordered'
             | 'home_section.updated'
             | 'home_section.toggled'
-            | 'home_section.reordered';
+            | 'home_section.reordered'
+            | 'contact_form.created'
+            | 'contact_form.updated'
+            | 'contact_form.deleted'
+            | 'tag.created'
+            | 'tag.updated'
+            | 'tag.deleted';
         export type ConsentCategory = 'analytics' | 'marketing';
+        export type ContactFieldType =
+            | 'text'
+            | 'textarea'
+            | 'select'
+            | 'checkbox';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
+        export type ContactWebhookStatus = 'pending' | 'delivered' | 'failed';
         export type ContentPreviewState = 'draft' | 'scheduled' | 'published';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';
@@ -990,6 +1154,11 @@ declare namespace App {
             | 'portfolio'
             | 'team'
             | 'pricing';
+        export type LaunchCheck =
+            | 'admin_two_factor'
+            | 'test_mail'
+            | 'search_console'
+            | 'legal_pages';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type MenuItemType =
             | 'page'
@@ -1008,7 +1177,17 @@ declare namespace App {
             | 'youtube'
             | 'tiktok'
             | 'github';
-        export type UserRole = 'admin' | 'editor';
+        export type ThemePreference = 'light' | 'dark' | 'system';
+        export type TypographyPreset = 'default' | 'classic';
+        export type UserRole = 'admin' | 'editor' | 'viewer';
+        export type Weekday =
+            | 'monday'
+            | 'tuesday'
+            | 'wednesday'
+            | 'thursday'
+            | 'friday'
+            | 'saturday'
+            | 'sunday';
     }
 }
 declare namespace Illuminate {

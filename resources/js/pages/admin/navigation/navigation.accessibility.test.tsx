@@ -117,7 +117,7 @@ describe('AdminNavigationIndex', () => {
             location: 'header',
             locale: 'en',
             locales,
-            can: { create: true, reorder: true, delete: true },
+            can: { create: true, update: true, reorder: true, delete: true },
             items: [
                 treeItem({
                     id: 1,
@@ -169,7 +169,7 @@ describe('AdminNavigationIndex', () => {
             location: 'footer',
             locale: 'pl',
             locales,
-            can: { create: true, reorder: true, delete: true },
+            can: { create: true, update: true, reorder: true, delete: true },
             items: [treeItem({ id: 5 }), treeItem({ id: 6 })],
         };
 
@@ -197,7 +197,7 @@ describe('AdminNavigationIndex', () => {
             location: 'header',
             locale: 'en',
             locales,
-            can: { create: false, reorder: true, delete: true },
+            can: { create: false, update: true, reorder: true, delete: true },
             items: [],
         };
 
@@ -237,7 +237,7 @@ function editor(item: Partial<EditorProps['item']> = {}): EditorProps {
             { anchor: 'hero', sectionType: 'hero', enabled: true },
             { anchor: 'faq', sectionType: 'faq', enabled: false },
         ],
-        can: { create: true, reorder: true, delete: true },
+        can: { create: true, update: true, reorder: true, delete: true },
     };
 }
 

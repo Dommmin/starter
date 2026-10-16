@@ -25,6 +25,9 @@ function ContactFamilySection() {
     const demo = (key: string) => t(`admin.designSystem.web.contact.${key}`);
     const [values, setValues] = useState<ContactSectionValues>(emptyValues);
     const [errors, setErrors] = useState<ContactSectionErrors>({});
+    const [extraBudget, setExtraBudget] = useState('');
+    const [extraDeadline, setExtraDeadline] = useState('');
+    const [extraPhone, setExtraPhone] = useState(false);
     const [status, setStatus] = useState<DemoStatus>('editing');
     const [isStaticErrorsShown, setStaticErrorsShown] = useState(false);
     const timer = useRef<number | null>(null);
@@ -169,6 +172,55 @@ function ContactFamilySection() {
                     {...common}
                     values={emptyValues}
                     success={success}
+                />
+            </ShowcaseState>
+            <ShowcaseState
+                state="withDescription"
+                detail={demo('extraFields')}
+                fill
+            >
+                <ContactSection
+                    {...common}
+                    values={filled}
+                    extraFields={[
+                        {
+                            name: 'fields[budget]',
+                            type: 'select',
+                            label: demo('extraBudget'),
+                            required: true,
+                            value: extraBudget,
+                            onChange: setExtraBudget,
+                            placeholder: t('contact.selectPlaceholder'),
+                            options: [
+                                {
+                                    value: 'small',
+                                    label: demo('extraBudgetSmall'),
+                                },
+                                {
+                                    value: 'large',
+                                    label: demo('extraBudgetLarge'),
+                                },
+                            ],
+                            error:
+                                extraBudget === ''
+                                    ? demo('extraBudgetError')
+                                    : undefined,
+                        },
+                        {
+                            name: 'fields[deadline]',
+                            type: 'text',
+                            label: demo('extraDeadline'),
+                            value: extraDeadline,
+                            onChange: setExtraDeadline,
+                        },
+                        {
+                            name: 'fields[phone_ok]',
+                            type: 'checkbox',
+                            label: demo('extraPhone'),
+                            value: extraPhone,
+                            onChange: setExtraPhone,
+                        },
+                    ]}
                 />
             </ShowcaseState>
             <ShowcaseState state="longContent" fill>

@@ -599,13 +599,13 @@ test('an owned resource stores its owner server-side and lets only the owner rea
         ->and($read('database/factories/ProductFactory.php'))->toContain("'user_id' => User::factory(),")
         ->and($read('app/Http/Requests/Admin/Products/StoreProductRequest.php'))->not->toContain('user_id');
 
-    expect($policy)->toContain('return $user->canAccessAdminPanel() && $user->id === $product->user_id;')
+    expect($policy)->toContain('return $user->canEditContent() && $user->id === $product->user_id;')
         ->not->toContain('isAdmin()');
 
     expect($controller)
         ->toContain("Product::query()->where('user_id', \$request->user()?->id)")
         ->toContain('$product->user()->associate($request->user());')
-        ->toContain(': ($user?->canAccessAdminPanel() ?? false),');
+        ->toContain(': ($user?->canEditContent() ?? false),');
 
     expect($read('tests/Feature/Admin/ProductCrudTest.php'))
         ->toContain("test('another user cannot open, change or delete a product, administrators included'")

@@ -133,12 +133,12 @@ test('admins can delete a message', function () {
     expect(ContactMessage::query()->whereKey($message->id)->exists())->toBeFalse();
 });
 
-test('the list tells only administrators that they may delete messages', function () {
+test('the list tells only administrators that they may delete and export messages', function () {
     $this->actingAs(User::factory()->admin()->create())->get(route('admin.contact.index'))
-        ->assertInertia(fn (Assert $page) => $page->where('can', ['delete' => true]));
+        ->assertInertia(fn (Assert $page) => $page->where('can', ['delete' => true, 'export' => true]));
 
     $this->actingAs(User::factory()->editor()->create())->get(route('admin.contact.index'))
-        ->assertInertia(fn (Assert $page) => $page->where('can', ['delete' => false]));
+        ->assertInertia(fn (Assert $page) => $page->where('can', ['delete' => false, 'export' => false]));
 });
 
 test('admins delete the selected messages and keep the others', function () {

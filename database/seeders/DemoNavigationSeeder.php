@@ -156,7 +156,9 @@ class DemoNavigationSeeder extends Seeder
 
     private static function pageId(string $key): ?int
     {
-        $id = PageTranslation::query()->whereIn('slug', DemoContent::PAGES[$key])->value('page_id');
+        // Legal pages are not demo content (LegalPageSeeder runs everywhere).
+        $slugs = DemoContent::PAGES[$key] ?? LegalPageSeeder::SLUGS[$key];
+        $id = PageTranslation::query()->whereIn('slug', $slugs)->value('page_id');
 
         return is_int($id) ? $id : null;
     }

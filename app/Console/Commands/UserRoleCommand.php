@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('app:user-role {email : The e-mail address of the user} {role? : The role to assign (admin|editor|none)}')]
+#[Signature('app:user-role {email : The e-mail address of the user} {role? : The role to assign (admin|editor|viewer|none)}')]
 #[Description('Assign or revoke the administration panel role of a user')]
 class UserRoleCommand extends Command
 {

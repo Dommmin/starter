@@ -13,8 +13,8 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database. Idempotent: a second run adds nothing.
      * The sample administrator and the sample content of every module are
-     * created only in the local environment; menus and home sections exist
-     * everywhere.
+     * created only in the local environment; legal page templates, contact
+     * forms, menus and home sections exist everywhere.
      */
     public function run(): void
     {
@@ -31,12 +31,15 @@ class DatabaseSeeder extends Seeder
                 DemoMediaSeeder::class,
                 PageSeeder::class,
                 ArticleSeeder::class,
+                TagSeeder::class,
                 FaqSeeder::class,
                 ContactMessageSeeder::class,
                 SiteSettingsSeeder::class,
             ]);
         }
 
+        $this->call(LegalPageSeeder::class);
+        $this->call(ContactFormSeeder::class);
         $this->call(NavigationMenuSeeder::class);
         $this->call(HomeSectionSeeder::class);
 

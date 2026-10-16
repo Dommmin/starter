@@ -6,9 +6,9 @@ use App\Models\{{ Model }};
 use App\Models\User;
 
 /**
- * {{ pluralLabel }} belong to the user who created them: panel roles (admin
- * and editor) list and create their own records, and only the owner may
- * open, change or delete one. Administrators are not exempt.
+ * {{ pluralLabel }} belong to the user who created them: admins and editors
+ * create records, every panel role lists its own, and only the owner (admin
+ * or editor) may open, change or delete one. Administrators are not exempt.
  */
 class {{ Model }}Policy
 {
@@ -25,7 +25,7 @@ class {{ Model }}Policy
      */
     public function create(User $user): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -33,7 +33,7 @@ class {{ Model }}Policy
      */
     public function update(User $user, {{ Model }} ${{ variable }}): bool
     {
-        return $user->canAccessAdminPanel() && $user->id === ${{ variable }}->user_id;
+        return $user->canEditContent() && $user->id === ${{ variable }}->user_id;
     }
 
     /**
@@ -41,7 +41,7 @@ class {{ Model }}Policy
      */
     public function delete(User $user, {{ Model }} ${{ variable }}): bool
     {
-        return $user->canAccessAdminPanel() && $user->id === ${{ variable }}->user_id;
+        return $user->canEditContent() && $user->id === ${{ variable }}->user_id;
     }
 {{ exportMethod }}
 }

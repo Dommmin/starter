@@ -133,6 +133,7 @@ const sections: Section[] = [
                     publishedAt: null,
                     cover: null,
                     coverAlt: '',
+                    tags: [],
                 },
             ],
             listUrl: '/articles',
@@ -142,7 +143,7 @@ const sections: Section[] = [
         id: 6,
         type: 'contact',
         anchor: 'contact',
-        content: { title: 'Talk to us', description: null },
+        content: { title: 'Talk to us', description: null, formKey: null },
     },
     {
         id: 7,
@@ -170,7 +171,7 @@ async function render(list: Section[]): Promise<HTMLElement> {
             <I18nProvider initialPage={initialPage}>
                 <HomeSections
                     sections={list}
-                    contactForm={{ token: 'token' }}
+                    contactForm={{ token: 'token', form: null }}
                     fallbackTitle="Starter site"
                 />
             </I18nProvider>,

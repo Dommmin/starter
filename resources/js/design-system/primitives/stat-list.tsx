@@ -140,7 +140,7 @@ export function StatList({
                     <dt className="text-muted-foreground text-xs font-medium wrap-anywhere sm:text-sm">
                         {item.label}
                     </dt>
-                    <dd className="text-primary font-serif text-3xl font-bold tracking-tight tabular-nums sm:text-5xl">
+                    <dd className="text-primary font-heading text-3xl font-bold tracking-tight tabular-nums sm:text-5xl">
                         {/* The final value stays readable to assistive technology while it counts. */}
                         <span aria-hidden={progress !== null || undefined}>
                             {displayValue(item.value, progress)}

@@ -6,6 +6,7 @@ import { I18nProvider } from '@/i18n';
 import { Seo, serializeJsonLd } from './seo';
 
 const headCalls: { title?: string; children: ReactNode }[] = [];
+const seoState = vi.hoisted(() => ({ noindex: false }));
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
@@ -21,6 +22,7 @@ vi.mock('@inertiajs/react', () => ({
                     url: 'https://example.test',
                     logo: null,
                 },
+                noindex: seoState.noindex,
             },
         },
     }),
@@ -174,5 +176,20 @@ describe('serializeJsonLd', () => {
 
         expect(serialized).not.toMatch(/[<>&\u2028]/);
         expect(JSON.parse(serialized)).toEqual(data);
+    });
+});
+
+describe('Seo site-wide noindex', () => {
+    it('overrides an indexable page and drops its canonical link', () => {
+        seoState.noindex = true;
+
+        try {
+            const { html } = renderHead(<Seo robots="index,follow" />);
+
+            expect(html).toMatch(/name="robots" content="noindex,nofollow"/);
+            expect(html).not.toContain('rel="canonical"');
+        } finally {
+            seoState.noindex = false;
+        }
     });
 });

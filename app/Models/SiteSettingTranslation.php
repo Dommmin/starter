@@ -20,11 +20,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $footer_text
  * @property string|null $seo_title
  * @property string|null $seo_description
+ * @property string|null $auto_reply_text
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read SiteSetting $siteSetting
  */
-#[Fillable(['locale', 'tagline', 'footer_text', 'seo_title', 'seo_description'])]
+#[Fillable(['locale', 'tagline', 'footer_text', 'seo_title', 'seo_description', 'auto_reply_text'])]
 class SiteSettingTranslation extends Model
 {
     /** @use HasFactory<SiteSettingTranslationFactory> */
@@ -44,6 +45,7 @@ class SiteSettingTranslation extends Model
             'footer_text' => 'string',
             'seo_title' => 'string',
             'seo_description' => 'string',
+            'auto_reply_text' => 'string',
         ];
     }
 

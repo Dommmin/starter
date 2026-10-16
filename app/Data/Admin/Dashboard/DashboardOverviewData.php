@@ -8,7 +8,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Content overview shown at the top of the panel dashboard. Every block is
- * null when the current user may not open the matching list.
+ * null when the current user may not open the matching list. The create
+ * flags hide the shortcuts from a read-only viewer.
  */
 #[TypeScript]
 class DashboardOverviewData extends Data
@@ -27,5 +28,7 @@ class DashboardOverviewData extends Data
         public ?array $recentActivity,
         public ?PublishingData $publishing = null,
         public ?AttentionData $attention = null,
+        public bool $canCreateArticles = false,
+        public bool $canCreatePages = false,
     ) {}
 }

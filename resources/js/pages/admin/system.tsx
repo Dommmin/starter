@@ -21,6 +21,7 @@ import {
     Surface,
     Text,
 } from '@/design-system/primitives';
+import { SiteLaunchPanel } from '@/components/admin/site-launch-panel';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index as pagesIndex } from '@/routes/admin/pages';
@@ -53,6 +54,7 @@ type AdminSettingsProps = {
 };
 
 type SystemPageProps = {
+    launch: App.Data.Admin.System.SiteLaunchData;
     system: SystemProps;
     security: SecurityProps;
     modules: ModuleItem[];
@@ -76,7 +78,7 @@ function RiskBadge({ safe, label }: { safe: boolean; label: string }) {
  * platform modules, kept off the dashboard so editors see their work first.
  */
 export default function AdminSystem() {
-    const { system, security, modules, adminSettings } =
+    const { launch, system, security, modules, adminSettings } =
         usePage<SystemPageProps>().props;
     const { t } = useTranslation();
 
@@ -102,6 +104,8 @@ export default function AdminSystem() {
                         {system.phpVersion} / Laravel {system.laravelVersion}
                     </Text>
                 </Stack>
+
+                <SiteLaunchPanel launch={launch} />
 
                 <Surface
                     tone="default"

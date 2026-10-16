@@ -1080,7 +1080,7 @@ final class ResourceRenderer
             'imports' => $this->imports($classes),
             'storeStatement' => $storeStatement,
             'ownerScope' => $this->ownerScope($resource),
-            'listDeleteAbility' => $resource->owned ? '$user?->canAccessAdminPanel() ?? false' : '$user?->isAdmin() ?? false',
+            'listDeleteAbility' => $resource->owned ? '$user?->canEditContent() ?? false' : '$user?->isAdmin() ?? false',
             'updateRelationArgument' => $resource->manyRelations === [] ? '' : ', $request->relationIds()',
             'constants' => ! $resource->export ? null : implode(PHP_EOL, [
                 '    /**',

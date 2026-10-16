@@ -188,7 +188,7 @@ class MediaAssetController extends Controller
             create: $user?->can('create', MediaAsset::class) ?? false,
             update: $asset !== null
                 ? ($user?->can('update', $asset) ?? false)
-                : ($user?->canAccessAdminPanel() ?? false),
+                : ($user?->canEditContent() ?? false),
             delete: $asset !== null
                 ? ($user?->can('delete', $asset) ?? false)
                 : ($user?->isAdmin() ?? false),

@@ -138,9 +138,10 @@ final class HomeSectionContentRules
                 ...$this->action('content.items.*.action', $locale),
             ],
             HomeSectionType::Contact => [
-                'content' => ['required', 'array:title,description'],
+                'content' => ['required', 'array:title,description,formKey'],
                 'content.title' => $this->text(120, required: true),
                 'content.description' => $this->text(500),
+                'content.formKey' => ['nullable', 'string', Rule::exists('contact_forms', 'key')],
             ],
         };
     }

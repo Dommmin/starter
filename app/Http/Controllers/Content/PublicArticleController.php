@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Content;
 use App\Data\Content\ArticleSummaryData;
 use App\Data\Content\PublicArticleData;
 use App\Data\Content\PublicArticleListData;
+use App\Data\Content\PublicTagData;
 use App\Data\Listing\ListPaginationData;
 use App\Http\Controllers\Controller;
 use App\Repositories\Content\ArticleRepository;
+use App\Repositories\Content\TagRepository;
 use App\Services\Content\RichTextRenderer;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizationManager;
@@ -23,6 +25,7 @@ class PublicArticleController extends Controller
 
     public function __construct(
         private readonly ArticleRepository $articles,
+        private readonly TagRepository $tags,
         private readonly RichTextRenderer $richText,
         private readonly LocalizationConfig $config,
         private readonly LocalizationManager $localization,
@@ -30,13 +33,24 @@ class PublicArticleController extends Controller
     ) {}
 
     /**
-     * List the newest visible articles of the current public locale. A page
-     * number beyond the last page is a 404.
+     * List the newest visible articles of the current public locale,
+     * optionally filtered by `?tag=`. An unknown tag or a page number beyond
+     * the last page is a 404.
      */
     public function index(Request $request): Response
     {
         $locale = $this->localization->getCurrentLocale($request);
-        $paginator = $this->articles->publishedPage($locale, self::PER_PAGE);
+        $fallback = $this->config->getPublicFallback();
+        $listUrl = $this->urls->url('articles.index', [], $locale);
+
+        $tagSlug = $request->query('tag');
+        $tag = null;
+        if ($tagSlug !== null) {
+            $tag = is_string($tagSlug) ? $this->tags->findBySlug($tagSlug) : null;
+            abort_if($tag === null, 404);
+        }
+
+        $paginator = $this->articles->publishedPage($locale, self::PER_PAGE, $tag);
 
         abort_if($paginator->currentPage() > max(1, $paginator->lastPage()), 404);
 
@@ -45,6 +59,7 @@ class PublicArticleController extends Controller
             $items[] = ArticleSummaryData::fromTranslation(
                 $translation,
                 $this->urls->url('articles.show', ['slug' => $translation->slug], $locale),
+                PublicTagData::listOf($translation->article->tags, $locale, $fallback, $listUrl),
             );
         }
 
@@ -57,6 +72,9 @@ class PublicArticleController extends Controller
                 perPage: $paginator->perPage(),
             ),
             locale: $locale,
+            listUrl: $listUrl,
+            tags: PublicTagData::listOf($this->tags->withPublishedArticles($locale), $locale, $fallback, $listUrl),
+            activeTag: $tag === null ? null : PublicTagData::fromTag($tag, $locale, $fallback, $listUrl),
         ));
     }
 
@@ -100,11 +118,14 @@ class PublicArticleController extends Controller
 
         Inertia::share('i18n.alternateUrls', $alternates);
 
+        $listUrl = $this->urls->url('articles.index', [], $locale);
+
         return Inertia::render('articles/show', PublicArticleData::fromTranslation(
             $translation,
             $this->richText->toHtml($translation->body),
-            $this->urls->url('articles.index', [], $locale),
+            $listUrl,
             $alternates,
+            tags: PublicTagData::listOf($translation->article->tags, $locale, $this->config->getPublicFallback(), $listUrl),
         ));
     }
 }

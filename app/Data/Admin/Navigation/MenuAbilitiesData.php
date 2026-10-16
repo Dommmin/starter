@@ -13,6 +13,7 @@ class MenuAbilitiesData extends Data
 {
     public function __construct(
         public bool $create,
+        public bool $update,
         public bool $reorder,
         public bool $delete,
     ) {}

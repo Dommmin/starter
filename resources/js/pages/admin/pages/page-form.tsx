@@ -438,6 +438,7 @@ export function PageForm({ editor }: PageFormProps) {
                                     handleChange(code, name, value)
                                 }
                                 onSubmit={submit}
+                                readOnly={!can.update}
                                 isPending={form.processing}
                                 cancelHref={pagesIndex()}
                                 labels={{

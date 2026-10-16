@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 {{-- Admin panel pages (admin/*) use the admin surface; keep in sync with surfaceFor() in resources/js/lib/page-resolver.ts --}}
 @php($surface = str_starts_with($page['component'], 'admin/') ? 'admin' : null)
-{{-- Accent preset from APP_ACCENT; the default needs no attribute. --}}
-@php($accent = \App\Enums\AccentColor::tryFrom((string) config('app.accent')) ?? \App\Enums\AccentColor::Default)
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) @if($surface) data-surface="{{ $surface }}" @endif @if($accent !== \App\Enums\AccentColor::Default) data-accent="{{ $accent->value }}" @endif>
+{{-- Accent and typography presets from the site settings (accent falls back to APP_ACCENT); defaults need no attribute. --}}
+@php($siteAppearance ??= app(\App\Repositories\Settings\SiteSettingsRepository::class)->appearance())
+@php($accent = $siteAppearance->accent)
+@php($typography = $siteAppearance->typography)
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app(\App\Services\Localization\LocalizationConfig::class)->getDirection(app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) @if($surface) data-surface="{{ $surface }}" @endif @if($accent !== \App\Enums\AccentColor::Default) data-accent="{{ $accent->value }}" @endif @if($typography !== \App\Enums\TypographyPreset::Default) data-typography="{{ $typography->value }}" @endif data-theme-default="{{ $siteAppearance->defaultTheme->value }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -42,9 +44,18 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @if($siteAppearance->faviconUrl)
+            <link rel="icon" href="{{ $siteAppearance->faviconUrl }}" type="{{ $siteAppearance->faviconType }}">
+            <link rel="apple-touch-icon" href="{{ $siteAppearance->faviconUrl }}">
+        @else
+            <link rel="icon" href="/favicon.ico" sizes="any">
+            <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @endif
+
+        @if($siteAppearance->googleSiteVerification)
+            <meta name="google-site-verification" content="{{ $siteAppearance->googleSiteVerification }}">
+        @endif
 
         @fonts
 

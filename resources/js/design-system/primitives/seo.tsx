@@ -75,7 +75,11 @@ export function Seo({
     const { props } = usePage();
     const { locale } = useTranslation();
     const defaults = props.seo;
-    const isIndexable = robots.startsWith('index');
+    // A site-wide noindex (settings or coming soon page) wins over the page.
+    const effectiveRobots: SeoRobots = defaults.noindex
+        ? 'noindex,nofollow'
+        : robots;
+    const isIndexable = effectiveRobots.startsWith('index');
     const canonicalUrl = canonical ?? defaults.canonical;
     const imageUrl = image ?? defaults.defaultImage;
     const pageTitle = title ?? defaults.defaultTitle;
@@ -83,7 +87,12 @@ export function Seo({
         description === undefined ? defaults.defaultDescription : description;
 
     const tags: ReactElement[] = [
-        <meta key="robots" head-key="robots" name="robots" content={robots} />,
+        <meta
+            key="robots"
+            head-key="robots"
+            name="robots"
+            content={effectiveRobots}
+        />,
         <meta
             key="og:site_name"
             head-key="og:site_name"

@@ -119,7 +119,7 @@ test('the index exposes the tree of the selected menu with target states', funct
             ->where('items.0.children.0.draftTarget', true)
             ->where('items.1.targetMissing', true)
             ->where('items.1.label', null)
-            ->where('can', ['create' => true, 'reorder' => true, 'delete' => true])
+            ->where('can', ['create' => true, 'update' => true, 'reorder' => true, 'delete' => true])
         );
 
     $this->actingAs($editor)->get(route('admin.navigation.index', ['location' => 'footer']))

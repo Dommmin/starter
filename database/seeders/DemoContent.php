@@ -11,6 +11,7 @@ use App\Support\DemoContent\DemoMedia;
 use App\Support\DemoContent\DemoMenuItems;
 use App\Support\DemoContent\DemoNavigationItems;
 use App\Support\DemoContent\DemoPages;
+use App\Support\DemoContent\DemoTags;
 use App\Support\DemoContent\DemoUsers;
 use Carbon\CarbonInterface;
 use Closure;
@@ -37,11 +38,8 @@ final class DemoContent
      * @var array<string, array<string, string>>
      */
     public const array PAGES = [
-        'privacy' => ['en' => 'privacy-policy', 'pl' => 'polityka-prywatnosci'],
         'upcoming' => ['en' => 'upcoming-offer'],
         'about' => ['de' => 'ueber-uns', 'en' => 'about-us', 'pl' => 'o-nas'],
-        'terms' => ['en' => 'terms-of-service', 'pl' => 'regulamin'],
-        'cookies' => ['pl' => 'polityka-cookies'],
         'contact-details' => ['en' => 'contact-details', 'pl' => 'dane-kontaktowe'],
         'careers' => ['en' => 'careers', 'pl' => 'kariera'],
         'accessibility' => ['en' => 'accessibility-statement', 'pl' => 'deklaracja-dostepnosci'],
@@ -90,7 +88,7 @@ final class DemoContent
     /**
      * Providers of removable sample content, in removal order: menu items
      * first (they point at the sample pages and articles), then pages,
-     * articles, media (article covers), FAQs, contact messages, the other
+     * articles, tags, media (article covers), FAQs, contact messages, the other
      * sample accounts and home sections. The sample administrator is removed
      * separately, after all of them.
      *
@@ -101,6 +99,7 @@ final class DemoContent
         DemoMenuItems::class,
         DemoPages::class,
         DemoArticles::class,
+        DemoTags::class,
         DemoMedia::class,
         DemoFaqs::class,
         DemoContactMessages::class,

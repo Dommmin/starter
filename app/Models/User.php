@@ -99,6 +99,20 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     {
         return app()->environment('local')
             || $this->hasRole(UserRole::Admin)
+            || $this->hasRole(UserRole::Editor)
+            || $this->hasRole(UserRole::Viewer);
+    }
+
+    /**
+     * Determine whether the user may change content in the panel and read
+     * contact messages (admin and editor; a viewer only reads content).
+     *
+     * The local environment grants this to every user.
+     */
+    public function canEditContent(): bool
+    {
+        return app()->environment('local')
+            || $this->hasRole(UserRole::Admin)
             || $this->hasRole(UserRole::Editor);
     }
 

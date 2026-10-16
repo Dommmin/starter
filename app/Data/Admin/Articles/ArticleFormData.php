@@ -16,12 +16,14 @@ class ArticleFormData extends Data
 {
     /**
      * @param  array<string, ArticleTranslationFormData>  $translations
+     * @param  list<int>  $tagIds
      */
     public function __construct(
         public ?int $id,
         public ?string $updatedAt,
         public ?int $coverMediaId,
         public array $translations,
+        public array $tagIds = [],
     ) {}
 
     /**
@@ -39,7 +41,7 @@ class ArticleFormData extends Data
     }
 
     /**
-     * Requires the `translations` relation to be eager loaded.
+     * Requires the `translations` and `tags` relations to be eager loaded.
      *
      * @param  list<string>  $locales
      */
@@ -60,6 +62,7 @@ class ArticleFormData extends Data
             updatedAt: $article->updated_at?->toIso8601String(),
             coverMediaId: $article->cover_media_id,
             translations: $translations,
+            tagIds: array_values($article->tags->modelKeys()),
         );
     }
 }

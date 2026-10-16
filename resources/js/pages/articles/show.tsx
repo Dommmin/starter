@@ -8,6 +8,7 @@ import {
     Section,
     Seo,
     Stack,
+    TagList,
     Text,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
@@ -25,6 +26,7 @@ export default function ArticleShow({
     listUrl,
     alternates,
     preview,
+    tags,
 }: App.Data.Content.PublicArticleData) {
     const { t, formatDate } = useTranslation();
     const canonical = alternates[locale];
@@ -76,6 +78,14 @@ export default function ArticleShow({
                                         })}
                                     </Text>
                                 )}
+                                <TagList
+                                    label={t('articles.tagsLabel')}
+                                    items={tags.map((tag) => ({
+                                        id: tag.slug,
+                                        label: tag.name,
+                                        href: tag.url,
+                                    }))}
+                                />
                                 {excerpt && (
                                     <Text variant="lead" tone="muted">
                                         {excerpt}

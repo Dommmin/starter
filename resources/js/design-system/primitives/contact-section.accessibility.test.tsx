@@ -331,4 +331,76 @@ describe('ContactSection', () => {
             ).toBe('email');
         }
     });
+
+    it('renders configured extra fields after the message and lists their errors in the summary', async () => {
+        const container = await render(
+            <ContactSection
+                title="Request a quote"
+                labels={{ name: 'Name', email: 'Email', message: 'Message' }}
+                errorSummaryTitle="Please fix the following"
+                values={{
+                    name: 'Ada',
+                    email: 'ada@example.com',
+                    message: 'Hi',
+                }}
+                onChange={vi.fn()}
+                onSubmit={vi.fn()}
+                submitLabel="Send"
+                extraFields={[
+                    {
+                        name: 'fields[budget]',
+                        type: 'select',
+                        label: 'Budget',
+                        required: true,
+                        value: '',
+                        onChange: vi.fn(),
+                        options: [{ value: 'small', label: 'Small' }],
+                        error: 'Choose a budget.',
+                    },
+                    {
+                        name: 'fields[deadline]',
+                        type: 'text',
+                        label: 'Deadline',
+                        value: 'March',
+                        onChange: vi.fn(),
+                    },
+                    {
+                        name: 'fields[phone_ok]',
+                        type: 'checkbox',
+                        label: 'You may call me',
+                        value: true,
+                        onChange: vi.fn(),
+                    },
+                ]}
+            />,
+        );
+
+        // The extra fields load lazily; wait for the chunk.
+        let deadline: HTMLInputElement | null = null;
+        for (let attempt = 0; attempt < 50 && deadline === null; attempt++) {
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+            });
+            deadline = container.querySelector<HTMLInputElement>(
+                'input[name="fields[deadline]"]',
+            );
+        }
+        const message = container.querySelector('textarea[name="message"]');
+
+        expect(deadline?.value).toBe('March');
+        expect(message).not.toBeNull();
+        expect(
+            (message as Node).compareDocumentPosition(deadline as Node) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(
+            container
+                .querySelector('[role="checkbox"]')
+                ?.getAttribute('aria-checked'),
+        ).toBe('true');
+        expect(container.textContent).toContain('Choose a budget.');
+        expect(
+            container.querySelector('a[href$="-extra-fields[budget]"]'),
+        ).not.toBeNull();
+    });
 });

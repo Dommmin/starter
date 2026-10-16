@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Seo;
 
 use App\Http\Controllers\Controller;
+use App\Repositories\Settings\SiteSettingsRepository;
 use Illuminate\Http\Response;
 
 class RobotsController extends Controller
 {
     /**
      * Only production may be crawled; every other environment (staging,
-     * preview, local) disallows everything.
+     * preview, local) disallows everything, as does production while the
+     * site-wide noindex switch or the coming soon page is on.
      */
-    public function __invoke(): Response
+    public function __invoke(SiteSettingsRepository $siteSettings): Response
     {
-        $lines = app()->isProduction()
+        $lines = app()->isProduction() && ! $siteSettings->isNoindex()
             ? [
                 'User-agent: *',
                 'Allow: /',

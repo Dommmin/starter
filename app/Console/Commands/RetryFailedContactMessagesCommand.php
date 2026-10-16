@@ -3,13 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Actions\Contact\RetryContactMessage;
+use App\Jobs\DeliverContactWebhook;
 use App\Repositories\Contact\ContactMessageRepository;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('contact:retry-failed')]
-#[Description('Re-dispatch failed contact messages and pending ones whose delivery job was lost')]
+#[Description('Re-dispatch failed contact messages and webhooks, and pending ones whose job was lost')]
 class RetryFailedContactMessagesCommand extends Command
 {
     /**
@@ -35,6 +36,17 @@ class RetryFailedContactMessagesCommand extends Command
         }
 
         $this->info(sprintf('Re-dispatched %d contact message(s).', $dispatched));
+
+        if (DeliverContactWebhook::isConfigured()) {
+            $webhooks = 0;
+
+            foreach ($contactMessages->webhooksAwaitingRecovery(now()->subMinutes($staleMinutes), $maxAttempts) as $contactMessage) {
+                DeliverContactWebhook::dispatch($contactMessage->id);
+                $webhooks++;
+            }
+
+            $this->info(sprintf('Re-dispatched %d webhook(s).', $webhooks));
+        }
 
         return self::SUCCESS;
     }

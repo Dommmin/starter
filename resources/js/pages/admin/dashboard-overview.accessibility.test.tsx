@@ -79,6 +79,8 @@ function makeOverview(overrides: Partial<Overview> = {}): Overview {
             soonHours: 48,
             staleDays: 14,
         },
+        canCreateArticles: true,
+        canCreatePages: true,
         ...overrides,
     };
 }

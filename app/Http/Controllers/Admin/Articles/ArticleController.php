@@ -13,13 +13,17 @@ use App\Data\Admin\Articles\ArticleListFiltersData;
 use App\Data\Admin\Articles\ArticleListItemData;
 use App\Data\Content\ContentLocalesData;
 use App\Data\Listing\ListPaginationData;
+use App\Data\Listing\RecordOptionData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Articles\ArticleInputRules;
 use App\Http\Requests\Admin\Articles\ListArticlesRequest;
 use App\Http\Requests\Admin\Articles\StoreArticleRequest;
 use App\Http\Requests\Admin\Articles\UpdateArticleRequest;
 use App\Models\Article;
+use App\Models\Tag;
 use App\Models\User;
 use App\Repositories\Content\ArticleRepository;
+use App\Repositories\Content\TagRepository;
 use App\Services\Content\ContentPreviewLinks;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +39,7 @@ class ArticleController extends Controller
 {
     public function __construct(
         private readonly ArticleRepository $articles,
+        private readonly TagRepository $tags,
         private readonly ContentPreviewLinks $previewLinks,
         private readonly LocalizationConfig $localization,
     ) {}
@@ -74,6 +79,8 @@ class ArticleController extends Controller
             article: ArticleFormData::blank($this->localization->getPublicLocales()),
             locales: ContentLocalesData::fromConfig($this->localization),
             can: $this->abilities($request, null),
+            tagOptions: $this->tagOptions(),
+            maxTags: ArticleInputRules::MAX_TAGS,
         ));
     }
 
@@ -85,7 +92,7 @@ class ArticleController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $article = $createArticle->handle($user, $request->coverMediaId(), $request->translations());
+        $article = $createArticle->handle($user, $request->coverMediaId(), $request->translations(), $request->tagIds());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.created')]);
 
@@ -104,6 +111,8 @@ class ArticleController extends Controller
             locales: ContentLocalesData::fromConfig($this->localization),
             can: $this->abilities($request, $article),
             previewUrls: $this->previewLinks->forArticle($article, $this->localization->getPublicLocales()),
+            tagOptions: $this->tagOptions(),
+            maxTags: ArticleInputRules::MAX_TAGS,
         ));
     }
 
@@ -122,6 +131,7 @@ class ArticleController extends Controller
             $request->translations(),
             $this->localization->getPublicLocales(),
             $request->expectedUpdatedAt(),
+            $request->tagIds(),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.updated')]);
@@ -144,12 +154,28 @@ class ArticleController extends Controller
         return to_route('admin.articles.index');
     }
 
+    /**
+     * @return list<RecordOptionData>
+     */
+    private function tagOptions(): array
+    {
+        $locale = app()->getLocale();
+        $fallback = $this->localization->getPublicFallback();
+
+        return array_values($this->tags->all()->map(
+            fn (Tag $tag): RecordOptionData => new RecordOptionData($tag->id, $tag->nameIn($locale, $fallback)),
+        )->all());
+    }
+
     private function abilities(Request $request, ?Article $article): ArticleAbilitiesData
     {
         $user = $request->user();
 
         return new ArticleAbilitiesData(
             create: $user?->can('create', Article::class) ?? false,
+            update: $article !== null
+                ? ($user?->can('update', $article) ?? false)
+                : ($user?->can('create', Article::class) ?? false),
             publish: $user?->can('publish', Article::class) ?? false,
             delete: $article !== null
                 ? ($user?->can('delete', $article) ?? false)

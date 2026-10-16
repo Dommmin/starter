@@ -29,6 +29,7 @@ test('the shared seo prop exposes site defaults and the canonical url without qu
                     'url' => url('/'),
                     'logo' => 'https://cdn.example.test/logo.png',
                 ],
+                'noindex' => false,
             ])
             ->where('i18n.alternateUrls', [
                 'en' => url('/'),

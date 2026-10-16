@@ -18,6 +18,7 @@ export type AuthAbilities = {
     manageUsers: boolean;
     viewAudit: boolean;
     manageSiteSettings: boolean;
+    viewContactMessages: boolean;
 };
 
 export type Auth = {

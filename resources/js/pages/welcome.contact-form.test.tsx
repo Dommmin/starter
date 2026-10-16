@@ -11,6 +11,8 @@ type Fields = {
     message: string;
     website: string;
     form_token: string;
+    form: string | null;
+    fields: Record<string, string | boolean>;
 };
 
 type SubmitOptions = {
@@ -20,7 +22,9 @@ type SubmitOptions = {
 };
 
 const submitMock =
-    vi.fn<(route: { url: string }, options: SubmitOptions) => void>();
+    vi.fn<
+        (route: { url: string }, options: SubmitOptions, data: Fields) => void
+    >();
 let formErrors: Partial<Record<keyof Fields, string>> = {};
 
 vi.mock('@inertiajs/react', async () => {
@@ -46,7 +50,7 @@ vi.mock('@inertiajs/react', async () => {
                     ),
                 reset: () => setDataState(initial),
                 submit: (route: { url: string }, options: SubmitOptions) =>
-                    submitMock(route, options),
+                    submitMock(route, options, data),
             };
         },
     };
@@ -135,7 +139,7 @@ afterEach(async () => {
 describe('ContactForm', () => {
     it('posts to the contact route of the current locale with the form token', async () => {
         const container = await render(
-            <ContactForm contactForm={{ token: 'signed-token' }} />,
+            <ContactForm contactForm={{ token: 'signed-token', form: null }} />,
             'de',
         );
 
@@ -152,7 +156,7 @@ describe('ContactForm', () => {
 
     it('uses the unprefixed route in the default locale', async () => {
         const container = await render(
-            <ContactForm contactForm={{ token: 'signed-token' }} />,
+            <ContactForm contactForm={{ token: 'signed-token', form: null }} />,
         );
 
         await submitForm(container);
@@ -162,7 +166,7 @@ describe('ContactForm', () => {
 
     it('shows a rate limit alert instead of the error modal on 429', async () => {
         const container = await render(
-            <ContactForm contactForm={{ token: 'signed-token' }} />,
+            <ContactForm contactForm={{ token: 'signed-token', form: null }} />,
         );
         await submitForm(container);
 
@@ -179,7 +183,7 @@ describe('ContactForm', () => {
 
     it('replaces the form with a success message after submission', async () => {
         const container = await render(
-            <ContactForm contactForm={{ token: 'signed-token' }} />,
+            <ContactForm contactForm={{ token: 'signed-token', form: null }} />,
         );
         await submitForm(container);
 
@@ -194,7 +198,7 @@ describe('ContactForm', () => {
     it('maps backend validation errors to fields and the error summary', async () => {
         formErrors = { email: 'The email must be valid.' };
         const container = await render(
-            <ContactForm contactForm={{ token: 'signed-token' }} />,
+            <ContactForm contactForm={{ token: 'signed-token', form: null }} />,
         );
 
         const summary = container.querySelector('[role="alert"]');
@@ -207,9 +211,55 @@ describe('ContactForm', () => {
     it('shows an expired form token as a form-level error', async () => {
         formErrors = { form_token: 'This form has expired.' };
         const container = await render(
-            <ContactForm contactForm={{ token: 'signed-token' }} />,
+            <ContactForm contactForm={{ token: 'signed-token', form: null }} />,
         );
 
         expect(container.textContent).toContain('This form has expired.');
+    });
+
+    it('sends the form key and the extra values of a configured form', async () => {
+        const container = await render(
+            <ContactForm
+                contactForm={{
+                    token: 'signed-token',
+                    form: {
+                        key: 'quote',
+                        title: 'Request a quote',
+                        fields: [
+                            {
+                                key: 'deadline',
+                                type: 'text',
+                                label: 'Deadline',
+                                required: false,
+                                options: [],
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+
+        let input: HTMLInputElement | null = null;
+        for (let attempt = 0; attempt < 50 && input === null; attempt++) {
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+            });
+            input = container.querySelector<HTMLInputElement>(
+                'input[name="fields[deadline]"]',
+            );
+        }
+
+        await act(async () => {
+            Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype,
+                'value',
+            )!.set!.call(input, 'March');
+            input?.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        await submitForm(container);
+
+        const data = submitMock.mock.calls[0][2];
+        expect(data.form).toBe('quote');
+        expect(data.fields).toEqual({ deadline: 'March' });
     });
 });

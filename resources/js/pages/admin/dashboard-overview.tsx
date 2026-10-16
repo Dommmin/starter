@@ -103,6 +103,8 @@ export function DashboardOverview({
         recentActivity,
         publishing,
         attention,
+        canCreateArticles,
+        canCreatePages,
     } = overview;
 
     const total = (counts: typeof articles) =>
@@ -230,12 +232,12 @@ export function DashboardOverview({
                 description={t('admin.overview.description')}
                 actions={
                     <>
-                        {articles !== null && (
+                        {canCreateArticles && (
                             <Button href={articlesCreate()} size="sm">
                                 {t('admin.overview.newArticle')}
                             </Button>
                         )}
-                        {pages !== null && (
+                        {canCreatePages && (
                             <Button
                                 href={pagesCreate()}
                                 size="sm"
@@ -255,11 +257,11 @@ export function DashboardOverview({
                         title={t('admin.overview.emptyTitle')}
                         description={t('admin.overview.emptyDescription')}
                         action={
-                            pages !== null ? (
+                            canCreatePages ? (
                                 <Button href={pagesCreate()}>
                                     {t('admin.overview.emptyAction')}
                                 </Button>
-                            ) : articles !== null ? (
+                            ) : canCreateArticles ? (
                                 <Button href={articlesCreate()}>
                                     {t('admin.overview.emptyArticleAction')}
                                 </Button>

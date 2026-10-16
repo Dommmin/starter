@@ -19,9 +19,9 @@ export type HeadingProps = {
 
 const variantMap: Record<HeadingVariant, string> = {
     display:
-        'font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight',
-    page: 'font-serif text-3xl sm:text-4xl font-bold tracking-tight',
-    section: 'font-serif text-2xl sm:text-3xl font-semibold tracking-tight',
+        'font-heading text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight',
+    page: 'font-heading text-3xl sm:text-4xl font-bold tracking-tight',
+    section: 'font-heading text-2xl sm:text-3xl font-semibold tracking-tight',
     subsection: 'font-sans text-xl sm:text-2xl font-semibold tracking-tight',
     group: 'font-sans text-lg font-semibold tracking-tight',
 };

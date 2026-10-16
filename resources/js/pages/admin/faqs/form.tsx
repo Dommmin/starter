@@ -175,6 +175,7 @@ export function FaqForm({ editor }: FaqFormProps) {
                     form.setData((data) => ({ ...data, [name]: value }))
                 }
                 onSubmit={submit}
+                readOnly={!can.update}
                 isPending={form.processing}
                 cancelHref={index()}
                 labels={{

@@ -13,6 +13,11 @@
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+    /* Headings, brand text and figures; [data-typography] below swaps it. */
+    --font-heading:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -170,6 +175,19 @@
     --accent-l: -0.045;
 }
 
+/* Typography presets (App\Enums\TypographyPreset). <html> renders only a
+   non-default preset; `default` resets a nested TypographyPreview. */
+[data-typography='default'] {
+    --font-heading:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+}
+
+[data-typography='classic'] {
+    --font-heading: 'Fraunces', ui-serif, Georgia, Cambria, serif;
+}
+
 .dark {
     --background: oklch(0.14 0.005 85);
     --foreground: oklch(0.94 0.005 85);
@@ -316,6 +334,7 @@
 
     /* Panel typography: Geist, 13.5 px body; text-sm/xs follow the scale. */
     --font-sans: var(--admin-font-sans);
+    --font-heading: var(--admin-font-sans);
     --font-mono: var(--admin-font-mono);
     --text-xs: var(--admin-text-xs);
     --text-sm: var(--admin-text-base);

@@ -3,6 +3,7 @@
 namespace App\Actions\Settings;
 
 use App\Actions\Audit\RecordAuditEvent;
+use App\Data\Settings\OpeningHoursDayData;
 use App\Data\Settings\SiteSettingsInputData;
 use App\Data\Settings\SiteSettingTranslationInputData;
 use App\Enums\AuditAction;
@@ -32,6 +33,8 @@ use Illuminate\Validation\ValidationException;
  *   settings were never saved).
  * - updateSiteName(): partial update of the brand name only, without a
  *   version check (console / init-project; `$actor` = null).
+ * - updatePublication(): the coming soon and noindex switches of the
+ *   System page, without a version check.
  */
 class UpdateSiteSettings
 {
@@ -49,9 +52,20 @@ class UpdateSiteSettings
         'city',
         'country_code',
         'social_links',
+        'accent',
+        'typography',
+        'default_theme',
+        'favicon_media_id',
+        'tax_id',
+        'map_url',
+        'opening_hours',
+        'google_site_verification',
+        'coming_soon',
+        'noindex',
+        'contact_auto_reply',
     ];
 
-    private const array TRANSLATION_FIELDS = ['tagline', 'footer_text', 'seo_title', 'seo_description'];
+    private const array TRANSLATION_FIELDS = ['tagline', 'footer_text', 'seo_title', 'seo_description', 'auto_reply_text'];
 
     public function __construct(
         private readonly RecordAuditEvent $audit,
@@ -86,8 +100,21 @@ class UpdateSiteSettings
                 'postal_code' => $input->postalCode,
                 'city' => $input->city,
                 'country_code' => $input->countryCode,
-                'contact_recipient_email' => $input->contactRecipientEmail,
+                // The first listed recipient also fills the single fallback column.
+                'contact_recipient_email' => $input->contactRecipients[0] ?? $input->contactRecipientEmail,
+                'contact_recipients' => $input->contactRecipients === [] ? null : $input->contactRecipients,
+                'contact_auto_reply' => $input->contactAutoReply,
                 'social_links' => $this->orderedSocialLinks($input->socialLinks),
+                'accent' => $input->accent,
+                'typography' => $input->typography,
+                'default_theme' => $input->defaultTheme,
+                'favicon_media_id' => $input->faviconMediaId,
+                'tax_id' => $input->taxId,
+                'map_url' => $input->mapUrl,
+                'opening_hours' => $input->openingHours === null
+                    ? null
+                    : array_map(fn (OpeningHoursDayData $day): array => $day->toRow(), $input->openingHours),
+                'google_site_verification' => $input->googleSiteVerification,
             ]);
 
             return [
@@ -116,6 +143,18 @@ class UpdateSiteSettings
 
         return $this->persist($actor, function (SiteSetting $settings) use ($siteName): array {
             $settings->site_name = $siteName;
+
+            return $this->settingChanges($settings);
+        });
+    }
+
+    /**
+     * Turn the coming soon page and the site-wide noindex on or off.
+     */
+    public function updatePublication(bool $comingSoon, bool $noindex, User $actor): SiteSetting
+    {
+        return $this->persist($actor, function (SiteSetting $settings) use ($comingSoon, $noindex): array {
+            $settings->forceFill(['coming_soon' => $comingSoon, 'noindex' => $noindex]);
 
             return $this->settingChanges($settings);
         });
@@ -188,8 +227,10 @@ class UpdateSiteSettings
             }
         }
 
-        if ($settings->isDirty('contact_recipient_email')) {
-            $changes['contact_recipient_email'] = RecordAuditEvent::redacted();
+        foreach (['contact_recipient_email', 'contact_recipients'] as $field) {
+            if ($settings->isDirty($field)) {
+                $changes[$field] = RecordAuditEvent::redacted();
+            }
         }
 
         return $changes;
@@ -229,6 +270,7 @@ class UpdateSiteSettings
                 'footer_text' => $input->footerText,
                 'seo_title' => $input->seoTitle,
                 'seo_description' => $input->seoDescription,
+                'auto_reply_text' => $input->autoReplyText,
             ]);
 
             foreach (self::TRANSLATION_FIELDS as $field) {

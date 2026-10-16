@@ -1,6 +1,7 @@
 import {
     BrandLogo,
     Footer,
+    groupOpeningHours,
     LocaleSwitcher,
     MobileNav,
     Stack,
@@ -13,7 +14,12 @@ import {
     ShowcaseState,
     type ShowcaseFamily,
 } from '../../admin/design-system/sections/showcase';
-import { demoFooterGroups, demoLogo, demoNavItems } from './demo-data';
+import {
+    demoFooterGroups,
+    demoLogo,
+    demoNavItems,
+    demoOpeningHours,
+} from './demo-data';
 
 /** WEB-01 — public navigation: header, mobile menu, logo and footer. */
 function NavigationSection() {
@@ -113,6 +119,26 @@ function NavigationSection() {
                                 url: 'https://www.linkedin.com/',
                             },
                         ]}
+                    />
+                </ShowcaseState>
+                <ShowcaseState
+                    state="withDescription"
+                    detail={demo('companyDetails')}
+                    fill
+                >
+                    <Footer
+                        copyright={demo('copyright')}
+                        contact={{
+                            email: 'kontakt@example.test',
+                            address: demo('address'),
+                            taxId: 'PL 123-456-32-18',
+                            mapUrl: 'https://www.openstreetmap.org/',
+                            openingHours: groupOpeningHours(
+                                demoOpeningHours,
+                                (day) => t(`weekdaysShort.${day}`),
+                                t('footer.closed'),
+                            ),
+                        }}
                     />
                 </ShowcaseState>
                 <ShowcaseState state="longContent" fill>

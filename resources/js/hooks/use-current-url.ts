@@ -1,6 +1,7 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { toUrl } from '@/lib/utils';
+import { isSameOrChildPath } from '@/lib/path-match';
 
 export type IsCurrentUrlFn = (
     urlToCheck: NonNullable<InertiaLinkProps['href']>,
@@ -44,7 +45,9 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         const urlString = toUrl(urlToCheck);
 
         const comparePath = (path: string): boolean =>
-            startsWith ? urlToCompare.startsWith(path) : path === urlToCompare;
+            startsWith
+                ? isSameOrChildPath(urlToCompare, path)
+                : path === urlToCompare;
 
         if (!urlString.startsWith('http')) {
             return comparePath(urlString);

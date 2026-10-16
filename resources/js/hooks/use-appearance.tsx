@@ -29,12 +29,27 @@ const setCookie = (name: string, value: string, days = 365): void => {
     document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
+const isAppearance = (value: unknown): value is Appearance =>
+    value === 'light' || value === 'dark' || value === 'system';
+
+/**
+ * Theme of the site settings, rendered on <html> as `data-theme-default`;
+ * applies until the visitor picks a theme.
+ */
+const siteDefaultAppearance = (): Appearance => {
+    const value = document.documentElement.dataset.themeDefault;
+
+    return isAppearance(value) ? value : 'system';
+};
+
 const getStoredAppearance = (): Appearance => {
     if (typeof window === 'undefined') {
         return 'system';
     }
 
-    return (localStorage.getItem('appearance') as Appearance) || 'system';
+    const stored = localStorage.getItem('appearance');
+
+    return isAppearance(stored) ? stored : siteDefaultAppearance();
 };
 
 const isDarkMode = (appearance: Appearance): boolean => {
@@ -75,11 +90,8 @@ export function initializeTheme(): void {
         return;
     }
 
-    if (!localStorage.getItem('appearance')) {
-        localStorage.setItem('appearance', 'system');
-        setCookie('appearance', 'system');
-    }
-
+    // Nothing is stored until the visitor picks a theme, so a later change
+    // of the site default still reaches them.
     currentAppearance = getStoredAppearance();
     applyTheme(currentAppearance);
 

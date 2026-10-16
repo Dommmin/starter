@@ -1,10 +1,10 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Eye } from 'lucide-react';
-import { Link, ResourceTable } from '@/design-system/primitives';
+import { Button, Link, ResourceTable } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
-import { destroyMany, index, show } from '@/routes/admin/contact';
+import { destroyMany, exportMethod, index, show } from '@/routes/admin/contact';
 import { ContactStatusBadge } from './status-badge';
 
 type Row = App.Data.Admin.Contact.ContactMessageListItemData;
@@ -14,7 +14,9 @@ type IndexProps = App.Data.Admin.Contact.ContactMessageIndexData;
  * Admin list of contact form messages with their delivery status.
  */
 export default function AdminContactIndex() {
-    const { items, pagination, filters, can } = usePage<IndexProps>().props;
+    const { items, pagination, filters, can, exportMaxRows } =
+        usePage<IndexProps>().props;
+    const isExportTooLarge = pagination.total > exportMaxRows;
     const { t, formatDate } = useTranslation();
 
     const deleteMessages = (keys: string[]): Promise<void> =>
@@ -38,7 +40,20 @@ export default function AdminContactIndex() {
                 url={index()}
                 header={{
                     title: t('admin.contact.title'),
-                    description: t('admin.contact.description'),
+                    description:
+                        can.export && isExportTooLarge
+                            ? `${t('admin.contact.description')} ${t('admin.contact.exportTooLarge', { max: exportMaxRows })}`
+                            : t('admin.contact.description'),
+                    actions: can.export ? (
+                        <Button
+                            variant="outline"
+                            href={exportMethod({ query: { ...filters } })}
+                            download
+                            disabled={isExportTooLarge}
+                        >
+                            {t('admin.contact.export')}
+                        </Button>
+                    ) : undefined,
                 }}
                 rows={items}
                 rowKey={(row) => row.id}

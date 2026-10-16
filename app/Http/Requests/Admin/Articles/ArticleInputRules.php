@@ -17,7 +17,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * Validation rules for the article payload shared by the store and update
- * requests: an optional DAM cover and per-locale `translations`.
+ * requests: an optional DAM cover, up to MAX_TAGS tags and per-locale
+ * `translations`.
  *
  * Every active public locale may be sent as `translations.{locale}`. An empty
  * title means "no translation for this locale" and skips the remaining
@@ -26,6 +27,8 @@ use Illuminate\Validation\Rule;
  */
 final class ArticleInputRules
 {
+    public const int MAX_TAGS = 10;
+
     public function __construct(
         private readonly LocalizationConfig $config,
         private readonly RichTextRenderer $renderer,
@@ -49,6 +52,8 @@ final class ArticleInputRules
                         ->whereNotNull('variants');
                 }),
             ],
+            'tag_ids' => ['nullable', 'array', 'list', 'max:'.self::MAX_TAGS],
+            'tag_ids.*' => ['integer', 'distinct', Rule::exists('tags', 'id')],
             'translations' => ['required', 'array:'.implode(',', $locales)],
         ];
 
@@ -90,6 +95,20 @@ final class ArticleInputRules
         $cover = $validated['cover_media_id'] ?? null;
 
         return $cover === null ? null : (int) $cover;
+    }
+
+    /**
+     * Ids of the selected tags, in selection order.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return list<int>
+     */
+    public function tagIds(array $validated): array
+    {
+        /** @var list<int|string> $ids */
+        $ids = $validated['tag_ids'] ?? [];
+
+        return array_map(intval(...), $ids);
     }
 
     /**

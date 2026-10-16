@@ -25,10 +25,6 @@ class PageSeeder extends Seeder
      * @var array<string, array{long?: bool, translations: array<string, array{0: string, 1: string|null, 2: string, 3: int}>}>
      */
     public const array PAGES = [
-        'privacy' => ['long' => true, 'translations' => [
-            'en' => ['Privacy policy', 'How this website processes personal data.', 'published', 0],
-            'pl' => ['Polityka prywatności', 'Jak ta strona przetwarza dane osobowe.', 'published', 0],
-        ]],
         'upcoming' => ['translations' => [
             'en' => ['Upcoming offer', null, 'draft', 0],
         ]],
@@ -36,13 +32,6 @@ class PageSeeder extends Seeder
             'de' => ['Über uns', 'Wer wir sind und was wir tun.', 'published', -30],
             'en' => ['About us', 'Who we are and what we do.', 'published', -30],
             'pl' => ['O nas', 'Kim jesteśmy i czym się zajmujemy.', 'published', -30],
-        ]],
-        'terms' => ['long' => true, 'translations' => [
-            'en' => ['Terms of service for the website, the newsletter and all online forms available to visitors', 'Rules for using this website.', 'published', -20],
-            'pl' => ['Regulamin korzystania z serwisu internetowego, newslettera oraz wszystkich formularzy dostępnych dla odwiedzających', 'Zasady korzystania z serwisu.', 'published', -20],
-        ]],
-        'cookies' => ['translations' => [
-            'pl' => ['Polityka cookies', null, 'published', -20],
         ]],
         'contact-details' => ['translations' => [
             'en' => ['Contact details', 'Address, phone and opening hours.', 'published', -10],

@@ -404,6 +404,7 @@ export function MenuItemForm({ editor }: MenuItemFormProps) {
                     )
                 }
                 onSubmit={submit}
+                readOnly={!can.update}
                 isPending={form.processing}
                 cancelHref={index({ query: menuQuery })}
                 labels={{

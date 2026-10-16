@@ -13,6 +13,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[TypeScript]
 class ArticleSummaryData extends Data
 {
+    /**
+     * @param  list<PublicTagData>  $tags
+     */
     public function __construct(
         public string $title,
         public string $url,
@@ -20,12 +23,15 @@ class ArticleSummaryData extends Data
         public ?string $publishedAt,
         public ?MediaImageData $cover,
         public string $coverAlt,
+        public array $tags = [],
     ) {}
 
     /**
      * Requires `article.cover` to be eager loaded.
+     *
+     * @param  list<PublicTagData>  $tags
      */
-    public static function fromTranslation(ArticleTranslation $translation, string $url): self
+    public static function fromTranslation(ArticleTranslation $translation, string $url, array $tags = []): self
     {
         $cover = $translation->article->cover;
 
@@ -36,6 +42,7 @@ class ArticleSummaryData extends Data
             publishedAt: $translation->published_at?->toIso8601String(),
             cover: $cover === null ? null : MediaImageData::fromAsset($cover),
             coverAlt: $cover->alt ?? '',
+            tags: $tags,
         );
     }
 }

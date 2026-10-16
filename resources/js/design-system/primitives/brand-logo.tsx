@@ -66,14 +66,14 @@ export function BrandLogo({ href, ariaLabel, image, name }: BrandLogoProps) {
                     {name ? (
                         <span
                             title={name}
-                            className="text-foreground min-w-0 truncate font-serif text-base tracking-tight sm:text-lg"
+                            className="text-foreground font-heading min-w-0 truncate text-base tracking-tight sm:text-lg"
                         >
                             {name}
                         </span>
                     ) : (
                         <span
                             title={t('brand.name')}
-                            className="text-foreground min-w-0 truncate font-serif text-base tracking-tight sm:text-lg"
+                            className="text-foreground font-heading min-w-0 truncate text-base tracking-tight sm:text-lg"
                         >
                             {t('brand.firstPart')}{' '}
                             <span className="text-primary">

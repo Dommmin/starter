@@ -23,6 +23,8 @@ class ContactMessageController extends Controller
                 email: $request->string('email')->trim()->toString(),
                 message: $request->string('message')->toString(),
                 locale: app()->getLocale(),
+                form: $request->contactForm(),
+                fields: $request->extraFields(),
             );
         }
 

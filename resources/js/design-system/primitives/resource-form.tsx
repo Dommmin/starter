@@ -204,6 +204,12 @@ export type ResourceFormProps<Values extends ResourceFormValues> = {
     labels: ResourceFormLabels;
     cancelHref?: ButtonProps['href'];
     onCancel?: () => void;
+    /**
+     * Shows the record without the right to change it (e.g. the `viewer`
+     * role): every field is disabled, there is no submit button and
+     * `onSubmit` is never called. The backend still refuses every change.
+     */
+    readOnly?: boolean;
     className?: never;
     style?: never;
 };
@@ -224,6 +230,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
     labels,
     cancelHref,
     onCancel,
+    readOnly = false,
 }: ResourceFormProps<Values>) {
     const formId = useId();
     const submitLockRef = useRef(false);
@@ -288,7 +295,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
             label: field.label,
             description: field.hint,
             error: errors[field.name],
-            disabled: isPending || field.disabled,
+            disabled: isPending || readOnly || field.disabled,
         };
 
         switch (field.type) {
@@ -520,7 +527,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
             onSubmit={(event) => {
                 event.preventDefault();
 
-                if (isPending || submitLockRef.current) {
+                if (readOnly || isPending || submitLockRef.current) {
                     return;
                 }
 
@@ -560,9 +567,11 @@ export function ResourceForm<Values extends ResourceFormValues>({
                             {labels.cancel}
                         </Button>
                     )}
-                    <Button type="submit" isPending={isPending}>
-                        {labels.submit}
-                    </Button>
+                    {!readOnly && (
+                        <Button type="submit" isPending={isPending}>
+                            {labels.submit}
+                        </Button>
+                    )}
                 </FormActions>
             </Stack>
         </form>

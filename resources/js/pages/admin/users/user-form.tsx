@@ -135,6 +135,7 @@ export function UserForm({ editor }: UserFormProps) {
     const roleOptions = [
         { value: '', label: t('admin.users.role.none') },
         { value: 'editor', label: t('admin.users.role.editor') },
+        { value: 'viewer', label: t('admin.users.role.viewer') },
         { value: 'admin', label: t('admin.users.role.admin') },
     ];
 

@@ -20,5 +20,6 @@ class ContactMessageIndexData extends Data
         public ListPaginationData $pagination,
         public ContactMessageListFiltersData $filters,
         public ContactMessageListAbilitiesData $can,
+        public int $exportMaxRows = 0,
     ) {}
 }

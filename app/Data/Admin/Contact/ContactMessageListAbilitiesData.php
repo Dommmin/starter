@@ -14,5 +14,6 @@ class ContactMessageListAbilitiesData extends Data
 {
     public function __construct(
         public bool $delete,
+        public bool $export = false,
     ) {}
 }

@@ -125,7 +125,12 @@ afterEach(async () => {
 
 describe('AdminPagesIndex', () => {
     it('links each title to its editor and marks a missing translation', async () => {
-        pageProps = makeProps({ create: true, publish: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            publish: true,
+            delete: true,
+        });
         const container = await render();
 
         const titleLink = Array.from(container.querySelectorAll('a')).find(
@@ -140,7 +145,12 @@ describe('AdminPagesIndex', () => {
     });
 
     it('offers the create action only with the create ability', async () => {
-        pageProps = makeProps({ create: true, publish: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            publish: true,
+            delete: true,
+        });
         let container = await render();
 
         const createLink = Array.from(container.querySelectorAll('a')).find(
@@ -158,14 +168,24 @@ describe('AdminPagesIndex', () => {
         });
         document.body.replaceChildren();
 
-        pageProps = makeProps({ create: false, publish: true, delete: false });
+        pageProps = makeProps({
+            create: false,
+            update: false,
+            publish: true,
+            delete: false,
+        });
         container = await render();
 
         expect(container.textContent).not.toContain('admin.pages.create');
     });
 
     it('clears the status and content locale filters to the server defaults', async () => {
-        pageProps = makeProps({ create: true, publish: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            publish: true,
+            delete: true,
+        });
         pageProps.filters = {
             ...pageProps.filters,
             status: 'draft',

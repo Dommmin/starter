@@ -98,6 +98,7 @@ test('the panel access flag follows the role', function (?string $state, bool $e
         ->assertInertia(fn (Assert $page) => $page->where('auth.can.accessAdminPanel', $expected));
 })->with([
     'no role' => [null, false],
+    'viewer' => ['viewer', true],
     'editor' => ['editor', true],
     'admin' => ['admin', true],
 ]);

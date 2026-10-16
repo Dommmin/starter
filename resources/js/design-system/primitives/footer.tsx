@@ -5,6 +5,7 @@ import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { Container } from './container';
 import type { NavItem } from './nav-item';
 import { isNavLink, NavItemLink } from './nav-item-link';
+import type { OpeningHoursRow } from './opening-hours';
 import { Text } from './text';
 
 export type FooterContact = {
@@ -12,6 +13,12 @@ export type FooterContact = {
     phone?: string;
     /** Postal address; line breaks (`\n`) are preserved. */
     address?: string;
+    /** Tax identification number, shown with a translated label. */
+    taxId?: string;
+    /** https link to the location on a map; opens in a new tab. */
+    mapUrl?: string;
+    /** Grouped opening hours, see `groupOpeningHours`. */
+    openingHours?: OpeningHoursRow[];
 };
 
 /** A text link to a social profile (no brand icons); always opens externally. */
@@ -108,12 +115,15 @@ export function Footer({
                             {contact?.email && (
                                 <a
                                     href={`mailto:${contact.email}`}
-                                    className="text-foreground hover:text-primary focus-visible:ring-ring decoration-primary/40 rounded-sm font-serif text-xl font-semibold tracking-tight wrap-anywhere underline underline-offset-8 transition-colors duration-150 hover:decoration-current focus-visible:ring-2 focus-visible:outline-none sm:text-2xl"
+                                    className="text-foreground hover:text-primary focus-visible:ring-ring decoration-primary/40 font-heading rounded-sm text-xl font-semibold tracking-tight wrap-anywhere underline underline-offset-8 transition-colors duration-150 hover:decoration-current focus-visible:ring-2 focus-visible:outline-none sm:text-2xl"
                                 >
                                     {contact.email}
                                 </a>
                             )}
-                            {(contact?.phone || contact?.address) && (
+                            {(contact?.phone ||
+                                contact?.address ||
+                                contact?.taxId ||
+                                contact?.mapUrl) && (
                                 <div className="flex flex-col gap-2">
                                     {contact.phone && (
                                         <a
@@ -128,8 +138,46 @@ export function Footer({
                                             {contact.address}
                                         </address>
                                     )}
+                                    {contact.mapUrl && (
+                                        <NavItemLink
+                                            item={{
+                                                id: 'map',
+                                                label: t('footer.map'),
+                                                href: contact.mapUrl,
+                                                kind: 'external',
+                                                newTab: true,
+                                            }}
+                                            classes={linkClasses}
+                                        />
+                                    )}
+                                    {contact.taxId && (
+                                        <Text variant="caption" tone="muted">
+                                            {t('footer.taxId', {
+                                                taxId: contact.taxId,
+                                            })}
+                                        </Text>
+                                    )}
                                 </div>
                             )}
+                            {contact?.openingHours &&
+                                contact.openingHours.length > 0 && (
+                                    <div className="flex flex-col gap-2">
+                                        <h2 className="text-foreground text-xs font-medium sm:text-sm">
+                                            {t('footer.openingHours')}
+                                        </h2>
+                                        <dl className="text-muted-foreground grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm tabular-nums">
+                                            {contact.openingHours.map((row) => (
+                                                <div
+                                                    key={row.days}
+                                                    className="contents"
+                                                >
+                                                    <dt>{row.days}</dt>
+                                                    <dd>{row.hours}</dd>
+                                                </div>
+                                            ))}
+                                        </dl>
+                                    </div>
+                                )}
                         </div>
                         {hasColumns && (
                             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-7">

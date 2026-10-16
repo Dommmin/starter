@@ -66,6 +66,10 @@ return [
         'links' => 'Informationen',
         'contact' => 'Kontakt',
         'social' => 'Soziale Medien',
+        'map' => 'Auf der Karte zeigen',
+        'taxId' => 'USt-IdNr.: :taxId',
+        'openingHours' => 'Öffnungszeiten',
+        'closed' => 'geschlossen',
     ],
     'orderable' => [
         'moveUp' => ':label nach oben verschieben',
@@ -80,6 +84,28 @@ return [
     ],
     'language' => [
         'label' => 'Sprache',
+    ],
+    'weekdays' => [
+        'monday' => 'Montag',
+        'tuesday' => 'Dienstag',
+        'wednesday' => 'Mittwoch',
+        'thursday' => 'Donnerstag',
+        'friday' => 'Freitag',
+        'saturday' => 'Samstag',
+        'sunday' => 'Sonntag',
+    ],
+    'weekdaysShort' => [
+        'monday' => 'Mo',
+        'tuesday' => 'Di',
+        'wednesday' => 'Mi',
+        'thursday' => 'Do',
+        'friday' => 'Fr',
+        'saturday' => 'Sa',
+        'sunday' => 'So',
+    ],
+    'answers' => [
+        'yes' => 'Ja',
+        'no' => 'Nein',
     ],
     'actions' => [
         'save' => 'Speichern',

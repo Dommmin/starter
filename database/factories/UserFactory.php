@@ -80,4 +80,14 @@ class UserFactory extends Factory
             'role' => UserRole::Editor,
         ]);
     }
+
+    /**
+     * Indicate that the user is a read-only viewer of the panel.
+     */
+    public function viewer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Viewer,
+        ]);
+    }
 }

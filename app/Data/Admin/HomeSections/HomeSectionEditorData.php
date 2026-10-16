@@ -18,6 +18,7 @@ class HomeSectionEditorData extends Data
     /**
      * @param  list<HomeLinkTarget>  $linkTargets
      * @param  list<HomePageOptionData>  $pages
+     * @param  list<HomeContactFormOptionData>  $contactForms
      */
     public function __construct(
         public HomeSectionFormData $section,
@@ -25,5 +26,6 @@ class HomeSectionEditorData extends Data
         public array $linkTargets,
         public array $pages,
         public HomeSectionAbilitiesData $can,
+        public array $contactForms = [],
     ) {}
 }

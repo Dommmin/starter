@@ -44,6 +44,7 @@ class DemoUserSeeder extends Seeder
      */
     public const array USERS = [
         'editor@example.com' => ['name' => 'Demo Editor', 'role' => UserRole::Editor, 'verified' => true],
+        'viewer@example.com' => ['name' => 'Demo Viewer', 'role' => UserRole::Viewer, 'verified' => true],
         'user@example.com' => ['name' => 'Demo User', 'role' => null, 'verified' => true],
         'mfa@example.com' => ['name' => 'Demo Admin 2FA', 'role' => UserRole::Admin, 'verified' => true, 'two_factor' => true],
         'klaus.schneider@example.com' => ['name' => 'Klaus Schneider', 'role' => null, 'verified' => true],

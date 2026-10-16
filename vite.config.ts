@@ -34,6 +34,13 @@ export default defineConfig({
                     // formats into one `src` list.
                     preload: false,
                 }),
+                // Headings of the `classic` typography preset only
+                // (`[data-typography='classic']`); faces load on first use.
+                bunny('Fraunces', {
+                    weights: [600, 700],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: false,
+                }),
                 // Admin surface only (`--admin-font-*`); faces load on first use.
                 bunny('Geist', {
                     weights: [400, 500, 600],

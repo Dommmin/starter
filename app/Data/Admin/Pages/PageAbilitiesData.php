@@ -13,6 +13,7 @@ class PageAbilitiesData extends Data
 {
     public function __construct(
         public bool $create,
+        public bool $update,
         public bool $publish,
         public bool $delete,
     ) {}

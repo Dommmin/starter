@@ -6,9 +6,10 @@ use App\Models\HomeSection;
 use App\Models\User;
 
 /**
- * Home page sections are managed by the panel roles (admin and editor).
- * Sections are never created or deleted in the panel (one per type and
- * locale, see EnsureHomeSections), so there are no such abilities.
+ * Home page sections are managed by admins and editors; a viewer lists
+ * them and opens a section read-only. Sections are never created or
+ * deleted in the panel (one per type and locale, see EnsureHomeSections),
+ * so there are no such abilities.
  */
 class HomeSectionPolicy
 {
@@ -21,11 +22,20 @@ class HomeSectionPolicy
     }
 
     /**
+     * Determine whether the user can open the section editor (read-only
+     * without `update`).
+     */
+    public function view(User $user, HomeSection $homeSection): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
      * Determine whether the user can edit or toggle the section.
      */
     public function update(User $user, HomeSection $homeSection): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -33,6 +43,6 @@ class HomeSectionPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 }

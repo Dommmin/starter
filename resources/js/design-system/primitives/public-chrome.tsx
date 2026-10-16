@@ -4,6 +4,7 @@ import { useTranslation } from '@/i18n';
 import type { BrandLogoImage } from './brand-logo';
 import { CookieConsent, useCookieConsent } from './cookie-consent';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
+import { groupOpeningHours } from './opening-hours';
 import type { NavItem } from './nav-item';
 import { PublicHeader } from './public-header';
 import { useSiteBrand } from './site-brand';
@@ -82,6 +83,15 @@ export function PublicChrome({
                   email: withoutNull(site.contact.email),
                   phone: withoutNull(site.contact.phone),
                   address: withoutNull(site.contact.address),
+                  taxId: withoutNull(site.contact.taxId),
+                  mapUrl: withoutNull(site.contact.mapUrl),
+                  openingHours: site.contact.openingHours
+                      ? groupOpeningHours(
+                            site.contact.openingHours,
+                            (day) => t(`weekdaysShort.${day}`),
+                            t('footer.closed'),
+                        )
+                      : undefined,
               }
             : undefined);
     const social: FooterSocialLink[] | undefined =

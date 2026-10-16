@@ -8,17 +8,22 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Props of the public `articles/index` screen: newest visible articles of
- * the current locale.
+ * the current locale, optionally filtered by `activeTag`. `tags` are the
+ * tags with at least one visible article in the locale.
  */
 #[TypeScript]
 class PublicArticleListData extends Data
 {
     /**
      * @param  list<ArticleSummaryData>  $items
+     * @param  list<PublicTagData>  $tags
      */
     public function __construct(
         public array $items,
         public ListPaginationData $pagination,
         public string $locale,
+        public string $listUrl = '',
+        public array $tags = [],
+        public ?PublicTagData $activeTag = null,
     ) {}
 }

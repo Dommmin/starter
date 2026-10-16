@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Deliver one contact message to the recipient from the site settings,
+ * Deliver one contact message to the recipients from the site settings,
  * read at send time (fallback: `contact.recipient` from the environment).
  * Idempotent: a message already marked `sent` is skipped, and only one job per message
  * may be queued at a time (ShouldBeUnique). A crash after the mailer
@@ -57,7 +57,7 @@ class SendContactMessage implements ShouldBeUnique, ShouldQueue
 
     public function handle(LocalizationConfig $localization, SiteSettingsRepository $siteSettings): void
     {
-        $contactMessage = ContactMessage::query()->find($this->contactMessageId);
+        $contactMessage = ContactMessage::query()->with('form.fields')->find($this->contactMessageId);
 
         if ($contactMessage === null || $contactMessage->status === ContactMessageStatus::Sent) {
             return;
@@ -69,7 +69,7 @@ class SendContactMessage implements ShouldBeUnique, ShouldQueue
         ])->save();
 
         try {
-            Mail::to($siteSettings->contactRecipient())
+            Mail::to($siteSettings->contactRecipients())
                 ->locale($localization->getAdminDefault())
                 ->send(new ContactMessageMail($contactMessage));
         } catch (Throwable $exception) {

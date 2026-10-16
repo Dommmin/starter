@@ -1,7 +1,10 @@
 <?php
 
 use App\Actions\Settings\UpdateSiteSettings;
+use App\Enums\AccentColor;
 use App\Enums\AuditAction;
+use App\Enums\ThemePreference;
+use App\Enums\TypographyPreset;
 use App\Models\AuditLog;
 use App\Models\MediaAsset;
 use App\Models\SiteSetting;
@@ -37,6 +40,8 @@ function siteSettingsPayload(array $overrides = []): array
             'linkedin' => 'https://www.linkedin.com/company/acme',
             'github' => '',
         ],
+        'default_theme' => 'system',
+        'contact_auto_reply' => false,
         'translations' => [
             'en' => [
                 'tagline' => 'We build things',
@@ -180,7 +185,102 @@ test('invalid settings are rejected without saving anything', function (Closure 
     'unknown locale' => [fn () => ['translations' => ['en' => ['tagline' => 'Hi'], 'fr' => ['tagline' => 'Salut']]], 'translations'],
     'too long seo title' => [fn () => ['translations' => ['en' => ['seo_title' => str_repeat('a', 71)]]], 'translations.en.seo_title'],
     'lowercase country code' => [fn () => ['country_code' => 'pl'], 'country_code'],
+    'unknown accent' => [fn () => ['accent' => 'orange'], 'accent'],
+    'unknown typography' => [fn () => ['typography' => 'comic'], 'typography'],
+    'missing default theme' => [fn () => ['default_theme' => null], 'default_theme'],
+    'favicon in quarantine' => [fn () => ['favicon_media_id' => MediaAsset::factory()->create()->id], 'favicon_media_id'],
+    'tax id with markup' => [fn () => ['tax_id' => '<b>123</b>'], 'tax_id'],
+    'plain http map link' => [fn () => ['map_url' => 'http://maps.example.com/acme'], 'map_url'],
+    'full meta tag as verification' => [fn () => ['google_site_verification' => '<meta name="google-site-verification" content="abc">'], 'google_site_verification'],
+    'unknown weekday' => [fn () => ['opening_hours' => ['funday' => ['opens' => '09:00', 'closes' => '17:00']]], 'opening_hours'],
+    'closing before opening' => [fn () => ['opening_hours' => ['monday' => ['opens' => '17:00', 'closes' => '09:00']]], 'opening_hours.monday.closes'],
+    'opening without closing' => [fn () => ['opening_hours' => ['monday' => ['opens' => '09:00', 'closes' => null]]], 'opening_hours.monday.closes'],
+    'malformed time' => [fn () => ['opening_hours' => ['monday' => ['opens' => '9am', 'closes' => '17:00']]], 'opening_hours.monday.opens'],
+    'too many recipients' => [fn () => ['contact_recipients' => ['a@acme.test', 'b@acme.test', 'c@acme.test', 'd@acme.test', 'e@acme.test', 'f@acme.test']], 'contact_recipients'],
+    'duplicate recipient' => [fn () => ['contact_recipients' => ['a@acme.test', 'A@acme.test']], 'contact_recipients.1'],
+    'invalid recipient' => [fn () => ['contact_recipients' => ['not-an-email']], 'contact_recipients.0'],
+    'header injection in a recipient' => [fn () => ['contact_recipients' => ["a@acme.test\r\nBcc: x@evil.test"]], 'contact_recipients.0'],
+    'too long auto-reply' => [fn () => ['translations' => ['en' => ['auto_reply_text' => str_repeat('a', 1001)]]], 'translations.en.auto_reply_text'],
 ]);
+
+test('recipients and the auto-reply are saved, the recipients audited without their addresses', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.site-settings.update'), siteSettingsPayload([
+            'contact_recipients' => ['one@acme.test', 'two@acme.test'],
+            'contact_auto_reply' => true,
+            'translations' => ['en' => ['auto_reply_text' => 'Thanks, we reply within a day.']],
+        ]))
+        ->assertSessionHasNoErrors();
+
+    $settings = SiteSetting::query()->sole();
+    expect($settings->contact_recipients)->toBe(['one@acme.test', 'two@acme.test'])
+        ->and($settings->contact_recipient_email)->toBe('one@acme.test')
+        ->and($settings->contact_auto_reply)->toBeTrue()
+        ->and($settings->translations()->where('locale', 'en')->value('auto_reply_text'))->toBe('Thanks, we reply within a day.');
+
+    $changes = AuditLog::query()->sole()->changes;
+    expect($changes['contact_recipients'])->toBe(['redacted' => true])
+        ->and(json_encode($changes))->not->toContain('two@acme.test');
+});
+
+test('appearance and company details are saved, audited and shown in the form', function () {
+    $admin = User::factory()->admin()->create();
+    $favicon = MediaAsset::factory()->withVariants()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.site-settings.update'), siteSettingsPayload([
+            'accent' => 'blue',
+            'typography' => 'classic',
+            'default_theme' => 'dark',
+            'favicon_media_id' => $favicon->id,
+            'tax_id' => 'PL 123-456-32-18',
+            'map_url' => 'https://maps.example.com/acme',
+            'google_site_verification' => 'abc_DEF-123',
+            'opening_hours' => [
+                'monday' => ['opens' => '09:00', 'closes' => '17:00'],
+                'saturday' => ['opens' => '10:00', 'closes' => '14:00'],
+                'sunday' => ['opens' => '', 'closes' => ''],
+            ],
+        ]))
+        ->assertSessionHasNoErrors();
+
+    $settings = SiteSetting::query()->sole();
+    expect($settings->accent)->toBe(AccentColor::Blue)
+        ->and($settings->typography)->toBe(TypographyPreset::Classic)
+        ->and($settings->default_theme)->toBe(ThemePreference::Dark)
+        ->and($settings->favicon_media_id)->toBe($favicon->id)
+        ->and($settings->tax_id)->toBe('PL 123-456-32-18')
+        ->and($settings->opening_hours)->toHaveCount(7)
+        ->and($settings->opening_hours[0])->toBe(['day' => 'monday', 'opens' => '09:00', 'closes' => '17:00'])
+        ->and($settings->opening_hours[1])->toBe(['day' => 'tuesday', 'opens' => null, 'closes' => null])
+        ->and($settings->opening_hours[5])->toBe(['day' => 'saturday', 'opens' => '10:00', 'closes' => '14:00']);
+
+    expect(AuditLog::query()->sole()->changes)
+        ->toHaveKeys(['accent', 'typography', 'default_theme', 'favicon_media_id', 'tax_id', 'map_url', 'opening_hours', 'google_site_verification']);
+
+    $this->actingAs($admin)->get(route('admin.site-settings.edit'))
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('settings.accent', 'blue')
+            ->where('settings.typography', 'classic')
+            ->where('settings.defaultTheme', 'dark')
+            ->where('settings.openingHours.monday', ['opens' => '09:00', 'closes' => '17:00'])
+            ->where('settings.openingHours.tuesday', ['opens' => '', 'closes' => ''])
+        );
+});
+
+test('a week without any open day stores no opening hours', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.site-settings.update'), siteSettingsPayload([
+            'opening_hours' => ['monday' => ['opens' => '', 'closes' => '']],
+        ]))
+        ->assertSessionHasNoErrors();
+
+    expect(SiteSetting::query()->sole()->opening_hours)->toBeNull();
+});
 
 test('the brand name can be changed alone from the console', function () {
     $settings = SiteSetting::factory()->create(['site_name' => 'Old', 'contact_email' => 'keep@acme.test']);

@@ -18,6 +18,7 @@ use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\SiteSetting;
+use App\Models\Tag;
 use App\Models\User;
 use App\Notifications\AccountInvitation;
 use App\Support\Env\EnvFileEditor;
@@ -27,8 +28,10 @@ use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoContent;
 use Database\Seeders\DemoMediaSeeder;
 use Database\Seeders\HomeSectionSeeder;
+use Database\Seeders\LegalPageSeeder;
 use Database\Seeders\NavigationMenuSeeder;
 use Database\Seeders\PageSeeder;
+use Database\Seeders\TagSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -418,7 +421,7 @@ test('missing values are asked for interactively', function () {
 
 test('a user page that shares one sample slug is kept', function () {
     $page = Page::factory()->create();
-    PageTranslation::factory()->published()->for($page)->create(['locale' => 'en', 'slug' => DemoContent::PAGES['privacy']['en']]);
+    PageTranslation::factory()->published()->for($page)->create(['locale' => 'en', 'slug' => DemoContent::PAGES['about']['en']]);
 
     runInit(['--remove-demo' => true]);
 
@@ -510,7 +513,8 @@ test('--remove-demo removes the whole local sample data set', function () {
         ->and(substr_count($output, 'kept'))->toBe(2)
         ->and(substr_count($output, 'Demo media: "'))->toBe(2)
         ->and(User::query()->pluck('email')->all())->toBe(['owner@example.test'])
-        ->and(Page::query()->exists())->toBeFalse()
+        // Legal pages are not demo content and survive --remove-demo.
+        ->and(Page::query()->count())->toBe(count(LegalPageSeeder::SLUGS))
         ->and(Article::query()->exists())->toBeFalse()
         ->and(MediaAsset::query()->pluck('id')->sort()->values()->all())->toBe(collect([SiteSetting::query()->value('logo_media_id'), SiteSetting::query()->value('og_image_media_id')])->sort()->values()->all())
         ->and(Faq::query()->exists())->toBeFalse()
@@ -555,4 +559,17 @@ test('--remove-demo keeps sample media still used by kept content or the site se
         ->and(MediaAsset::query()->pluck('id')->sort()->values()->all())->toBe(collect([$cover, $logo, $inBody])->sort()->values()->all())
         ->and(Article::query()->value('cover_media_id'))->toBe($cover)
         ->and(SiteSetting::query()->value('logo_media_id'))->toBe($logo);
+});
+
+test('--remove-demo deletes the sample tags with an audit entry and keeps a renamed one', function () {
+    seedDemo();
+    test()->seed(TagSeeder::class);
+    $this->travel(1)->minutes();
+    Tag::query()->where('slug', 'news')->sole()->update(['name' => ['en' => 'Company news']]);
+
+    [$exitCode] = runInit(['--remove-demo' => true]);
+
+    expect($exitCode)->toBe(0)
+        ->and(Tag::query()->pluck('slug')->all())->toBe(['news'])
+        ->and(AuditLog::query()->where('action', AuditAction::TagDeleted)->count())->toBe(count(TagSeeder::TAGS) - 1);
 });

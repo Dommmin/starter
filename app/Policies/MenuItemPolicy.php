@@ -6,8 +6,9 @@ use App\Models\MenuItem;
 use App\Models\User;
 
 /**
- * Navigation menus are managed by both panel roles (admin and editor),
- * including deletion (human decision for the navigation-menu scope).
+ * Navigation menus are managed by admins and editors, including deletion
+ * (human decision for the navigation-menu scope); a viewer sees the menus
+ * and opens items read-only.
  */
 class MenuItemPolicy
 {
@@ -20,11 +21,20 @@ class MenuItemPolicy
     }
 
     /**
+     * Determine whether the user can open the menu item editor (read-only
+     * without `update`).
+     */
+    public function view(User $user, MenuItem $menuItem): bool
+    {
+        return $user->canAccessAdminPanel();
+    }
+
+    /**
      * Determine whether the user can add menu items.
      */
     public function create(User $user): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -32,7 +42,7 @@ class MenuItemPolicy
      */
     public function update(User $user, MenuItem $menuItem): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -40,7 +50,7 @@ class MenuItemPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -48,6 +58,6 @@ class MenuItemPolicy
      */
     public function delete(User $user, MenuItem $menuItem): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 }

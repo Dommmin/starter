@@ -53,4 +53,23 @@ return [
 
     'retention_days' => (int) env('CONTACT_RETENTION_DAYS', 180),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook
+    |--------------------------------------------------------------------------
+    |
+    | Every new contact message is POSTed as JSON to `url` (https only, public
+    | addresses only, no redirects), signed with HMAC-SHA256 of
+    | "{timestamp}.{body}" using `secret` (X-Starter-Signature). Both live in
+    | the server environment, never in the database or the panel. Empty url
+    | or secret = no webhook.
+    |
+    */
+
+    'webhook' => [
+        'url' => env('CONTACT_WEBHOOK_URL'),
+        'secret' => env('CONTACT_WEBHOOK_SECRET'),
+        'timeout_seconds' => (int) env('CONTACT_WEBHOOK_TIMEOUT', 10),
+    ],
+
 ];

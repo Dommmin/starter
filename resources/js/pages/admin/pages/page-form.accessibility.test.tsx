@@ -114,7 +114,13 @@ function makeEditor(
             ...page,
         },
         locales,
-        can: { create: true, publish: true, delete: false, ...can },
+        can: {
+            create: true,
+            update: true,
+            publish: true,
+            delete: false,
+            ...can,
+        },
         previewUrls,
     };
 }

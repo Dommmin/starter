@@ -17,6 +17,7 @@ import {
 } from '@/design-system/primitives';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useTranslation } from '@/i18n';
+import { multiSelectLabels } from '@/lib/multi-select-labels';
 import { slugify } from '@/lib/slug';
 import {
     destroy as articlesDestroy,
@@ -40,8 +41,11 @@ type TranslationValues = {
     published_on: string;
 };
 
-/** Values of one language tab: its translation plus the shared cover. */
-type TabValues = TranslationValues & { cover_media_id: string };
+/** Values of one language tab: its translation plus the shared cover and tags. */
+type TabValues = TranslationValues & {
+    cover_media_id: string;
+    tag_ids: string[];
+};
 
 /**
  * Request-ready form state. The rich text body is kept serialised because
@@ -52,6 +56,7 @@ type TranslationState = Omit<TranslationValues, 'body'> & { body: string };
 
 type ArticleFormState = {
     cover_media_id: string;
+    tag_ids: string[];
     translations: Record<string, TranslationState>;
 };
 
@@ -121,6 +126,7 @@ export function ArticleForm({ editor }: ArticleFormProps) {
     const form = useForm<ArticleFormState>({
         cover_media_id:
             article.coverMediaId === null ? '' : String(article.coverMediaId),
+        tag_ids: article.tagIds.map(String),
         translations: Object.fromEntries(
             locales.available.map((locale) => [
                 locale.code,
@@ -164,6 +170,8 @@ export function ArticleForm({ editor }: ArticleFormProps) {
             (key) =>
                 key !== 'conflict' &&
                 key !== 'cover_media_id' &&
+                key !== 'tag_ids' &&
+                !key.startsWith('tag_ids.') &&
                 !locales.available.some((locale) =>
                     TRANSLATION_FIELDS.some(
                         (field) =>
@@ -215,6 +223,12 @@ export function ArticleForm({ editor }: ArticleFormProps) {
             return;
         }
 
+        if (name === 'tag_ids') {
+            form.setData('tag_ids', value as string[]);
+
+            return;
+        }
+
         if (name === 'title' && !manualSlugs[code]) {
             updateTranslation(code, {
                 title: value as string,
@@ -243,6 +257,7 @@ export function ArticleForm({ editor }: ArticleFormProps) {
         form.transform((data) => ({
             cover_media_id:
                 data.cover_media_id === '' ? null : Number(data.cover_media_id),
+            tag_ids: data.tag_ids.map(Number),
             translations: Object.fromEntries(
                 Object.entries(data.translations).map(([code, state]) => {
                     const body: FormDataConvertible = JSON.parse(state.body);
@@ -447,6 +462,7 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                         ...state,
                         body: parseDocument(state.body),
                         cover_media_id: form.data.cover_media_id,
+                        tag_ids: form.data.tag_ids,
                     };
                     const isDefault = code === locales.default;
                     const prefix = errorPrefix(code);
@@ -468,11 +484,19 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                         ]),
                                     ),
                                     cover_media_id: errors.cover_media_id,
+                                    tag_ids:
+                                        errors.tag_ids ??
+                                        errors[
+                                            errorKeys.find((key) =>
+                                                key.startsWith('tag_ids.'),
+                                            ) ?? ''
+                                        ],
                                 }}
                                 onChange={(name, value) =>
                                     handleChange(code, name, value)
                                 }
                                 onSubmit={submit}
+                                readOnly={!can.update}
                                 isPending={form.processing}
                                 cancelHref={articlesIndex()}
                                 labels={{
@@ -618,6 +642,39 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                         'admin.articles.cover.preview',
                                                     ),
                                                 },
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        id: `tags-${code}`,
+                                        title: t('admin.articles.tagsSection'),
+                                        description: t(
+                                            'admin.articles.tagsSectionDescription',
+                                        ),
+                                        fields: [
+                                            {
+                                                type: 'multiSelect',
+                                                name: 'tag_ids',
+                                                label: t(
+                                                    'admin.articles.fields.tags',
+                                                ),
+                                                hint:
+                                                    editor.tagOptions.length ===
+                                                    0
+                                                        ? t(
+                                                              'admin.articles.fields.tagsEmpty',
+                                                          )
+                                                        : undefined,
+                                                options: editor.tagOptions.map(
+                                                    (option) => ({
+                                                        value: String(
+                                                            option.id,
+                                                        ),
+                                                        label: option.label,
+                                                    }),
+                                                ),
+                                                labels: multiSelectLabels(t),
+                                                max: editor.maxTags,
                                             },
                                         ],
                                     },

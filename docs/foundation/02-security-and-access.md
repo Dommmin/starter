@@ -16,6 +16,8 @@ Alternatywy: zewnętrzny IdP (mniej odpowiedzialności za auth, koszt i zależno
 
 Status: proponowany. Uprawnienia poprzez Laravel policies, default deny, oddzielne operacje publikacji i zarządzania kontami. Role statyczne P0; Permission dopiero dla dynamicznego RBAC. Zmiana uprawnień od razu unieważnia odpowiedni cache; odebranie dostępu nie czeka na ponowny login. Identyfikatory nie stanowią zabezpieczenia przed IDOR. Administrator nie dostaje automatycznie dostępu do sekretów infrastruktury.
 
+Role panelu (enum `UserRole`, decyzja właściciela 2026-10-16): `admin` — wszystko, w tym użytkownicy, audyt, ustawienia, formularze kontaktowe i usuwanie; `editor` — tworzy, edytuje i publikuje treści, czyta wiadomości kontaktowe; `viewer` — tylko odczyt: dashboard, listy treści i mediów, edytory w trybie tylko do odczytu, podgląd szkiców i pobieranie mediów, bez wiadomości kontaktowych (dane osobowe), użytkowników, audytu i ustawień. `User::canEditContent()` rozdziela zapis od odczytu (`canAccessAdminPanel()`); każda zmiana viewera kończy się 403 bez skutku w danych (`ViewerRoleTest`). Wymóg 2FA obejmuje wszystkie role panelu.
+
 ## Threat model
 
 Zasoby: konta i sesje, treści przed publikacją, dane kontaktowe, przyszłe dokumenty klienta, backupy, obrazy, sekrety deployu i dostępność. Aktorzy: gość, bot, editor, admin, developer, agent AI, dostawca, atakujący z przejętym kontem lub zależnością. Granice zaufania: Internet → proxy → Laravel → DB/queue/storage; aplikacja → mail/monitoring; PR → CI → GHCR → hosting; dokumenty i wyniki narzędzi → agent. Osobne środowiska i osobne projekty klientów nie współdzielą credentiali.

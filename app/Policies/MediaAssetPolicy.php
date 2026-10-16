@@ -6,10 +6,11 @@ use App\Models\MediaAsset;
 use App\Models\User;
 
 /**
- * The DAM belongs to the panel roles: admins and editors list, upload,
- * describe and download assets; only administrators delete them.
- * Downloading additionally requires a clean asset (checked by the
- * controller), so quarantined or rejected bytes are never served.
+ * The DAM belongs to the panel roles: every panel role lists, opens and
+ * downloads assets; admins and editors upload and describe them; only
+ * administrators delete them. Downloading additionally requires a clean
+ * asset (checked by the controller), so quarantined or rejected bytes are
+ * never served.
  */
 class MediaAssetPolicy
 {
@@ -34,7 +35,7 @@ class MediaAssetPolicy
      */
     public function create(User $user): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**
@@ -42,7 +43,7 @@ class MediaAssetPolicy
      */
     public function update(User $user, MediaAsset $asset): bool
     {
-        return $user->canAccessAdminPanel();
+        return $user->canEditContent();
     }
 
     /**

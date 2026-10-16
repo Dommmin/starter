@@ -8,6 +8,7 @@ import {
     Stack,
     Tabs,
     type ImagePickerFieldLabels,
+    type ResourceFormRepeaterItem,
     type ResourceFormSection,
 } from '@/design-system/primitives';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
@@ -20,6 +21,27 @@ import {
 
 type EditorData = App.Data.Admin.Settings.SiteSettingsEditorData;
 type SocialNetwork = App.Enums.SocialNetwork;
+type Weekday = App.Enums.Weekday;
+
+const WEEKDAYS: Weekday[] = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+];
+
+const ACCENTS: App.Enums.AccentColor[] = [
+    'default',
+    'blue',
+    'violet',
+    'rose',
+    'green',
+];
+const TYPOGRAPHY_PRESETS: App.Enums.TypographyPreset[] = ['default', 'classic'];
+const THEMES: App.Enums.ThemePreference[] = ['system', 'light', 'dark'];
 
 /** Request keys of the settings shared by every language. */
 const SHARED_FIELDS = [
@@ -33,6 +55,13 @@ const SHARED_FIELDS = [
     'city',
     'country_code',
     'contact_recipient_email',
+    'accent',
+    'typography',
+    'default_theme',
+    'favicon_media_id',
+    'tax_id',
+    'map_url',
+    'google_site_verification',
 ] as const;
 
 /** Request keys of the texts of one language (`translations.{locale}.*`). */
@@ -41,25 +70,50 @@ const TRANSLATION_FIELDS = [
     'footer_text',
     'seo_title',
     'seo_description',
+    'auto_reply_text',
 ] as const;
 
 type SharedField = (typeof SHARED_FIELDS)[number];
 type TranslationField = (typeof TRANSLATION_FIELDS)[number];
 type TranslationState = Record<TranslationField, string>;
 
+type OpeningHoursState = Record<Weekday, { opens: string; closes: string }>;
+
 type SiteSettingsFormState = Record<SharedField, string> & {
     social_links: Record<SocialNetwork, string>;
     translations: Record<string, TranslationState>;
+    opening_hours: OpeningHoursState;
+    contact_recipients: ResourceFormRepeaterItem[];
+    contact_auto_reply: boolean;
 };
+
+/** Contact form recipients the settings accept (UpdateSiteSettingsRequest). */
+const MAX_RECIPIENTS = 5;
 
 /**
  * Values of one language tab: the shared settings, one `social_links.{network}`
  * entry per network and the texts of the tab's language.
  */
-type TabValues = Record<string, string>;
+type TextKey =
+    | SharedField
+    | TranslationField
+    | `social_links.${SocialNetwork}`
+    | `opening_hours.${Weekday}.${'opens' | 'closes'}`;
 
-function socialField(network: SocialNetwork): string {
+type TabValues = Record<TextKey, string> & {
+    contact_recipients: ResourceFormRepeaterItem[];
+    contact_auto_reply: boolean;
+};
+
+function socialField(network: SocialNetwork): `social_links.${SocialNetwork}` {
     return `social_links.${network}`;
+}
+
+function hoursField(
+    day: Weekday,
+    edge: 'opens' | 'closes',
+): `opening_hours.${Weekday}.${'opens' | 'closes'}` {
+    return `opening_hours.${day}.${edge}`;
 }
 
 function translationPrefix(locale: string): string {
@@ -76,6 +130,7 @@ function toTranslationState(
         footer_text: translation?.footerText ?? '',
         seo_title: translation?.seoTitle ?? '',
         seo_description: translation?.seoDescription ?? '',
+        auto_reply_text: translation?.autoReplyText ?? '',
     };
 }
 
@@ -113,6 +168,21 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         city: settings.city ?? '',
         country_code: settings.countryCode ?? '',
         contact_recipient_email: settings.contactRecipientEmail ?? '',
+        accent: settings.accent ?? '',
+        typography: settings.typography ?? '',
+        default_theme: settings.defaultTheme,
+        favicon_media_id:
+            settings.faviconMediaId === null
+                ? ''
+                : String(settings.faviconMediaId),
+        tax_id: settings.taxId ?? '',
+        map_url: settings.mapUrl ?? '',
+        google_site_verification: settings.googleSiteVerification ?? '',
+        opening_hours: { ...settings.openingHours },
+        contact_recipients: settings.contactRecipients.map((email) => ({
+            email,
+        })),
+        contact_auto_reply: settings.contactAutoReply,
         social_links: { ...settings.socialLinks },
         translations: Object.fromEntries(
             locales.available.map((locale) => [
@@ -131,10 +201,19 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
     const inlineKeys = new Set<string>([
         ...SHARED_FIELDS,
         ...socialNetworks.map((option) => socialField(option.network)),
+        ...WEEKDAYS.flatMap((day) => [
+            hoursField(day, 'opens'),
+            hoursField(day, 'closes'),
+        ]),
         ...locales.available.flatMap((locale) =>
             TRANSLATION_FIELDS.map(
                 (field) => `${translationPrefix(locale.code)}${field}`,
             ),
+        ),
+        'contact_recipients',
+        'contact_auto_reply',
+        ...form.data.contact_recipients.map(
+            (_, position) => `contact_recipients.${position}`,
         ),
     ]);
 
@@ -167,7 +246,42 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         });
     }, [form.isDirty, t]);
 
-    function handleChange(code: string, name: string, value: string) {
+    function handleChange(
+        code: string,
+        name: string,
+        value: TabValues[keyof TabValues],
+    ) {
+        if (name === 'contact_recipients' && Array.isArray(value)) {
+            form.setData('contact_recipients', value);
+
+            return;
+        }
+
+        if (name === 'contact_auto_reply' && typeof value === 'boolean') {
+            form.setData('contact_auto_reply', value);
+
+            return;
+        }
+
+        if (typeof value !== 'string') {
+            return;
+        }
+
+        if (name.startsWith('opening_hours.')) {
+            const [, day, edge] = name.split('.') as [
+                string,
+                Weekday,
+                'opens' | 'closes',
+            ];
+
+            form.setData('opening_hours', {
+                ...form.data.opening_hours,
+                [day]: { ...form.data.opening_hours[day], [edge]: value },
+            });
+
+            return;
+        }
+
         if (name.startsWith('social_links.')) {
             const network = name.slice('social_links.'.length) as SocialNetwork;
 
@@ -211,6 +325,21 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             city: nullable(data.city),
             country_code: nullable(data.country_code),
             contact_recipient_email: nullable(data.contact_recipient_email),
+            contact_recipients: data.contact_recipients
+                .map((item) => (item.email ?? '').trim())
+                .filter((email) => email !== ''),
+            contact_auto_reply: data.contact_auto_reply,
+            accent: nullable(data.accent),
+            typography: nullable(data.typography),
+            default_theme: data.default_theme,
+            favicon_media_id:
+                data.favicon_media_id === ''
+                    ? null
+                    : Number(data.favicon_media_id),
+            tax_id: nullable(data.tax_id),
+            map_url: nullable(data.map_url),
+            google_site_verification: nullable(data.google_site_verification),
+            opening_hours: data.opening_hours,
             social_links: data.social_links,
             translations: data.translations,
         }));
@@ -314,6 +443,62 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                 ],
             },
             {
+                id: 'appearance',
+                title: t('admin.siteSettings.sections.appearance.title'),
+                description: t(
+                    'admin.siteSettings.sections.appearance.description',
+                ),
+                fields: [
+                    {
+                        type: 'select',
+                        name: 'accent',
+                        label: t('admin.siteSettings.fields.accent'),
+                        hint: t('admin.siteSettings.fields.accentHelp'),
+                        placeholder: t(
+                            'admin.siteSettings.fields.accentFromConfig',
+                        ),
+                        options: ACCENTS.map((accent) => ({
+                            value: accent,
+                            label: t(`admin.siteSettings.accents.${accent}`),
+                        })),
+                    },
+                    {
+                        type: 'select',
+                        name: 'typography',
+                        label: t('admin.siteSettings.fields.typography'),
+                        hint: t('admin.siteSettings.fields.typographyHelp'),
+                        placeholder: t(
+                            'admin.siteSettings.typographyPresets.default',
+                        ),
+                        options: TYPOGRAPHY_PRESETS.map((preset) => ({
+                            value: preset,
+                            label: t(
+                                `admin.siteSettings.typographyPresets.${preset}`,
+                            ),
+                        })),
+                    },
+                    {
+                        type: 'select',
+                        name: 'default_theme',
+                        label: t('admin.siteSettings.fields.defaultTheme'),
+                        hint: t('admin.siteSettings.fields.defaultThemeHelp'),
+                        required: true,
+                        options: THEMES.map((theme) => ({
+                            value: theme,
+                            label: t(`admin.siteSettings.themes.${theme}`),
+                        })),
+                    },
+                    {
+                        type: 'image',
+                        name: 'favicon_media_id',
+                        label: t('admin.siteSettings.fields.favicon'),
+                        hint: t('admin.siteSettings.fields.faviconHelp'),
+                        picker,
+                        labels: imageLabels,
+                    },
+                ],
+            },
+            {
                 id: 'contact',
                 title: t('admin.siteSettings.sections.contact.title'),
                 description: t(
@@ -360,7 +545,44 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         label: t('admin.siteSettings.fields.countryCode'),
                         hint: t('admin.siteSettings.fields.countryCodeHelp'),
                     },
+                    {
+                        type: 'text',
+                        name: 'tax_id',
+                        label: t('admin.siteSettings.fields.taxId'),
+                        hint: t('admin.siteSettings.fields.taxIdHelp'),
+                    },
+                    {
+                        type: 'text',
+                        name: 'map_url',
+                        inputType: 'url',
+                        label: t('admin.siteSettings.fields.mapUrl'),
+                        hint: t('admin.siteSettings.fields.mapUrlHelp'),
+                        placeholder: 'https://',
+                    },
                 ],
+            },
+            {
+                id: 'hours',
+                title: t('admin.siteSettings.sections.hours.title'),
+                description: t('admin.siteSettings.sections.hours.description'),
+                fields: WEEKDAYS.flatMap((day) => [
+                    {
+                        type: 'text' as const,
+                        name: hoursField(day, 'opens'),
+                        label: t('admin.siteSettings.fields.opens', {
+                            day: t(`weekdays.${day}`),
+                        }),
+                        placeholder: '09:00',
+                    },
+                    {
+                        type: 'text' as const,
+                        name: hoursField(day, 'closes'),
+                        label: t('admin.siteSettings.fields.closes', {
+                            day: t(`weekdays.${day}`),
+                        }),
+                        placeholder: '17:00',
+                    },
+                ]),
             },
             {
                 id: 'social',
@@ -392,6 +614,16 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         picker,
                         labels: imageLabels,
                     },
+                    {
+                        type: 'text',
+                        name: 'google_site_verification',
+                        label: t(
+                            'admin.siteSettings.fields.googleVerification',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.googleVerificationHelp',
+                        ),
+                    },
                 ],
             },
             {
@@ -419,7 +651,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         name: 'seo_title',
                         label: t('admin.siteSettings.fields.seoTitle'),
                         hint: t('admin.siteSettings.fields.seoTitleCounter', {
-                            length: values.seo_title.length,
+                            length: String(values.seo_title).length,
                         }),
                     },
                     {
@@ -429,8 +661,15 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         label: t('admin.siteSettings.fields.seoDescription'),
                         hint: t(
                             'admin.siteSettings.fields.seoDescriptionCounter',
-                            { length: values.seo_description.length },
+                            { length: String(values.seo_description).length },
                         ),
+                    },
+                    {
+                        type: 'textarea',
+                        name: 'auto_reply_text',
+                        rows: 4,
+                        label: t('admin.siteSettings.fields.autoReplyText'),
+                        hint: t('admin.siteSettings.fields.autoReplyTextHelp'),
                     },
                 ],
             },
@@ -442,12 +681,33 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                 ),
                 fields: [
                     {
-                        type: 'text',
-                        name: 'contact_recipient_email',
-                        inputType: 'email',
-                        autoComplete: 'off',
-                        label: t('admin.siteSettings.fields.recipient'),
-                        hint: t('admin.siteSettings.fields.recipientHelp'),
+                        type: 'repeater',
+                        name: 'contact_recipients',
+                        label: t('admin.siteSettings.fields.recipients'),
+                        hint: t('admin.siteSettings.fields.recipientsHelp'),
+                        maxItems: MAX_RECIPIENTS,
+                        newItem: () => ({ email: '' }),
+                        labels: {
+                            add: t('admin.siteSettings.fields.recipientAdd'),
+                            item: (position) =>
+                                t('admin.siteSettings.fields.recipientItem', {
+                                    position,
+                                }),
+                        },
+                        itemFields: [
+                            {
+                                type: 'text',
+                                name: 'email',
+                                label: t('admin.siteSettings.fields.recipient'),
+                                required: true,
+                            },
+                        ],
+                    },
+                    {
+                        type: 'switch',
+                        name: 'contact_auto_reply',
+                        label: t('admin.siteSettings.fields.autoReply'),
+                        hint: t('admin.siteSettings.fields.autoReplyHelp'),
                     },
                 ],
             },
@@ -498,8 +758,22 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                                 form.data.social_links[option.network] ?? '',
                             ]),
                         ),
+                        ...Object.fromEntries(
+                            WEEKDAYS.flatMap((day) => [
+                                [
+                                    hoursField(day, 'opens'),
+                                    form.data.opening_hours[day].opens,
+                                ],
+                                [
+                                    hoursField(day, 'closes'),
+                                    form.data.opening_hours[day].closes,
+                                ],
+                            ]),
+                        ),
                         ...form.data.translations[code],
-                    };
+                        contact_recipients: form.data.contact_recipients,
+                        contact_auto_reply: form.data.contact_auto_reply,
+                    } as TabValues;
 
                     return {
                         value: code,
@@ -512,6 +786,18 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                                 values={values}
                                 errors={{
                                     ...errors,
+                                    // The request validates plain addresses;
+                                    // the repeater reads `<name>.<index>.email`.
+                                    ...Object.fromEntries(
+                                        form.data.contact_recipients.map(
+                                            (_, position) => [
+                                                `contact_recipients.${position}.email`,
+                                                errors[
+                                                    `contact_recipients.${position}`
+                                                ],
+                                            ],
+                                        ),
+                                    ),
                                     ...Object.fromEntries(
                                         TRANSLATION_FIELDS.map((field) => [
                                             field,

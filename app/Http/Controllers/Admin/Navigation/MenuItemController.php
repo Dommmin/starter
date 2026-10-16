@@ -229,6 +229,7 @@ class MenuItemController extends Controller
 
         return new MenuAbilitiesData(
             create: $user?->can('create', MenuItem::class) ?? false,
+            update: $user?->can('update', new MenuItem) ?? false,
             reorder: $user?->can('reorder', MenuItem::class) ?? false,
             delete: $user?->can('delete', new MenuItem) ?? false,
         );

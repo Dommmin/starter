@@ -49,7 +49,7 @@ test('the page list exposes the typed list payload with defaults', function () {
             ])
             ->where('locales.default', 'en')
             ->where('locales.available.1.code', 'pl')
-            ->where('can', ['create' => true, 'publish' => true, 'delete' => false])
+            ->where('can', ['create' => true, 'update' => true, 'publish' => true, 'delete' => false])
         );
 });
 
@@ -157,6 +157,6 @@ test('the page list lets only administrators delete from the list', function () 
     $this->actingAs($admin)->get(route('admin.pages.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $inertia) => $inertia
-            ->where('can', ['create' => true, 'publish' => true, 'delete' => true])
+            ->where('can', ['create' => true, 'update' => true, 'publish' => true, 'delete' => true])
         );
 });

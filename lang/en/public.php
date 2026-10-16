@@ -70,11 +70,17 @@ return [
         'readMore' => 'Read article: :title',
         'publishedOn' => 'Published :date',
         'backToList' => 'All articles',
+        'tagsLabel' => 'Tags',
+        'filterLabel' => 'Filter by tag',
+        'allTags' => 'All',
+        'taggedTitle' => 'Articles: :tag',
+        'emptyTagged' => 'No articles with this tag.',
         'previousPage' => 'Previous page',
         'nextPage' => 'Next page',
         'paginationSummary' => 'Page :page of :total',
     ],
     'contact' => [
+        'selectPlaceholder' => 'Choose…',
         'title' => 'Contact us',
         'description' => 'Send us a message and we will get back to you by email.',
         'fields' => [
@@ -94,6 +100,16 @@ return [
             'invalidCharacters' => 'This field contains characters that are not allowed.',
             'formExpired' => 'This form has expired. Please reload the page and try again.',
         ],
+    ],
+    'comingSoon' => [
+        'title' => 'Coming soon',
+        'heading' => 'We are launching soon',
+        'description' => 'Our new website is almost ready. Please come back in a few days.',
+        'contact' => 'Questions? Write to :email.',
+    ],
+    'contactAutoReply' => [
+        'subject' => 'Thank you for your message — :site',
+        'automatic' => 'This is an automatic reply; we will get back to you personally.',
     ],
     'site' => [
         'defaultTitle' => 'Punkt Startowy — Websites and web apps for small businesses',

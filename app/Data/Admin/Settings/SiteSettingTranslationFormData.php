@@ -17,11 +17,12 @@ class SiteSettingTranslationFormData extends Data
         public ?string $footerText,
         public ?string $seoTitle,
         public ?string $seoDescription,
+        public ?string $autoReplyText,
     ) {}
 
     public static function blank(): self
     {
-        return new self(tagline: null, footerText: null, seoTitle: null, seoDescription: null);
+        return new self(tagline: null, footerText: null, seoTitle: null, seoDescription: null, autoReplyText: null);
     }
 
     public static function fromTranslation(SiteSettingTranslation $translation): self
@@ -31,6 +32,7 @@ class SiteSettingTranslationFormData extends Data
             footerText: $translation->footer_text,
             seoTitle: $translation->seo_title,
             seoDescription: $translation->seo_description,
+            autoReplyText: $translation->auto_reply_text,
         );
     }
 }

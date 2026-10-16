@@ -7,6 +7,12 @@
 @if ($submittedAt)
 {{ __('admin.contact.fields.createdAt') }}: {{ $submittedAt }}
 @endif
+@if ($formTitle)
+{{ __('admin.contact.fields.form') }}: {!! $formTitle !!}
+@endif
+@foreach ($extraFields as $row)
+{!! $row['label'] !!}: {!! $row['value'] !!}
+@endforeach
 
 {!! $body !!}
 

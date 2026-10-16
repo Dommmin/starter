@@ -135,3 +135,14 @@ export function demoFooterGroups(t: TranslationFunction): NavItem[] {
         },
     ];
 }
+
+/** Opening hours with a weekday group, a short Saturday and a closed Sunday. */
+export const demoOpeningHours: App.Data.Settings.OpeningHoursDayData[] = [
+    { day: 'monday', opens: '09:00', closes: '17:00' },
+    { day: 'tuesday', opens: '09:00', closes: '17:00' },
+    { day: 'wednesday', opens: '09:00', closes: '17:00' },
+    { day: 'thursday', opens: '09:00', closes: '17:00' },
+    { day: 'friday', opens: '09:00', closes: '17:00' },
+    { day: 'saturday', opens: '10:00', closes: '14:00' },
+    { day: 'sunday', opens: null, closes: null },
+];

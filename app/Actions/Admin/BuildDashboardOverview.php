@@ -79,6 +79,8 @@ class BuildDashboardOverview
                 ? $this->articles->publishing($locale, $now, self::PUBLISHING_DAYS)
                 : null,
             attention: $this->attention($user, $locale, $now),
+            canCreateArticles: $user->can('create', Article::class),
+            canCreatePages: $user->can('create', Page::class),
         );
     }
 

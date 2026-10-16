@@ -95,6 +95,9 @@ function makeSite(
             email: 'office@panel.test',
             phone: '+48 123 456 789',
             address: null,
+            taxId: null,
+            mapUrl: null,
+            openingHours: null,
         },
         social: [
             {
@@ -289,6 +292,50 @@ describe('PublicChrome site settings defaults', () => {
         expect(
             footer?.querySelector('a[href="https://github.com/panel"]'),
         ).not.toBeNull();
+    });
+
+    it('shows the tax id, the map link and grouped opening hours of the site', async () => {
+        const office = { opens: '09:00', closes: '17:00' };
+        sharedProps.current.site = makeSite({
+            contact: {
+                email: null,
+                phone: null,
+                address: null,
+                taxId: 'PL 123-456-32-18',
+                mapUrl: 'https://maps.example.test/acme',
+                openingHours: [
+                    { day: 'monday', ...office },
+                    { day: 'tuesday', ...office },
+                    { day: 'wednesday', ...office },
+                    { day: 'thursday', ...office },
+                    { day: 'friday', ...office },
+                    { day: 'saturday', opens: null, closes: null },
+                    { day: 'sunday', opens: null, closes: null },
+                ],
+            },
+        });
+        const container = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        const footer = container.querySelector('footer');
+        const mapLink = footer?.querySelector(
+            'a[href="https://maps.example.test/acme"]',
+        );
+
+        // The test catalog is empty, so the label renders as its key.
+        expect(footer?.textContent).toContain('footer.taxId');
+        expect(mapLink?.getAttribute('target')).toBe('_blank');
+        expect(
+            [...(footer?.querySelectorAll('dt') ?? [])].map(
+                (term) => term.textContent,
+            ),
+        ).toHaveLength(2);
+        expect(footer?.querySelector('dl')?.textContent).toContain(
+            '09:00–17:00',
+        );
     });
 
     it('lets the page override the defaults and keeps the catalog brand before the first save', async () => {

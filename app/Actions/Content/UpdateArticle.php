@@ -8,6 +8,7 @@ use App\Enums\AuditAction;
 use App\Enums\PublicationStatus;
 use App\Models\Article;
 use App\Models\ArticleTranslation;
+use App\Models\Tag;
 use App\Models\User;
 use App\Services\Content\ArticleSlugRedirects;
 use App\Services\Content\RichTextRenderer;
@@ -17,7 +18,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Update the cover and translations of an article with optimistic locking.
+ * Update the cover, tags and translations of an article with optimistic
+ * locking. Tags are replaced only when `$tagIds` is given.
  *
  * Active locales present in the input are created or updated; active locales
  * missing from the input lose their translation. `published_at` is resolved
@@ -47,6 +49,7 @@ class UpdateArticle
      * @param  array<string, ArticleTranslationInputData>  $translations  Keyed by locale.
      * @param  list<string>  $activeLocales  Locales managed by the form.
      * @param  string  $expectedUpdatedAt  Article version the form was loaded with.
+     * @param  list<int>|null  $tagIds  New tag set, or null to keep the current one.
      *
      * @throws ValidationException When the article changed in the meantime (`conflict`).
      */
@@ -57,8 +60,9 @@ class UpdateArticle
         array $translations,
         array $activeLocales,
         string $expectedUpdatedAt,
+        ?array $tagIds = null,
     ): Article {
-        return DB::transaction(function () use ($article, $actor, $coverMediaId, $translations, $activeLocales, $expectedUpdatedAt): Article {
+        return DB::transaction(function () use ($article, $actor, $coverMediaId, $translations, $activeLocales, $expectedUpdatedAt, $tagIds): Article {
             $locked = Article::query()->whereKey($article->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->updated_at?->getTimestamp() !== Carbon::parse($expectedUpdatedAt)->getTimestamp()) {
@@ -76,6 +80,18 @@ class UpdateArticle
             if ($locked->cover_media_id !== $coverMediaId) {
                 $changes['cover_media_id'] = RecordAuditEvent::change($locked->cover_media_id, $coverMediaId);
                 $locked->cover_media_id = $coverMediaId;
+            }
+
+            if ($tagIds !== null) {
+                /** @var list<int> $before */
+                $before = $locked->tags()->pluck('tags.id')->sort()->values()->all();
+                $after = $tagIds;
+                sort($after);
+
+                if ($before !== $after) {
+                    $changes['tags'] = RecordAuditEvent::change(Tag::slugsOf($before), Tag::slugsOf($after));
+                    $locked->tags()->sync($tagIds);
+                }
             }
 
             foreach ($activeLocales as $locale) {

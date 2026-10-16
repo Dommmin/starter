@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Language-independent identity of an article: its cover image and authors.
+ * Language-independent identity of an article: its cover image, tags and
+ * authors.
  * Everything visible to visitors (title, slug, excerpt, body, SEO,
  * publication) lives in ArticleTranslation.
  *
@@ -24,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, ArticleTranslation> $translations
  * @property-read MediaAsset|null $cover
+ * @property-read Collection<int, Tag> $tags
  */
 #[Fillable(['cover_media_id', 'created_by', 'updated_by'])]
 class Article extends Model
@@ -45,6 +48,16 @@ class Article extends Model
     public function cover(): BelongsTo
     {
         return $this->belongsTo(MediaAsset::class, 'cover_media_id');
+    }
+
+    /**
+     * Tags shared by every translation of the article.
+     *
+     * @return BelongsToMany<Tag, $this>
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('slug');
     }
 
     /**

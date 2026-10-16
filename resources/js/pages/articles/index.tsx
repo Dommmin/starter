@@ -12,6 +12,7 @@ import {
     Section,
     Seo,
     Stack,
+    TagList,
     Text,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
@@ -20,6 +21,9 @@ export default function ArticlesIndex({
     items,
     pagination,
     locale,
+    listUrl,
+    tags,
+    activeTag,
 }: App.Data.Content.PublicArticleListData) {
     const { t, formatDate } = useTranslation();
     const alternateUrls =
@@ -28,24 +32,36 @@ export default function ArticlesIndex({
                 i18n?: { alternateUrls?: Record<string, string> };
             }
         ).i18n?.alternateUrls ?? {};
+    const title = activeTag
+        ? t('articles.taggedTitle', { tag: activeTag.name })
+        : t('articles.title');
 
     function goToPage(page: number) {
-        router.get(window.location.pathname, page > 1 ? { page } : {}, {
-            preserveScroll: false,
-        });
+        router.get(
+            window.location.pathname,
+            {
+                ...(activeTag ? { tag: activeTag.slug } : {}),
+                ...(page > 1 ? { page } : {}),
+            },
+            { preserveScroll: false },
+        );
     }
 
     return (
         <>
             <Seo
-                title={t('articles.title')}
+                title={title}
                 description={t('articles.description')}
-                robots={pagination.page > 1 ? 'noindex,follow' : undefined}
-                alternates={alternateUrls}
+                robots={
+                    pagination.page > 1 || activeTag
+                        ? 'noindex,follow'
+                        : undefined
+                }
+                alternates={activeTag ? {} : alternateUrls}
                 jsonLd={{
                     '@context': 'https://schema.org',
                     '@type': 'CollectionPage',
-                    name: t('articles.title'),
+                    name: title,
                     description: t('articles.description'),
                     inLanguage: locale,
                 }}
@@ -56,15 +72,45 @@ export default function ArticlesIndex({
                     <Stack gap="relaxed">
                         <Stack gap="tight">
                             <Heading level={1} variant="page">
-                                {t('articles.title')}
+                                {title}
                             </Heading>
                             <Text variant="lead" tone="muted">
                                 {t('articles.description')}
                             </Text>
                         </Stack>
 
+                        <TagList
+                            label={t('articles.filterLabel')}
+                            variant="filter"
+                            items={
+                                tags.length === 0
+                                    ? []
+                                    : [
+                                          {
+                                              id: '',
+                                              label: t('articles.allTags'),
+                                              href: listUrl,
+                                              current: activeTag === null,
+                                          },
+                                          ...tags.map((tag) => ({
+                                              id: tag.slug,
+                                              label: tag.name,
+                                              href: tag.url,
+                                              current:
+                                                  tag.slug === activeTag?.slug,
+                                          })),
+                                      ]
+                            }
+                        />
+
                         {items.length === 0 ? (
-                            <EmptyState title={t('articles.empty')} />
+                            <EmptyState
+                                title={
+                                    activeTag
+                                        ? t('articles.emptyTagged')
+                                        : t('articles.empty')
+                                }
+                            />
                         ) : (
                             <Grid layout="cards">
                                 {items.map((article) => (
@@ -132,6 +178,18 @@ export default function ArticlesIndex({
                                                         {article.excerpt}
                                                     </Text>
                                                 )}
+                                                <TagList
+                                                    label={t(
+                                                        'articles.tagsLabel',
+                                                    )}
+                                                    items={article.tags.map(
+                                                        (tag) => ({
+                                                            id: tag.slug,
+                                                            label: tag.name,
+                                                            href: tag.url,
+                                                        }),
+                                                    )}
+                                                />
                                             </Stack>
                                         </CardContent>
                                     </Card>

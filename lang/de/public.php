@@ -70,11 +70,17 @@ return [
         'readMore' => 'Artikel lesen: :title',
         'publishedOn' => 'Veröffentlicht am :date',
         'backToList' => 'Alle Artikel',
+        'tagsLabel' => 'Tags',
+        'filterLabel' => 'Nach Tag filtern',
+        'allTags' => 'Alle',
+        'taggedTitle' => 'Artikel: :tag',
+        'emptyTagged' => 'Keine Artikel mit diesem Tag.',
         'previousPage' => 'Vorherige Seite',
         'nextPage' => 'Nächste Seite',
         'paginationSummary' => 'Seite :page von :total',
     ],
     'contact' => [
+        'selectPlaceholder' => 'Bitte wählen…',
         'title' => 'Kontakt',
         'description' => 'Senden Sie uns eine Nachricht, wir antworten Ihnen per E-Mail.',
         'fields' => [
@@ -94,6 +100,16 @@ return [
             'invalidCharacters' => 'Dieses Feld enthält unzulässige Zeichen.',
             'formExpired' => 'Das Formular ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut.',
         ],
+    ],
+    'comingSoon' => [
+        'title' => 'Demnächst',
+        'heading' => 'Wir starten in Kürze',
+        'description' => 'Unsere neue Website ist fast fertig. Schauen Sie in ein paar Tagen wieder vorbei.',
+        'contact' => 'Fragen? Schreiben Sie an :email.',
+    ],
+    'contactAutoReply' => [
+        'subject' => 'Vielen Dank für Ihre Nachricht — :site',
+        'automatic' => 'Dies ist eine automatische Antwort; wir melden uns persönlich bei Ihnen.',
     ],
     'site' => [
         'defaultTitle' => 'Punkt Startowy — Websites und Web-Apps für kleine Unternehmen',

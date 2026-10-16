@@ -18,14 +18,17 @@ use App\Models\Page;
 use App\Models\PageSlugRedirect;
 use App\Models\PageTranslation;
 use App\Models\SiteSetting;
+use App\Models\Tag;
 use App\Models\User;
 use Database\Seeders\ArticleSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoUserSeeder;
 use Database\Seeders\HomeSectionSeeder;
+use Database\Seeders\LegalPageSeeder;
 use Database\Seeders\PageSeeder;
 use Database\Seeders\SiteSettingsSeeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -40,6 +43,8 @@ function seededCounts(): array
         'media' => MediaAsset::query()->count(),
         'pages' => Page::query()->count(),
         'articles' => Article::query()->count(),
+        'tags' => Tag::query()->count(),
+        'article tags' => DB::table('article_tag')->count(),
         'faqs' => Faq::query()->count(),
         'contact messages' => ContactMessage::query()->count(),
         'menu items' => MenuItem::query()->count(),
@@ -148,14 +153,15 @@ test('the local seed keeps a site name that is already saved', function () {
         ->and(SiteSetting::query()->value('contact_email'))->not->toBeNull();
 });
 
-test('outside the local environment only menus and home sections are seeded', function (string $environment) {
+test('outside the local environment only legal page drafts, menus and home sections are seeded', function (string $environment) {
     $this->app['env'] = $environment;
 
     $this->artisan('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true])->assertSuccessful();
 
     expect(User::query()->exists())->toBeFalse()
         ->and(MediaAsset::query()->exists())->toBeFalse()
-        ->and(Page::query()->exists())->toBeFalse()
+        ->and(Page::query()->count())->toBe(count(LegalPageSeeder::SLUGS))
+        ->and(PageTranslation::query()->where('status', '!=', PublicationStatus::Draft->value)->exists())->toBeFalse()
         ->and(Article::query()->exists())->toBeFalse()
         ->and(Faq::query()->exists())->toBeFalse()
         ->and(ContactMessage::query()->exists())->toBeFalse()

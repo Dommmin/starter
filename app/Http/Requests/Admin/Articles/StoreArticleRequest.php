@@ -38,6 +38,14 @@ class StoreArticleRequest extends FormRequest
     }
 
     /**
+     * @return list<int>
+     */
+    public function tagIds(): array
+    {
+        return $this->inputRules()->tagIds($this->validated());
+    }
+
+    /**
      * @return array<string, ArticleTranslationInputData>
      */
     public function translations(): array

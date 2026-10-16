@@ -18,6 +18,7 @@ class PublicArticleData extends Data
 {
     /**
      * @param  array<string, string>  $alternates  Locale (and `x-default`) => canonical URL of each visible translation.
+     * @param  list<PublicTagData>  $tags
      */
     public function __construct(
         public string $title,
@@ -32,12 +33,14 @@ class PublicArticleData extends Data
         public string $listUrl,
         public array $alternates,
         public ?ContentPreviewData $preview = null,
+        public array $tags = [],
     ) {}
 
     /**
      * Requires the `article.cover` relation to be eager loaded.
      *
      * @param  array<string, string>  $alternates
+     * @param  list<PublicTagData>  $tags
      */
     public static function fromTranslation(
         ArticleTranslation $translation,
@@ -45,6 +48,7 @@ class PublicArticleData extends Data
         string $listUrl,
         array $alternates,
         ?ContentPreviewData $preview = null,
+        array $tags = [],
     ): self {
         $cover = $translation->article->cover;
 
@@ -63,6 +67,7 @@ class PublicArticleData extends Data
             listUrl: $listUrl,
             alternates: $alternates,
             preview: $preview,
+            tags: $tags,
         );
     }
 }

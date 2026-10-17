@@ -2,12 +2,14 @@ import { Rocket, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { HomeSections } from '@/components/home/home-sections';
 import {
+    AppearancePreview,
     Button,
     CTA,
     FeatureGrid,
     Heading,
     Hero,
     Image,
+    Inline,
     Stack,
     StatList,
     Text,
@@ -201,6 +203,42 @@ function LandingSection() {
                                 </Text>
                             </Stack>
                         </TypographyPreview>
+                    </ShowcaseState>
+                ))}
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="AppearancePreview · data-accent + data-typography"
+                layout="wide"
+                notApplicable={['loading', 'empty', 'error', 'disabled']}
+            >
+                {(
+                    [
+                        ['blue', 'classic'],
+                        ['green', 'default'],
+                    ] as const
+                ).map(([accent, typography]) => (
+                    <ShowcaseState
+                        key={accent}
+                        state={accent === 'blue' ? 'default' : 'variants'}
+                        detail={`accent=${accent} typography=${typography}`}
+                    >
+                        <AppearancePreview
+                            accent={accent}
+                            typography={typography}
+                            label={demo('typography.heading')}
+                        >
+                            <Stack gap="tight">
+                                <Heading level={3} variant="section">
+                                    {demo('typography.heading')}
+                                </Heading>
+                                <Inline gap="tight">
+                                    <Button variant="primary">
+                                        {demo('primaryAction')}
+                                    </Button>
+                                </Inline>
+                            </Stack>
+                        </AppearancePreview>
                     </ShowcaseState>
                 ))}
             </ShowcaseComponent>

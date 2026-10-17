@@ -22,7 +22,12 @@
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
+}
 
+/* Colour utilities reference the tokens directly (inline), so a token
+   re-declared below <html> (e.g. an AppearancePreview accent) reaches
+   them instead of the value computed on :root. */
+@theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
@@ -89,7 +94,10 @@
     --color-brand-text: var(--brand-text);
 }
 
-:root {
+/* [data-appearance-preview] (AppearancePreview) re-declares the public tokens,
+   so an accent preset nested below <html> recomputes the colours derived from it. */
+:root,
+[data-appearance-preview] {
     /* Accent preset: orange by default; [data-accent] below swaps hue and, where a hue needs it, light-mode lightness (AA, see tests/Unit/AccentContrastTest). */
     --accent-hue: 48;
     --accent-l: 0;
@@ -188,7 +196,8 @@
     --font-heading: 'Fraunces', ui-serif, Georgia, Cambria, serif;
 }
 
-.dark {
+.dark,
+.dark [data-appearance-preview] {
     --background: oklch(0.14 0.005 85);
     --foreground: oklch(0.94 0.005 85);
     --card: oklch(0.17 0.005 85);

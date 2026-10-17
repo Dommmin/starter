@@ -2,6 +2,10 @@
 
 use App\Enums\AccentColor;
 
+/** Selector lines of the public token blocks, shared with AppearancePreview. */
+const ROOT_BLOCK = ':root,\n\[data-appearance-preview\]';
+const DARK_BLOCK = '\.dark,\n\.dark \[data-appearance-preview\]';
+
 /**
  * Accent presets live in resources/css/app.css as `--accent-hue` / `--accent-l`
  * overrides. These tests resolve the token values from the stylesheet, so a
@@ -108,10 +112,10 @@ function accentContrast(array $a, array $b): float
  * Surfaces × modes that carry the accent, with the selectors of their token blocks.
  */
 dataset('accent surfaces', [
-    'public light' => [[':root'], ':root'],
-    'public dark' => [['\.dark'], '\.dark'],
-    'admin light' => [[':root', "\[data-surface='admin'\]"], "\[data-surface='admin'\]"],
-    'admin dark' => [[':root', "\[data-surface='admin'\]", '\.dark'], "\.dark\[data-surface='admin'\],\n\.dark \[data-surface='admin'\]"],
+    'public light' => [[ROOT_BLOCK], ROOT_BLOCK],
+    'public dark' => [[DARK_BLOCK], DARK_BLOCK],
+    'admin light' => [[ROOT_BLOCK, "\[data-surface='admin'\]"], "\[data-surface='admin'\]"],
+    'admin dark' => [[ROOT_BLOCK, "\[data-surface='admin'\]", DARK_BLOCK], "\.dark\[data-surface='admin'\],\n\.dark \[data-surface='admin'\]"],
 ]);
 
 $presets = array_map(fn (AccentColor $accent): string => $accent->value, AccentColor::cases());
@@ -123,7 +127,7 @@ test('every accent preset has a stylesheet block and the other way round', funct
 });
 
 test('accent buttons and links keep AA contrast in every surface and mode', function (array $bases, string $selector, string $preset) {
-    $variables = accentBlock(':root');
+    $variables = accentBlock(ROOT_BLOCK);
     $variables = [
         '--accent-hue' => $variables['--accent-hue'],
         '--accent-l' => $variables['--accent-l'],
@@ -147,7 +151,7 @@ test('accent buttons and links keep AA contrast in every surface and mode', func
     ->with(array_map(fn (AccentColor $accent): string => $accent->value, AccentColor::cases()));
 
 test('accent buttons stay distinguishable from destructive actions and success states', function (array $bases, string $selector, string $preset) {
-    $variables = accentBlock(':root');
+    $variables = accentBlock(ROOT_BLOCK);
     $variables = [
         '--accent-hue' => $variables['--accent-hue'],
         '--accent-l' => $variables['--accent-l'],

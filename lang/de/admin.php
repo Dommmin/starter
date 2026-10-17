@@ -1192,6 +1192,29 @@ return [
             'default' => 'Modern — serifenlose Überschriften',
             'classic' => 'Klassisch — Serifen-Überschriften (Fraunces)',
         ],
+        'skins' => [
+            'title' => 'Designs',
+            'description' => 'Fertige Kombinationen aus Akzentfarbe und Typografie. „Übernehmen“ füllt die Felder zum Erscheinungsbild unten aus; die Änderung gilt nach dem Speichern.',
+            'sample' => 'Vorschau des Designs :name',
+            'sampleEyebrow' => 'Ihr Unternehmen',
+            'sampleTitle' => 'Websites, die für Ihr Unternehmen arbeiten',
+            'sampleAction' => 'Schreiben Sie uns',
+            'apply' => 'Übernehmen',
+            'applyNamed' => 'Design :name übernehmen',
+            'current' => 'Ausgewählt',
+            'studio' => [
+                'name' => 'Studio',
+                'description' => 'Orangefarbener Akzent und moderne Überschriften. Für Agenturen, Kreativdienstleister und Tech-Firmen.',
+            ],
+            'office' => [
+                'name' => 'Kanzlei',
+                'description' => 'Blauer Akzent und klassische Serifen-Überschriften. Für Kanzleien, Berater und Finanzen.',
+            ],
+            'nature' => [
+                'name' => 'Natur',
+                'description' => 'Grüner Akzent und moderne Überschriften. Für Praxen, Gastronomie und lokale Betriebe.',
+            ],
+        ],
         'themes' => [
             'system' => 'Wie das Gerät',
             'light' => 'Hell',

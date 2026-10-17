@@ -1192,6 +1192,29 @@ return [
             'default' => 'Modern — sans-serif headings',
             'classic' => 'Classic — serif headings (Fraunces)',
         ],
+        'skins' => [
+            'title' => 'Skins',
+            'description' => 'Ready-made pairs of an accent colour and typography. “Apply” fills the appearance fields below; the change takes effect once you save the settings.',
+            'sample' => 'Preview of the :name skin',
+            'sampleEyebrow' => 'Your company',
+            'sampleTitle' => 'Websites that work for your business',
+            'sampleAction' => 'Write to us',
+            'apply' => 'Apply',
+            'applyNamed' => 'Apply the :name skin',
+            'current' => 'Selected',
+            'studio' => [
+                'name' => 'Studio',
+                'description' => 'Orange accent and modern headings. For agencies, creative services and tech companies.',
+            ],
+            'office' => [
+                'name' => 'Office',
+                'description' => 'Blue accent and classic serif headings. For law firms, advisers and finance.',
+            ],
+            'nature' => [
+                'name' => 'Nature',
+                'description' => 'Green accent and modern headings. For clinics, restaurants and local businesses.',
+            ],
+        ],
         'themes' => [
             'system' => 'Follow the device',
             'light' => 'Light',

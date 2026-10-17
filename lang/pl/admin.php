@@ -1194,6 +1194,29 @@ return [
             'default' => 'Nowoczesny — nagłówki bezszeryfowe',
             'classic' => 'Klasyczny — nagłówki szeryfowe (Fraunces)',
         ],
+        'skins' => [
+            'title' => 'Skórki',
+            'description' => 'Gotowe połączenia koloru akcentu i typografii. „Zastosuj” wypełnia pola wyglądu poniżej; zmiana działa po zapisaniu ustawień.',
+            'sample' => 'Podgląd skórki :name',
+            'sampleEyebrow' => 'Twoja firma',
+            'sampleTitle' => 'Strony, które pracują na Twój biznes',
+            'sampleAction' => 'Napisz do nas',
+            'apply' => 'Zastosuj',
+            'applyNamed' => 'Zastosuj skórkę :name',
+            'current' => 'Wybrana',
+            'studio' => [
+                'name' => 'Studio',
+                'description' => 'Pomarańczowy akcent i nowoczesne nagłówki. Dla agencji, usług kreatywnych i firm technologicznych.',
+            ],
+            'office' => [
+                'name' => 'Kancelaria',
+                'description' => 'Niebieski akcent i klasyczne nagłówki szeryfowe. Dla kancelarii, doradców i finansów.',
+            ],
+            'nature' => [
+                'name' => 'Natura',
+                'description' => 'Zielony akcent i nowoczesne nagłówki. Dla gabinetów, gastronomii i lokalnych firm.',
+            ],
+        ],
         'themes' => [
             'system' => 'Jak w urządzeniu',
             'light' => 'Jasny',

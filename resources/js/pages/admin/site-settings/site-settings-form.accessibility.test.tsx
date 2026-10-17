@@ -34,8 +34,15 @@ vi.mock('@inertiajs/react', async () => {
             processing: false,
             recentlySuccessful: false,
             isDirty: false,
-            setData: (key: keyof Data, value: unknown) =>
-                setDataState((current) => ({ ...current, [key]: value })),
+            setData: (
+                key: keyof Data | ((current: Data) => Data),
+                value?: unknown,
+            ) =>
+                setDataState((current) =>
+                    typeof key === 'function'
+                        ? key(current)
+                        : { ...current, [key]: value },
+                ),
             transform: (callback: (value: Data) => unknown) => {
                 transformRef.current = callback;
             },
@@ -332,5 +339,38 @@ describe('SiteSettingsForm', () => {
             '[role="tabpanel"] textarea[name="seo_description"]',
         )!;
         expect(describedByTexts(description)).toContain('Too long.');
+    });
+
+    it('applies a skin to the accent and typography fields and saves it with the form', async () => {
+        editorProps = makeEditor({ accent: 'default', typography: null });
+        const container = await render(<AdminSiteSettingsEdit />);
+
+        expect(
+            container.querySelectorAll('[data-appearance-preview][inert]'),
+        ).toHaveLength(3);
+        expect(
+            container.querySelectorAll(
+                'button[aria-label="admin.siteSettings.skins.applyNamed"]',
+            ),
+        ).toHaveLength(2);
+
+        await act(async () => {
+            container
+                .querySelectorAll<HTMLButtonElement>(
+                    'button[aria-label="admin.siteSettings.skins.applyNamed"]',
+                )[0]
+                .click();
+        });
+        await submit(container);
+
+        expect(submitMock.mock.lastCall![1]).toMatchObject({
+            accent: 'blue',
+            typography: 'classic',
+        });
+        expect(
+            container.querySelectorAll(
+                'button[aria-label="admin.siteSettings.skins.applyNamed"]',
+            ),
+        ).toHaveLength(2);
     });
 });

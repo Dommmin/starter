@@ -2,11 +2,14 @@
 
 namespace App\Repositories\Content;
 
+use App\Contracts\Search\AdminSearchSource;
 use App\Data\Admin\Dashboard\ContentStatusCountsData;
+use App\Data\Admin\Search\AdminSearchResultData;
 use App\Enums\PublicationStatus;
 use App\Models\Page;
 use App\Models\PageSlugRedirect;
 use App\Models\PageTranslation;
+use App\Support\Search\LikeSearch;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,7 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
 /**
  * Named read queries of the Content module for pages.
  */
-class PageRepository
+class PageRepository implements AdminSearchSource
 {
     /**
      * Base query of the admin page list. The list definition in
@@ -154,5 +157,33 @@ class PageRepository
             ->where('published_at', '>', $now)
             ->where('published_at', '<=', $now->toImmutable()->addHours($hours))
             ->count();
+    }
+
+    public function model(): string
+    {
+        return Page::class;
+    }
+
+    /**
+     * Pages with a translation whose title or slug contains the term,
+     * named by the most recently changed matching translation.
+     */
+    public function search(string $term, int $limit): array
+    {
+        $query = PageTranslation::query()->orderByDesc('updated_at')->orderByDesc('id');
+        LikeSearch::apply($query, ['title', 'slug'], $term);
+
+        $results = [];
+        foreach ($query->limit($limit * 4)->get()->unique('page_id')->take($limit) as $translation) {
+            $results[] = new AdminSearchResultData(
+                type: 'pages',
+                id: $translation->page_id,
+                label: $translation->title,
+                description: mb_strtoupper($translation->locale).' · '.$translation->slug,
+                url: route('admin.pages.edit', $translation->page_id),
+            );
+        }
+
+        return $results;
     }
 }

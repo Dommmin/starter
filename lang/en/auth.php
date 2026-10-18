@@ -19,6 +19,7 @@ return [
         'signUp' => 'Sign up',
         'usePasskey' => 'Sign in with Passkey',
         'devLogin' => 'Log in as administrator (dev)',
+        'demoLogin' => 'Enter the demo panel',
     ],
     'register' => [
         'title' => 'Register',

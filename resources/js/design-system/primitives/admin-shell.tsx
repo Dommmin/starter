@@ -32,7 +32,10 @@ import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useAdminLocaleChange } from './admin-locale-select';
 import { CommandPalette } from './command-palette';
-import type { CommandPaletteItem } from './command-palette';
+import type {
+    CommandPaletteItem,
+    CommandPaletteSearch,
+} from './command-palette';
 import { useReturnFocus } from './return-focus';
 
 type Href = NonNullable<InertiaLinkProps['href']>;
@@ -74,6 +77,8 @@ export type AdminShellProps = {
     user: AdminShellUser;
     profileHref: Href;
     logoutHref: Href;
+    /** Record search of the command palette (⌘K). */
+    commandSearch?: CommandPaletteSearch;
     children: ReactNode;
     className?: never;
     style?: never;
@@ -447,6 +452,7 @@ export function AdminShell({
     user,
     profileHref,
     logoutHref,
+    commandSearch,
     children,
 }: AdminShellProps) {
     const returnFocus = useReturnFocus();
@@ -596,6 +602,7 @@ export function AdminShell({
                 open={isCommandOpen}
                 onOpenChange={setIsCommandOpen}
                 items={commandItems}
+                search={commandSearch}
             />
         </div>
     );

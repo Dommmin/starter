@@ -108,6 +108,15 @@ final class DemoContent
     ];
 
     /**
+     * Whether sample content is seeded: in the local environment and on the
+     * public demo (`config('demo.enabled')`).
+     */
+    public static function samplesEnabled(): bool
+    {
+        return app()->environment('local') || (bool) config('demo.enabled');
+    }
+
+    /**
      * Creation moment of a sample page or article: shortly before its
      * earliest publication, or a few hours ago (offset by the key, so the
      * samples differ) when it is only a draft or scheduled.

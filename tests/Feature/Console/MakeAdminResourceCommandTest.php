@@ -496,7 +496,11 @@ test('relations, rich text and badge tones are validated before planning', funct
     'many relation to a missing model' => [['--fields' => 'name:string,tags:belongsToMany(Tag.name)'], 'model app/Models/Tag.php does not exist.'],
     'many relation to users' => [['--fields' => 'name:string,owners:belongsToMany(User.name)'], 'cannot reference [User]'],
     'many relation to itself' => [['--fields' => 'name:string,products:belongsToMany(Product.name)'], 'a belongsToMany relation to the resource itself is not supported'],
-    'only many relations' => [['--fields' => 'faqs:belongsToMany(Faq.question)'], 'At least one column field is required besides belongsToMany relations.'],
+    'only many relations' => [['--fields' => 'faqs:belongsToMany(Faq.question)'], 'At least one column field is required besides belongsToMany and hasMany relations.'],
+    'singular has-many relation' => [['--fields' => 'name:string,faq:hasMany(Faq.question)'], 'hasMany field name [faq] must be plural'],
+    'has-many relation with presence' => [['--fields' => 'name:string,faqs:hasMany(Faq.question):required'], 'takes no presence'],
+    'has-many relation to itself' => [['--fields' => 'name:string,products:hasMany(Product.name)'], 'a hasMany relation to the resource itself is not supported'],
+    'has-many relation without the foreign key' => [['--fields' => 'name:string,faqs:hasMany(Faq.question)'], 'App\\Models\\Faq has no [product_id] attribute'],
     'many relation as a filter' => [['--fields' => 'name:string,faqs:belongsToMany(Faq.question)', '--filters' => 'faqs'], 'Filter [faqs] must be a boolean or enum field'],
     'owned resource with a user field' => [['--fields' => 'name:string,user:string', '--owned' => true], 'Field [user] collides with the owner relation added by --owned'],
     'public resource with its own slug' => [['--fields' => 'name:string,slug:string', '--public' => true], 'Field [slug] is added by --public (slug, published); remove it from --fields.'],
@@ -708,6 +712,84 @@ test('a belongsToMany relation gets a pivot table, a synced multi-select and its
     expect($read('tests/Feature/Admin/ProductCrudTest.php'))
         ->toContain("test('the faqs are synced on create, replaced on update and unlinked with their record'")
         ->toContain("test('unknown or repeated faqs ids are rejected without linking anything'");
+});
+
+test('a hasMany relation adds the relation, a tab of related records and its test', function () {
+    $this->artisan('app:make-resource', [
+        'name' => 'Category',
+        '--fields' => 'name:string:required,products:hasMany(Product.name)',
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+    $migration = $this->files->get($this->files->glob("{$this->sandbox}/database/migrations/*_create_categories_table.php")[0]);
+
+    expect($migration)->not->toContain('products');
+
+    expect($read('app/Models/Category.php'))
+        ->toContain("return \$this->hasMany(Product::class, 'category_id');")
+        ->toContain('@property-read Collection<int, Product> $products')
+        ->toContain('use Illuminate\Database\Eloquent\Relations\HasMany;');
+
+    expect($read('app/Data/Admin/Categories/CategoryEditorData.php'))
+        ->toContain('public array $related,')
+        ->toContain('use App\Data\Listing\RelatedRecordsData;');
+
+    expect($read('app/Http/Controllers/Admin/Categories/CategoryController.php'))
+        ->toContain('related: $this->related($request, $category),')
+        ->toContain("if (\$request->user()?->can('viewAny', Product::class) ?? false) {")
+        ->toContain("fn (Product \$product): string => route('admin.products.edit', \$product),");
+
+    expect($read('resources/js/pages/admin/categories/edit.tsx'))
+        ->toContain('<RelatedRecords')
+        ->toContain("label: t('admin.categories.detailsTab'),");
+
+    expect($read('lang/en/admin.php'))->toContain("'productsTab' => 'Products (:count)',");
+
+    expect($read('tests/Feature/Admin/CategoryCrudTest.php'))
+        ->toContain("test('the edit screen lists the related products of the category'")
+        ->toContain("Product::factory()->count(2)->create(['category_id' => \$category->id]);");
+});
+
+test('a hasMany tab never lists an --owned resource, whichever is generated first', function () {
+    $this->artisan('app:make-resource', [
+        'name' => 'Category',
+        '--fields' => 'name:string:required',
+        '--no-format' => true,
+    ])->assertSuccessful();
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,category:belongsTo(Category.name)',
+        '--owned' => true,
+        '--no-format' => true,
+    ])->assertSuccessful();
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Shelf',
+        '--fields' => 'name:string:required,products:hasMany(Product.name)',
+        '--no-format' => true,
+    ])->expectsOutputToContain('is an --owned resource; a hasMany tab would list other users\' records')->assertFailed();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+});
+
+test('an --owned resource cannot be generated for a parent that lists it in a hasMany tab', function () {
+    $this->artisan('app:make-resource', [
+        'name' => 'Category',
+        '--fields' => 'name:string:required,products:hasMany(Product.name)',
+        '--no-format' => true,
+    ])->assertSuccessful();
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,category:belongsTo(Category.name)',
+        '--owned' => true,
+        '--no-format' => true,
+    ])->expectsOutputToContain('lists Product records in a hasMany tab, which an --owned resource does not support.')->assertFailed();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
 });
 
 test('enum badge tones are parsed per value and default to neutral', function () {

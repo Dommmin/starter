@@ -1,6 +1,6 @@
 import { act, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ContactSection } from './contact-section';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -25,6 +25,12 @@ afterEach(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
     document.body.replaceChildren();
+});
+
+// The extra fields are a lazy chunk; load it once up front so a slow
+// transform under load never races the polling below.
+beforeAll(async () => {
+    await import('./contact-extra-fields');
 });
 
 describe('ContactSection', () => {

@@ -138,11 +138,11 @@ test.describe('articles', () => {
             name: 'Delete this article?',
         });
         await expect(dialog).toBeVisible();
-        await dialog
-            .getByRole('button', { name: 'Delete permanently' })
-            .click();
+        await dialog.getByRole('button', { name: 'Move to trash' }).click();
 
-        await expect(page.getByText('Article deleted.')).toBeVisible();
+        await expect(
+            page.getByText('Article moved to the trash.'),
+        ).toBeVisible();
         await expect(dialog).toBeHidden();
         await expect(page.getByRole('link', { name: editedTitle })).toHaveCount(
             0,
@@ -202,9 +202,11 @@ test.describe('articles', () => {
         await page.getByRole('button', { name: 'Delete article' }).click();
         await page
             .getByRole('dialog', { name: 'Delete this article?' })
-            .getByRole('button', { name: 'Delete permanently' })
+            .getByRole('button', { name: 'Move to trash' })
             .click();
-        await expect(page.getByText('Article deleted.')).toBeVisible();
+        await expect(
+            page.getByText('Article moved to the trash.'),
+        ).toBeVisible();
         await expect(page).toHaveURL(/\/admin\/articles$/);
     });
 });

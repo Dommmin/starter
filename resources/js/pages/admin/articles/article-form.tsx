@@ -703,7 +703,9 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                     open={isDeleteOpen}
                     onOpenChange={setIsDeleteOpen}
                     title={t('admin.articles.deleteTitle')}
-                    description={t('admin.articles.deleteDescription')}
+                    description={t('admin.articles.deleteDescription', {
+                        days: editor.trashDays,
+                    })}
                     confirmLabel={t('admin.articles.deleteConfirm')}
                     cancelLabel={t('admin.articles.cancel')}
                     closeLabel={t('actions.close')}

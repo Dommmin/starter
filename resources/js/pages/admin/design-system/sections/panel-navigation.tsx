@@ -6,6 +6,7 @@ import {
     Stack,
     Text,
     type CommandPaletteItem,
+    type CommandPaletteSearch,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
@@ -28,6 +29,7 @@ function PanelNavigationSection() {
         t(`admin.designSystem.panelNavigation.${key}`);
     const [isPaletteOpen, setPaletteOpen] = useState(false);
     const [isLongPaletteOpen, setLongPaletteOpen] = useState(false);
+    const [isSearchPaletteOpen, setSearchPaletteOpen] = useState(false);
 
     const group = demo('paletteGroup');
     const paletteItems: CommandPaletteItem[] = [
@@ -53,6 +55,37 @@ function PanelNavigationSection() {
             icon: ImageIcon,
         },
     ];
+    /** Synthetic backend: any term finds one page; "error" fails. */
+    const demoSearch: CommandPaletteSearch = {
+        load: (query) =>
+            new Promise((resolve, reject) => {
+                window.setTimeout(() => {
+                    if (query.toLocaleLowerCase().includes('error')) {
+                        reject(new Error('demo'));
+
+                        return;
+                    }
+
+                    resolve([
+                        {
+                            id: 'found-page',
+                            label: t(
+                                'admin.designSystem.panelNavigation.searchFoundLabel',
+                                { query },
+                            ),
+                            description: 'EN · offer',
+                            group: demo('searchFoundGroup'),
+                            href: adminIndex(),
+                            icon: FileText,
+                        },
+                    ]);
+                }, 600);
+            }),
+        labels: {
+            loading: t('admin.command.searching'),
+            error: t('admin.command.searchError'),
+        },
+    };
     const longPaletteItems: CommandPaletteItem[] = [
         ...paletteItems,
         {
@@ -101,14 +134,7 @@ function PanelNavigationSection() {
             <ShowcaseComponent
                 name="CommandPalette"
                 layout="wide"
-                notApplicable={[
-                    'disabled',
-                    'pending',
-                    'loading',
-                    'error',
-                    'success',
-                    'noMedia',
-                ]}
+                notApplicable={['disabled', 'pending', 'success', 'noMedia']}
             >
                 <ShowcaseState state="default" detail={demo('synthetic')} fill>
                     <Stack gap="tight" align="start">
@@ -139,6 +165,32 @@ function PanelNavigationSection() {
                             items={longPaletteItems}
                         />
                     </Stack>
+                </ShowcaseState>
+                <ShowcaseState
+                    state="variants"
+                    detail={demo('searchDetail')}
+                    fill
+                >
+                    <Stack gap="tight" align="start">
+                        <Button
+                            variant="outline"
+                            onClick={() => setSearchPaletteOpen(true)}
+                        >
+                            {demo('openSearchPalette')}
+                        </Button>
+                        <CommandPalette
+                            open={isSearchPaletteOpen}
+                            onOpenChange={setSearchPaletteOpen}
+                            items={paletteItems}
+                            search={demoSearch}
+                        />
+                    </Stack>
+                </ShowcaseState>
+                <ShowcaseState state="loading" fill>
+                    <Text>{demo('searchLoading')}</Text>
+                </ShowcaseState>
+                <ShowcaseState state="error" fill>
+                    <Text>{demo('searchErrorState')}</Text>
                 </ShowcaseState>
                 <ShowcaseState state="empty" fill>
                     <Text>{demo('paletteEmpty')}</Text>

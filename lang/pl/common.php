@@ -157,4 +157,9 @@ return [
         'sortAscending' => ':column (rosnąco)',
         'sortDescending' => ':column (malejąco)',
     ],
+
+    'demo' => [
+        'blocked' => 'To jest demo: zmiany są wyłączone.',
+        'banner' => 'Demo: przeglądaj panel do woli. Zmiany są wyłączone, a dane wracają do stanu początkowego co godzinę.',
+    ],
 ];

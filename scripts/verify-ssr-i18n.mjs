@@ -48,7 +48,13 @@ async function runSsrVerification() {
             auth: { user: null },
             seo,
             site,
-            contactForm: { token: 'ssr-fixture-token' },
+            contactForm: { token: 'ssr-fixture-token', form: null },
+            organizationJsonLd: {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'Starter',
+                url: 'http://localhost',
+            },
             navigation: {
                 header: [
                     {
@@ -84,6 +90,9 @@ async function runSsrVerification() {
                         description: 'Hero description',
                         primaryAction: { label: 'Contact', url: '#contact' },
                         secondaryAction: null,
+                        image: null,
+                        imageAlt: '',
+                        stats: [{ value: '24h', label: 'SSR stat label' }],
                     },
                 },
                 {
@@ -106,7 +115,11 @@ async function runSsrVerification() {
                     id: 2,
                     type: 'contact',
                     anchor: 'contact',
-                    content: { title: 'Contact', description: null },
+                    content: {
+                        title: 'Contact',
+                        description: null,
+                        formKey: null,
+                    },
                 },
             ],
             i18n: {
@@ -203,6 +216,10 @@ async function runSsrVerification() {
         en1.body.includes('SSR answer in first HTML') &&
             en1.body.includes('<details'),
         'SSR musi zawierać treść odpowiedzi FAQ (zwinięty <details>) w pierwszym HTML',
+    );
+    assert.ok(
+        en1.body.includes('SSR stat label'),
+        'SSR hero musi zawierać statystyki (HeroStatData) w pierwszym HTML',
     );
     assert.ok(
         /<a[^>]*href="#contact"/.test(en1.body),
@@ -325,6 +342,7 @@ async function runSsrVerification() {
             bodyHtml: '<p>Treść strony</p>',
             locale: 'pl',
             publishedAt: '2026-09-01T10:00:00+00:00',
+            preview: null,
             alternates: {
                 en: 'http://localhost/about-us',
                 pl: 'http://localhost/pl/o-nas',

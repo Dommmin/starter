@@ -1,6 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import {
     Badge,
     ConfirmDialog,
@@ -201,6 +202,7 @@ export default function AdminMediaIndex() {
                 <PageHeader
                     title={t('admin.media.title')}
                     description={t('admin.media.description')}
+                    actions={<SavedViewsMenu list="admin.media.index" />}
                 />
 
                 {can.create && (

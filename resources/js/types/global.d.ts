@@ -24,6 +24,8 @@ declare module '@inertiajs/core' {
             consent?: App.Data.Consent.ConsentData;
             /** Admin area in the local environment only (design-system showcase). */
             designSystemUrl?: string;
+            /** Present (true) only on the public demo. */
+            demo?: boolean;
             [key: string]: unknown;
         };
     }

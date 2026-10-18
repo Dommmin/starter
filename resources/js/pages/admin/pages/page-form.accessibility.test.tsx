@@ -122,6 +122,7 @@ function makeEditor(
             ...can,
         },
         previewUrls,
+        trashDays: 30,
     };
 }
 

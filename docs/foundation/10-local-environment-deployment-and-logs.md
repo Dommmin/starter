@@ -124,6 +124,12 @@ Stan na 2026-09-27. „Gotowe w repo” oznacza kod, konfigurację i testy lokal
 - Równoległy SSR per release na osobnym porcie (ADR-022 krok 3), watchdog niezależny od runnera CI, kontrola SSR/logowania w smoke po przełączeniu, retencja starych assetów — nadal niezaimplementowane; obecny restart SSR może na chwilę przełączyć rendering na klienta.
 - `opcache.validate_timestamps=off` w puli: pamięć opcache rośnie z kolejnymi release'ami — okresowy `reload` PHP-FPM w oknie serwisowym lub monitoring zapełnienia.
 
+## Publiczne demo (fala 7.1)
+
+Osobna instalacja na osobnym hoście i bazie, wyłącznie z danymi syntetycznymi — nigdy na stronie klienta. W `shared/.env`: `APP_DEMO=true`, `ADMIN_REQUIRE_TWO_FACTOR=false` (konto demo nie ma 2FA), `MAIL_MAILER=log`, osobny `APP_KEY`. Pierwsze uruchomienie: `php artisan demo:reset` (migracje od zera + seed z treściami przykładowymi; komenda odmawia pracy bez `APP_DEMO=true`). Scheduler wykonuje `demo:reset` co godzinę.
+
+Zachowanie: strona logowania ma przycisk „Wejdź do panelu demo” (`POST /_demo/login`, trasa istnieje tylko przy `APP_DEMO=true`, loguje konto `DemoContent::USER_EMAIL`); `BlockChangesInDemo` odrzuca każde żądanie poza GET/HEAD/OPTIONS z wyjątkiem logowania i wylogowania (strona: toast, JSON: 403) — także formularz kontaktowy, rejestrację i zmianę hasła; panel pokazuje baner demo. Lokalny `/_dev/login-as-admin` pozostaje wyłącznie dla `APP_ENV=local`.
+
 ## Dowody wymagane przed produkcją
 
 - Nowy developer przechodzi onboarding; doctor wykrywa rozbieżność CLI/FPM i zajęty port; reset odmawia pracy na innym środowisku.

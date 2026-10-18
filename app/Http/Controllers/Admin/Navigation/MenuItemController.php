@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Navigation;
 
+use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Navigation\CreateMenuItem;
 use App\Actions\Navigation\DeleteMenuItem;
 use App\Actions\Navigation\ReorderMenuItems;
@@ -99,8 +100,10 @@ class MenuItemController extends Controller
     /**
      * Show the form for editing the item.
      */
-    public function edit(Request $request, MenuItem $menuItem): Response
+    public function edit(Request $request, MenuItem $menuItem, ShareRecordHistory $recordHistory): Response
     {
+        $recordHistory->handle($request->user(), $menuItem);
+
         $menuItem = $this->items->forEditor($menuItem);
 
         return Inertia::render('admin/navigation/edit', $this->editor(

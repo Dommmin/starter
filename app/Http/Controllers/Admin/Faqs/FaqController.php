@@ -127,6 +127,7 @@ class FaqController extends Controller
             delete: $faq !== null
                 ? ($user?->can('delete', $faq) ?? false)
                 : ($user?->isAdmin() ?? false),
+            import: $user?->can('import', Faq::class) ?? false,
         );
     }
 }

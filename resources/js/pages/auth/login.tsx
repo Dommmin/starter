@@ -26,6 +26,8 @@ type Props = {
     canResetPassword: boolean;
     /** Local-only one-click administrator login; null in other environments. */
     devLoginUrl?: string | null;
+    /** One-click sign-in of the public demo; null unless the demo is on. */
+    demoLoginUrl?: string | null;
 };
 
 const FIELD_ORDER = ['email', 'password'] as const;
@@ -34,6 +36,7 @@ export default function Login({
     status,
     canResetPassword,
     devLoginUrl = null,
+    demoLoginUrl = null,
 }: Props) {
     const canRegister =
         usePage<{ auth?: { canRegister?: boolean } }>().props.auth
@@ -42,13 +45,15 @@ export default function Login({
     const form = useForm({ email: '', password: '', remember: false });
     const [isDevLoginPending, setIsDevLoginPending] = useState(false);
 
+    const oneClickLoginUrl = demoLoginUrl ?? devLoginUrl;
+
     function loginAsAdministrator(): void {
-        if (devLoginUrl === null || isDevLoginPending) {
+        if (oneClickLoginUrl === null || isDevLoginPending) {
             return;
         }
 
         router.post(
-            devLoginUrl,
+            oneClickLoginUrl,
             {},
             { onFinish: () => setIsDevLoginPending(false) },
         );
@@ -152,13 +157,15 @@ export default function Login({
                     </Stack>
                 </form>
 
-                {devLoginUrl !== null && (
+                {oneClickLoginUrl !== null && (
                     <Button
-                        variant="outline"
+                        variant={demoLoginUrl !== null ? 'primary' : 'outline'}
                         isPending={isDevLoginPending}
                         onClick={loginAsAdministrator}
                     >
-                        {t('auth.login.devLogin')}
+                        {demoLoginUrl !== null
+                            ? t('auth.login.demoLogin')
+                            : t('auth.login.devLogin')}
                     </Button>
                 )}
 

@@ -2,15 +2,18 @@
 
 namespace App\Repositories\Content;
 
+use App\Contracts\Search\AdminSearchSource;
+use App\Data\Admin\Search\AdminSearchResultData;
 use App\Models\ArticleTranslation;
 use App\Models\Tag;
+use App\Services\Localization\LocalizationConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Named read queries of the Content module for article tags.
  */
-class TagRepository
+class TagRepository implements AdminSearchSource
 {
     /**
      * Every tag with the number of its articles, by slug (admin list).
@@ -52,5 +55,44 @@ class TagRepository
     public function findBySlug(string $slug): ?Tag
     {
         return Tag::query()->where('slug', $slug)->first();
+    }
+
+    public function model(): string
+    {
+        return Tag::class;
+    }
+
+    /**
+     * Tags whose slug or name in any language contains the term. Tags are
+     * few, so names (JSON) are matched in PHP, independent of the database.
+     */
+    public function search(string $term, int $limit): array
+    {
+        $needle = mb_strtolower($term);
+        $locale = app()->getLocale();
+        $fallback = app(LocalizationConfig::class)->getPublicFallback();
+
+        $results = [];
+        foreach ($this->all() as $tag) {
+            $haystack = mb_strtolower($tag->slug.' '.implode(' ', $tag->name));
+
+            if (! str_contains($haystack, $needle)) {
+                continue;
+            }
+
+            $results[] = new AdminSearchResultData(
+                type: 'tags',
+                id: $tag->id,
+                label: $tag->nameIn($locale, $fallback),
+                description: $tag->slug,
+                url: route('admin.tags.edit', $tag),
+            );
+
+            if (count($results) === $limit) {
+                break;
+            }
+        }
+
+        return $results;
     }
 }

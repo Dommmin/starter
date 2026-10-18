@@ -9,9 +9,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Permanently delete an article with its translations and slug redirects
- * (FK cascade), recording `article.deleted` in the same transaction. The
- * cover stays in the DAM.
+ * Move an article to the trash, recording `article.deleted` in the same
+ * transaction. Its translations, slugs and redirects stay until the trash
+ * is emptied (PurgeTrashedContent); the cover stays in the DAM.
  */
 class DeleteArticle
 {

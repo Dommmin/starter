@@ -151,4 +151,9 @@ return [
         'sortAscending' => ':column (aufsteigend)',
         'sortDescending' => ':column (absteigend)',
     ],
+
+    'demo' => [
+        'blocked' => 'Dies ist eine Demo: Änderungen sind deaktiviert.',
+        'banner' => 'Demo: Sehen Sie sich die Verwaltung in Ruhe an. Änderungen sind deaktiviert, die Daten werden stündlich zurückgesetzt.',
+    ],
 ];

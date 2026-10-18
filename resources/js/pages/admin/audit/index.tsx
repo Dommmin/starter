@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import { ResourceTable, Text } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
@@ -34,6 +35,7 @@ export default function AdminAuditIndex() {
                 header={{
                     title: t('admin.audit.title'),
                     description: t('admin.audit.description'),
+                    actions: <SavedViewsMenu list="admin.audit.index" />,
                 }}
                 rows={items}
                 rowKey={(row) => row.id}

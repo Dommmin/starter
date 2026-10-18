@@ -23,6 +23,11 @@ Schedule::command('contact:prune')
     ->onOneServer()
     ->withoutOverlapping();
 
+Schedule::command('content:purge-trash')
+    ->daily()
+    ->onOneServer()
+    ->withoutOverlapping();
+
 Schedule::command('ops:heartbeat')
     ->everyMinute()
     ->onOneServer();
@@ -35,3 +40,9 @@ Schedule::command('ops:check-backup')
 Schedule::command('horizon:snapshot')
     ->everyFiveMinutes()
     ->onOneServer();
+
+Schedule::command('demo:reset')
+    ->hourly()
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('demo.enabled'));

@@ -19,6 +19,7 @@ return [
         'signUp' => 'Registrieren',
         'usePasskey' => 'Mit Passkey anmelden',
         'devLogin' => 'Als Administrator anmelden (dev)',
+        'demoLogin' => 'Demo-Verwaltung öffnen',
     ],
     'register' => [
         'title' => 'Registrieren',

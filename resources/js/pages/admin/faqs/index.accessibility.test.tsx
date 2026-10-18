@@ -117,7 +117,12 @@ afterEach(async () => {
 
 describe('AdminFaqsIndex', () => {
     it('renders a captioned table whose first column links to the editor', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: true,
+            import: true,
+        });
         const container = await render();
 
         expect(container.querySelector('table caption')?.textContent).toBe(
@@ -130,7 +135,12 @@ describe('AdminFaqsIndex', () => {
     });
 
     it('offers the create action and row menus only with the abilities', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: true,
+            import: true,
+        });
         let container = await render();
 
         const createLink = Array.from(container.querySelectorAll('a')).find(
@@ -145,14 +155,24 @@ describe('AdminFaqsIndex', () => {
 
         await unmountAll();
 
-        pageProps = makeProps({ create: false, update: false, delete: false });
+        pageProps = makeProps({
+            create: false,
+            update: false,
+            delete: false,
+            import: false,
+        });
         container = await render();
 
         expect(container.textContent).not.toContain('admin.faqs.create');
     });
 
     it('clears the filters to the server defaults', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: true,
+            import: true,
+        });
         pageProps.filters = {
             ...pageProps.filters,
             published: 'yes',

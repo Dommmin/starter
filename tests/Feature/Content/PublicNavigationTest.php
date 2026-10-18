@@ -123,7 +123,7 @@ test('unpublished, scheduled, untranslated and deleted targets are hidden', func
     );
 });
 
-test('anchors on a deleted page disappear with it and home anchors stay', function () {
+test('items of a page in the trash are hidden, removed with it for good, and home anchors stay', function () {
     $admin = User::factory()->admin()->create();
     $page = navigationPage('team');
     $pageAnchor = MenuItem::factory()->anchor('members', $page)->create(['label' => 'Members', 'position' => 1]);
@@ -136,6 +136,14 @@ test('anchors on a deleted page disappear with it and home anchors stay', functi
     );
 
     $this->actingAs($admin)->delete(route('admin.pages.destroy', $page))->assertRedirect();
+    auth()->logout();
+
+    $this->get('/')->assertInertia(fn (Assert $inertia) => $inertia
+        ->has('navigation.header', 1)
+        ->where('navigation.header.0.label', 'Features')
+    );
+
+    $this->actingAs($admin)->delete(route('admin.trash.destroy', ['type' => 'pages', 'id' => $page->id]))->assertRedirect();
 
     expect(MenuItem::query()->whereKey([$pageAnchor->id, $child->id])->exists())->toBeFalse()
         ->and($pageLink->fresh()?->page_id)->toBeNull();

@@ -103,7 +103,7 @@ jobs:
       - name: Check AI and deployment configuration
         run: python3 -m unittest discover -s tests/ai -v
       - name: Test local environment bootstrap
-        run: node --test scripts/dev-environment.test.mjs
+        run: node --test scripts/dev-environment.test.mjs scripts/starter-sync.test.mjs
       - name: Enforce localization catalog contract
         run: composer check:i18n
       - name: Enforce UI contract on changed source
@@ -119,12 +119,46 @@ jobs:
           else
             echo "Brak referencji bazowej dla bramki UI; pomijam kontrolę różnic."
           fi
-      - name: Build frontend assets
-        run: npm run build
+      # build:ssr also runs the client build, so the budget step below still
+      # reads public/build; the SSR smoke catches browser-only APIs at module
+      # level in the SSR entry long before the e2e job.
+      - name: Build frontend and SSR assets
+        run: npm run build:ssr
       - name: Enforce bundle budget
         run: npm run check:budget
+      - name: Smoke test SSR rendering and i18n isolation
+        run: npm run test:ssr
       - name: Run quality checks
         run: composer ci:check
+
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Supply-chain gate for the committed lockfiles: both audits fail the job
+    # on a known advisory (composer: any; npm: high/critical) in runtime
+    # dependencies. A failure to download the advisory database is a failure,
+    # not a pass. Exceptions need a human-approved, dated justification
+    # (docs/foundation/03-testing-and-quality.md), never a lower threshold.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Audit Composer runtime dependencies from the lockfile
+        run: composer audit --locked --no-dev --format=plain
+      - name: Audit npm runtime dependencies from the lockfile
+        run: npm audit --omit=dev --audit-level=high
 
   tests-pgsql:
     name: tests-pgsql

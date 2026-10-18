@@ -1,7 +1,15 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    afterEach,
+    beforeAll,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import { ContactForm } from '@/components/contact-form';
 import { I18nProvider } from '@/i18n';
 
@@ -134,6 +142,12 @@ afterEach(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
     document.body.replaceChildren();
+});
+
+// The extra fields are a lazy chunk; load it once up front so a slow
+// transform under load never races the polling below.
+beforeAll(async () => {
+    await import('@/design-system/primitives/contact-extra-fields');
 });
 
 describe('ContactForm', () => {

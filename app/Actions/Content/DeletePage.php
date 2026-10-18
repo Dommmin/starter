@@ -9,8 +9,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Permanently delete a page with its translations and slug redirects
- * (FK cascade), recording `page.deleted` in the same transaction.
+ * Move a page to the trash, recording `page.deleted` in the same
+ * transaction. Its translations, slugs and redirects stay until the trash
+ * is emptied (PurgeTrashedContent).
  */
 class DeletePage
 {

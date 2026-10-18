@@ -3,12 +3,14 @@ import {
     Button,
     DataTable,
     EmptyState,
+    Inline,
     Link,
     PageHeader,
     Stack,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
+import { show as importShow } from '@/routes/admin/import';
 import { create, edit, index } from '@/routes/admin/tags';
 
 type IndexProps = App.Data.Admin.Tags.TagIndexData;
@@ -19,7 +21,7 @@ type Row = App.Data.Admin.Tags.TagListItemData;
  * slug of the public filter.
  */
 export default function AdminTagsIndex() {
-    const { items, canCreate } = usePage<IndexProps>().props;
+    const { items, canCreate, canImport } = usePage<IndexProps>().props;
     const { t } = useTranslation();
 
     return (
@@ -31,10 +33,22 @@ export default function AdminTagsIndex() {
                     title={t('admin.tags.title')}
                     description={t('admin.tags.description')}
                     actions={
-                        canCreate ? (
-                            <Button href={create()}>
-                                {t('admin.tags.create')}
-                            </Button>
+                        canCreate || canImport ? (
+                            <Inline gap="tight">
+                                {canImport && (
+                                    <Button
+                                        variant="outline"
+                                        href={importShow('tags')}
+                                    >
+                                        {t('admin.import.open')}
+                                    </Button>
+                                )}
+                                {canCreate && (
+                                    <Button href={create()}>
+                                        {t('admin.tags.create')}
+                                    </Button>
+                                )}
+                            </Inline>
                         ) : undefined
                     }
                 />

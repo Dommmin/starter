@@ -13,6 +13,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class PageEditorData extends Data
 {
     /**
+     * @param  int  $trashDays  Days a deleted record stays in the trash.
      * @param  array<string, string>  $previewUrls  Locale => signed admin preview URL of each saved translation.
      */
     public function __construct(
@@ -20,5 +21,6 @@ class PageEditorData extends Data
         public ContentLocalesData $locales,
         public PageAbilitiesData $can,
         public array $previewUrls = [],
+        public int $trashDays = 30,
     ) {}
 }

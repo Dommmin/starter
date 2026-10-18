@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from 'lucide-react';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from '@/i18n';
 import { cn, toUrl } from '@/lib/utils';
@@ -16,15 +16,43 @@ export type CommandPaletteItem = {
     group: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon: LucideIcon;
+    /** Secondary line, e.g. the slug or e-mail of a found record. */
+    description?: string | null;
+};
+
+export type CommandPaletteSearch = {
+    /**
+     * Loads records for the trimmed query (at least `minLength` characters),
+     * 200 ms after the last keystroke. The signal aborts outdated requests.
+     */
+    load: (query: string, signal: AbortSignal) => Promise<CommandPaletteItem[]>;
+    /** Shortest query sent to `load`; default 2. */
+    minLength?: number;
+    labels: {
+        /** Announced while records load. */
+        loading: string;
+        /** Shown when loading failed; local items stay usable. */
+        error: string;
+    };
 };
 
 export type CommandPaletteProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     items: CommandPaletteItem[];
+    /** Optional record search shown after the matching local items. */
+    search?: CommandPaletteSearch;
     className?: never;
     style?: never;
 };
+
+type RemoteState = {
+    query: string;
+    status: 'loading' | 'done' | 'error';
+    items: CommandPaletteItem[];
+};
+
+const SEARCH_DELAY_MS = 200;
 
 function Kbd({ children }: { children: string }) {
     return (
@@ -44,11 +72,13 @@ function matches(item: CommandPaletteItem, query: string): boolean {
  * Keyboard-first jump list for the admin panel (⌘K / Ctrl+K). A modal Radix
  * dialog: focus is trapped, Escape closes it and focus returns to the opener.
  * The input is a combobox driving the listbox via aria-activedescendant.
+ * With `search`, records found by the backend follow the local items.
  */
 export function CommandPalette({
     open,
     onOpenChange,
     items,
+    search,
 }: CommandPaletteProps) {
     const returnFocus = useReturnFocus();
     const { t } = useTranslation();
@@ -58,12 +88,55 @@ export function CommandPalette({
     const optionId = (index: number) => `${listId}-option-${index}`;
 
     const trimmedQuery = query.trim();
+    const [remote, setRemote] = useState<RemoteState | null>(null);
+    const minLength = search?.minLength ?? 2;
+    const searches = search !== undefined && trimmedQuery.length >= minLength;
+    const load = search?.load;
+
+    useEffect(() => {
+        if (!searches || load === undefined) {
+            return;
+        }
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => {
+            setRemote({ query: trimmedQuery, status: 'loading', items: [] });
+            load(trimmedQuery, controller.signal).then(
+                (found) =>
+                    setRemote({
+                        query: trimmedQuery,
+                        status: 'done',
+                        items: found,
+                    }),
+                () => {
+                    if (!controller.signal.aborted) {
+                        setRemote({
+                            query: trimmedQuery,
+                            status: 'error',
+                            items: [],
+                        });
+                    }
+                },
+            );
+        }, SEARCH_DELAY_MS);
+
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
+    }, [searches, load, trimmedQuery]);
+
+    const current = searches && remote?.query === trimmedQuery ? remote : null;
+    const isLoading =
+        searches && (current === null || current.status === 'loading');
     const visibleItems = useMemo(
-        () =>
-            trimmedQuery === ''
+        () => [
+            ...(trimmedQuery === ''
                 ? items
-                : items.filter((item) => matches(item, trimmedQuery)),
-        [items, trimmedQuery],
+                : items.filter((item) => matches(item, trimmedQuery))),
+            ...(current?.items ?? []),
+        ],
+        [items, trimmedQuery, current],
     );
     const safeActiveIndex = Math.min(
         activeIndex,
@@ -180,9 +253,11 @@ export function CommandPalette({
                     >
                         {visibleItems.length === 0 ? (
                             <p className="text-muted-foreground p-6 text-center">
-                                {t('admin.command.empty', {
-                                    query: trimmedQuery,
-                                })}
+                                {isLoading && search
+                                    ? search.labels.loading
+                                    : t('admin.command.empty', {
+                                          query: trimmedQuery,
+                                      })}
                             </p>
                         ) : (
                             visibleItems.map((item, index) => {
@@ -231,12 +306,35 @@ export function CommandPalette({
                                             <span className="truncate">
                                                 {item.label}
                                             </span>
+                                            {item.description && (
+                                                <span className="text-muted-foreground ml-auto truncate text-xs">
+                                                    {item.description}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 );
                             })
                         )}
                     </div>
+
+                    {search && (
+                        <p
+                            role="status"
+                            className={cn(
+                                'px-3.5 pb-2 text-xs',
+                                current?.status === 'error'
+                                    ? 'text-status-danger'
+                                    : 'sr-only',
+                            )}
+                        >
+                            {current?.status === 'error'
+                                ? search.labels.error
+                                : isLoading && visibleItems.length > 0
+                                  ? search.labels.loading
+                                  : ''}
+                        </p>
+                    )}
 
                     <div className="border-border bg-surface-subtle text-muted-foreground flex items-center gap-3.5 border-t px-3.5 py-2 text-xs max-md:hidden">
                         <span className="inline-flex items-center gap-1">

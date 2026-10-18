@@ -127,7 +127,7 @@ class HomeSectionSeeder extends Seeder
 
     public function run(EnsureHomeSections $ensureHomeSections, LocalizationConfig $localization): void
     {
-        if (app()->environment('local')) {
+        if (DemoContent::samplesEnabled()) {
             foreach ($localization->getPublicLocales() as $locale) {
                 foreach (self::defaults($locale) as $type => $definition) {
                     HomeSection::query()->firstOrCreate(
@@ -153,7 +153,7 @@ class HomeSectionSeeder extends Seeder
      */
     public static function enabledTypes(): array
     {
-        return app()->environment('local') ? HomeSectionType::cases() : self::ENABLED_TYPES;
+        return DemoContent::samplesEnabled() ? HomeSectionType::cases() : self::ENABLED_TYPES;
     }
 
     /**
@@ -161,7 +161,7 @@ class HomeSectionSeeder extends Seeder
      */
     public static function startsEnabled(HomeSectionType $type, string $locale): bool
     {
-        if (app()->environment('local')) {
+        if (DemoContent::samplesEnabled()) {
             return ! in_array($type, self::LOCAL_LAYOUT[$locale]['disabled'] ?? [], true);
         }
 
@@ -173,7 +173,7 @@ class HomeSectionSeeder extends Seeder
      */
     public static function position(HomeSectionType $type, string $locale): int
     {
-        $order = app()->environment('local') ? (self::LOCAL_LAYOUT[$locale]['order'] ?? null) : null;
+        $order = DemoContent::samplesEnabled() ? (self::LOCAL_LAYOUT[$locale]['order'] ?? null) : null;
 
         return $order === null ? $type->defaultPosition() : (int) array_search($type, $order, true) + 1;
     }
@@ -210,7 +210,7 @@ class HomeSectionSeeder extends Seeder
 
     public static function landingContent(HomeSectionType $type, string $locale): Data
     {
-        if (app()->environment('local') && in_array($type, [HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::Cta], true)) {
+        if (DemoContent::samplesEnabled() && in_array($type, [HomeSectionType::Hero, HomeSectionType::Features, HomeSectionType::Cta], true)) {
             return self::brandContent($type, self::BRAND[$locale] ?? self::BRAND['en']);
         }
 

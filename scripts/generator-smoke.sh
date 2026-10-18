@@ -119,6 +119,12 @@ generate SmokeTask \
     --export \
     --owned \
     --public
+# hasMany: the parent first, then the related resource pointing back to it.
+generate SmokeShelf \
+    --fields='name:string:required,entries:hasMany(SmokeEntry.title)'
+generate SmokeEntry \
+    --fields='title:string:required,smoke_shelf:belongsTo(SmokeShelf.name):required' \
+    --filters=smoke_shelf
 # A public resource: slug, published flag, SSR list and detail pages with
 # summary and rich text body, public routes, catalog texts and sitemap source.
 generate SmokePost \
@@ -156,4 +162,4 @@ step "UI contract (generated pages)"
 # shellcheck disable=SC2086
 node scripts/check-ui-contract.mjs --files $GENERATED_UI
 
-step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag, SmokeTask and SmokePost generated and verified without manual fixes"
+step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag, SmokeTask, SmokeShelf, SmokeEntry and SmokePost generated and verified without manual fixes"

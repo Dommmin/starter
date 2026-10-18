@@ -14,6 +14,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class ArticleEditorData extends Data
 {
     /**
+     * @param  int  $trashDays  Days a deleted record stays in the trash.
      * @param  array<string, string>  $previewUrls  Locale => signed admin preview URL of each saved translation.
      * @param  list<RecordOptionData>  $tagOptions  Every tag, named in the panel locale.
      */
@@ -24,5 +25,6 @@ class ArticleEditorData extends Data
         public array $previewUrls = [],
         public array $tagOptions = [],
         public int $maxTags = 0,
+        public int $trashDays = 30,
     ) {}
 }

@@ -1,0 +1,82 @@
+# Template for CLIENT repositories (copy to .github/workflows/starter-sync.yml
+# there; it does not run in the starter itself). Once a week it merges the
+# starter into a branch starter-sync/<version> and opens a pull request; on
+# conflicts it opens an issue instead. A person reviews, runs the checks and
+# merges: migrations and conflicts are never resolved automatically.
+#
+# Settings of the client repository:
+# - variable STARTER_REPOSITORY: Git URL of the starter (required)
+# - variable STARTER_REF: branch of the starter to follow (default: main)
+# - secret STARTER_SYNC_TOKEN (optional): token with contents/pull-requests/
+#   issues write access. Pull requests opened with the default GITHUB_TOKEN do
+#   not trigger CI; with this token they do. It also reads a private starter.
+name: starter-sync
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: starter-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.STARTER_SYNC_TOKEN || github.token }}
+      STARTER_REPOSITORY: ${{ vars.STARTER_REPOSITORY }}
+      STARTER_REF: ${{ vars.STARTER_REF || 'main' }}
+      BASE_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.STARTER_SYNC_TOKEN || github.token }}
+      - name: Configure Git
+        run: |
+          git config user.name 'starter-sync'
+          git config user.email 'starter-sync@users.noreply.github.com'
+      - name: Merge the starter into a branch
+        id: merge
+        run: |
+          set +e
+          output=$(sh scripts/starter-sync.sh 2>&1)
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          {
+            echo "status=$status"
+            echo "branch=$(printf '%s\n' "$output" | tail -n 1)"
+            echo 'files<<FILES'
+            printf '%s\n' "$output"
+            echo 'FILES'
+          } >> "$GITHUB_OUTPUT"
+          [ "$status" -eq 0 ] || [ "$status" -eq 2 ] || [ "$status" -eq 3 ]
+      - name: Open the pull request
+        if: steps.merge.outputs.status == '0'
+        env:
+          BRANCH: ${{ steps.merge.outputs.branch }}
+        run: |
+          if gh pr list --head "$BRANCH" --state open --json number --jq 'length' | grep -qx 0; then
+            git push origin "$BRANCH"
+            gh pr create --base "$BASE_BRANCH" --head "$BRANCH" \
+              --title "chore(starter): merge ${BRANCH#starter-sync/}" \
+              --body "Automatic merge of the starter. Review migrations and changed defaults, run the checks and merge by hand."
+          fi
+      - name: Report conflicts
+        if: steps.merge.outputs.status == '3'
+        env:
+          DETAILS: ${{ steps.merge.outputs.files }}
+        run: |
+          gh issue create \
+            --title 'Starter update needs a manual merge' \
+            --body "$(printf 'The weekly starter sync found conflicts. Run scripts/starter-sync.sh locally, resolve and open a PR.\n\n```\n%s\n```' "$DETAILS")"

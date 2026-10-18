@@ -67,6 +67,9 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('name: commit-convention', ci)
         self.assertIn('name: secrets', ci)
         self.assertIn('name: quality', ci)
+        self.assertIn('name: audit', ci)
+        self.assertIn('composer audit --locked --no-dev --format=plain', ci)
+        self.assertIn('npm audit --omit=dev --audit-level=high', ci)
         self.assertIn('gitleaks/gitleaks-action@', ci)
         self.assertIn(
             'php artisan wayfinder:generate --with-form --no-interaction',
@@ -598,11 +601,18 @@ class AiConfigurationTest(unittest.TestCase):
             package["scripts"]["check:budget"],
             "node scripts/check-bundle-budget.mjs",
         )
+        # build:ssr also runs the client build that the budget reads.
+        self.assertTrue(package["scripts"]["build:ssr"].startswith("vp build && "))
+        self.assertEqual(
+            package["scripts"]["test:ssr"], "node scripts/verify-ssr-i18n.mjs"
+        )
 
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
-        build_step = ci.index("run: npm run build\n")
+        build_step = ci.index("run: npm run build:ssr\n")
         budget_step = ci.index("run: npm run check:budget")
+        ssr_smoke_step = ci.index("run: npm run test:ssr")
         self.assertLess(build_step, budget_step)
+        self.assertLess(build_step, ssr_smoke_step)
 
         budget = json.loads((ROOT / "bundle-budget.json").read_text())
         self.assertEqual(budget["entry"], "resources/js/app.tsx")

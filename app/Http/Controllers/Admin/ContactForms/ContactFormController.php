@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\ContactForms;
 
+use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\ContactForms\SaveContactForm;
 use App\Data\Admin\ContactForms\ContactFormEditorData;
 use App\Data\Admin\ContactForms\ContactFormFormData;
@@ -62,8 +63,10 @@ class ContactFormController extends Controller
         return to_route('admin.contact-forms.edit', $form);
     }
 
-    public function edit(Request $request, ContactForm $contactForm): Response
+    public function edit(Request $request, ContactForm $contactForm, ShareRecordHistory $recordHistory): Response
     {
+        $recordHistory->handle($request->user(), $contactForm);
+
         return Inertia::render('admin/contact-forms/edit', $this->editor(
             ContactFormFormData::fromModel($contactForm->load('fields'), $this->localization->getPublicLocales()),
             canDelete: $request->user()?->can('delete', $contactForm) ?? false,

@@ -366,6 +366,7 @@ test('--remove-demo removes only unedited registry records and then the sample a
         ->and($output)->toContain('edited after seeding — kept')
         ->and(Page::query()->pluck('id')->sort()->values()->all())->toBe(collect([$ownPage->id, $editedTranslation->page_id])->sort()->values()->all())
         ->and(Article::query()->count())->toBe(0)
+        ->and(Article::withTrashed()->count())->toBe(0)
         ->and(User::query()->where('email', DemoContent::USER_EMAIL)->exists())->toBeFalse()
         ->and(User::query()->where('email', 'owner@example.test')->value('role'))->toBe(UserRole::Admin);
 });

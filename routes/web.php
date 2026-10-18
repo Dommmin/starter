@@ -42,6 +42,11 @@ if (app()->environment('local')) {
     require __DIR__.'/dev-login.php';
 }
 
+// One-click demo sign-in: registered only on the public demo.
+if (config('demo.enabled')) {
+    require __DIR__.'/demo.php';
+}
+
 // Content catch-all routes must stay last: default locale without prefix,
 // extra public locales under /{locale}.
 require __DIR__.'/content.php';

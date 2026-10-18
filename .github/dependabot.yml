@@ -2,6 +2,9 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
+    # Updates go through develop like every other change; main only
+    # receives release PRs from develop.
+    target-branch: "develop"
     schedule:
       interval: "weekly"
     cooldown:

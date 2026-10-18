@@ -76,6 +76,8 @@ final readonly class ResourceBlueprint
      *                       (`user_id`, owner-only policy, list scoped to the owner).
      * @param  bool  $public  Whether published records get a public list and detail
      *                        page (adds the `slug` and `published` fields).
+     * @param  list<ResourceField>  $hasManyRelations  hasMany fields: no column, the related
+     *                                                 records are a tab of the edit screen.
      */
     private function __construct(
         public string $model,
@@ -87,6 +89,7 @@ final readonly class ResourceBlueprint
         public array $manyRelations = [],
         public bool $owned = false,
         public bool $public = false,
+        public array $hasManyRelations = [],
     ) {}
 
     /**
@@ -101,11 +104,18 @@ final readonly class ResourceBlueprint
         [$allFields, $fieldErrors] = self::parseFields($fields);
         $errors = [...$errors, ...$fieldErrors];
 
-        $parsedFields = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type !== 'belongsToMany'));
+        $parsedFields = array_values(array_filter($allFields, fn (ResourceField $field): bool => ! in_array($field->type, ['belongsToMany', 'hasMany'], true)));
         $manyRelations = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type === 'belongsToMany'));
+        $hasManyRelations = array_values(array_filter($allFields, fn (ResourceField $field): bool => $field->type === 'hasMany'));
 
         if ($allFields !== [] && $parsedFields === []) {
-            $errors[] = 'At least one column field is required besides belongsToMany relations.';
+            $errors[] = 'At least one column field is required besides belongsToMany and hasMany relations.';
+        }
+
+        foreach ($hasManyRelations as $relation) {
+            if ($relation->relatedModel === $name) {
+                $errors[] = "Field [{$relation->name}]: a hasMany relation to the resource itself is not supported.";
+            }
         }
 
         if ($public) {
@@ -188,6 +198,7 @@ final readonly class ResourceBlueprint
             manyRelations: $manyRelations,
             owned: $owned,
             public: $public,
+            hasManyRelations: $hasManyRelations,
         );
     }
 
@@ -226,8 +237,8 @@ final readonly class ResourceBlueprint
         }
 
         foreach ($parts as $part) {
-            if (preg_match('/^(?<name>[^:]+):(?<type>string|text|integer|decimal|boolean|date|image|richtext|enum\((?<enum>[^)]*)\)|belongsToMany\((?<many>[^)]*)\)|belongsTo\((?<target>[^)]*)\))(?::(?<presence>required|nullable))?$/', $part, $matches) !== 1) {
-                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column), belongsToMany as belongsToMany(Model.label_column)).';
+            if (preg_match('/^(?<name>[^:]+):(?<type>string|text|integer|decimal|boolean|date|image|richtext|enum\((?<enum>[^)]*)\)|belongsToMany\((?<many>[^)]*)\)|hasMany\((?<hasmany>[^)]*)\)|belongsTo\((?<target>[^)]*)\))(?::(?<presence>required|nullable))?$/', $part, $matches) !== 1) {
+                $errors[] = "Field [{$part}] must look like name:type[:required]; types: ".implode(', ', ResourceField::TYPES).' (enum as enum(a|b:success), belongsTo as belongsTo(Model.label_column), belongsToMany as belongsToMany(Model.label_column), hasMany as hasMany(Model.label_column)).';
 
                 continue;
             }
@@ -236,6 +247,7 @@ final readonly class ResourceBlueprint
             $type = match (true) {
                 str_starts_with($matches['type'], 'enum(') => 'enum',
                 str_starts_with($matches['type'], 'belongsToMany(') => 'belongsToMany',
+                str_starts_with($matches['type'], 'hasMany(') => 'hasMany',
                 str_starts_with($matches['type'], 'belongsTo(') => 'belongsTo',
                 default => $matches['type'],
             };
@@ -249,6 +261,12 @@ final readonly class ResourceBlueprint
 
             if (in_array($name, self::RESERVED_FIELDS, true)) {
                 $errors[] = "Field name [{$name}] is reserved.";
+
+                continue;
+            }
+
+            if ($type === 'hasMany' && ($matches['presence'] ?? '') !== '') {
+                $errors[] = "Field [{$name}] of type hasMany takes no presence; remove :{$matches['presence']}.";
 
                 continue;
             }
@@ -272,8 +290,12 @@ final readonly class ResourceBlueprint
 
             $relatedModel = null;
             $relatedLabel = null;
-            if ($type === 'belongsTo' || $type === 'belongsToMany') {
-                $target = $type === 'belongsTo' ? ($matches['target'] ?? '') : ($matches['many'] ?? '');
+            if (in_array($type, ['belongsTo', 'belongsToMany', 'hasMany'], true)) {
+                $target = match ($type) {
+                    'belongsTo' => $matches['target'] ?? '',
+                    'belongsToMany' => $matches['many'] ?? '',
+                    default => $matches['hasmany'] ?? '',
+                };
                 $relationErrors = self::validateBelongsTo($name, $target);
                 if ($relationErrors !== []) {
                     $errors = [...$errors, ...$relationErrors];
@@ -284,14 +306,14 @@ final readonly class ResourceBlueprint
                 [$relatedModel, $relatedLabel] = explode('.', trim($target), 2);
             }
 
-            if (in_array($type, ['belongsTo', 'belongsToMany', 'image'], true) && (str_ends_with($name, '_id') || str_ends_with($name, '_ids') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
+            if (in_array($type, ['belongsTo', 'belongsToMany', 'hasMany', 'image'], true) && (str_ends_with($name, '_id') || str_ends_with($name, '_ids') || in_array(Str::camel($name), self::RESERVED_RELATIONS, true))) {
                 $errors[] = "Relation field name [{$name}] must name the relation (e.g. category, not category_id) and must not shadow an Eloquent method.";
 
                 continue;
             }
 
-            if ($type === 'belongsToMany' && (Str::plural($name) !== $name || Str::singular($name) === $name)) {
-                $errors[] = "belongsToMany field name [{$name}] must be plural, e.g. tags.";
+            if (in_array($type, ['belongsToMany', 'hasMany'], true) && (Str::plural($name) !== $name || Str::singular($name) === $name)) {
+                $errors[] = "{$type} field name [{$name}] must be plural, e.g. tags.";
 
                 continue;
             }

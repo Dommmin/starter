@@ -223,3 +223,4 @@ test('a bulk delete needs a bounded list of distinct ids', function () {
 {{ ownedTests }}
 {{ publicSlugTests }}
 {{ exportTests }}
+{{ relatedTests }}

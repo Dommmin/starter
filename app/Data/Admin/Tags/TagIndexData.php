@@ -17,5 +17,6 @@ class TagIndexData extends Data
     public function __construct(
         public array $items,
         public bool $canCreate,
+        public bool $canImport = false,
     ) {}
 }

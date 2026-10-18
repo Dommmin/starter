@@ -1,4 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
+import { RecordHistory } from '@/components/admin/record-history';
+import { Stack } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index } from '@/routes/admin/home-sections';
@@ -18,7 +20,10 @@ export default function AdminHomeSectionsEdit() {
                     ),
                 })}
             />
-            <SectionForm key={editor.section.id} editor={editor} />
+            <Stack gap="relaxed">
+                <SectionForm key={editor.section.id} editor={editor} />
+                <RecordHistory />
+            </Stack>
         </>
     );
 }

@@ -126,6 +126,7 @@ function makeEditor(
         previewUrls: {},
         tagOptions: [],
         maxTags: 10,
+        trashDays: 30,
     };
 }
 

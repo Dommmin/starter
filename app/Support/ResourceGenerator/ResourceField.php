@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  */
 final readonly class ResourceField
 {
-    public const array TYPES = ['string', 'text', 'integer', 'decimal', 'boolean', 'date', 'enum', 'belongsTo', 'belongsToMany', 'image', 'richtext'];
+    public const array TYPES = ['string', 'text', 'integer', 'decimal', 'boolean', 'date', 'enum', 'belongsTo', 'belongsToMany', 'hasMany', 'image', 'richtext'];
 
     /**
      * Tones of the `Badge` primitive (`BadgeProps['tone']` in
@@ -24,7 +24,7 @@ final readonly class ResourceField
     /**
      * @param  list<string>  $enumValues
      * @param  array<string, string>  $enumTones  Badge tone per enum value (unlisted values are neutral).
-     * @param  string|null  $relatedModel  Short class name in App\Models of a belongsTo or belongsToMany target.
+     * @param  string|null  $relatedModel  Short class name in App\Models of a belongsTo, belongsToMany or hasMany target.
      * @param  string|null  $relatedLabel  Column of the related model shown as its label.
      */
     public function __construct(
@@ -56,6 +56,16 @@ final readonly class ResourceField
             'image' => $this->name.'_media_id',
             default => $this->name,
         };
+    }
+
+    /**
+     * Foreign key on the related table of a hasMany field: the snake_case
+     * resource name, e.g. `category_id` for Category (the related resource
+     * declares it as `category:belongsTo(Category.name)`).
+     */
+    public function foreignKey(string $model): string
+    {
+        return Str::snake($model).'_id';
     }
 
     /**

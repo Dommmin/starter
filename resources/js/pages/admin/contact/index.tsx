@@ -1,6 +1,12 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Eye } from 'lucide-react';
-import { Button, Link, ResourceTable } from '@/design-system/primitives';
+import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
+import {
+    Button,
+    Inline,
+    Link,
+    ResourceTable,
+} from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
@@ -44,16 +50,23 @@ export default function AdminContactIndex() {
                         can.export && isExportTooLarge
                             ? `${t('admin.contact.description')} ${t('admin.contact.exportTooLarge', { max: exportMaxRows })}`
                             : t('admin.contact.description'),
-                    actions: can.export ? (
-                        <Button
-                            variant="outline"
-                            href={exportMethod({ query: { ...filters } })}
-                            download
-                            disabled={isExportTooLarge}
-                        >
-                            {t('admin.contact.export')}
-                        </Button>
-                    ) : undefined,
+                    actions: (
+                        <Inline gap="tight">
+                            <SavedViewsMenu list="admin.contact.index" />
+                            {can.export && (
+                                <Button
+                                    variant="outline"
+                                    href={exportMethod({
+                                        query: { ...filters },
+                                    })}
+                                    download
+                                    disabled={isExportTooLarge}
+                                >
+                                    {t('admin.contact.export')}
+                                </Button>
+                            )}
+                        </Inline>
+                    ),
                 }}
                 rows={items}
                 rowKey={(row) => row.id}

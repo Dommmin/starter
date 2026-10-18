@@ -113,13 +113,18 @@ test('a redirect never shadows a published page and yields its slug to another p
     $this->get('/contact')->assertOk()->assertSee('Title contact');
 });
 
-test('deleting a page removes its redirects', function () {
+test('a page in the trash stops redirecting and emptying the trash removes its redirects', function () {
     $page = Page::factory()->create();
     PageTranslation::factory()->for($page)->published()->create(['slug' => 'gone']);
     savePageSlugs($page, ['en' => ['gone-too', 'published']]);
 
     $this->actingAs($this->admin)->delete(route('admin.pages.destroy', $page))->assertRedirect();
 
-    expect(PageSlugRedirect::query()->count())->toBe(0);
+    expect(PageSlugRedirect::query()->count())->toBe(1);
     $this->get('/gone')->assertNotFound();
+    $this->get('/gone-too')->assertNotFound();
+
+    $this->actingAs($this->admin)->delete(route('admin.trash.destroy', ['type' => 'pages', 'id' => $page->id]))->assertRedirect();
+
+    expect(PageSlugRedirect::query()->count())->toBe(0);
 });

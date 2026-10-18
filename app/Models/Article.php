@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Language-independent identity of an article: its cover image, tags and
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $updated_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $deleted_at In the trash since.
  * @property-read Collection<int, ArticleTranslation> $translations
  * @property-read MediaAsset|null $cover
  * @property-read Collection<int, Tag> $tags
@@ -33,6 +35,8 @@ class Article extends Model
 {
     /** @use HasFactory<ArticleFactory> */
     use HasFactory;
+
+    use SoftDeletes;
 
     /**
      * @return HasMany<ArticleTranslation, $this>

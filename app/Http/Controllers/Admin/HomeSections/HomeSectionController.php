@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\HomeSections;
 
+use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Home\ReorderHomeSections;
 use App\Actions\Home\ToggleHomeSection;
 use App\Actions\Home\UpdateHomeSection;
@@ -70,8 +71,10 @@ class HomeSectionController extends Controller
     /**
      * Show the content form of the section.
      */
-    public function edit(Request $request, HomeSection $homeSection): Response
+    public function edit(Request $request, HomeSection $homeSection, ShareRecordHistory $recordHistory): Response
     {
+        $recordHistory->handle($request->user(), $homeSection);
+
         $pages = [];
         foreach ($this->pages->publishedInLocale($homeSection->locale) as $pageId => $translation) {
             $pages[] = new HomePageOptionData(id: $pageId, title: $translation->title);

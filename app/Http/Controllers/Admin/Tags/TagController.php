@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Tags;
 
+use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Tags\SaveTag;
 use App\Data\Admin\Tags\TagEditorData;
 use App\Data\Admin\Tags\TagFormData;
@@ -40,6 +41,7 @@ class TagController extends Controller
                 fn (Tag $tag): TagListItemData => TagListItemData::fromModel($tag, $locale, $fallback),
             )->all()),
             canCreate: $request->user()?->can('create', Tag::class) ?? false,
+            canImport: $request->user()?->can('import', Tag::class) ?? false,
         ));
     }
 
@@ -62,8 +64,10 @@ class TagController extends Controller
         return to_route('admin.tags.edit', $tag);
     }
 
-    public function edit(Request $request, Tag $tag): Response
+    public function edit(Request $request, Tag $tag, ShareRecordHistory $recordHistory): Response
     {
+        $recordHistory->handle($request->user(), $tag);
+
         return Inertia::render('admin/tags/edit', $this->editor(
             TagFormData::fromModel($tag, $this->localization->getPublicLocales()),
             canDelete: $request->user()?->can('delete', $tag) ?? false,

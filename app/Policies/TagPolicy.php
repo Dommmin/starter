@@ -52,4 +52,13 @@ class TagPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * Determine whether the user can import tags from CSV (administrators;
+     * an import writes many records at once).
+     */
+    public function import(User $user): bool
+    {
+        return $user->isAdmin();
+    }
 }

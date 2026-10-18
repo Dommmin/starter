@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Users;
 
+use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Users\CreateUser;
 use App\Actions\Users\DeleteUser;
 use App\Actions\Users\UpdateUser;
@@ -59,8 +60,10 @@ class UserController extends Controller
     /**
      * Show the form for editing the account.
      */
-    public function edit(Request $request, User $user): Response
+    public function edit(Request $request, User $user, ShareRecordHistory $recordHistory): Response
     {
+        $recordHistory->handle($request->user(), $user);
+
         /** @var User $actor */
         $actor = $request->user();
 

@@ -3,9 +3,12 @@
 namespace App\Support\DemoContent;
 
 use App\Actions\Content\DeletePage;
+use App\Actions\Content\ManageTrashedContent;
 use App\Contracts\DemoContent\DemoContentProvider;
+use App\Enums\TrashedContentType;
 use App\Models\Page;
 use App\Models\User;
+use App\Repositories\Content\TrashRepository;
 use Database\Seeders\DemoContent;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -18,7 +21,11 @@ class DemoPages implements DemoContentProvider
 {
     use MatchesSeededTranslations;
 
-    public function __construct(private readonly DeletePage $deletePage) {}
+    public function __construct(
+        private readonly DeletePage $deletePage,
+        private readonly ManageTrashedContent $trash,
+        private readonly TrashRepository $trashed,
+    ) {}
 
     public function label(): string
     {
@@ -47,7 +54,12 @@ class DemoPages implements DemoContentProvider
 
     public function delete(Model $record, User $actor): void
     {
-        $this->deletePage->handle($this->page($record), $actor);
+        $page = $this->page($record);
+
+        // Audited move to the trash, then removed for good: sample content
+        // must not keep its slugs taken for the trash retention period.
+        $this->deletePage->handle($page, $actor);
+        $this->trash->purge($this->trashed->findTrashed(TrashedContentType::Pages, $page->id) ?? $page, $actor);
     }
 
     private function page(Model $record): Page

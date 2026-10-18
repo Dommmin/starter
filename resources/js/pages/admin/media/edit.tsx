@@ -22,6 +22,7 @@ import {
     TextareaField,
     TextField,
 } from '@/design-system/primitives';
+import { RecordHistory } from '@/components/admin/record-history';
 import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
@@ -334,6 +335,8 @@ export default function AdminMediaEdit() {
                         />
                     </Stack>
                 )}
+
+                <RecordHistory />
             </Stack>
 
             <ConfirmDialog

@@ -51,4 +51,13 @@ class FaqPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * Determine whether the user can import faqs from CSV (administrators;
+     * an import writes many records at once).
+     */
+    public function import(User $user): bool
+    {
+        return $user->isAdmin();
+    }
 }

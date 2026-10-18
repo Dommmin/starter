@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Pages;
 
+use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Content\CreatePage;
 use App\Actions\Content\DeletePage;
 use App\Actions\Content\UpdatePage;
@@ -74,6 +75,7 @@ class PageController extends Controller
             page: PageFormData::blank($this->localization->getPublicLocales()),
             locales: ContentLocalesData::fromConfig($this->localization),
             can: $this->abilities($request, null),
+            trashDays: (int) config('content.trash_days'),
         ));
     }
 
@@ -95,8 +97,10 @@ class PageController extends Controller
     /**
      * Show the form for editing the page.
      */
-    public function edit(Request $request, Page $page): Response
+    public function edit(Request $request, Page $page, ShareRecordHistory $recordHistory): Response
     {
+        $recordHistory->handle($request->user(), $page);
+
         $page = $this->pages->forEditor($page);
 
         return Inertia::render('admin/pages/edit', new PageEditorData(
@@ -104,6 +108,7 @@ class PageController extends Controller
             locales: ContentLocalesData::fromConfig($this->localization),
             can: $this->abilities($request, $page),
             previewUrls: $this->previewLinks->forPage($page, $this->localization->getPublicLocales()),
+            trashDays: (int) config('content.trash_days'),
         ));
     }
 

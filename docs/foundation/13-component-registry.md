@@ -236,7 +236,7 @@ AdminShell (sidebar z grupami, drawer mobilny, topbar z okruszkami, UserMenu z m
 - Breadcrumbs (wewnętrzne w `AdminShell`) — OK: ostatni element `aria-current="page"`, poniżej 768 px widoczny tylko bieżący element z wielokropkiem.
 - Usterka do decyzji: `Kbd` w shellu/palecie używa arbitralnych wartości (`h-[18px]`, `text-[10.5px]`) — dozwolone w prymitywie, ale poza skalą tokenów.
 
-Wyszukiwanie rekordów w CommandPalette = `planned` (wymaga endpointu wyszukiwania). Przełącznik organizacji = `planned` (P2), wymaga modelu dostępu multi-tenant (decyzja produktowa + backend).
+Wyszukiwanie rekordów w CommandPalette = `implemented` 2026-10-16 (fala 6.1): opcjonalny prop `search` (`load(query, signal)`, `minLength` domyślnie 2, `labels.loading/error`); zapytanie po 200 ms od ostatniego znaku, poprzednie przerywane `AbortSignal`, wyniki po pasujących modułach z `description`, błąd w `role="status"` bez blokowania listy modułów. `AdminShell` przekazuje `commandSearch`; panel wywołuje `admin.search` (źródła `AdminSearchSource` w repozytoriach, każde filtrowane przez `viewAny`). Demo: #adm-15 → „Otwórz paletę z wyszukiwaniem”. Test: `command-palette.search.test.tsx`. Akceptacja wizualna przed `verified`. Przełącznik organizacji = `planned` (P2), wymaga modelu dostępu multi-tenant (decyzja produktowa + backend).
 
 ### ADM-16 — Powiadomienia (P0 feedback; P1 centrum; P2 realtime) — zrealizowane pozycje `verified` 2026-09-30, reszta `planned`
 

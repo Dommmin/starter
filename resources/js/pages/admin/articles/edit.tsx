@@ -1,4 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
+import { RecordHistory } from '@/components/admin/record-history';
+import { Stack } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index as articlesIndex } from '@/routes/admin/articles';
@@ -11,7 +13,10 @@ export default function AdminArticlesEdit() {
     return (
         <>
             <Head title={t('admin.articles.editTitle')} />
-            <ArticleForm key={editor.article.id} editor={editor} />
+            <Stack gap="relaxed">
+                <ArticleForm key={editor.article.id} editor={editor} />
+                <RecordHistory />
+            </Stack>
         </>
     );
 }

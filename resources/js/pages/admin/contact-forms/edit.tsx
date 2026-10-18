@@ -1,4 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
+import { RecordHistory } from '@/components/admin/record-history';
+import { Stack } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index } from '@/routes/admin/contact-forms';
@@ -12,7 +14,10 @@ export default function AdminContactFormsEdit() {
     return (
         <>
             <Head title={t('admin.contactForms.editTitle')} />
-            <ContactFormEditor key={editor.form.id} editor={editor} />
+            <Stack gap="relaxed">
+                <ContactFormEditor key={editor.form.id} editor={editor} />
+                <RecordHistory />
+            </Stack>
         </>
     );
 }

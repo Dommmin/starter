@@ -1,0 +1,70 @@
+import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import { RelatedRecords } from '@/components/admin/related-records';
+import { Tabs } from '@/design-system/primitives';
+import { useTranslation } from '@/i18n';
+import { index as adminIndex } from '@/routes/admin';
+import { index } from '@/routes/admin/{{ kebabPlural }}';
+import { {{ Model }}Form } from './form';
+
+const DETAILS_TAB = 'details';
+
+/**
+ * Edit screen with the form in the first tab and one tab per hasMany
+ * relation listing the newest related records.
+ */
+export default function Admin{{ Plural }}Edit() {
+    const editor = usePage<App.Data.Admin.{{ Plural }}.{{ Model }}EditorData>().props;
+    const { t } = useTranslation();
+    const [tab, setTab] = useState(DETAILS_TAB);
+    const form = <{{ Model }}Form key={editor.{{ variable }}.id} editor={editor} />;
+
+    return (
+        <>
+            <Head title={t('admin.{{ camelPlural }}.editTitle')} />
+            {editor.related.length === 0 ? (
+                form
+            ) : (
+                <Tabs
+                    ariaLabel={t('admin.{{ camelPlural }}.tabsLabel')}
+                    value={tab}
+                    onValueChange={setTab}
+                    items={[
+                        {
+                            value: DETAILS_TAB,
+                            label: t('admin.{{ camelPlural }}.detailsTab'),
+                            content: form,
+                        },
+                        ...editor.related.map((group) => ({
+                            value: group.relation,
+                            label: t(`admin.{{ camelPlural }}.${group.relation}Tab`, {
+                                count: group.total,
+                            }),
+                            content: (
+                                <RelatedRecords
+                                    group={group}
+                                    labels={{
+                                        empty: t('admin.{{ camelPlural }}.relatedEmpty'),
+                                        shown: (shown, total) =>
+                                            t('admin.{{ camelPlural }}.relatedShown', {
+                                                shown,
+                                                total,
+                                            }),
+                                        showAll: t('admin.{{ camelPlural }}.relatedShowAll'),
+                                    }}
+                                />
+                            ),
+                        })),
+                    ]}
+                />
+            )}
+        </>
+    );
+}
+
+Admin{{ Plural }}Edit.layout = {
+    breadcrumbs: [
+        { title: 'admin.dashboard', href: adminIndex() },
+        { title: 'admin.{{ camelPlural }}.title', href: index() },
+    ],
+};

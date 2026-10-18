@@ -1,6 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import {
     Badge,
     Button,
@@ -9,6 +10,7 @@ import {
     ResourceTable,
     Stack,
     Text,
+    Inline,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
@@ -66,11 +68,16 @@ export default function AdminArticlesIndex() {
                 header={{
                     title: t('admin.articles.title'),
                     description: t('admin.articles.description'),
-                    actions: can.create ? (
-                        <Button href={articlesCreate()}>
-                            {t('admin.articles.create')}
-                        </Button>
-                    ) : undefined,
+                    actions: (
+                        <Inline gap="tight">
+                            <SavedViewsMenu list="admin.articles.index" />
+                            {can.create && (
+                                <Button href={articlesCreate()}>
+                                    {t('admin.articles.create')}
+                                </Button>
+                            )}
+                        </Inline>
+                    ),
                 }}
                 emptyAction={
                     can.create ? (

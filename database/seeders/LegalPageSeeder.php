@@ -108,7 +108,7 @@ class LegalPageSeeder extends Seeder
 
     public function run(): void
     {
-        $isDemo = app()->environment('local');
+        $isDemo = DemoContent::samplesEnabled();
 
         foreach (self::PAGES as $key => $translations) {
             if (self::seeded($key)) {

@@ -398,7 +398,7 @@ test('reordering with a stale or foreign set of ids is a conflict without change
     'swapped for foreign' => [fn (MenuItem $first, MenuItem $second, MenuItem $polish) => [$second->id, $polish->id]],
 ]);
 
-test('the edit form marks a deleted target', function () {
+test('the edit form marks a target in the trash as hidden from visitors', function () {
     $editor = User::factory()->editor()->create();
     $article = Article::factory()->create();
     ArticleTranslation::factory()->for($article)->published()->create();
@@ -411,8 +411,9 @@ test('the edit form marks a deleted target', function () {
             ->component('admin/navigation/edit', false)
             ->where('item.id', $item->id)
             ->where('item.type', MenuItemType::Article->value)
-            ->where('item.articleId', null)
-            ->where('item.targetMissing', true)
+            ->where('item.articleId', $article->id)
+            ->where('item.targetMissing', false)
+            ->where('item.draftTarget', true)
         );
 });
 

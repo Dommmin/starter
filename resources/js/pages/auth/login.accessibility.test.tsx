@@ -187,4 +187,30 @@ describe('Login', () => {
             'auth.login.heading',
         );
     });
+
+    it('offers the demo sign-in instead of the local one on the public demo', async () => {
+        const container = await render(
+            <Login
+                canResetPassword
+                devLoginUrl="/_dev/login-as-admin"
+                demoLoginUrl="/_demo/login"
+            />,
+        );
+        const labels = Array.from(container.querySelectorAll('button')).map(
+            (button) => button.textContent,
+        );
+
+        expect(labels).toContain('auth.login.demoLogin');
+        expect(labels).not.toContain('auth.login.devLogin');
+    });
+
+    it('shows no one-click sign-in without a dev or demo URL', async () => {
+        const container = await render(<Login canResetPassword />);
+        const labels = Array.from(container.querySelectorAll('button')).map(
+            (button) => button.textContent,
+        );
+
+        expect(labels).not.toContain('auth.login.demoLogin');
+        expect(labels).not.toContain('auth.login.devLogin');
+    });
 });

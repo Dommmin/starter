@@ -1,4 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
+import { RecordHistory } from '@/components/admin/record-history';
+import { Stack } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index } from '@/routes/admin/navigation';
@@ -12,7 +14,10 @@ export default function AdminNavigationEdit() {
     return (
         <>
             <Head title={t('admin.navigation.editTitle')} />
-            <MenuItemForm key={editor.item.id} editor={editor} />
+            <Stack gap="relaxed">
+                <MenuItemForm key={editor.item.id} editor={editor} />
+                <RecordHistory />
+            </Stack>
         </>
     );
 }

@@ -166,7 +166,7 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
                 values={{{ formValues }}}
                 errors={errors}
                 onChange={(name, value) =>
-                    form.setData((data) => ({ ...data, [name]: {{ changeValue }} }))
+                    form.setData((data: FormState) => ({ ...data, [name]: {{ changeValue }} }))
                 }
                 onSubmit={submit}
                 isPending={form.processing}

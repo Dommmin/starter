@@ -106,7 +106,7 @@ test-pgsql: local-guard ## Pest na PostgreSQL z compose w osobnej bazie PGSQL_TE
 		app php artisan test --compact $(ARGS)
 
 test-setup: ## Testy bootstrappingu i ochrony konfiguracji
-	$(RUN) node --test scripts/dev-environment.test.mjs
+	$(RUN) node --test scripts/dev-environment.test.mjs scripts/starter-sync.test.mjs
 
 generator-smoke: ## Smoke generatora CRUD w tymczasowej kopii repo (bez zmian w drzewie roboczym)
 	$(RUN) sh scripts/generator-smoke.sh

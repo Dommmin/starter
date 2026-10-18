@@ -38,6 +38,8 @@ final class ResourceRenderer
             'relationField' => ['Placeholder' => 'Select: {label}', 'Empty' => 'No options available yet: {label}.'],
             'image' => ['imageChoose' => 'Choose image', 'imageChange' => 'Change image', 'imageRemove' => 'Remove image', 'imageEmpty' => 'No image selected', 'imagePreview' => 'Selected image'],
             'dateFilter' => ['dateFrom' => 'From', 'dateTo' => 'To'],
+            'hasMany' => ['tabsLabel' => 'Sections', 'detailsTab' => 'Details', 'relatedEmpty' => 'No related records yet.', 'relatedShown' => 'Showing :shown of :total.', 'relatedShowAll' => 'Open the full list'],
+            'hasManyTab' => ['label' => '{label} (:count)'],
         ],
         'pl' => [
             'export' => ['export' => 'Eksportuj CSV', 'exportTooLarge' => 'Eksport CSV obejmuje najwyżej :max wierszy. Najpierw zawęź listę wyszukiwaniem lub filtrami.', 'exportFilename' => '{kebab}-:date.csv'],
@@ -45,6 +47,8 @@ final class ResourceRenderer
             'relationField' => ['Placeholder' => 'Wybierz: {label}', 'Empty' => 'Brak dostępnych opcji: {label}.'],
             'image' => ['imageChoose' => 'Wybierz obraz', 'imageChange' => 'Zmień obraz', 'imageRemove' => 'Usuń obraz', 'imageEmpty' => 'Nie wybrano obrazu', 'imagePreview' => 'Wybrany obraz'],
             'dateFilter' => ['dateFrom' => 'Od', 'dateTo' => 'Do'],
+            'hasMany' => ['tabsLabel' => 'Sekcje', 'detailsTab' => 'Szczegóły', 'relatedEmpty' => 'Brak powiązanych rekordów.', 'relatedShown' => 'Wyświetlono :shown z :total.', 'relatedShowAll' => 'Otwórz pełną listę'],
+            'hasManyTab' => ['label' => '{label} (:count)'],
         ],
         'de' => [
             'export' => ['export' => 'CSV exportieren', 'exportTooLarge' => 'Der CSV-Export ist auf :max Zeilen begrenzt. Grenzen Sie die Liste zuerst mit Suche oder Filtern ein.', 'exportFilename' => '{kebab}-:date.csv'],
@@ -52,6 +56,8 @@ final class ResourceRenderer
             'relationField' => ['Placeholder' => 'Auswählen: {label}', 'Empty' => 'Noch keine Optionen verfügbar: {label}.'],
             'image' => ['imageChoose' => 'Bild auswählen', 'imageChange' => 'Bild ändern', 'imageRemove' => 'Bild entfernen', 'imageEmpty' => 'Kein Bild ausgewählt', 'imagePreview' => 'Ausgewähltes Bild'],
             'dateFilter' => ['dateFrom' => 'Von', 'dateTo' => 'Bis'],
+            'hasMany' => ['tabsLabel' => 'Bereiche', 'detailsTab' => 'Details', 'relatedEmpty' => 'Noch keine verknüpften Einträge.', 'relatedShown' => ':shown von :total angezeigt.', 'relatedShowAll' => 'Vollständige Liste öffnen'],
+            'hasManyTab' => ['label' => '{label} (:count)'],
         ],
     ];
 
@@ -85,6 +91,7 @@ final class ResourceRenderer
                     ...$this->enumImportList($resource),
                     ...($this->relationFields($resource) === [] && ! $resource->owned ? [] : ['Illuminate\Database\Eloquent\Relations\BelongsTo']),
                     ...($resource->manyRelations === [] ? [] : ['Illuminate\Database\Eloquent\Collection', 'Illuminate\Database\Eloquent\Relations\BelongsToMany']),
+                    ...($resource->hasManyRelations === [] ? [] : ['Illuminate\Database\Eloquent\Collection', 'Illuminate\Database\Eloquent\Relations\HasMany']),
                 ]),
                 'propertyDocs' => $this->propertyDocs($resource),
                 'fillable' => $this->quotedList(array_map(fn (ResourceField $field): string => $field->column(), $resource->fields)),
@@ -185,7 +192,7 @@ final class ResourceRenderer
             ]),
             "{$pages}/form.tsx" => $this->render('react.form', $resource, $this->formFragments($resource)),
             "{$pages}/create.tsx" => $this->render('react.create', $resource),
-            "{$pages}/edit.tsx" => $this->render('react.edit', $resource),
+            "{$pages}/edit.tsx" => $this->render($resource->hasManyRelations === [] ? 'react.edit' : 'react.edit-related', $resource),
             "{$pages}/index.accessibility.test.tsx" => $this->render('react.index-test', $resource, [
                 'items' => $this->testRows($resource),
                 'filters' => $this->testFilters($resource),
@@ -224,6 +231,7 @@ final class ResourceRenderer
                     : 'an editor cannot delete a '.Str::lower($resource->singularLabel()),
                 'forbiddenExport' => $this->forbiddenExport($resource),
                 'exportTests' => $this->exportTests($resource),
+                'relatedTests' => $this->relatedTests($resource),
             ]),
         ];
 
@@ -506,6 +514,10 @@ final class ResourceRenderer
             $classes[] = 'Illuminate\Support\Facades\DB';
         }
 
+        foreach ($resource->hasManyRelations as $field) {
+            $classes[] = 'App\\Models\\'.$field->relatedClass();
+        }
+
         if ($resource->hasType('image')) {
             $classes[] = 'App\Models\MediaAsset';
         }
@@ -516,6 +528,55 @@ final class ResourceRenderer
         }
 
         return $this->imports($classes);
+    }
+
+    /**
+     * Feature test of the hasMany tabs: the newest related records of the
+     * edited record only, and no tabs while creating.
+     */
+    private function relatedTests(ResourceBlueprint $resource): ?string
+    {
+        if ($resource->hasManyRelations === []) {
+            return null;
+        }
+
+        $model = $resource->model;
+        $variable = $resource->variable();
+        $kebab = $resource->kebabPlural();
+        $owned = $resource->owned ? '->for($admin)' : '';
+        $tests = [];
+
+        foreach ($resource->hasManyRelations as $index => $field) {
+            $class = $field->relatedClass();
+            $foreignKey = $field->foreignKey($model);
+            $tests[] = <<<PHP
+
+            test('the edit screen lists the related {$field->name} of the {$this->lowerSingular($resource)}', function () {
+                \$admin = User::factory()->admin()->create();
+                \${$variable} = {$model}::factory(){$owned}->create();
+                {$class}::factory()->count(2)->create(['{$foreignKey}' => \${$variable}->id]);
+                {$class}::factory()->create(['{$foreignKey}' => {$model}::factory(){$owned}->create()->id]);
+
+                \$this->actingAs(\$admin)->get(route('admin.{$kebab}.edit', \${$variable}))
+                    ->assertOk()
+                    ->assertInertia(fn (Assert \$page) => \$page
+                        ->where('related.{$index}.relation', '{$field->relation()}')
+                        ->where('related.{$index}.total', 2)
+                        ->has('related.{$index}.items', 2)
+                    );
+
+                \$this->actingAs(\$admin)->get(route('admin.{$kebab}.create'))
+                    ->assertInertia(fn (Assert \$page) => \$page->where('related', []));
+            });
+            PHP;
+        }
+
+        return implode(PHP_EOL, $tests);
+    }
+
+    private function lowerSingular(ResourceBlueprint $resource): string
+    {
+        return Str::lower($resource->singularLabel());
     }
 
     private function storeRequestImports(ResourceBlueprint $resource): ?string
@@ -884,7 +945,7 @@ final class ResourceRenderer
             $lines[] = " * @property-read {$field->relatedClass()}".($field->isRequired() ? '' : '|null')." \${$field->relation()}";
         }
 
-        foreach ($resource->manyRelations as $field) {
+        foreach ([...$resource->manyRelations, ...$resource->hasManyRelations] as $field) {
             $lines[] = " * @property-read Collection<int, {$field->relatedClass()}> \${$field->relation()}";
         }
 
@@ -963,6 +1024,20 @@ final class ResourceRenderer
             PHP;
         }
 
+        foreach ($resource->hasManyRelations as $field) {
+            $class = $field->relatedClass();
+            $methods[] = <<<PHP
+
+                /**
+                 * @return HasMany<{$class}, \$this>
+                 */
+                public function {$field->relation()}(): HasMany
+                {
+                    return \$this->hasMany({$class}::class, '{$field->foreignKey($resource->model)}');
+                }
+            PHP;
+        }
+
         return $methods === [] ? null : implode(PHP_EOL, $methods);
     }
 
@@ -1023,6 +1098,14 @@ final class ResourceRenderer
             $classes[] = 'App\Data\Listing\RecordOptionData';
         }
 
+        foreach ($resource->hasManyRelations as $field) {
+            $classes[] = 'App\\Models\\'.$field->relatedClass();
+        }
+
+        if ($resource->hasManyRelations !== []) {
+            $classes[] = 'App\Data\Listing\RelatedRecordsData';
+        }
+
         if ($resource->export) {
             array_push($classes, ...$this->enumImportList($resource));
             array_push(
@@ -1051,6 +1134,9 @@ final class ResourceRenderer
             $editorOptions[] = "        [\${$relation}Options, \${$relation}OptionsTruncated] = \$this->{$relation}Options();";
             $editorArguments[] = "            {$relation}Options: \${$relation}Options,";
             $editorArguments[] = "            {$relation}OptionsTruncated: \${$relation}OptionsTruncated,";
+        }
+        if ($resource->hasManyRelations !== []) {
+            $editorArguments[] = '            related: $this->related($request, $'.$resource->variable().'),';
         }
 
         $variable = '$'.$resource->variable();
@@ -1264,7 +1350,62 @@ final class ResourceRenderer
             PHP;
         }
 
+        if ($resource->hasManyRelations !== []) {
+            $methods[] = $this->relatedMethod($resource);
+        }
+
         return $methods === [] ? null : implode(PHP_EOL, $methods);
+    }
+
+    /**
+     * `related()` of the controller: one RelatedRecordsData per hasMany
+     * relation the user may list, none while creating.
+     */
+    private function relatedMethod(ResourceBlueprint $resource): string
+    {
+        $model = $resource->model;
+        $variable = $resource->variable();
+        $blocks = [];
+
+        foreach ($resource->hasManyRelations as $field) {
+            $class = $field->relatedClass();
+            $kebab = Str::kebab(Str::plural($class));
+            $childVariable = Str::camel($class);
+            $blocks[] = <<<PHP
+                    if (\$request->user()?->can('viewAny', {$class}::class) ?? false) {
+                        \$related[] = RelatedRecordsData::fromRelation(
+                            '{$field->relation()}',
+                            \${$variable}->{$field->relation()}(),
+                            '{$field->relatedLabel}',
+                            fn ({$class} \${$childVariable}): string => route('admin.{$kebab}.edit', \${$childVariable}),
+                            route('admin.{$kebab}.index'),
+                        );
+                    }
+            PHP;
+        }
+
+        $body = implode(PHP_EOL.PHP_EOL, $blocks);
+
+        return <<<PHP
+
+                /**
+                 * Records of the hasMany relations shown as tabs of the edit screen,
+                 * each only for users who may list them.
+                 *
+                 * @return list<RelatedRecordsData>
+                 */
+                private function related(Request \$request, ?{$model} \${$variable}): array
+                {
+                    if (\${$variable} === null) {
+                        return [];
+                    }
+
+                    \$related = [];
+            {$body}
+
+                    return \$related;
+                }
+            PHP;
     }
 
     /**
@@ -1297,12 +1438,13 @@ final class ResourceRenderer
     private function editorDataFragments(ResourceBlueprint $resource): array
     {
         $fields = $resource->optionFields();
-        if ($fields === []) {
+        if ($fields === [] && $resource->hasManyRelations === []) {
             return ['imports' => null, 'constructorDoc' => null, 'properties' => null];
         }
 
         $docs = ['    /**'];
         $properties = [];
+        $imports = [];
         foreach ($fields as $field) {
             $relation = $field->relation();
             $docs[] = "     * @param  list<RecordOptionData>  \${$relation}Options  Choices of the {$field->name} field (at most RecordOptionData::LIMIT).";
@@ -1310,10 +1452,18 @@ final class ResourceRenderer
             $properties[] = "        public array \${$relation}Options,";
             $properties[] = "        public bool \${$relation}OptionsTruncated,";
         }
+        if ($fields !== []) {
+            $imports[] = 'use App\Data\Listing\RecordOptionData;';
+        }
+        if ($resource->hasManyRelations !== []) {
+            $docs[] = '     * @param  list<RelatedRecordsData>  $related  Tabs of the hasMany relations the user may list (empty when creating).';
+            $properties[] = '        public array $related,';
+            $imports[] = 'use App\Data\Listing\RelatedRecordsData;';
+        }
         $docs[] = '     */';
 
         return [
-            'imports' => 'use App\Data\Listing\RecordOptionData;',
+            'imports' => implode(PHP_EOL, $imports),
             'constructorDoc' => implode(PHP_EOL, $docs),
             'properties' => implode(PHP_EOL, $properties),
         ];
@@ -2116,6 +2266,14 @@ final class ResourceRenderer
 
         if ($resource->dateFilterFields() !== []) {
             $entries = [...$entries, ...$labels['dateFilter']];
+        }
+
+        if ($resource->hasManyRelations !== []) {
+            $entries = [...$entries, ...$labels['hasMany']];
+        }
+
+        foreach ($resource->hasManyRelations as $field) {
+            $entries[$field->relation().'Tab'] = strtr($labels['hasManyTab']['label'], ['{label}' => $field->label()]);
         }
 
         if ($entries === []) {

@@ -151,4 +151,9 @@ return [
         'sortAscending' => ':column (ascending)',
         'sortDescending' => ':column (descending)',
     ],
+
+    'demo' => [
+        'blocked' => 'This is a demo: changes are turned off.',
+        'banner' => 'Demo: look around the panel freely. Changes are turned off and the data is reset every hour.',
+    ],
 ];

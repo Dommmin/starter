@@ -72,6 +72,7 @@ class FortifyServiceProvider extends ServiceProvider
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
             'devLoginUrl' => app()->environment('local') && Route::has('dev.login') ? route('dev.login') : null,
+            'demoLoginUrl' => config('demo.enabled') && Route::has('demo.login') ? route('demo.login') : null,
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [

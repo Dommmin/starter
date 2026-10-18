@@ -3,9 +3,12 @@
 namespace App\Support\DemoContent;
 
 use App\Actions\Content\DeleteArticle;
+use App\Actions\Content\ManageTrashedContent;
 use App\Contracts\DemoContent\DemoContentProvider;
+use App\Enums\TrashedContentType;
 use App\Models\Article;
 use App\Models\User;
+use App\Repositories\Content\TrashRepository;
 use Database\Seeders\DemoContent;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -18,7 +21,11 @@ class DemoArticles implements DemoContentProvider
 {
     use MatchesSeededTranslations;
 
-    public function __construct(private readonly DeleteArticle $deleteArticle) {}
+    public function __construct(
+        private readonly DeleteArticle $deleteArticle,
+        private readonly ManageTrashedContent $trash,
+        private readonly TrashRepository $trashed,
+    ) {}
 
     public function label(): string
     {
@@ -47,7 +54,12 @@ class DemoArticles implements DemoContentProvider
 
     public function delete(Model $record, User $actor): void
     {
-        $this->deleteArticle->handle($this->article($record), $actor);
+        $article = $this->article($record);
+
+        // Audited move to the trash, then removed for good: sample content
+        // must not keep its slugs taken for the trash retention period.
+        $this->deleteArticle->handle($article, $actor);
+        $this->trash->purge($this->trashed->findTrashed(TrashedContentType::Articles, $article->id) ?? $article, $actor);
     }
 
     private function article(Model $record): Article

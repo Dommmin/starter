@@ -8,7 +8,7 @@ use App\Models\User;
 /**
  * Articles are written and published by admins and editors; a viewer
  * lists, opens (read-only) and previews them. Only administrators may
- * delete an article with all its translations.
+ * move an article to the trash, restore it or empty the trash.
  */
 class ArticlePolicy
 {
@@ -63,9 +63,33 @@ class ArticlePolicy
     }
 
     /**
-     * Determine whether the user can permanently delete the article.
+     * Determine whether the user can move the article to the trash.
      */
     public function delete(User $user, Article $article): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can see the articles in the trash.
+     */
+    public function viewTrashed(User $user): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can bring the article back from the trash.
+     */
+    public function restore(User $user, Article $article): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Determine whether the user can remove the article from the trash for good.
+     */
+    public function forceDelete(User $user, Article $article): bool
     {
         return $user->isAdmin();
     }

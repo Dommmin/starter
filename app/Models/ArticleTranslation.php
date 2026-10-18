@@ -61,6 +61,21 @@ class ArticleTranslation extends Model
     }
 
     /**
+     * Translations of a article in the trash are invisible everywhere: public
+     * pages, sitemap, menus, lists and counts. Slug uniqueness is checked
+     * directly in the database, so their slugs stay taken until the trash
+     * is emptied. Trash screens read them with `withoutGlobalScope`.
+     */
+    public const string LIVE_PARENT_SCOPE = 'liveArticle';
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(self::LIVE_PARENT_SCOPE, function (Builder $query): void {
+            $query->whereHas('article');
+        });
+    }
+
+    /**
      * @return BelongsTo<Article, $this>
      */
     public function article(): BelongsTo

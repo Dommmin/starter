@@ -54,7 +54,7 @@ const statusTones = {
 
 function useDemoArticles(): DemoArticle[] {
     const { t } = useTranslation();
-    const text = (key: string) => t(`admin.designSystem.tables.rows.${key}`);
+    const text = (key: string) => t(`showcase.tables.rows.${key}`);
 
     return [
         {
@@ -94,7 +94,7 @@ function useLongArticle(): DemoArticle {
 
     return {
         id: 99,
-        title: t('admin.designSystem.tables.rows.longTitle'),
+        title: t('showcase.tables.rows.longTitle'),
         author: 'Maximiliane Konstantina Wiśniewska-Grünberg von Hohenstein',
         initials: 'MW',
         status: 'draft',
@@ -160,7 +160,7 @@ function useArticleColumns({
 }): DataTableColumn<DemoArticle>[] {
     const { t, formatDate, formatNumber } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.tables.${key}`, params);
+        t(`showcase.tables.${key}`, params);
     const role = (priority: DataTableColumnPriority) =>
         withPriority ? priority : undefined;
 
@@ -264,7 +264,7 @@ function InteractiveArticleTable({
 }) {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.tables.${key}`, params);
+        t(`showcase.tables.${key}`, params);
     const articles = useDemoArticles();
     const [removedIds, setRemovedIds] = useState<number[]>([]);
     const [sort, setSort] = useState<DataTableSort>(initialSort);
@@ -344,7 +344,7 @@ function StaticArticleTable({
     withPriority?: boolean;
 }) {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.tables.${key}`);
+    const demo = (key: string) => t(`showcase.tables.${key}`);
     const columns = useArticleColumns({ withPriority });
     const [isRetrying, setRetrying] = useState(false);
 
@@ -384,7 +384,7 @@ function StaticArticleTable({
  */
 function FilteredArticleTable() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.tables.${key}`);
+    const demo = (key: string) => t(`showcase.tables.${key}`);
     const articles = useDemoArticles();
     const columns = useArticleColumns({});
     const initialSearch = demo('noMatchSearch');
@@ -481,9 +481,9 @@ function DemoPaginator({
             page={page}
             totalPages={totalPages}
             onPageChange={setPage}
-            previousLabel={t('admin.designSystem.tables.previousPage')}
-            nextLabel={t('admin.designSystem.tables.nextPage')}
-            summary={t('admin.designSystem.tables.pageSummary', {
+            previousLabel={t('showcase.tables.previousPage')}
+            nextLabel={t('showcase.tables.nextPage')}
+            summary={t('showcase.tables.pageSummary', {
                 page: String(page),
                 total: String(totalPages),
             })}
@@ -518,7 +518,7 @@ function DemoResourceTable({
 }) {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.tables.${key}`, params);
+        t(`showcase.tables.${key}`, params);
     const perPage = 3;
     const header = {
         title: demo('resourceTitle'),
@@ -562,7 +562,7 @@ function DemoResourceTable({
                                       title: demo('bulkDeleteTitle'),
                                       description: (count) =>
                                           t(
-                                              'admin.designSystem.tables.bulkDeleteDescription',
+                                              'showcase.tables.bulkDeleteDescription',
                                               {},
                                               count,
                                           ),
@@ -636,10 +636,10 @@ function DemoResourceTable({
                           {
                               kind: 'dateRange' as const,
                               name: 'created',
-                              label: t('admin.designSystem.dates.rangeLabel'),
+                              label: t('showcase.dates.rangeLabel'),
                               labels: {
-                                  from: t('admin.designSystem.dates.from'),
-                                  to: t('admin.designSystem.dates.to'),
+                                  from: t('showcase.dates.from'),
+                                  to: t('showcase.dates.to'),
                               },
                           },
                       ]
@@ -688,7 +688,7 @@ function DemoResourceTable({
 /** ADM-09 — tables: DataTable, Paginator, SearchInput/FilterBar, ResourceTable. */
 function TablesSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.tables.${key}`);
+    const demo = (key: string) => t(`showcase.tables.${key}`);
     const articles = useDemoArticles();
     const longArticle = useLongArticle();
     const noMediaRows = articles.map((row) => ({ ...row, avatar: undefined }));
@@ -873,7 +873,7 @@ function TablesSection() {
 
 export const tablesFamily: ShowcaseFamily = {
     id: 'adm-09',
-    titleKey: 'admin.designSystem.tables.title',
-    descriptionKey: 'admin.designSystem.tables.description',
+    titleKey: 'showcase.tables.title',
+    descriptionKey: 'showcase.tables.description',
     Component: TablesSection,
 };

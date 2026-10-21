@@ -28,9 +28,9 @@ type HomeSection = App.Data.Home.HomeSectionData;
 /** WEB-02 — landing: hero, key figures, feature grid, call to action, home sections. */
 function LandingSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.web.landing.${key}`);
-    const longName = t('admin.designSystem.web.longName');
-    const longText = t('admin.designSystem.web.longText');
+    const demo = (key: string) => t(`showcase.web.landing.${key}`);
+    const longName = t('showcase.web.longName');
+    const longText = t('showcase.web.longText');
     const [isHomeEmpty, setHomeEmpty] = useState(false);
 
     const actions = (
@@ -392,7 +392,7 @@ function LandingSection() {
 
 export const landingFamily: ShowcaseFamily = {
     id: 'web-02',
-    titleKey: 'admin.designSystem.web.landing.title',
-    descriptionKey: 'admin.designSystem.web.landing.description',
+    titleKey: 'showcase.web.landing.title',
+    descriptionKey: 'showcase.web.landing.description',
     Component: LandingSection,
 };

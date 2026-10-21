@@ -27,7 +27,7 @@ export default function PublicDesignSystemShowcase() {
     return (
         <>
             <Seo
-                title={t('admin.designSystem.web.title')}
+                title={t('showcase.web.title')}
                 description={null}
                 robots="noindex,nofollow"
             />
@@ -40,17 +40,17 @@ export default function PublicDesignSystemShowcase() {
                     <Stack gap="relaxed">
                         <Stack gap="tight">
                             <Heading level={1} variant="page">
-                                {t('admin.designSystem.web.title')}
+                                {t('showcase.web.title')}
                             </Heading>
                             <Text tone="muted">
-                                {t('admin.designSystem.web.description')}
+                                {t('showcase.web.description')}
                             </Text>
                         </Stack>
 
                         <Card padding="compact">
                             <CardHeader>
                                 <Heading level={2} variant="group">
-                                    {t('admin.designSystem.tocTitle')}
+                                    {t('showcase.tocTitle')}
                                 </Heading>
                             </CardHeader>
                             <CardContent>

@@ -33,7 +33,37 @@ test('an admin opens the showcase in the local environment', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/design-system/index')
             ->where('designSystemUrl', '/admin/design-system')
-            ->has('i18n.messages.admin.designSystem.title'),
+            ->where('i18n.messages.showcase.title', 'Design system')
+            ->has('i18n.messages.showcase.forms')
+            ->where('i18n.messages.admin.designSystem', ['navLabel' => 'Design system']),
+        );
+});
+
+test('the showcase labels follow the admin locale of the account', function () {
+    registerLocalDesignSystemShowcase();
+    $admin = User::factory()->admin()->withTwoFactor()->create(['admin_locale' => 'pl']);
+
+    $this->actingAs($admin)
+        ->get('/admin/design-system')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('i18n.locale', 'pl')
+            ->where('i18n.messages.showcase.tables.noResultsTitle', trans('showcase.tables.noResultsTitle', [], 'pl')),
+        );
+});
+
+test('other panel pages do not receive the showcase catalog', function () {
+    registerLocalDesignSystemShowcase();
+    $admin = User::factory()->admin()->withTwoFactor()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('designSystemUrl', '/admin/design-system')
+            ->has('i18n.messages.admin.designSystem.navLabel')
+            ->missing('i18n.messages.showcase')
+            ->missing('i18n.messages.admin.designSystem.title'),
         );
 });
 

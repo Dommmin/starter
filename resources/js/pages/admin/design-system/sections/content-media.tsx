@@ -64,7 +64,7 @@ function paragraph(text: string): RichTextDocument {
 function ContentMediaSection() {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.contentMedia.${key}`, params);
+        t(`showcase.contentMedia.${key}`, params);
 
     const richTextLabels = Object.fromEntries(
         richTextLabelKeys.map((key) => [key, t(`admin.richText.${key}`)]),
@@ -507,7 +507,7 @@ function ContentMediaSection() {
 
 export const contentMediaFamily: ShowcaseFamily = {
     id: 'adm-06',
-    titleKey: 'admin.designSystem.contentMedia.title',
-    descriptionKey: 'admin.designSystem.contentMedia.description',
+    titleKey: 'showcase.contentMedia.title',
+    descriptionKey: 'showcase.contentMedia.description',
     Component: ContentMediaSection,
 };

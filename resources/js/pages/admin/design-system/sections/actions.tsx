@@ -54,7 +54,7 @@ function useDemoText() {
     const { t } = useTranslation();
 
     return (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.actions.${key}`, params);
+        t(`showcase.actions.${key}`, params);
 }
 
 /** Shows the last action picked in a menu or dialog, for keyboard review. */
@@ -565,7 +565,7 @@ function ActionsSection() {
 
 export const actionsFamily: ShowcaseFamily = {
     id: 'adm-12',
-    titleKey: 'admin.designSystem.actions.title',
-    descriptionKey: 'admin.designSystem.actions.description',
+    titleKey: 'showcase.actions.title',
+    descriptionKey: 'showcase.actions.description',
     Component: ActionsSection,
 };

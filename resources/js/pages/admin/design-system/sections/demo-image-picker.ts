@@ -49,8 +49,8 @@ export function useDemoImagePicker() {
             size: number,
         ): RichTextImageOption => ({
             id,
-            name: t(`admin.designSystem.contentMedia.imageNames.${nameKey}`),
-            alt: t('admin.designSystem.contentMedia.imageAlt'),
+            name: t(`showcase.contentMedia.imageNames.${nameKey}`),
+            alt: t('showcase.contentMedia.imageAlt'),
             thumbnailUrl,
             width: size,
             height: size,
@@ -110,8 +110,7 @@ export function useDemoImagePicker() {
     }, [t, demoImages]);
 
     const pickerLabels = useMemo<ImagePickerFieldLabels>(() => {
-        const label = (key: string) =>
-            t(`admin.designSystem.contentMedia.picker.${key}`);
+        const label = (key: string) => t(`showcase.contentMedia.picker.${key}`);
 
         return {
             choose: label('choose'),

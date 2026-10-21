@@ -25,7 +25,7 @@ export type ShowcaseFamily = {
 /**
  * State vocabulary of the registry's `verified` definition, plus the
  * API-specific axes (variants, sizes, link targets) a component shows.
- * Labels live in `admin.designSystem.states.*`.
+ * Labels live in `showcase.states.*`.
  */
 export type ShowcaseStateKey =
     | 'default'
@@ -123,10 +123,10 @@ export function ShowcaseComponent({
                     </Grid>
                     {notApplicable.length > 0 && (
                         <Text variant="caption" tone="muted">
-                            {t('admin.designSystem.notApplicable', {
+                            {t('showcase.notApplicable', {
                                 states: notApplicable
                                     .map((state) =>
-                                        t(`admin.designSystem.states.${state}`),
+                                        t(`showcase.states.${state}`),
                                     )
                                     .join(', '),
                             })}
@@ -155,7 +155,7 @@ export function ShowcaseState({
     children,
 }: ShowcaseStateProps) {
     const { t } = useTranslation();
-    const label = t(`admin.designSystem.states.${state}`);
+    const label = t(`showcase.states.${state}`);
 
     return (
         <Stack gap="tight" align={fill ? 'stretch' : 'start'}>

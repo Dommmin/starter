@@ -13,7 +13,7 @@ function activeCatalogs(): array
     /** @var LocalizationConfig $config */
     $config = app(LocalizationConfig::class);
     $locales = array_unique(array_merge($config->getPublicLocales(), $config->getAdminLocales()));
-    $groups = ['common', 'public', 'auth', 'settings', 'admin', 'errors', 'validation'];
+    $groups = ['common', 'public', 'auth', 'settings', 'admin', 'errors', 'validation', 'showcase'];
     $catalogs = [];
 
     foreach ($locales as $locale) {
@@ -37,7 +37,7 @@ test('all registered locales have required catalog groups', function () {
     $config = app(LocalizationConfig::class);
     $allLocales = array_unique(array_merge($config->getPublicLocales(), $config->getAdminLocales()));
 
-    $requiredGroups = ['common', 'public', 'auth', 'settings', 'admin', 'errors', 'validation'];
+    $requiredGroups = ['common', 'public', 'auth', 'settings', 'admin', 'errors', 'validation', 'showcase'];
 
     foreach ($allLocales as $locale) {
         $localePath = lang_path($locale);
@@ -218,9 +218,9 @@ test('catalog scopes send only their mapped groups', function (string $scope, ar
         ->and(array_keys($messages))->toContain(...$prefixedGroups)
         ->and(array_keys($messages))->not->toContain('common', 'public', 'validation', ...$absentGroups);
 })->with([
-    'public' => ['public', ['errors', 'landing', 'contact'], ['auth', 'admin', 'settings']],
-    'auth' => ['auth', ['errors', 'auth'], ['admin', 'settings', 'landing', 'contact']],
-    'admin' => ['admin', ['errors', 'admin', 'settings', 'auth'], ['landing', 'contact']],
+    'public' => ['public', ['errors', 'landing', 'contact'], ['auth', 'admin', 'settings', 'showcase']],
+    'auth' => ['auth', ['errors', 'auth'], ['admin', 'settings', 'landing', 'contact', 'showcase']],
+    'admin' => ['admin', ['errors', 'admin', 'settings', 'auth'], ['landing', 'contact', 'showcase']],
 ]);
 
 test('shared i18n prop of rendered pages follows the scope mapping', function () {
@@ -250,12 +250,12 @@ test('React translation keys resolve within every catalog scope the module rende
         $scopeKeys[$scope] = flattenTranslationKeys($manager->getMessagesForScope($scope, 'en'));
     }
 
-    // The local public showcase (PublicDesignSystemController) renders in the
-    // public scope plus the `admin.designSystem` group added to its payload.
-    $scopeKeys['design-system'] = [
-        ...$scopeKeys['public'],
-        ...flattenTranslationKeys(['admin' => ['designSystem' => trans('admin.designSystem', [], 'en')]]),
-    ];
+    // The local showcases render in their area scope plus the `showcase`
+    // group their controllers add to the payload (DesignSystemController,
+    // PublicDesignSystemController).
+    $showcaseKeys = flattenTranslationKeys(['showcase' => trans('showcase', [], 'en')]);
+    $scopeKeys['design-system'] = [...$scopeKeys['public'], ...$showcaseKeys];
+    $scopeKeys['admin-design-system'] = [...$scopeKeys['admin'], ...$showcaseKeys];
 
     $missing = [];
 
@@ -422,6 +422,7 @@ function reactModuleScopes(): array
             $name === 'welcome', str_starts_with($name, 'pages/'), str_starts_with($name, 'articles/'), str_starts_with($name, 'public/') => ['public'],
             str_starts_with($name, 'errors/') => $allScopes,
             str_starts_with($name, 'design-system/') => ['design-system'],
+            str_starts_with($name, 'admin/design-system/') => ['admin-design-system'],
             // Unprefixed /user/confirm-password belongs to the admin area.
             $name === 'auth/confirm-password' => ['auth', 'admin'],
             str_starts_with($name, 'auth/') => ['auth'],

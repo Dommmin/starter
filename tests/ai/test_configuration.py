@@ -98,6 +98,9 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}', deploy)
         self.assertIn('DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}', deploy)
         self.assertIn('sha256sum -c .release/starter.tar.gz.sha256', deploy)
+        build_steps = deploy.split("  build-release:", 1)[1].split("\n  deploy:", 1)[0]
+        self.assertLess(build_steps.index("wayfinder:generate --with-form"), build_steps.index("composer ci:check"))
+        self.assertLess(build_steps.index("npm run build:ssr"), build_steps.index("composer ci:check"))
         # The git-ignored SSR bundle must ship in the artifact and is checked
         # on the candidate release before the switch.
         self.assertIn('cp -R bootstrap/ssr .release/app/bootstrap/ssr', deploy)

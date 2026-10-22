@@ -44,9 +44,13 @@ jobs:
         env:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.sha }}
+        # The first push of a branch (e.g. a new repository created from the
+        # starter) carries history validated where it was written, older
+        # commits even predate the convention. New work arrives through
+        # pull requests, whose titles are validated above.
         run: |
           if [ "$BEFORE" = '0000000000000000000000000000000000000000' ]; then
-            npx commitlint --from "$(git rev-list --max-parents=0 HEAD)" --to "$AFTER" --verbose
+            echo "::notice::First push of this branch; existing history is not re-validated."
           else
             npx commitlint --from "$BEFORE" --to "$AFTER" --verbose
           fi

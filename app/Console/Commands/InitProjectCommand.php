@@ -153,7 +153,7 @@ class InitProjectCommand extends Command
         }
 
         $defaultLocale = $this->stringOption('default-locale');
-        if ($defaultLocale === null && $interactive && $locales !== null && $locales !== []) {
+        if ($defaultLocale === null && $interactive && $locales !== []) {
             $chosenDefault = $this->choice('Default public language', $locales, 0);
             $defaultLocale = is_string($chosenDefault) ? $chosenDefault : null;
         }

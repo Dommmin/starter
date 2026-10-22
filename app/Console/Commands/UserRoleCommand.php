@@ -23,8 +23,10 @@ class UserRoleCommand extends Command
      */
     public function handle(AssignUserRole $assignUserRole): int
     {
-        $email = (string) $this->argument('email');
-        $roleInput = strtolower((string) ($this->argument('role') ?? self::NO_ROLE));
+        $emailArgument = $this->argument('email');
+        $roleArgument = $this->argument('role');
+        $email = is_string($emailArgument) ? $emailArgument : '';
+        $roleInput = strtolower(is_string($roleArgument) ? $roleArgument : self::NO_ROLE);
 
         $allowedRoles = [...array_column(UserRole::cases(), 'value'), self::NO_ROLE];
 

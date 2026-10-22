@@ -1,7 +1,7 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { I18nProvider } from '@/i18n';
 import { LocaleSwitcher } from './locale-switcher';
 
@@ -61,5 +61,77 @@ describe('LocaleSwitcher', () => {
         expect(trigger?.getAttribute('aria-label')).toBe(
             'a11y.languageSelector: Polski',
         );
+    });
+
+    it('renders a closed menu trigger before loading the menu and opens it on pointer down', async () => {
+        const container = document.createElement('div');
+        document.body.append(container);
+        const root = createRoot(container);
+        mountedRoots.push(root);
+
+        await act(async () => {
+            root.render(
+                <I18nProvider initialPage={initialPage}>
+                    <LocaleSwitcher />
+                </I18nProvider>,
+            );
+        });
+
+        const trigger = container.querySelector('button');
+        expect(trigger?.getAttribute('aria-haspopup')).toBe('menu');
+        expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(trigger?.getAttribute('data-state')).toBe('closed');
+        expect(document.querySelector('[role="menu"]')).toBeNull();
+
+        await act(async () => {
+            trigger?.dispatchEvent(
+                new MouseEvent('pointerdown', { bubbles: true, button: 0 }),
+            );
+        });
+        await act(async () => {
+            await import('./locale-menu');
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        expect(
+            container.querySelector('button')?.getAttribute('aria-expanded'),
+        ).toBe('true');
+        expect(
+            Array.from(document.querySelectorAll('[role="menuitem"]')).map(
+                (item) => item.getAttribute('href'),
+            ),
+        ).toEqual(['/', '/pl']);
+    });
+
+    it('opens from the keyboard before loading the menu and focuses its first item', async () => {
+        const container = document.createElement('div');
+        document.body.append(container);
+        const root = createRoot(container);
+        mountedRoots.push(root);
+
+        await act(async () => {
+            root.render(
+                <I18nProvider initialPage={initialPage}>
+                    <LocaleSwitcher />
+                </I18nProvider>,
+            );
+        });
+
+        const trigger = container.querySelector('button');
+        trigger?.focus();
+
+        await act(async () => {
+            trigger?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+            );
+        });
+        await act(async () => {
+            await import('./locale-menu');
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        const items = document.querySelectorAll('[role="menuitem"]');
+        expect(items).toHaveLength(2);
+        expect(document.activeElement).toBe(items[0]);
     });
 });

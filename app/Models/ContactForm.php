@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use Carbon\CarbonImmutable;
 use Database\Factories\ContactFormFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -39,7 +40,7 @@ class ContactForm extends Model
     protected function casts(): array
     {
         return [
-            'title' => 'array',
+            'title' => JsonArray::class,
             'enabled' => 'boolean',
         ];
     }

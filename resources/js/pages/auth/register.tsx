@@ -11,14 +11,13 @@ import {
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { focusFirstError } from '@/lib/focus-first-error';
-import {
-    getLocalizedLoginRoute,
-    getLocalizedRegisterForm,
-} from '@/lib/localized-routes';
+import { getLocalizedLoginRoute } from '@/lib/localized-routes';
 import { describePasswordRules } from '@/lib/password-rules';
 
 type Props = {
     passwordRules: string;
+    /** Localized sign-up endpoint; the backend owns it because Wayfinder skips disabled registration routes. */
+    registerAction: string;
 };
 
 const FIELD_ORDER = [
@@ -28,7 +27,7 @@ const FIELD_ORDER = [
     'password_confirmation',
 ] as const;
 
-export default function Register({ passwordRules }: Props) {
+export default function Register({ passwordRules, registerAction }: Props) {
     const { t, locale, defaultLocale } = useTranslation();
     const form = useForm({
         name: '',
@@ -44,12 +43,7 @@ export default function Register({ passwordRules }: Props) {
             return;
         }
 
-        const { method, action } = getLocalizedRegisterForm(
-            locale,
-            defaultLocale,
-        );
-
-        form.submit(method, action, {
+        form.submit('post', registerAction, {
             onError: (errors) => focusFirstError(errors, FIELD_ORDER),
             onFinish: () => form.reset('password', 'password_confirmation'),
         });
@@ -62,8 +56,6 @@ export default function Register({ passwordRules }: Props) {
 
     // Also on the <form>: a submit before hydration posts to the same
     // endpoint instead of a GET that would put the password in the URL.
-    const formTarget = getLocalizedRegisterForm(locale, defaultLocale);
-
     return (
         <>
             <Head title={t('auth.register.title')} />
@@ -75,8 +67,8 @@ export default function Register({ passwordRules }: Props) {
 
             <Stack gap="default">
                 <form
-                    method={formTarget.method}
-                    action={formTarget.action}
+                    method="post"
+                    action={registerAction}
                     onSubmit={submit}
                     noValidate
                 >

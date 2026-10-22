@@ -41,7 +41,7 @@ test('an administrator creates a form with ordered fields and parsed options', f
         ->and($form->title)->toBe(['en' => 'Book an event', 'pl' => 'Zarezerwuj termin'])
         ->and($form->fields->pluck('key')->all())->toBe(['guests', 'room'])
         ->and($form->fields[1]->type)->toBe(ContactFieldType::Select)
-        ->and($form->fields[1]->options)->toBe([
+        ->and($form->fields[1]->options)->toEqual([
             ['value' => 'small', 'label' => ['en' => 'Small', 'pl' => 'Mała']],
             ['value' => 'large', 'label' => ['en' => 'Large']],
         ]);

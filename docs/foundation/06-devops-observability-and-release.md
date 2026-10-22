@@ -18,7 +18,7 @@ Status: proponowany. P0: logi JSON, error alert, zewnętrzny uptime, heartbeat q
 
 ## Lokalne środowisko i artefakt
 
-Lokalny development: Docker Compose i Makefile, PHP 8.5 CLI/FPM, Nginx, PostgreSQL 18, Redis, Horizon, scheduler, Node 24 oraz Mailpit. Zaimplementowany workflow opisuje [README](../../README.md), a decyzję [ADR-021](10-local-environment-deployment-and-logs.md).
+Lokalny development: Docker Compose i Makefile, PHP 8.5 CLI/FPM, Nginx, MySQL 8.4 (domyślnie) albo PostgreSQL 18 wg `DB_CONNECTION`, Redis, Horizon, scheduler, Node 24 oraz Mailpit. Zaimplementowany workflow opisuje [README](../../README.md), a decyzję [ADR-021](10-local-environment-deployment-and-logs.md).
 
 Artefakt P0 to archiwum o zweryfikowanej sumie SHA-256 z kodem/vendor/bundle klienta i SSR, zbudowane przez CI na zgodnym Linux/CPU. Ten sam artefakt trafia na staging i produkcję; config cache powstaje na hoście w nowym katalogu release’u. Bez sekretów w archiwum, bez ponownego rozwiązywania zależności na produkcji. Natywne usługi mają ograniczone konta i prawa; zapis tylko do wymaganych katalogów. Aktualizacje runtime wymagają osobnej kwalifikacji.
 
@@ -85,7 +85,7 @@ Ochrona gałęzi (GitHub → Settings → Rules → Rulesets, cel `main` i `deve
 
 - [ ] Zmiana tylko przez PR; bez force push i usuwania gałęzi; bypass tylko dla jawnie wymienionego właściciela.
 - [ ] Wymagany co najmniej 1 approval, unieważnienie approval po nowym commicie, rozwiązane wątki przed merge.
-- [ ] Required status checks z `.github/workflows/ci.yml` (nazwy jobów): `commit-convention`, `secrets`, `quality`, `tests-pgsql`, `generator-smoke`, `e2e`, a po scaleniu fali 1 także `audit`. Dla `main` włączone „require branches to be up to date”.
+- [ ] Required status checks z `.github/workflows/ci.yml` (nazwy jobów): `commit-convention`, `secrets`, `quality`, `tests-mysql`, `tests-pgsql`, `generator-smoke`, `e2e`, a po scaleniu fali 1 także `audit`. Dla `main` włączone „require branches to be up to date”.
 - [ ] Sprawdzone na testowym PR: merge jest zablokowany przy czerwonym checku i bez approval. Sam wpis w ustawieniach nie jest dowodem.
 - [ ] Environment `production` z `deploy.yml` ma required reviewer i prevent self-review, o ile plan GitHub to wspiera; w przeciwnym razie obowiązuje ręczny deploy człowieka (sekcja „GitHub Actions i Deployer”).
 

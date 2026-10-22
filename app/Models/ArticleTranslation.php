@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use App\Enums\PublicationStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\ArticleTranslationFactory;
@@ -54,7 +55,7 @@ class ArticleTranslation extends Model
     protected function casts(): array
     {
         return [
-            'body' => 'array',
+            'body' => JsonArray::class,
             'status' => PublicationStatus::class,
             'published_at' => 'datetime',
         ];

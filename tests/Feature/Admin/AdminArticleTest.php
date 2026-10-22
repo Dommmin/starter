@@ -156,6 +156,20 @@ test('a future publication date schedules the article', function () {
     expect(ArticleTranslation::query()->published()->exists())->toBeFalse();
 });
 
+test('a publication date after 2038 is stored on every database engine', function () {
+    $editor = User::factory()->editor()->create();
+
+    $this->actingAs($editor)->post(route('admin.articles.store'), [
+        'translations' => [
+            'en' => articleTranslationInput('Far future', 'far-future', 'published', ['published_on' => '2099-12-31']),
+        ],
+    ])->assertSessionHasNoErrors();
+
+    $translation = ArticleTranslation::query()->sole();
+    expect($translation->published_at?->format('Y-m-d H:i:s'))->toBe('2099-12-31 00:00:00');
+    expect(ArticleTranslation::query()->published()->exists())->toBeFalse();
+});
+
 test('invalid covers, slugs and dates are rejected without creating anything', function (array $payload, string $errorKey) {
     $editor = User::factory()->editor()->create();
     ArticleTranslation::factory()->published()->create(['slug' => 'taken']);

@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/react';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vite-plus/test';
 import { ResourceForm, type ResourceFormSection } from './resource-form';
 import {
     isAllowedRichTextHref,

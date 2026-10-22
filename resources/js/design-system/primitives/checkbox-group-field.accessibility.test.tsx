@@ -1,6 +1,6 @@
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { CheckboxGroupField } from './checkbox-group-field';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });

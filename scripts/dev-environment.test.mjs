@@ -67,7 +67,7 @@ await test('init-project starts the database and passes ARGS to the command', ()
             { cwd, encoding: 'utf8' },
         );
 
-        assert.match(command, /up -d --wait postgres redis/);
+        assert.match(command, /up -d --wait mysql redis/);
         assert.match(
             command,
             /run --rm --no-deps app php artisan app:init-project --dry-run/,
@@ -105,7 +105,7 @@ await test('Docker environment configures every local service', () => {
         },
         {
             app: 'http://localhost:8080',
-            database: 'pgsql://postgres:5432',
+            database: 'mysql://mysql:3306',
             cache: 'redis',
             session: 'redis',
             queue: 'redis',
@@ -141,9 +141,9 @@ await test('testing environment isolates application dependencies', () => {
     );
 });
 
-for (const target of ['setup', 'seed', 'fresh', 'test-pgsql']) {
+for (const target of ['setup', 'seed', 'fresh', 'test-pgsql', 'test-mysql']) {
     for (const env of [
-        'APP_ENV=production\nDB_HOST=postgres\n',
+        'APP_ENV=production\nDB_HOST=mysql\n',
         'APP_ENV=local\nDB_HOST=external.example\n',
     ]) {
         await test(`${target} refuses unsafe configuration: ${env.trim().replaceAll('\n', ', ')}`, () => {
@@ -160,3 +160,29 @@ for (const target of ['setup', 'seed', 'fresh', 'test-pgsql']) {
         });
     }
 }
+
+await test('the database engine of .env selects the Compose service and profile', () => {
+    fixture((cwd) => {
+        writeFileSync(
+            join(cwd, '.env'),
+            'APP_ENV=local\nDB_CONNECTION=pgsql\nDB_HOST=postgres\nCOMPOSE_PROFILES=clamav\n',
+        );
+        const command = execFileSync('make', ['--dry-run', 'seed', 'backup'], {
+            cwd,
+            encoding: 'utf8',
+        });
+
+        assert.match(command, /up -d --wait postgres redis/);
+        assert.match(command, /--profile pgsql run --rm backup-pgsql/);
+
+        const database = execFileSync(
+            'make',
+            ['--dry-run', '--print-data-base', 'ps'],
+            {
+                cwd,
+                encoding: 'utf8',
+            },
+        );
+        assert.match(database, /^COMPOSE_PROFILES := pgsql,clamav$/m);
+    });
+});

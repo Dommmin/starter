@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Backup of the PostgreSQL database and application storage.
+# Backup of the database (PostgreSQL or MySQL) and application storage.
 #
 # Produces BACKUP_DIR/starter-<UTC timestamp>/ containing:
-#   db.dump           pg_dump custom format (-Fc)
+#   db.dump           pg_dump custom format (-Fc)          (BACKUP_DB_ENGINE=pgsql)
+#   db.sql.gz         mysqldump --single-transaction, gzip (BACKUP_DB_ENGINE=mysql)
 #   storage.tar.gz    archive of BACKUP_STORAGE_DIRS under BACKUP_STORAGE_PATH
 #   manifest.json     SHA-256 and size of each file, table/row counts, versions
 # Files are optionally encrypted (BACKUP_ENCRYPT=age|gpg); checksums then
@@ -11,8 +12,11 @@
 # backup that looks valid. Keeps the newest BACKUP_KEEP complete backups.
 #
 # Configuration (environment only; no secrets in the repository):
+#   BACKUP_DB_ENGINE      pgsql (default) | mysql
 #   PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE  standard libpq variables
 #                                               (or PGPASSFILE / .pgpass)
+#   MYSQL_HOST MYSQL_TCP_PORT MYSQL_USER MYSQL_PASSWORD MYSQL_DATABASE
+#                                               MySQL (see mysql.sh)
 #   BACKUP_DIR            target directory (required)
 #   BACKUP_STORAGE_PATH   storage/app of the application (required)
 #   BACKUP_STORAGE_DIRS   space-separated subdirectories (default: "media public")
@@ -32,6 +36,7 @@ readonly SCRIPT_NAME=backup
 BACKUP_STORAGE_DIRS=${BACKUP_STORAGE_DIRS:-media public}
 BACKUP_KEEP=${BACKUP_KEEP:-7}
 BACKUP_ENCRYPT=${BACKUP_ENCRYPT:-none}
+BACKUP_DB_ENGINE=${BACKUP_DB_ENGINE:-pgsql}
 
 log() {
     local level=$1 event=$2 message=$3
@@ -63,11 +68,27 @@ fail() {
 
 [ -n "${BACKUP_DIR:-}" ] || fail 'BACKUP_DIR is required'
 [ -n "${BACKUP_STORAGE_PATH:-}" ] || fail 'BACKUP_STORAGE_PATH is required'
-[ -n "${PGDATABASE:-}" ] || fail 'PGDATABASE is required'
+case "$BACKUP_DB_ENGINE" in
+    pgsql)
+        [ -n "${PGDATABASE:-}" ] || fail 'PGDATABASE is required'
+        database=$PGDATABASE
+        db_file=db.dump
+        db_tools='pg_dump psql'
+        ;;
+    mysql)
+        [ -n "${MYSQL_DATABASE:-}" ] || fail 'MYSQL_DATABASE is required'
+        database=$MYSQL_DATABASE
+        db_file=db.sql.gz
+        db_tools='mysqldump mysql'
+        # shellcheck source=scripts/backup/mysql.sh
+        source "$(dirname "${BASH_SOURCE[0]}")/mysql.sh"
+        ;;
+    *) fail "unsupported BACKUP_DB_ENGINE: $BACKUP_DB_ENGINE" ;;
+esac
 [[ "$BACKUP_KEEP" =~ ^[1-9][0-9]*$ ]] || fail 'BACKUP_KEEP must be a positive integer'
 BACKUP_STATUS_FILE=${BACKUP_STATUS_FILE:-$BACKUP_DIR/last-success}
 
-for tool in pg_dump psql tar gzip sha256sum; do
+for tool in $db_tools tar gzip sha256sum; do
     command -v "$tool" >/dev/null 2>&1 || fail "missing tool: $tool"
 done
 
@@ -92,21 +113,36 @@ partial_dir="$BACKUP_DIR/$name.partial"
 final_dir="$BACKUP_DIR/$name"
 [ ! -e "$final_dir" ] || fail "backup $name already exists"
 mkdir "$partial_dir"
+work_dir=$(mktemp -d)
+trap 'rm -rf -- "$work_dir"' EXIT
 
 log info ops.backup.started "backup $name started"
 
-# 1. Database: custom format (compressed, selective pg_restore possible).
-pg_dump --format=custom --no-owner --no-privileges --file="$partial_dir/db.dump"
+# 1. Database. Table and exact row counts are taken right after the dump,
+# for restore verification: on a busy database they may differ slightly; the
+# drill reports such differences (see restore.sh --drill).
+if [ "$BACKUP_DB_ENGINE" = pgsql ]; then
+    # Custom format (compressed, selective pg_restore possible).
+    pg_dump --format=custom --no-owner --no-privileges --file="$partial_dir/db.dump"
 
-# Table and exact row counts of the public schema, for restore verification.
-# Taken right after the dump: on a busy database they may differ slightly;
-# the drill reports such differences (see restore.sh --drill).
-table_counts=$(psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 <<'SQL'
+    table_counts=$(psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 <<'SQL'
 SELECT coalesce(json_object_agg(t.table_name, (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I.%I', t.table_schema, t.table_name), false, true, '')))[1]::text::bigint), '{}'::json)
 FROM information_schema.tables t
 WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE';
 SQL
 )
+    dump_version="\"pg_dump_version\": \"$(pg_dump --version | sed -E 's/^[^0-9]*([0-9.]+).*/\1/')\""
+else
+    mysql_prepare "$work_dir"
+    # Consistent InnoDB snapshot without locks; no USE/CREATE DATABASE, so a
+    # restore can target a new database. Triggers are included by default.
+    mysqldump --defaults-extra-file="$mysql_cnf" --single-transaction --quick --hex-blob \
+        --no-tablespaces --set-gtid-purged=OFF --default-character-set=utf8mb4 \
+        "$MYSQL_DATABASE" | gzip > "$partial_dir/db.sql.gz"
+
+    table_counts=$(mysql_table_counts "$MYSQL_DATABASE")
+    dump_version="\"mysqldump_version\": \"$(mysqldump --version | sed -E 's/^[^0-9]*([0-9.]+).*/\1/')\""
+fi
 
 # 2. Storage: only the configured subdirectories that exist.
 storage_dirs=()
@@ -125,7 +161,7 @@ fi
 
 # 3. Optional encryption; plaintext is removed only after success.
 suffix=''
-for file in db.dump storage.tar.gz; do
+for file in "$db_file" storage.tar.gz; do
     case "$BACKUP_ENCRYPT" in
         age)
             age --recipient "$BACKUP_AGE_RECIPIENT" --output "$partial_dir/$file.age" "$partial_dir/$file"
@@ -143,7 +179,7 @@ done
 
 # 4. Manifest with checksums, then atomic rename to the final name.
 file_entries=''
-for file in "db.dump$suffix" "storage.tar.gz$suffix"; do
+for file in "$db_file$suffix" "storage.tar.gz$suffix"; do
     sum=$(sha256sum "$partial_dir/$file" | cut -d ' ' -f 1)
     size=$(wc -c < "$partial_dir/$file" | tr -d ' ')
     file_entries+="${file_entries:+,}\"$file\":{\"sha256\":\"$sum\",\"bytes\":$size}"
@@ -159,8 +195,9 @@ cat > "$partial_dir/manifest.json" <<JSON
   "name": "$name",
   "created_at": "$(date -u -d "@$started_epoch" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)",
   "duration_seconds": $((finished_epoch - started_epoch)),
-  "database": "$PGDATABASE",
-  "pg_dump_version": "$(pg_dump --version | sed -E 's/^[^0-9]*([0-9.]+).*/\1/')",
+  "engine": "$BACKUP_DB_ENGINE",
+  "database": "$database",
+  $dump_version,
   "encryption": "$BACKUP_ENCRYPT",
   "files": {$file_entries},
   "tables": $table_counts,

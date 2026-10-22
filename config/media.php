@@ -67,9 +67,16 @@ return [
     |--------------------------------------------------------------------------
     | Malware scanner (clamd over TCP, INSTREAM)
     |--------------------------------------------------------------------------
+    |
+    | Off by default: without clamd the scan job releases uploads from
+    | quarantine as clean and audits the skipped scan. The content-based type
+    | allowlist, size limit and admin/editor policy still apply. Enable it
+    | per project when a clamd is available (Docker: COMPOSE_PROFILES=clamav).
+    |
     */
 
     'scanner' => [
+        'enabled' => (bool) env('MEDIA_SCANNER_ENABLED', false),
         'host' => env('CLAMAV_HOST', '127.0.0.1'),
         'port' => (int) env('CLAMAV_PORT', 3310),
         'timeout' => (int) env('CLAMAV_TIMEOUT', 30),

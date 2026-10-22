@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use App\Enums\PublicationStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\PageTranslationFactory;
@@ -51,7 +52,7 @@ class PageTranslation extends Model
     protected function casts(): array
     {
         return [
-            'body' => 'array',
+            'body' => JsonArray::class,
             'status' => PublicationStatus::class,
             'published_at' => 'datetime',
         ];

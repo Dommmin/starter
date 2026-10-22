@@ -4,7 +4,7 @@
 # proves to /health/ready that this timer works.
 [Unit]
 Description=starter Laravel scheduler run
-After=network-online.target redis-server.service postgresql.service
+After=network-online.target redis-server.service postgresql.service mysql.service
 OnFailure=starter-alert@%n.service
 
 [Service]

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use App\Enums\ContactFieldType;
 use Carbon\CarbonImmutable;
 use Database\Factories\ContactFormFieldFactory;
@@ -44,8 +45,8 @@ class ContactFormField extends Model
             'type' => ContactFieldType::class,
             'required' => 'boolean',
             'position' => 'integer',
-            'label' => 'array',
-            'options' => 'array',
+            'label' => JsonArray::class,
+            'options' => JsonArray::class,
         ];
     }
 

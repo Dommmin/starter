@@ -103,7 +103,7 @@ jobs:
       - name: Check AI and deployment configuration
         run: python3 -m unittest discover -s tests/ai -v
       - name: Test local environment bootstrap
-        run: node --test scripts/dev-environment.test.mjs scripts/starter-sync.test.mjs
+        run: node --test scripts/dev-environment.test.mjs scripts/starter-sync.test.mjs scripts/registration-routes.test.mjs
       - name: Enforce localization catalog contract
         run: composer check:i18n
       - name: Enforce UI contract on changed source
@@ -119,10 +119,19 @@ jobs:
           else
             echo "Brak referencji bazowej dla bramki UI; pomijam kontrolę różnic."
           fi
+      # Sign-up is off by default (.env.example, app:init-project), and
+      # Wayfinder then skips the registration routes; the build must not
+      # depend on them. The next step rebuilds with sign-up switched on.
+      - name: Build frontend and SSR assets with registration disabled
+        env:
+          APP_REGISTRATION_ENABLED: 'false'
+        run: npm run build:ssr
       # build:ssr also runs the client build, so the budget step below still
       # reads public/build; the SSR smoke catches browser-only APIs at module
       # level in the SSR entry long before the e2e job.
       - name: Build frontend and SSR assets
+        env:
+          APP_REGISTRATION_ENABLED: 'true'
         run: npm run build:ssr
       - name: Enforce bundle budget
         run: npm run check:budget
@@ -146,13 +155,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.5'
           tools: composer:v2
           coverage: none
       - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
       - name: Audit Composer runtime dependencies from the lockfile
@@ -164,8 +173,9 @@ jobs:
     name: tests-pgsql
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # The full Pest suite against PostgreSQL, the production database family,
-    # while `quality` keeps the fast in-memory SQLite run. A service container
+    # The full Pest suite against PostgreSQL, one of the two supported
+    # production engines (DB_CONNECTION), while `quality` keeps the fast
+    # in-memory SQLite run. A service container
     # uses the same image as compose.yaml without building the runtime image;
     # the credentials exist only inside this throwaway container.
     services:
@@ -210,6 +220,58 @@ jobs:
           php artisan key:generate --force --no-interaction
       # Job-level DB_* variables take precedence over .env.testing (SQLite).
       - name: Run Pest on PostgreSQL
+        run: php artisan test --compact
+
+  tests-mysql:
+    name: tests-mysql
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The full Pest suite against MySQL 8.4, the default engine of new
+    # projects (.env.example). Same image as compose.yaml; the credentials
+    # exist only inside this throwaway container.
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: starter_testing
+          MYSQL_USER: starter
+          MYSQL_PASSWORD: ci-testing-only
+          MYSQL_ROOT_PASSWORD: ci-root-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -u root -pci-root-only --silent"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 40
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_DATABASE: starter_testing
+      DB_USERNAME: starter
+      DB_PASSWORD: ci-testing-only
+      DB_URL: ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql
+          tools: composer:v2
+          coverage: none
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force --no-interaction
+      # Job-level DB_* variables take precedence over .env.testing (SQLite).
+      - name: Run Pest on MySQL
         run: php artisan test --compact
 
   generator-smoke:
@@ -263,7 +325,7 @@ jobs:
           make deps
       - name: Start database services and migrate
         run: |
-          docker compose up -d --wait postgres redis mailpit
+          docker compose --profile mysql up -d --wait mysql redis mailpit
           make artisan ARGS='key:generate --no-interaction'
           make artisan ARGS='migrate --no-interaction'
           make artisan ARGS='storage:link --no-interaction'
@@ -286,4 +348,4 @@ jobs:
           retention-days: 7
       - name: Stop stack
         if: always()
-        run: docker compose --profile e2e down --volumes --remove-orphans
+        run: docker compose --profile e2e --profile mysql down --volumes --remove-orphans

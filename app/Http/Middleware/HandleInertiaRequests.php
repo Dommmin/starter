@@ -19,7 +19,6 @@ use App\Services\Navigation\PublicNavigation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
-use Laravel\Fortify\Features;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -76,7 +75,7 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
-                'canRegister' => Features::enabled(Features::registration()),
+                'registerUrl' => Route::has('register') ? $this->urlGenerator->url('register') : null,
                 'can' => [
                     'accessAdminPanel' => $request->user()?->canAccessAdminPanel() ?? false,
                     'manageUsers' => $request->user()?->can('viewAny', User::class) ?? false,

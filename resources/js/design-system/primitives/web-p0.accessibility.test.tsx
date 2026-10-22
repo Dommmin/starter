@@ -1,7 +1,7 @@
 import { Rocket } from 'lucide-react';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { CTA } from './cta';
 import { FeatureGrid } from './feature-grid';
 import { Hero } from './hero';

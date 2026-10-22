@@ -55,7 +55,7 @@ test('an administrator checks a FAQ file, nothing is saved, then imports exactly
 
     $audit = AuditLog::query()->sole();
     expect($audit->action)->toBe(AuditAction::ResourceImported)
-        ->and($audit->changes)->toBe(['module' => ['old' => null, 'new' => 'faqs'], 'rows' => ['old' => null, 'new' => 3]]);
+        ->and($audit->changes)->toEqual(['module' => ['old' => null, 'new' => 'faqs'], 'rows' => ['old' => null, 'new' => 3]]);
 
     $this->actingAs($admin)->post(route('admin.import.store', 'faqs'), ['token' => $token])
         ->assertSessionHasErrors('token');

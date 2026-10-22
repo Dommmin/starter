@@ -9,7 +9,7 @@ import {
     expect,
     it,
     vi,
-} from 'vitest';
+} from 'vite-plus/test';
 import { ContactForm } from '@/components/contact-form';
 import { I18nProvider } from '@/i18n';
 

@@ -7,6 +7,7 @@ use App\Enums\MediaStatus;
 use App\Models\MediaAsset;
 use App\Services\Media\Exceptions\MalwareScannerUnavailable;
 use App\Services\Media\MalwareScanner;
+use App\Services\Media\ScanResult;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -18,7 +19,8 @@ use Throwable;
  * that already left quarantine are skipped. While the scanner is
  * unavailable the asset stays in quarantine with `scan_error` and the job is
  * retried with backoff; after the last attempt it stays in quarantine and
- * can be re-queued (`failed_jobs`).
+ * can be re-queued (`failed_jobs`). With the scanner disabled
+ * (`media.scanner.enabled`) the asset is released as clean without a scan.
  */
 class ScanMediaAsset implements ShouldBeUnique, ShouldQueue
 {
@@ -53,6 +55,12 @@ class ScanMediaAsset implements ShouldBeUnique, ShouldQueue
         $asset = MediaAsset::query()->find($this->mediaAssetId);
 
         if ($asset === null || $asset->status !== MediaStatus::Quarantine) {
+            return;
+        }
+
+        if (! config('media.scanner.enabled')) {
+            $recordResult->handle($asset, ScanResult::skipped());
+
             return;
         }
 

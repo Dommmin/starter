@@ -26,7 +26,8 @@ Glob: `compose.yaml`, `docker/**`, `Makefile`, `.env.example`, `.env.testing`, `
 
 ## Usługi
 
-- PHP 8.5 FPM/CLI, Nginx, PostgreSQL 18, Redis 8.2, Horizon, schedule:work, Vite (dev SSR), Mailpit.
+- PHP 8.5 FPM/CLI, Nginx, MySQL 8.4 (domyślnie) albo PostgreSQL 18, Redis 8.2, Horizon, schedule:work, Vite (dev SSR), Mailpit.
+- Silnik bazy wybiera `DB_CONNECTION=mysql|pgsql` w `.env`; Makefile aktywuje profil Compose o tej samej nazwie (i dokłada `COMPOSE_PROFILES` z `.env`). Gołe `docker compose` bez profilu nie uruchomi bazy — używaj `make`. Zmiany zależne od SQL sprawdzaj `make test-mysql` i `make test-pgsql`.
 - Kolejkę obsługuje Horizon (`php artisan horizon`, serwis `queue`); `make doctor` sprawdza `horizon:status`.
 - `.env` jest jedynym lokalnym źródłem konfiguracji — Compose czyta je bezpośrednio. Nie nadpisuj hostowego `.env`.
 

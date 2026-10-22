@@ -84,7 +84,7 @@ test('emptying the trash removes the record with its translations for good', fun
     expect(Article::withTrashed()->count())->toBe(0)
         ->and(ArticleTranslation::query()->withoutGlobalScope(ArticleTranslation::LIVE_PARENT_SCOPE)->count())->toBe(0)
         ->and($audit->action)->toBe(AuditAction::ArticlePurged)
-        ->and($audit->changes['en.title'] ?? null)->toBe(['old' => 'Old news', 'new' => null]);
+        ->and($audit->changes['en.title'] ?? null)->toEqual(['old' => 'Old news', 'new' => null]);
 });
 
 test('only records in the trash can be restored or removed for good', function () {

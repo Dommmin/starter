@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use App\Enums\MediaStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\MediaAssetFactory;
@@ -59,7 +60,7 @@ class MediaAsset extends Model
             'width' => 'integer',
             'height' => 'integer',
             'status' => MediaStatus::class,
-            'variants' => 'array',
+            'variants' => JsonArray::class,
         ];
     }
 

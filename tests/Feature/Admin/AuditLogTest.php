@@ -42,10 +42,10 @@ test('creating a published page records created and published events by the acto
     expect($created->actor_id)->toBe($editor->id)
         ->and($created->subject_type)->toBe($page->getMorphClass())
         ->and($created->subject_id)->toBe($page->id)
-        ->and($created->changes['en.title'])->toBe(['old' => null, 'new' => 'Pricing'])
-        ->and($created->changes['en.body'])->toBe(['redacted' => true])
+        ->and($created->changes['en.title'])->toEqual(['old' => null, 'new' => 'Pricing'])
+        ->and($created->changes['en.body'])->toEqual(['redacted' => true])
         ->and(AuditLog::query()->where('action', AuditAction::PagePublished)->sole()->changes)
-        ->toBe(['en.status' => ['old' => null, 'new' => 'published']]);
+        ->toEqual(['en.status' => ['old' => null, 'new' => 'published']]);
 });
 
 test('updating a page records changed fields without the body and status changes separately', function () {
@@ -62,11 +62,11 @@ test('updating a page records changed fields without the body and status changes
     $updated = AuditLog::query()->where('action', AuditAction::PageUpdated)->sole();
 
     expect(array_keys($updated->changes))->toEqualCanonicalizing(['en.title', 'en.body'])
-        ->and($updated->changes['en.title'])->toBe(['old' => 'Old', 'new' => 'New'])
-        ->and($updated->changes['en.body'])->toBe(['redacted' => true])
+        ->and($updated->changes['en.title'])->toEqual(['old' => 'Old', 'new' => 'New'])
+        ->and($updated->changes['en.body'])->toEqual(['redacted' => true])
         ->and(json_encode($updated->changes))->not->toContain('Secret new body')
         ->and(AuditLog::query()->where('action', AuditAction::PageUnpublished)->sole()->changes)
-        ->toBe(['en.status' => ['old' => 'published', 'new' => 'draft']])
+        ->toEqual(['en.status' => ['old' => 'published', 'new' => 'draft']])
         ->and(AuditLog::query()->where('action', AuditAction::PagePublished)->exists())->toBeFalse();
 });
 
@@ -99,7 +99,7 @@ test('deleting a page records a deleted event that survives the page', function 
 
     expect($deleted->subject_id)->toBe($page->id)
         ->and($deleted->actor_id)->toBe($admin->id)
-        ->and($deleted->changes)->toBe([
+        ->and($deleted->changes)->toEqual([
             'en.title' => ['old' => 'Legal', 'new' => null],
             'en.slug' => ['old' => 'legal', 'new' => null],
         ]);
@@ -125,7 +125,7 @@ test('a role change from the console is recorded without an actor and without se
     expect($log->action)->toBe(AuditAction::UserRoleChanged)
         ->and($log->actor_id)->toBeNull()
         ->and($log->subject_id)->toBe($user->id)
-        ->and($log->changes)->toBe(['role' => ['old' => UserRole::Editor->value, 'new' => UserRole::Admin->value]])
+        ->and($log->changes)->toEqual(['role' => ['old' => UserRole::Editor->value, 'new' => UserRole::Admin->value]])
         ->and($serialized)->not->toContain($user->password)
         ->and($serialized)->not->toContain($user->email);
 

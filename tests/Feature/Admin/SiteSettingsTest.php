@@ -81,9 +81,9 @@ test('an administrator saves the settings with an audit entry that hides the rec
     expect($audit->action)->toBe(AuditAction::SiteSettingsUpdated)
         ->and($audit->actor_id)->toBe($admin->id)
         ->and($audit->changes['site_name']['new'])->toBe('Acme Studio')
-        ->and($audit->changes['contact_email'])->toBe(['old' => null, 'new' => 'hello@acme.test'])
+        ->and($audit->changes['contact_email'])->toEqual(['old' => null, 'new' => 'hello@acme.test'])
         ->and($audit->changes['en.seo_title']['new'])->toBe('Acme Studio — software house')
-        ->and($audit->changes['contact_recipient_email'])->toBe(['redacted' => true]);
+        ->and($audit->changes['contact_recipient_email'])->toEqual(['redacted' => true]);
 
     expect(json_encode($audit->changes))->not->toContain('inbox@acme.test');
 });
@@ -295,7 +295,7 @@ test('the brand name can be changed alone from the console', function () {
 
     $audit = AuditLog::query()->sole();
     expect($audit->actor_id)->toBeNull()
-        ->and($audit->changes)->toBe(['site_name' => ['old' => 'Old', 'new' => 'New Brand']]);
+        ->and($audit->changes)->toEqual(['site_name' => ['old' => 'Old', 'new' => 'New Brand']]);
 });
 
 test('the console creates the settings row when setting the name for the first time', function () {

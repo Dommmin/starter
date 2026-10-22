@@ -1,5 +1,5 @@
 import type { Page } from '@inertiajs/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { documentTitle } from './document-title';
 
 const page = { props: { site: { name: 'Acme' } } } as unknown as Page;

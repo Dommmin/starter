@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip curl gosu make python3 libpq-dev libicu-dev libzip-dev libonig-dev libxml2-dev \
     libpng-dev libjpeg62-turbo-dev libwebp-dev libavif-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp --with-avif \
-    && docker-php-ext-install -j$(nproc) pdo_pgsql intl zip mbstring bcmath pcntl gd exif \
+    && docker-php-ext-install -j$(nproc) pdo_pgsql pdo_mysql intl zip mbstring bcmath pcntl gd exif \
     && pecl install redis-6.3.0 && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 

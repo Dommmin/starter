@@ -1,7 +1,7 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { I18nProvider } from '@/i18n';
 import PublicDesignSystemShowcase from './index';
 import { publicShowcaseFamilies } from './sections';
@@ -244,8 +244,14 @@ describe('PublicDesignSystemShowcase', () => {
         );
 
         await act(async () => trigger?.click());
+        // The panel module loads on the first opening (lazy-popup.ts).
+        await act(async () => {
+            await import('@/design-system/primitives/mobile-nav-panel');
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
 
         const dialog = document.querySelector('[role="dialog"]');
+        expect(dialog).not.toBeNull();
         expect(dialog?.querySelector('a[href="#web-02"]')).not.toBeNull();
         expect(
             dialog?.querySelector('a[target="_blank"]')?.getAttribute('rel'),

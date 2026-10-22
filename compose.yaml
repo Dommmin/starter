@@ -24,9 +24,16 @@ services:
         <<: *runtime
         ports:
             - '127.0.0.1:${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        # Exactly one database runs: its Compose profile equals DB_CONNECTION
+        # (mysql | pgsql) and the Makefile activates it, so the other one is
+        # an optional dependency.
         depends_on:
+            mysql:
+                condition: service_healthy
+                required: false
             postgres:
                 condition: service_healthy
+                required: false
             redis:
                 condition: service_healthy
         healthcheck:
@@ -97,8 +104,36 @@ services:
             web:
                 condition: service_healthy
 
+    mysql:
+        image: mysql:8.4
+        profiles: [mysql]
+        command:
+            [
+                --character-set-server=utf8mb4,
+                --collation-server=utf8mb4_unicode_ci,
+            ]
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE:-starter}
+            MYSQL_USER: ${DB_USERNAME:-starter}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-local-development-only}
+            # Local only: creates the test/e2e databases and the restore drill.
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-local-development-root}
+        volumes:
+            - mysql:/var/lib/mysql
+        healthcheck:
+            test:
+                [
+                    CMD-SHELL,
+                    'MYSQL_PWD="$${MYSQL_ROOT_PASSWORD}" mysqladmin ping -h 127.0.0.1 -u root --silent',
+                ]
+            interval: 3s
+            timeout: 3s
+            retries: 40
+            start_period: 60s
+
     postgres:
         image: postgres:18-bookworm
+        profiles: [pgsql]
         environment:
             POSTGRES_DB: ${DB_DATABASE:-starter}
             POSTGRES_USER: ${DB_USERNAME:-starter}
@@ -127,11 +162,13 @@ services:
             retries: 20
 
     # Malware scanner for DAM uploads (clamd over TCP 3310 inside the compose
-    # network only; no host port). The first start downloads signatures into
-    # the clamav volume, so the service may need a few minutes to turn
-    # healthy. Tests use a fake scanner and never depend on it.
+    # network only; no host port). Optional, off by default: enable with
+    # COMPOSE_PROFILES=clamav and MEDIA_SCANNER_ENABLED=true in .env. The first
+    # start downloads signatures into the clamav volume, so the service may
+    # need a few minutes to turn healthy. Tests use a fake scanner.
     clamav:
         image: clamav/clamav:1.5.4-debian
+        profiles: [clamav]
         environment:
             CLAMAV_NO_MILTERD: 'true'
             # Accept the 50 MB DAM limit over INSTREAM (default is 25 MB).
@@ -147,10 +184,11 @@ services:
             retries: 5
             start_period: 10m
 
-    # One-off backup/restore runner (`make backup`, `make restore-drill`):
-    # PostgreSQL 18 client tools matching the server, read-only access to the
-    # storage volume, archives written to ./.backups on the host (gitignored).
-    backup:
+    # One-off backup/restore runners (`make backup`, `make restore-drill`), one
+    # per engine (backup-<DB_CONNECTION>): client tools matching the server,
+    # read-only access to the storage volume, archives written to ./.backups
+    # on the host (gitignored).
+    backup-pgsql:
         image: postgres:18-bookworm
         profiles: [ops]
         user: '${LOCAL_UID:-1000}:${LOCAL_GID:-1000}'
@@ -158,6 +196,7 @@ services:
         working_dir: /opt/backup
         environment:
             HOME: /tmp
+            BACKUP_DB_ENGINE: pgsql
             PGHOST: postgres
             PGPORT: '5432'
             PGUSER: ${DB_USERNAME:-starter}
@@ -170,9 +209,39 @@ services:
             - ./scripts/backup:/opt/backup:ro
             - ./.backups:/backups
             - storage:/var/www/html/storage:ro
+        # Optional: only the runner of the active engine profile is used.
         depends_on:
             postgres:
                 condition: service_healthy
+                required: false
+
+    backup-mysql:
+        image: mysql:8.4
+        profiles: [ops]
+        user: '${LOCAL_UID:-1000}:${LOCAL_GID:-1000}'
+        entrypoint: [/bin/bash]
+        working_dir: /opt/backup
+        environment:
+            HOME: /tmp
+            BACKUP_DB_ENGINE: mysql
+            MYSQL_HOST: mysql
+            MYSQL_TCP_PORT: '3306'
+            # Local root: the drill creates and drops a temporary database.
+            MYSQL_USER: root
+            MYSQL_PASSWORD: ${DB_ROOT_PASSWORD:-local-development-root}
+            MYSQL_DATABASE: ${DB_DATABASE:-starter}
+            BACKUP_DIR: /backups
+            BACKUP_STORAGE_PATH: /var/www/html/storage/app
+            BACKUP_KEEP: ${BACKUP_KEEP:-7}
+        volumes:
+            - ./scripts/backup:/opt/backup:ro
+            - ./.backups:/backups
+            - storage:/var/www/html/storage:ro
+        # Optional: only the runner of the active engine profile is used.
+        depends_on:
+            mysql:
+                condition: service_healthy
+                required: false
 
     mailpit:
         image: axllent/mailpit:v1.27
@@ -228,6 +297,7 @@ volumes:
     node_modules:
     storage:
     bootstrap_cache:
+    mysql:
     postgres:
     redis:
     clamav:

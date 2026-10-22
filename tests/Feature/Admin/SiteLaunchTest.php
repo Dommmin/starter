@@ -32,7 +32,7 @@ test('an administrator turns the coming soon page and noindex on with an audit e
 
     $audit = AuditLog::query()->sole();
     expect($audit->action)->toBe(AuditAction::SiteSettingsUpdated)
-        ->and($audit->changes['coming_soon'])->toBe(['old' => false, 'new' => true]);
+        ->and($audit->changes['coming_soon'])->toEqual(['old' => false, 'new' => true]);
 });
 
 test('editors cannot change the publication switches or send a test e-mail', function () {

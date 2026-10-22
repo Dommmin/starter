@@ -34,7 +34,7 @@ Wszystkie ADR-y mają status **proponowany**, chyba że wskazano „wymaganie u�
 
 ### ADR-002: Laravel 13, PHP 8.5 i Node 24 LTS jako baseline
 
-**Decyzja kierunkowa zatwierdzona:** dla nowego projektu użyć najnowszego stabilnego patcha Laravel 13, PHP 8.5 i Node 24 LTS oraz jednego silnika DB. Laravel 13 wspiera PHP 8.5, a Node 24 jest linią LTS; PHP 8.3 nie jest preferowanym minimum startera. [Polityka Laravel](https://laravel.com/framework/docs/releases), [Node releases](https://nodejs.org/en/about/previous-releases).
+**Decyzja kierunkowa zatwierdzona:** dla nowego projektu użyć najnowszego stabilnego patcha Laravel 13, PHP 8.5 i Node 24 LTS oraz jednego silnika DB na projekt (MySQL albo PostgreSQL, ADR-004). Laravel 13 wspiera PHP 8.5, a Node 24 jest linią LTS; PHP 8.3 nie jest preferowanym minimum startera. [Polityka Laravel](https://laravel.com/framework/docs/releases), [Node releases](https://nodejs.org/en/about/previous-releases).
 
 **Trade-off:** najnowszy runtime wymaga kwalifikacji wszystkich paczek, rozszerzeń PHP, obrazów i hostingu na faktycznym lockfile. Nie obniżać całego frameworka dla opcjonalnej paczki; nie przechodzić na Node Current zamiast LTS tylko dla pojedynczego narzędzia. Ostateczne patche przypiąć dopiero po teście resolvera i CI.
 
@@ -42,9 +42,9 @@ Wszystkie ADR-y mają status **proponowany**, chyba że wskazano „wymaganie u�
 
 **Decyzja kierunkowa zatwierdzona:** React + TypeScript + Inertia dla całego serwisu, w tym publicznych stron. Publiczne trasy wymagają SSR, aby pierwszy response zawierał treść i meta dla wyszukiwarek; utrzymujemy osobny proces Node SSR monitorowany i przełączany bez przerwy przez równoległy start nowej instancji przy deployu. **Alternatywy:** Blade dla stron publicznych (mniejszy runtime, ale dwa renderery) albo Filament/Livewire (szybszy CRUD, drugi model UI). **Konsekwencje:** jeden renderer i wspólny system komponentów, ale większy koszt operacyjny Node SSR. Filament nie jest częścią P0.
 
-### ADR-004: PostgreSQL jako domyślna propozycja, MySQL jako wariant awaryjny
+### ADR-004: MySQL 8.4 i PostgreSQL 18, domyślnie MySQL
 
-Wybrać **jeden** wspierany major dostępny u dostawcy i używać go lokalnie, w CI i na produkcji. Decyzją roboczą jest PostgreSQL, ze względu na integralność danych i przyszłe zapytania; MySQL pozostaje wariantem wyłącznie, jeśli ograniczenia hostingu go wymuszą. Nie utrzymywać podwójnej matrycy DB w P0. Brak multi-tenancy; klienci mają osobne dane, sekrety i wdrożenia.
+**Status: decyzja właściciela D8 z 2026-10-20** (zastępuje wcześniejszą propozycję „tylko PostgreSQL, MySQL jako wariant awaryjny”). **Kontekst:** część hostingów klientów oferuje wyłącznie MySQL, a pierwotna decyzja zakładała jeden silnik bez podwójnej matrycy DB. **Decyzja:** starter wspiera MySQL 8.4 i PostgreSQL 18; domyślny dla nowych projektów jest MySQL (`DB_CONNECTION=mysql` w `.env.example`). Projekt wybiera silnik przez `DB_CONNECTION=mysql|pgsql`, a `Makefile` aktywuje profil Compose o tej samej nazwie. Każdy projekt używa jednego silnika i tego samego majora lokalnie, w CI i na produkcji. **Skutki:** oba silniki mają job CI z pełnym Pest (`tests-mysql` i `tests-pgsql`); backup i `restore-drill` obsługują `mysqldump` i `pg_dump` (serwis `backup-<DB_CONNECTION>`); mutowalne kolumny `json` używają castu `App\Casts\JsonArray`, bo MySQL zapisuje JSON znormalizowany (posortowane klucze), a wbudowany cast `array` oznaczałby każdy zapis jako zmianę. Kod i migracje nie mogą zależeć od cech jednego silnika bez testu na obu. Brak multi-tenancy; klienci mają osobne dane, sekrety i wdrożenia. Implementacja: PR #84 (MySQL), #86 (daty publikacji po 2038 na MySQL).
 
 ### ADR-005: bezpieczeństwo wydania egzekwowane poza agentem
 
@@ -89,7 +89,7 @@ Uzupełnienie wymagań 2026-09-10: szybkie tworzenie CRUD-ów w Inertia + React,
 
 P0 strony i artykuły: title, slug, description/excerpt, Tiptap body, stan draft/published, published_at i metadata SEO. Zestaw rich textu jest zamknięty, a wynik renderowania sanitizowany; bez dowolnego HTML i drag-and-drop page buildera. Adminowy DAM przechowuje pliki do 50 MB lokalnie na VM, prywatnie do chwili świadomej publikacji; tylko obrazy otrzymują warianty. Początkowy formularz kontaktowy bez załączników. Uploady użytkowników i płatności są poza P0. Analityka domyślnie wyłączona.
 
-P0 infrastruktury: jedna ekonomiczna VM w regionie UE, Nginx + PHP-FPM, PostgreSQL i Redis/Horizon. GitHub Actions wykonuje CI/CD, a Deployer publikuje katalogowe release’y na VM: zachowuje pięć ostatnich wersji, atomowo przełącza symlink `current`, uruchamia kontrolę gotowości i automatycznie wraca do poprzedniej zgodnej wersji po nieudanych kontrolach w oknie deployu. To zapewnia bezprzerwowe przełączenie kodu aplikacji, lecz nie wysoką dostępność przy awarii pojedynczej VM.
+P0 infrastruktury: jedna ekonomiczna VM w regionie UE, Nginx + PHP-FPM, MySQL albo PostgreSQL (ADR-004) i Redis/Horizon. GitHub Actions wykonuje CI/CD, a Deployer publikuje katalogowe release’y na VM: zachowuje pięć ostatnich wersji, atomowo przełącza symlink `current`, uruchamia kontrolę gotowości i automatycznie wraca do poprzedniej zgodnej wersji po nieudanych kontrolach w oknie deployu. To zapewnia bezprzerwowe przełączenie kodu aplikacji, lecz nie wysoką dostępność przy awarii pojedynczej VM.
 
 ## Kolejność i zależności
 
@@ -136,7 +136,7 @@ Zależność krytyczna: dostawca/plan GitHub → realny approval → tożsamośc
 | Q1  | Czy pusty katalog jest właściwym miejscem, czy istnieje repo do analizy? | Traktować jako greenfield dopiero po potwierdzeniu                                               | Właściciel / D0                       |
 | Q2  | Jaki jest pierwszy klient i jego najważniejszy proces?                   | Strona firmowa z prostą edycją stron                                                             | Product owner / D0                    |
 | Q3  | Jaki zakres SSR i które trasy mogą być z niego wyłączone?                | SSR dla wszystkich publicznych tras; wyjątki wymagają uzasadnienia SEO                           | Tech lead / P0-A                      |
-| Q4  | Jaki dostawca VM w UE i jakie parametry hosta?                           | PostgreSQL na jednej ekonomicznej VM P0                                                          | Właściciel operacji / D1              |
+| Q4  | Jaki dostawca VM w UE i jakie parametry hosta?                           | MySQL (domyślnie) albo PostgreSQL na jednej ekonomicznej VM P0 (ADR-004)                         | Właściciel operacji / D1              |
 | Q5  | Budżet GitHub i infrastruktury; kto zatwierdza produkcję?                | Zewnętrzna wobec agenta bramka z nazwanym człowiekiem                                            | Właściciel / D1                       |
 | Q6  | RTO/RPO i godziny wsparcia?                                              | Dla pilotażu RPO 24 h, RTO 4 h; dopasować do danych                                              | Biznes / przed stagingiem             |
 | Q7  | Monitoring SaaS i wysyłka danych poza hosting?                           | Jeden dostawca po akceptacji retencji, DPA i kosztu                                              | Administrator danych / P0-C           |
@@ -157,5 +157,6 @@ Zależność krytyczna: dostawca/plan GitHub → realny approval → tożsamośc
 - [09 — agenci, skille i proporcjonalne przepływy Claude/Codex](09-agents-skills-and-workflows.md)
 - [10 — lokalne środowisko, zero-downtime, automatyczny rollback i logi](10-local-environment-deployment-and-logs.md)
 - [14 — routing i lokalizacja: przewodnik](14-routing-and-localization.md)
+- [15 — plan po przeglądzie 2026-10-12](15-review-plan-2026-10-12.md)
 - [16 — nowy klient w 5 dni: runbook](16-new-client-runbook.md)
 - [Instrukcja Claude Code](../../CLAUDE.md)

@@ -6,10 +6,10 @@ Stan na 2026-10-12, gałąź `chore/foundation-hygiene-wave2` (develop + scalony
 
 | Warstwa | Wersje |
 | --- | --- |
-| Runtime lokalny | Docker Compose + `Makefile`; PHP 8.5 FPM (bookworm), Node 24, PostgreSQL 18, Redis 8.2, Nginx 1.28, Mailpit 1.27, ClamAV 1.5.4 (opcjonalny), Playwright 1.63 |
+| Runtime lokalny | Docker Compose + `Makefile`; PHP 8.5 FPM (bookworm), Node 24, MySQL 8.4 (domyślnie) albo PostgreSQL 18 wg `DB_CONNECTION` (ADR-004), Redis 8.2, Nginx 1.28, Mailpit 1.27, ClamAV 1.5.4 (opcjonalny), Playwright 1.63 |
 | Backend | Laravel 13.31, Inertia Laravel 3.3, Fortify 1.39 (2FA, passkeys), Horizon 5.50, Wayfinder 0.1.21, spatie/laravel-data 4.23, Intervention Image 3.11, tiptap-php 2.2; `composer.json` wymaga PHP ^8.3 |
-| Frontend | React 19.3, @inertiajs/react 3.7, TypeScript 5.9, Vite 8.2 (vite-plus 0.3), Tailwind CSS 4.3, Radix (pojedyncze pakiety), TipTap 3.31, lucide-react 0.475 |
-| Jakość | Pest 5.1, Larastan 3.11, Pint, vitest 4.1 (przez vite-plus), Playwright + axe, Lefthook, commitlint, gitleaks, Boost 2.8 |
+| Frontend | React 19.3, @inertiajs/react 3.7, TypeScript 5.9, Vite 8.3 (alias `@voidzero-dev/vite-plus-core` 1.3), Tailwind CSS 4.3, Radix (pojedyncze pakiety), TipTap 3.31, lucide-react 0.475 |
+| Jakość | Pest 5.1, Larastan 3.11, Pint, Vite+ 1.3 (vitest 5.0, oxlint 1.88, oxfmt 0.73), Playwright + axe, Lefthook, commitlint, gitleaks, Boost 2.8 |
 | Deploy | Deployer 8.0, artefakt z manifestem i SHA-256, automatyczny rollback w oknie deployu (ADR-022) |
 
 ## Moduły w kodzie
@@ -26,9 +26,9 @@ Trasy według plików w `routes/`: `admin`, `auth`, `content`, `design-system`, 
 
 ## Komendy
 
-`make setup`, `make up`, `make doctor`, `make test`, `make test-pgsql`, `make check`, `make e2e`, `make generator-smoke`, `make init-project`, `make backup`, `make restore-drill`; wrappery `make artisan/composer/npm ARGS='…'`. Skrypty: `composer lint`, `composer types:check`, `npm run check` (format, lint, vitest), `npm run types:check`, `npm run check:ui-contract`, `npm run check:budget`. Testy konfiguracji agentów: `python3 -m unittest discover -s tests/ai`.
+`make setup`, `make up`, `make doctor`, `make test`, `make test-mysql`, `make test-pgsql`, `make check`, `make e2e`, `make generator-smoke`, `make init-project`, `make backup`, `make restore-drill`; wrappery `make artisan/composer/npm ARGS='…'`. Skrypty: `composer lint`, `composer types:check`, `npm run check` (format, lint, vitest), `npm run types:check`, `npm run check:ui-contract`, `npm run check:budget`. Testy konfiguracji agentów: `python3 -m unittest discover -s tests/ai`.
 
-CI (`.github/workflows/ci.yml`): `commit-convention`, `secrets`, `quality`, `tests-pgsql`, `generator-smoke`, `e2e`; job `audit` dochodzi z fali 1. `deploy.yml` buduje artefakt i wdraża po zatwierdzeniu człowieka.
+CI (`.github/workflows/ci.yml`): `commit-convention`, `secrets`, `quality`, `tests-mysql`, `tests-pgsql`, `generator-smoke`, `e2e`; job `audit` dochodzi z fali 1. `deploy.yml` buduje artefakt i wdraża po zatwierdzeniu człowieka.
 
 ## Co jest `verified`
 
@@ -40,4 +40,4 @@ CI (`.github/workflows/ci.yml`): `commit-convention`, `secrets`, `quality`, `tes
 ## Znane rozbieżności z dokumentami
 
 - CSP i bramka `composer audit`/`npm audit` są na gałęzi fali 1, jeszcze nie w `develop`.
-- Wsparcie MySQL istnieje tylko jako niezacommitowana praca na `feat/sh-showcase` (D8); ADR-004 pozostaje przy samym PostgreSQL.
+- MySQL 8.4 obok PostgreSQL 18 (D8 zmieniona 2026-10-20) jest w `develop` od PR #84; ADR-004 opisuje oba silniki, domyślny MySQL. Poprawka dat publikacji po 2038 na MySQL (PR #86) czeka na merge. Liczby testów powyżej pochodzą sprzed #84.

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { CenteredLayout } from './centered-layout';
 import { SectionNav } from './section-nav';
 import { TextField } from './text-field';

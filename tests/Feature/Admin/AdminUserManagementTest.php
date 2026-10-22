@@ -109,8 +109,8 @@ test('an administrator creates an editor who receives a set-password invitation'
 
     $audit = AuditLog::query()->where('action', AuditAction::UserCreated->value)->sole();
     expect($audit->actor_id)->toBe($admin->id)
-        ->and($audit->changes['role'])->toBe(['old' => null, 'new' => 'editor'])
-        ->and($audit->changes['email'])->toBe(['redacted' => true]);
+        ->and($audit->changes['role'])->toEqual(['old' => null, 'new' => 'editor'])
+        ->and($audit->changes['email'])->toEqual(['redacted' => true]);
 });
 
 test('an account without a role can be created and duplicates or unknown roles are rejected', function () {
@@ -201,7 +201,7 @@ test('an administrator deletes another account; authored content keeps a null au
     expect(User::query()->whereKey($user->id)->exists())->toBeFalse()
         ->and($page->refresh()->created_by)->toBeNull()
         ->and(AuditLog::query()->where('action', AuditAction::UserDeleted->value)->sole()->changes)
-        ->toBe(['role' => ['old' => 'editor', 'new' => null]]);
+        ->toEqual(['role' => ['old' => 'editor', 'new' => null]]);
 });
 
 test('administrators cannot delete their own account from the panel', function () {

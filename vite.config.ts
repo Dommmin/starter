@@ -16,43 +16,49 @@ if (process.env.VITEST) {
 const vitePort = Number(process.env.VITE_PORT ?? 5173);
 const appOrigin = `http://localhost:${process.env.APP_PORT ?? 8080}`;
 
+const fonts = [
+    bunny('Instrument Sans', {
+        weights: [400, 500, 600],
+        // latin-ext carries Polish diacritics (ą, ę, ł...); faces are
+        // split by unicode-range, so browsers fetch it only when used.
+        subsets: ['latin', 'latin-ext'],
+        // No preload: laravel-vite-plugin 3.x emits separate woff2 and
+        // woff @font-face rules with identical descriptors, so browsers
+        // use the last (woff) one and preloaded woff2 files are wasted.
+        // Revisit (preload weight 400 only) once the plugin merges
+        // formats into one `src` list.
+        preload: false,
+    }),
+    // Headings of the `classic` typography preset only
+    // (`[data-typography='classic']`); faces load on first use.
+    bunny('Fraunces', {
+        weights: [600, 700],
+        subsets: ['latin', 'latin-ext'],
+        preload: false,
+    }),
+    // Admin surface only (`--admin-font-*`); faces load on first use.
+    bunny('Geist', {
+        weights: [400, 500, 600],
+        subsets: ['latin', 'latin-ext'],
+        preload: false,
+    }),
+    bunny('Geist Mono', {
+        weights: [400, 500],
+        subsets: ['latin', 'latin-ext'],
+        preload: false,
+    }),
+];
+
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
-            fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
-                    // latin-ext carries Polish diacritics (ą, ę, ł...); faces are
-                    // split by unicode-range, so browsers fetch it only when used.
-                    subsets: ['latin', 'latin-ext'],
-                    // No preload: laravel-vite-plugin 3.x emits separate woff2 and
-                    // woff @font-face rules with identical descriptors, so browsers
-                    // use the last (woff) one and preloaded woff2 files are wasted.
-                    // Revisit (preload weight 400 only) once the plugin merges
-                    // formats into one `src` list.
-                    preload: false,
-                }),
-                // Headings of the `classic` typography preset only
-                // (`[data-typography='classic']`); faces load on first use.
-                bunny('Fraunces', {
-                    weights: [600, 700],
-                    subsets: ['latin', 'latin-ext'],
-                    preload: false,
-                }),
-                // Admin surface only (`--admin-font-*`); faces load on first use.
-                bunny('Geist', {
-                    weights: [400, 500, 600],
-                    subsets: ['latin', 'latin-ext'],
-                    preload: false,
-                }),
-                bunny('Geist Mono', {
-                    weights: [400, 500],
-                    subsets: ['latin', 'latin-ext'],
-                    preload: false,
-                }),
-            ],
+            // laravel:fonts deletes public/fonts-manifest.dev.json on process
+            // exit without a VITEST guard; a test run would wipe the dev
+            // server's manifest and Blade @fonts would render nothing until
+            // vite restarts.
+            ...(process.env.VITEST ? {} : { fonts }),
         }),
         inertia(),
         react(),

@@ -76,7 +76,6 @@ class DemoNavigationSeeder extends Seeder
                         ['type' => MenuItemType::External, 'label' => 'Laravel', 'url' => 'https://laravel.com', 'open_in_new_tab' => true],
                     ],
                 ],
-                ['type' => MenuItemType::External, 'label' => 'GitHub', 'url' => 'https://github.com', 'open_in_new_tab' => true],
             ],
             MenuLocation::Footer->value => [
                 [

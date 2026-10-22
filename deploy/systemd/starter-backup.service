@@ -6,7 +6,7 @@
 # log); `php artisan ops:check-backup` alerts hourly on a stale backup.
 [Unit]
 Description=starter database and storage backup
-After=network-online.target postgresql.service
+After=network-online.target postgresql.service mysql.service
 Wants=network-online.target
 OnFailure=starter-alert@%n.service
 

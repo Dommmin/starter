@@ -1,7 +1,7 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { I18nProvider } from '@/i18n';
 import { MenuItemForm } from './form';
 import AdminNavigationIndex from './index';

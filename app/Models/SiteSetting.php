@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use App\Enums\AccentColor;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -83,16 +84,16 @@ class SiteSetting extends Model
             'city' => 'string',
             'country_code' => 'string',
             'contact_recipient_email' => 'string',
-            'contact_recipients' => 'array',
+            'contact_recipients' => JsonArray::class,
             'contact_auto_reply' => 'boolean',
-            'social_links' => 'array',
+            'social_links' => JsonArray::class,
             'accent' => AccentColor::class,
             'typography' => TypographyPreset::class,
             'default_theme' => ThemePreference::class,
             'favicon_media_id' => 'integer',
             'tax_id' => 'string',
             'map_url' => 'string',
-            'opening_hours' => 'array',
+            'opening_hours' => JsonArray::class,
             'google_site_verification' => 'string',
             'coming_soon' => 'boolean',
             'noindex' => 'boolean',

@@ -31,8 +31,9 @@ function quarantinedMedia(string $bytes, array $attributes = []): MediaAsset
     return $asset;
 }
 
-function runMediaScan(MediaAsset $asset, MalwareScanner $scanner): void
+function runMediaScan(MediaAsset $asset, MalwareScanner $scanner, bool $scannerEnabled = true): void
 {
+    config(['media.scanner.enabled' => $scannerEnabled]);
     app()->instance(MalwareScanner::class, $scanner);
     app()->call([new ScanMediaAsset($asset->id), 'handle']);
 }
@@ -51,7 +52,26 @@ test('a clean scan marks the asset clean, audits it and queues image variants', 
 
     $audit = AuditLog::query()->where('action', AuditAction::MediaCleaned)->sole();
     expect($audit->actor_id)->toBeNull()
-        ->and($audit->changes)->toBe(['status' => ['old' => 'quarantine', 'new' => 'clean']]);
+        ->and($audit->changes)->toEqual(['status' => ['old' => 'quarantine', 'new' => 'clean']]);
+});
+
+test('with the scanner disabled the asset is released as clean without a scan and audited as skipped', function () {
+    Queue::fake();
+    $scanner = FakeMalwareScanner::infected();
+    $asset = quarantinedMedia(MediaFixtures::jpegBytes());
+
+    runMediaScan($asset, $scanner, scannerEnabled: false);
+
+    expect($asset->refresh()->status)->toBe(MediaStatus::Clean)
+        ->and($asset->scan_error)->toBeNull()
+        ->and($scanner->scanned)->toBe([]);
+    Queue::assertPushed(GenerateImageVariants::class, fn (GenerateImageVariants $job): bool => $job->mediaAssetId === $asset->id);
+
+    $audit = AuditLog::query()->where('action', AuditAction::MediaCleaned)->sole();
+    expect($audit->changes)->toEqual([
+        'status' => ['old' => 'quarantine', 'new' => 'clean'],
+        'scan' => ['old' => null, 'new' => 'skipped'],
+    ]);
 });
 
 test('a clean document gets no variants', function () {

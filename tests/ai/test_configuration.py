@@ -183,6 +183,12 @@ class AiConfigurationTest(unittest.TestCase):
             self.assertIn("umask 077", script)
             self.assertNotRegex(script, r"PGPASSWORD=\S")
         self.assertIn("--format=custom", backup)
+        self.assertIn("--single-transaction", backup)
+        self.assertIn('"engine": "$BACKUP_DB_ENGINE"', backup)
+        mysql = (ROOT / "scripts/backup/mysql.sh").read_text()
+        self.assertIn("--defaults-extra-file", mysql)
+        self.assertNotRegex(mysql, r"--password|-p\$")
+        subprocess.run(["bash", "-n", str(ROOT / "scripts/backup/mysql.sh")], check=True)
         self.assertIn("sha256sum", backup)
         self.assertIn(".partial", backup)
         self.assertIn("ops.backup.failed", backup)
@@ -190,6 +196,7 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn("already exists; refusing to overwrite", restore)
         self.assertIn("is not empty; refusing to overwrite", restore)
         self.assertIn("dropdb --if-exists", restore)
+        self.assertIn("DROP DATABASE IF EXISTS", restore)
         self.assertNotIn("--clean", restore)
         for path in ("scripts/backup/backup.sh", "scripts/backup/restore.sh"):
             self.assertTrue(os.access(ROOT / path, os.X_OK), path)
@@ -792,7 +799,7 @@ class AiConfigurationTest(unittest.TestCase):
     def test_pest_also_runs_on_postgresql_in_ci_and_locally(self):
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertIn("\n  tests-pgsql:\n    name: tests-pgsql\n", ci)
-        job = ci[ci.index("\n  tests-pgsql:\n"):ci.index("\n  generator-smoke:\n")]
+        job = ci[ci.index("\n  tests-pgsql:\n"):ci.index("\n  tests-mysql:\n")]
         compose = (ROOT / "compose.yaml").read_text()
         self.assertIn("image: postgres:18-bookworm", compose)
         self.assertIn("image: postgres:18-bookworm", job)
@@ -806,6 +813,44 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn("PGSQL_TEST_DATABASE ?= starter_testing", makefile)
         self.assertIn('"$$TEST_DB" = "$$POSTGRES_DB"', makefile)
         self.assertIn("-e DB_DATABASE=$(PGSQL_TEST_DATABASE)", makefile)
+
+    def test_sign_up_is_off_by_default_and_ci_builds_both_variants(self):
+        env = (ROOT / ".env.example").read_text()
+        self.assertIn("\nAPP_REGISTRATION_ENABLED=false\n", env)
+
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        quality = ci[ci.index("\n  quality:\n"):ci.index("\n  tests-pgsql:\n")]
+        self.assertIn("APP_REGISTRATION_ENABLED: 'false'\n        run: npm run build:ssr", quality)
+        self.assertIn("APP_REGISTRATION_ENABLED: 'true'\n        run: npm run build:ssr", quality)
+
+    def test_mysql_is_the_default_engine_and_runs_in_ci_and_locally(self):
+        env = (ROOT / ".env.example").read_text()
+        self.assertIn("\nDB_CONNECTION=mysql\nDB_HOST=mysql\nDB_PORT=3306\n", env)
+
+        compose = (ROOT / "compose.yaml").read_text()
+        mysql = compose.split("\n    mysql:\n", 1)[1].split("\n    postgres:\n", 1)[0]
+        self.assertIn("image: mysql:8.4", mysql)
+        self.assertIn("profiles: [mysql]", mysql)
+        postgres = compose.split("\n    postgres:\n", 1)[1].split("\n    redis:\n", 1)[0]
+        self.assertIn("profiles: [pgsql]", postgres)
+        app = compose.split("\n    app:\n", 1)[1].split("\n    web:\n", 1)[0]
+        self.assertEqual(app.count("required: false"), 2)
+
+        ci = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertIn("\n  tests-mysql:\n    name: tests-mysql\n", ci)
+        job = ci[ci.index("\n  tests-mysql:\n"):ci.index("\n  generator-smoke:\n")]
+        self.assertIn("image: mysql:8.4", job)
+        self.assertIn("DB_CONNECTION: mysql", job)
+        self.assertIn("run: php artisan test --compact", job)
+        self.assertNotIn("continue-on-error", job)
+        self.assertNotIn("secrets.", job)
+
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("test-mysql: local-guard ##", makefile)
+        self.assertIn("MYSQL_TEST_DATABASE ?= starter_testing", makefile)
+        self.assertIn('"$$TEST_DB" = "$$MYSQL_DATABASE"', makefile)
+        self.assertIn("-e DB_DATABASE=$(MYSQL_TEST_DATABASE)", makefile)
+        self.assertIn("export COMPOSE_PROFILES := $(DB_ENGINE)", makefile)
 
     def test_ci_runs_browser_e2e_against_the_docker_stack(self):
         ci = (ROOT / ".github/workflows/ci.yml").read_text()

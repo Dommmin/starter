@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonArray;
 use Carbon\CarbonImmutable;
 use Database\Factories\SavedListViewFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -35,7 +36,7 @@ class SavedListView extends Model
     protected function casts(): array
     {
         return [
-            'query' => 'array',
+            'query' => JsonArray::class,
         ];
     }
 

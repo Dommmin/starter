@@ -5,6 +5,7 @@ namespace App\Casts;
 use App\Enums\HomeSectionType;
 use App\Models\HomeSection;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Contracts\Database\Eloquent\ComparesCastableAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Spatie\LaravelData\Data;
@@ -16,7 +17,7 @@ use Spatie\LaravelData\Data;
  *
  * @implements CastsAttributes<Data, Data>
  */
-class HomeSectionContent implements CastsAttributes
+class HomeSectionContent implements CastsAttributes, ComparesCastableAttributes
 {
     /**
      * Cast the given value.
@@ -53,6 +54,15 @@ class HomeSectionContent implements CastsAttributes
         }
 
         return [$key => json_encode($value->toArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)];
+    }
+
+    /**
+     * Ignore object key order and formatting: MySQL returns its normalized
+     * JSON text (see {@see JsonArray}).
+     */
+    public function compare(Model $model, string $key, mixed $firstValue, mixed $secondValue): bool
+    {
+        return JsonArray::equivalent($firstValue, $secondValue);
     }
 
     /**

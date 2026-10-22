@@ -25,8 +25,12 @@ export type AuthAbilities = {
 export type Auth = {
     user: User;
     can: AuthAbilities;
-    /** Self-service sign-up is switched on (`APP_REGISTRATION_ENABLED`). */
-    canRegister: boolean;
+    /**
+     * Localized sign-up page URL, or `null` while self-service sign-up is off
+     * (`APP_REGISTRATION_ENABLED`). Comes from the backend because Wayfinder
+     * does not generate the registration routes when they are disabled.
+     */
+    registerUrl: string | null;
 };
 
 export type Passkey = {

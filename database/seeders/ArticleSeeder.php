@@ -55,15 +55,15 @@ class ArticleSeeder extends Seeder
             'en' => 'A two-line note: the studio is closed on Friday. We answer all messages on Monday.',
             'pl' => 'Krótka notka: w piątek pracownia jest zamknięta. Na wszystkie wiadomości odpowiemy w poniedziałek.',
         ], 'translations' => [
-            'en' => ['Hi', null, 'published', -2],
-            'pl' => ['Hej', null, 'published', -2],
+            'en' => ['Closed on Friday', null, 'published', -2],
+            'pl' => ['W piątek nieczynne', null, 'published', -2],
         ]],
         'long-title' => ['cover' => 'panorama', 'long' => true, 'translations' => [
-            'en' => ['A very long headline that checks wrapping in lists, cards and the browser tab, because editors sometimes write whole sentences instead of short, punchy titles', 'An excerpt that is also rather long, to show how two or three lines of text behave next to a cover image on a narrow phone screen and on a wide desktop monitor.', 'published', -3],
-            'pl' => ['Bardzo długi nagłówek sprawdzający zawijanie na listach, kartach i w karcie przeglądarki, bo redaktorzy czasem piszą całe zdania zamiast krótkich tytułów', 'Zajawka, która także jest dość długa, aby pokazać, jak dwie lub trzy linie tekstu zachowują się obok okładki na wąskim telefonie i szerokim monitorze.', 'published', -3],
+            'en' => ['How we moved a family bakery from phone orders and paper notes to a simple online order form in just two weeks', 'What we changed, what the staff had to learn and why most weekend orders now arrive before Friday evening, without a single extra phone call.', 'published', -3],
+            'pl' => ['Jak w dwa tygodnie przenieśliśmy rodzinną piekarnię z zamówień telefonicznych i kartek na prosty formularz online', 'Co zmieniliśmy, czego musiał nauczyć się zespół i dlaczego większość zamówień na weekend spływa teraz już w piątek wieczorem, bez ani jednego dodatkowego telefonu.', 'published', -3],
         ]],
         'polish-characters' => ['cover' => 'landscape', 'long' => true, 'translations' => [
-            'pl' => ['Zażółć gęślą jaźń — test polskich znaków w tytule i treści', 'Ąę, ćń, óś, źż: sprawdzamy fonty, sortowanie i adresy URL.', 'published', -4],
+            'pl' => ['Źródła, łączniki i ogonki: jak przygotować teksty i zdjęcia na nową stronę', 'Lista rzeczy do zebrania przed startem: opisy usług, zdjęcia z prawem do użycia i dane firmy.', 'published', -4],
         ]],
         'release-notes' => ['cover' => 'square', 'long' => true, 'translations' => [
             'de' => ['Versionshinweise 2.0', 'Was ist neu in Version 2.0?', 'published', -5],

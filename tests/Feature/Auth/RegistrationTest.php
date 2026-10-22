@@ -46,7 +46,18 @@ test('new users can register', function () {
     $response->assertRedirect('/');
 });
 
-test('the sign-up flag is shared with the pages', function () {
-    $this->get(route('login'))
-        ->assertInertia(fn (Assert $page) => $page->where('auth.canRegister', true));
+test('the localized sign-up url is shared with the pages', function () {
+    $this->get('/login')
+        ->assertInertia(fn (Assert $page) => $page->where('auth.registerUrl', url('/register')));
+
+    $this->get('/de/login')
+        ->assertInertia(fn (Assert $page) => $page->where('auth.registerUrl', url('/de/register')));
+});
+
+test('registration screen passes the localized form action', function () {
+    $this->get('/register')
+        ->assertInertia(fn (Assert $page) => $page->where('registerAction', url('/register')));
+
+    $this->get('/de/register')
+        ->assertInertia(fn (Assert $page) => $page->where('registerAction', url('/de/register')));
 });

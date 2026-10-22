@@ -4,7 +4,7 @@
 # Timeout chain: job <= 80 s < supervisor 85 s < retry_after 90 s < stop 100 s.
 [Unit]
 Description=starter Horizon queue workers
-After=network-online.target redis-server.service postgresql.service
+After=network-online.target redis-server.service postgresql.service mysql.service
 Wants=network-online.target
 OnFailure=starter-alert@%n.service
 

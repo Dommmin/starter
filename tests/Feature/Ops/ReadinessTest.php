@@ -126,6 +126,15 @@ test('disabled checks are skipped', function () {
         ->assertJsonPath('checks.scheduler', 'skipped');
 });
 
+test('the scanner check is skipped while the malware scanner is disabled', function () {
+    config(['ops.health.scanner' => true, 'media.scanner.enabled' => false]);
+
+    $this->get('/health/ready', readinessDetails())
+        ->assertOk()
+        ->assertJsonPath('status', 'ok')
+        ->assertJsonPath('checks.scanner', 'skipped');
+});
+
 test('readiness is rate limited per client', function () {
     config(['ops.health.rate_limit_per_minute' => 2]);
 

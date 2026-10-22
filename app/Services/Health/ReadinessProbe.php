@@ -39,7 +39,7 @@ class ReadinessProbe
             'storage' => $this->guard(fn (): bool => $this->storage()),
             'queue' => $this->shouldCheckHorizon() ? $this->guard(fn (): bool => $this->horizon()) : HealthCheckStatus::Skipped,
             'scheduler' => config('ops.health.scheduler') ? $this->guard(fn (): bool => $this->scheduler()) : HealthCheckStatus::Skipped,
-            'scanner' => config('ops.health.scanner') ? $this->guard(fn (): bool => $this->scanner()) : HealthCheckStatus::Skipped,
+            'scanner' => config('ops.health.scanner') && config('media.scanner.enabled') ? $this->guard(fn (): bool => $this->scanner()) : HealthCheckStatus::Skipped,
         ];
 
         return new ReadinessReport($this->overallStatus($checks), $checks);

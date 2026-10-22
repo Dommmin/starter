@@ -3,19 +3,40 @@ SHELL := /bin/sh
 .NOTPARALLEL:
 export LOCAL_UID := $(shell id -u)
 export LOCAL_GID := $(shell id -g)
+# Database engine from .env (DB_CONNECTION=mysql|pgsql, default mysql as in
+# .env.example). Its Compose profile has the same name; it is merged with
+# COMPOSE_PROFILES from .env (e.g. clamav), because an explicit --profile
+# would replace them.
+comma := ,
+DB_ENGINE := $(or $(shell sed -n 's/^DB_CONNECTION=//p' .env 2>/dev/null | tail -n 1),mysql)
+DB_SERVICE := $(if $(filter pgsql,$(DB_ENGINE)),postgres,mysql)
+DOTENV_PROFILES := $(shell sed -n 's/^COMPOSE_PROFILES=//p' .env 2>/dev/null | tail -n 1)
+export COMPOSE_PROFILES := $(DB_ENGINE)$(if $(DOTENV_PROFILES),$(comma)$(DOTENV_PROFILES))
 COMPOSE := docker compose
-E2E_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.e2e.yaml --profile e2e
+E2E_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.e2e.yaml --profile e2e --profile $(DB_ENGINE)
 # One-off artisan with the E2E database and Redis prefixes of the app
 # service in compose.e2e.yaml, but APP_ENV=local for the local-only commands.
 E2E_RUN := $(E2E_COMPOSE) run --rm --no-deps -e APP_ENV=local -e E2E_PASSWORD app
 RUN := $(COMPOSE) run --rm --no-deps app
 ARGS ?=
+ifeq ($(DB_ENGINE),pgsql)
+E2E_CREATE_DATABASE = $(COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$${POSTGRES_DB}_e2e" -tAc "SELECT 1" >/dev/null 2>&1 || createdb -U "$$POSTGRES_USER" "$${POSTGRES_DB}_e2e"'
+DB_CONSOLE = exec psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+else
+E2E_CREATE_DATABASE = $(COMPOSE) exec -T mysql sh -c '$(MYSQL_ROOT) -e "CREATE DATABASE IF NOT EXISTS \`$${MYSQL_DATABASE}_e2e\`; GRANT ALL PRIVILEGES ON \`$${MYSQL_DATABASE}_e2e\`.* TO \`$$MYSQL_USER\`@\`%\`;"'
+DB_CONSOLE = MYSQL_PWD="$$MYSQL_PASSWORD" exec mysql -u"$$MYSQL_USER" "$$MYSQL_DATABASE"
+endif
 SERVICE ?=
 CONFIRM ?=
 TEST_PROCESSES ?= 4
 PGSQL_TEST_DATABASE ?= starter_testing
+MYSQL_TEST_DATABASE ?= starter_testing
+PGSQL_COMPOSE := $(COMPOSE) --profile pgsql
+MYSQL_COMPOSE := $(COMPOSE) --profile mysql
+# Root-only statements in the mysql container (database + grant for the app user).
+MYSQL_ROOT = MYSQL_PWD="$$MYSQL_ROOT_PASSWORD" mysql -uroot
 
-.PHONY: help env local-guard setup seed fresh up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-pgsql test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
+.PHONY: help env local-guard setup seed fresh up down stop restart build deps hooks hook-check logs ps doctor test test-parallel test-pgsql test-mysql test-setup generator-smoke check assets artisan composer npm shell db config backup restore-drill e2e init-project
 
 help: ## Lista komend
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  make %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -25,23 +46,23 @@ env: ## Utwórz lokalny .env bez nadpisywania istniejącej konfiguracji
 
 local-guard: env
 	@grep -qx 'APP_ENV=local' .env || { echo 'Ta komenda wymaga APP_ENV=local w .env'; exit 1; }
-	@grep -qx 'DB_HOST=postgres' .env || { echo 'Ta komenda wymaga lokalnego DB_HOST=postgres'; exit 1; }
+	@grep -qx 'DB_HOST=$(DB_SERVICE)' .env || { echo 'Ta komenda wymaga lokalnego DB_HOST=$(DB_SERVICE)'; exit 1; }
 
 setup: local-guard ## Pierwsza instalacja: obraz, zależności, klucz, migracje, dane demo, start
 	$(COMPOSE) build app
 	$(MAKE) deps
-	$(COMPOSE) up -d --wait postgres redis mailpit
+	$(COMPOSE) up -d --wait $(DB_SERVICE) redis mailpit
 	$(RUN) sh -ec 'php artisan config:clear; if ! grep -Eq "^APP_KEY=.+" .env; then php artisan key:generate --no-interaction; fi; php artisan migrate --no-interaction; if [ ! -L public/storage ] && [ ! -e public/storage ]; then php artisan storage:link --no-interaction; fi; php artisan db:seed --no-interaction'
 	$(MAKE) up
 
 seed: local-guard ## Dane demo (idempotentnie, tylko APP_ENV=local)
-	$(COMPOSE) up -d --wait postgres redis
+	$(COMPOSE) up -d --wait $(DB_SERVICE) redis
 	$(RUN) php artisan db:seed --no-interaction
 
 fresh: local-guard ## Usuń lokalną bazę i odtwórz ją z danymi demo (pyta o potwierdzenie; CONFIRM=1 pomija)
-	@echo "make fresh usunie WSZYSTKIE tabele i dane lokalnej bazy PostgreSQL projektu '$$(grep -E '^COMPOSE_PROJECT_NAME=' .env | cut -d= -f2)' (konta, treści, media w bazie, audit log) i wgra dane demo."
+	@echo "make fresh usunie WSZYSTKIE tabele i dane lokalnej bazy $(DB_ENGINE) projektu '$$(grep -E '^COMPOSE_PROJECT_NAME=' .env | cut -d= -f2)' (konta, treści, media w bazie, audit log) i wgra dane demo."
 	@if [ "$(CONFIRM)" != "1" ]; then printf 'Kontynuować? [y/N] '; read answer; case "$$answer" in y|Y|yes|tak) ;; *) echo 'Przerwano, baza bez zmian.'; exit 1;; esac; fi
-	$(COMPOSE) up -d --wait postgres redis
+	$(COMPOSE) up -d --wait $(DB_SERVICE) redis
 	$(RUN) php artisan migrate:fresh --seed --no-interaction
 
 deps: env ## Instaluj dokładnie zależności z lockfile (również po git pull)
@@ -94,19 +115,31 @@ test-parallel: ## Równoległe testy Pest; TEST_PROCESSES=4 domyślnie
 
 test-pgsql: local-guard ## Pest na PostgreSQL z compose w osobnej bazie PGSQL_TEST_DATABASE (starter_testing); opcjonalnie ARGS
 	@case "$(PGSQL_TEST_DATABASE)" in *[!a-z0-9_]*|'') echo 'PGSQL_TEST_DATABASE: dozwolone tylko [a-z0-9_]'; exit 1;; esac
-	$(COMPOSE) up -d --wait postgres
-	@$(COMPOSE) exec -T -e TEST_DB=$(PGSQL_TEST_DATABASE) postgres sh -ec '\
+	$(PGSQL_COMPOSE) up -d --wait postgres
+	@$(PGSQL_COMPOSE) exec -T -e TEST_DB=$(PGSQL_TEST_DATABASE) postgres sh -ec '\
 		if [ "$$TEST_DB" = "$$POSTGRES_DB" ]; then echo "Baza testowa nie może być bazą aplikacji ($$POSTGRES_DB)"; exit 1; fi; \
 		psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT 1 FROM pg_database WHERE datname = '"'"'$$TEST_DB'"'"'" | grep -qx 1 \
 		|| createdb -U "$$POSTGRES_USER" "$$TEST_DB"'
-	@DB_USERNAME="$$($(COMPOSE) exec -T postgres printenv POSTGRES_USER)" \
-	DB_PASSWORD="$$($(COMPOSE) exec -T postgres printenv POSTGRES_PASSWORD)"; export DB_USERNAME DB_PASSWORD; \
-	$(COMPOSE) run --rm --no-deps -e DB_CONNECTION=pgsql -e DB_HOST=postgres -e DB_PORT=5432 \
+	@DB_USERNAME="$$($(PGSQL_COMPOSE) exec -T postgres printenv POSTGRES_USER)" \
+	DB_PASSWORD="$$($(PGSQL_COMPOSE) exec -T postgres printenv POSTGRES_PASSWORD)"; export DB_USERNAME DB_PASSWORD; \
+	$(PGSQL_COMPOSE) run --rm --no-deps -e DB_CONNECTION=pgsql -e DB_HOST=postgres -e DB_PORT=5432 \
 		-e DB_DATABASE=$(PGSQL_TEST_DATABASE) -e DB_URL= -e DB_USERNAME -e DB_PASSWORD \
 		app php artisan test --compact $(ARGS)
 
+test-mysql: local-guard ## Pest na MySQL z compose w osobnej bazie MYSQL_TEST_DATABASE (starter_testing); opcjonalnie ARGS
+	@case "$(MYSQL_TEST_DATABASE)" in *[!a-z0-9_]*|'') echo 'MYSQL_TEST_DATABASE: dozwolone tylko [a-z0-9_]'; exit 1;; esac
+	$(MYSQL_COMPOSE) up -d --wait mysql
+	@$(MYSQL_COMPOSE) exec -T -e TEST_DB=$(MYSQL_TEST_DATABASE) mysql sh -ec '\
+		if [ "$$TEST_DB" = "$$MYSQL_DATABASE" ]; then echo "Baza testowa nie może być bazą aplikacji ($$MYSQL_DATABASE)"; exit 1; fi; \
+		$(MYSQL_ROOT) -e "CREATE DATABASE IF NOT EXISTS \`$$TEST_DB\`; GRANT ALL PRIVILEGES ON \`$$TEST_DB\`.* TO \`$$MYSQL_USER\`@\`%\`;"'
+	@DB_USERNAME="$$($(MYSQL_COMPOSE) exec -T mysql printenv MYSQL_USER)" \
+	DB_PASSWORD="$$($(MYSQL_COMPOSE) exec -T mysql printenv MYSQL_PASSWORD)"; export DB_USERNAME DB_PASSWORD; \
+	$(MYSQL_COMPOSE) run --rm --no-deps -e DB_CONNECTION=mysql -e DB_HOST=mysql -e DB_PORT=3306 \
+		-e DB_DATABASE=$(MYSQL_TEST_DATABASE) -e DB_URL= -e DB_USERNAME -e DB_PASSWORD \
+		app php artisan test --compact $(ARGS)
+
 test-setup: ## Testy bootstrappingu i ochrony konfiguracji
-	$(RUN) node --test scripts/dev-environment.test.mjs scripts/starter-sync.test.mjs
+	$(RUN) node --test scripts/dev-environment.test.mjs scripts/starter-sync.test.mjs scripts/registration-routes.test.mjs
 
 generator-smoke: ## Smoke generatora CRUD w tymczasowej kopii repo (bez zmian w drzewie roboczym)
 	$(RUN) sh scripts/generator-smoke.sh
@@ -125,7 +158,7 @@ e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymu
 	$(RUN) npm run build:ssr
 	$(E2E_COMPOSE) up -d --wait --wait-timeout 180 web queue ssr playwright
 	@E2E_PASSWORD="$${E2E_PASSWORD:-$$(od -An -tx1 -N18 /dev/urandom | tr -d ' \n')}"; export E2E_PASSWORD; \
-	$(COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$${POSTGRES_DB}_e2e" -tAc "SELECT 1" >/dev/null 2>&1 || createdb -U "$$POSTGRES_USER" "$${POSTGRES_DB}_e2e"' \
+	$(E2E_CREATE_DATABASE) \
 	&& $(E2E_RUN) php artisan migrate:fresh --force --no-interaction \
 	&& $(E2E_RUN) php artisan cache:clear --no-interaction \
 	&& $(E2E_RUN) php artisan app:e2e-prepare --client-host=playwright --no-interaction \
@@ -135,7 +168,7 @@ e2e: env ## E2E Playwright na buildzie produkcyjnym + SSR, APP_ENV=e2e (zatrzymu
 	echo 'Usługi wróciły do APP_ENV=local; serwer Vite dev pozostaje zatrzymany (`make up`).'; exit $$status
 
 init-project: env ## Start nowego projektu: marka, języki, admin, demo; ARGS='--dry-run' (local)
-	$(COMPOSE) up -d --wait postgres redis
+	$(COMPOSE) up -d --wait $(DB_SERVICE) redis
 	$(RUN) php artisan app:init-project $(ARGS)
 
 artisan: ## Artisan, np. ARGS='migrate:status'
@@ -150,15 +183,15 @@ npm: ## npm, np. ARGS='run types:check'
 shell: ## Bash w kontenerze jako użytkownik aplikacji
 	$(RUN) bash
 
-db: ## Konsola PostgreSQL (bez publikowania portu DB)
-	$(COMPOSE) exec postgres sh -c 'exec psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+db: ## Konsola bazy danych z DB_CONNECTION (bez publikowania portu DB)
+	$(COMPOSE) exec $(DB_SERVICE) sh -c '$(DB_CONSOLE)'
 
 config: env ## Sprawdź poprawność Compose bez wypisywania sekretów
 	$(COMPOSE) config --quiet
 
 backup: env ## Lokalny backup DB + storage do ./.backups (manifest SHA-256, rotacja BACKUP_KEEP)
 	@mkdir -p .backups
-	$(COMPOSE) --profile ops run --rm backup /opt/backup/backup.sh
+	$(COMPOSE) --profile ops --profile $(DB_ENGINE) run --rm backup-$(DB_ENGINE) /opt/backup/backup.sh
 
 restore-drill: env ## Próba odtworzenia ostatniego backupu do tymczasowej bazy (weryfikacja + czas)
-	$(COMPOSE) --profile ops run --rm backup /opt/backup/restore.sh --drill $(ARGS)
+	$(COMPOSE) --profile ops --profile $(DB_ENGINE) run --rm backup-$(DB_ENGINE) /opt/backup/restore.sh --drill $(ARGS)

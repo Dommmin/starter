@@ -193,7 +193,7 @@ test('feature items are stored as the closed schema', function () {
         ->assertSessionHasNoErrors();
 
     $stored = json_decode((string) HomeSection::query()->toBase()->where('id', $features->id)->value('content'), true);
-    expect($stored)->toBe([
+    expect($stored)->toEqual([
         'items' => [
             ['title' => 'Fast', 'description' => 'Very fast', 'icon' => 'rocket'],
             ['title' => 'Fast', 'description' => 'Very fast', 'icon' => 'rocket'],
@@ -551,7 +551,7 @@ test('an editor shows and hides a section', function () {
 
     $log = AuditLog::query()->sole();
     expect($log->action)->toBe(AuditAction::HomeSectionToggled)
-        ->and($log->changes)->toBe(['enabled' => ['old' => false, 'new' => true]]);
+        ->and($log->changes)->toEqual(['enabled' => ['old' => false, 'new' => true]]);
 
     $this->actingAs($editor)->patch(route('admin.home-sections.visibility', $hero), ['enabled' => true]);
     expect(AuditLog::query()->count())->toBe(1);

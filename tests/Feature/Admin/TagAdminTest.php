@@ -154,7 +154,7 @@ test('the article editor lists the tags and saves the selection with an audit en
 
     $article = Article::query()->sole();
     expect($article->tags()->pluck('slug')->all())->toBe(['guides', 'news'])
-        ->and(AuditLog::query()->sole()->changes['tags'] ?? null)->toBe(['old' => null, 'new' => ['guides', 'news']]);
+        ->and(AuditLog::query()->sole()->changes['tags'] ?? null)->toEqual(['old' => null, 'new' => ['guides', 'news']]);
 
     $this->actingAs($editor)->get(route('admin.articles.edit', $article))
         ->assertInertia(fn (Assert $page) => $page->where('article.tagIds', [$guides->id, $news->id]));
@@ -175,7 +175,7 @@ test('an update replaces the tags, and a request without tag_ids keeps them', fu
         ->assertSessionHasNoErrors();
 
     expect($article->tags()->pluck('slug')->all())->toBe(['guides'])
-        ->and(AuditLog::query()->latest('id')->first()?->changes['tags'] ?? null)->toBe(['old' => ['news'], 'new' => ['guides']]);
+        ->and(AuditLog::query()->latest('id')->first()?->changes['tags'] ?? null)->toEqual(['old' => ['news'], 'new' => ['guides']]);
 
     $this->actingAs($editor)
         ->put(route('admin.articles.update', $article), taggedArticlePayload([

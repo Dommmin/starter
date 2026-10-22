@@ -46,8 +46,8 @@ class PageSeeder extends Seeder
             'pl' => ['Deklaracja dostępności', 'Informacje o dostępności serwisu.', 'published', -5],
         ]],
         'short' => ['translations' => [
-            'en' => ['Ok', null, 'published', -1],
-            'pl' => ['Ok', null, 'published', -1],
+            'en' => ['Opening hours', null, 'published', -1],
+            'pl' => ['Godziny otwarcia', null, 'published', -1],
         ]],
         'services' => ['long' => true, 'translations' => [
             'de' => ['Leistungen', 'Websites, Pflege und Hosting für kleine Unternehmen.', 'published', -40],

@@ -2,7 +2,14 @@ import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { FileText, LayoutGrid } from 'lucide-react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vite-plus/test';
 import { I18nProvider } from '@/i18n';
 import {
     CommandPalette,

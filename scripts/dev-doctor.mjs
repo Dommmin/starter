@@ -60,7 +60,7 @@ check('Node 24', 'node', [
 check('PHP 8.5 i rozszerzenia', 'php', [
     '-r',
     `
-    $required = ['pdo_pgsql', 'pdo_sqlite', 'redis', 'intl', 'mbstring', 'zip', 'pcntl', 'gd', 'exif', 'fileinfo'];
+    $required = ['pdo_pgsql', 'pdo_mysql', 'pdo_sqlite', 'redis', 'intl', 'mbstring', 'zip', 'pcntl', 'gd', 'exif', 'fileinfo'];
     exit(str_starts_with(PHP_VERSION, '8.5.') && !array_diff($required, get_loaded_extensions()) ? 0 : 1);
 `,
 ]);
@@ -72,7 +72,7 @@ check('GD: JPEG, PNG, WebP i AVIF (warianty DAM)', 'php', [
 `,
 ]);
 check('Zależności PHP', 'composer', ['check-platform-reqs']);
-check('PostgreSQL i migracje', 'php', [
+check('Baza danych (MySQL/PostgreSQL) i migracje', 'php', [
     'artisan',
     'migrate:status',
     '--no-interaction',
@@ -83,15 +83,38 @@ check('Redis i lokalny SMTP', 'php', [
     require 'vendor/autoload.php';
     $app = require 'bootstrap/app.php';
     $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
-    if (config('app.env') !== 'local' || config('database.default') !== 'pgsql') { exit(1); }
+    if (config('app.env') !== 'local' || ! in_array(config('database.default'), ['mysql', 'pgsql'], true)) { exit(1); }
     Illuminate\\Support\\Facades\\Redis::connection()->ping();
     $smtp = @fsockopen('mailpit', 1025, $code, $message, 5);
     exit($smtp ? 0 : 1);
 `,
 ]);
-check('ClamAV clamd (PING/PONG)', 'php', [
-    '-r',
-    `
+function scannerEnabled() {
+    try {
+        const value = execFileSync(
+            'php',
+            [
+                '-r',
+                `
+    require 'vendor/autoload.php';
+    $app = require 'bootstrap/app.php';
+    $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
+    echo config('media.scanner.enabled') ? '1' : '0';
+`,
+            ],
+            { encoding: 'utf8', timeout: 20000 },
+        );
+
+        return value.trim() === '1';
+    } catch {
+        return true;
+    }
+}
+
+if (scannerEnabled()) {
+    check('ClamAV clamd (PING/PONG)', 'php', [
+        '-r',
+        `
     $socket = @fsockopen(getenv('CLAMAV_HOST') ?: 'clamav', (int) (getenv('CLAMAV_PORT') ?: 3310), $code, $message, 5);
     if ($socket === false) { exit(1); }
     stream_set_timeout($socket, 5);
@@ -99,7 +122,10 @@ check('ClamAV clamd (PING/PONG)', 'php', [
     $reply = (string) fread($socket, 16);
     exit(trim($reply, "\\0\\n") === 'PONG' ? 0 : 1);
 `,
-]);
+    ]);
+} else {
+    console.log('SKIP ClamAV clamd — MEDIA_SCANNER_ENABLED=false');
+}
 check('Horizon (kolejka)', 'php', [
     'artisan',
     'horizon:status',

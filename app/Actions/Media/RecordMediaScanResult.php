@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Move a quarantined asset to `clean` (and queue image variants) or to
  * `rejected` (the infected bytes are deleted; the record stays for audit).
- * Recorded as `media.cleaned` / `media.rejected` by the system actor.
+ * Recorded as `media.cleaned` / `media.rejected` by the system actor; a
+ * release without a scan (scanner disabled) is audited as `scan: skipped`.
  */
 class RecordMediaScanResult
 {
@@ -36,11 +37,17 @@ class RecordMediaScanResult
                 'scan_error' => $result->clean ? null : mb_substr('Malware detected: '.$result->signature, 0, 250),
             ])->save();
 
+            $changes = ['status' => RecordAuditEvent::change(MediaStatus::Quarantine->value, $status->value)];
+
+            if (! $result->scanned) {
+                $changes['scan'] = RecordAuditEvent::change(null, 'skipped');
+            }
+
             $this->audit->handle(
                 $result->clean ? AuditAction::MediaCleaned : AuditAction::MediaRejected,
                 $locked,
                 null,
-                ['status' => RecordAuditEvent::change(MediaStatus::Quarantine->value, $status->value)],
+                $changes,
             );
 
             return $status;

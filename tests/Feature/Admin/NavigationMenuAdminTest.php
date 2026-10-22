@@ -179,7 +179,7 @@ test('an editor creates an item at the end of its level with an audit entry', fu
     expect($log->action)->toBe(AuditAction::NavigationItemCreated)
         ->and($log->actor_id)->toBe($editor->id)
         ->and($log->subject_id)->toBe($item->id)
-        ->and($log->changes['page_id'] ?? null)->toBe(['old' => null, 'new' => $page->id]);
+        ->and($log->changes['page_id'] ?? null)->toEqual(['old' => null, 'new' => $page->id]);
 });
 
 test('an admin creates a child and an external link opening in a new tab', function () {
@@ -270,7 +270,7 @@ test('an editor updates an item with an audit of the changed fields', function (
     $log = AuditLog::query()->sole();
     expect($log->action)->toBe(AuditAction::NavigationItemUpdated)
         ->and(array_keys($log->changes ?? []))->toBe(['url', 'label'])
-        ->and($log->changes['label'] ?? null)->toBe(['old' => 'Old', 'new' => 'New']);
+        ->and($log->changes['label'] ?? null)->toEqual(['old' => 'Old', 'new' => 'New']);
 });
 
 test('an item with children cannot become a child', function () {
@@ -331,7 +331,7 @@ test('an editor deletes an item with its children and an audit entry', function 
     $log = AuditLog::query()->sole();
     expect($log->action)->toBe(AuditAction::NavigationItemDeleted)
         ->and($log->subject_id)->toBe($parent->id)
-        ->and($log->changes['children'] ?? null)->toBe(['old' => [$child->id], 'new' => null]);
+        ->and($log->changes['children'] ?? null)->toEqual(['old' => [$child->id], 'new' => null]);
 });
 
 test('admins and editors reorder one level with an audit entry', function (string $role) {
@@ -354,7 +354,7 @@ test('admins and editors reorder one level with an audit entry', function (strin
 
     $log = AuditLog::query()->sole();
     expect($log->action)->toBe(AuditAction::NavigationReordered)
-        ->and($log->changes['order'] ?? null)->toBe([
+        ->and($log->changes['order'] ?? null)->toEqual([
             'old' => [$first->id, $second->id, $third->id],
             'new' => [$third->id, $first->id, $second->id],
         ]);

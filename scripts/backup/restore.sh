@@ -11,15 +11,19 @@
 #                                         operator step, see doc 10)
 #
 # BACKUP is a backup directory (default for --drill: newest complete backup in
-# BACKUP_DIR). The drill verifies SHA-256 checksums from manifest.json,
-# pg_restore exit status, the number of tables, exact row counts per table and
-# the number of storage files, and reports the elapsed time (RTO of the data
-# restore). The result is written as JSON to BACKUP/drill-<UTC>.json.
+# BACKUP_DIR). The database engine comes from manifest.json ("engine"; older
+# backups without it are PostgreSQL). The drill verifies SHA-256 checksums from
+# manifest.json, the pg_restore/mysql exit status, the number of tables, exact
+# row counts per table and the number of storage files, and reports the
+# elapsed time (RTO of the data restore). The result is written as JSON to
+# BACKUP/drill-<UTC>.json.
 #
-# Environment: PGHOST PGPORT PGUSER PGPASSWORD (role allowed to CREATE/DROP
-# DATABASE), BACKUP_DIR, BACKUP_AGE_IDENTITY (age key file) or a gpg keyring
-# for encrypted backups, DRILL_STRICT_ROWS=1 (default) fails on row count
-# differences; set 0 for backups of a busy database (differences reported).
+# Environment: PGHOST PGPORT PGUSER PGPASSWORD (PostgreSQL) or MYSQL_HOST
+# MYSQL_TCP_PORT MYSQL_USER MYSQL_PASSWORD (MySQL, see mysql.sh) of a role
+# allowed to CREATE/DROP DATABASE, BACKUP_DIR, BACKUP_AGE_IDENTITY (age key
+# file) or a gpg keyring for encrypted backups, DRILL_STRICT_ROWS=1 (default)
+# fails on row count differences; set 0 for backups of a busy database
+# (differences reported).
 set -Eeuo pipefail
 umask 077
 
@@ -52,10 +56,6 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$mode" ] || fail 'use --drill [BACKUP] or --restore BACKUP --target-db NAME --storage-target DIR'
 
-for tool in pg_restore psql createdb dropdb tar sha256sum; do
-    command -v "$tool" >/dev/null 2>&1 || fail "missing tool: $tool"
-done
-
 if [ -z "$backup" ]; then
     [ -n "${BACKUP_DIR:-}" ] || fail 'BACKUP_DIR is required when no backup is given'
     backup=$(find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 -type d -name 'starter-*' ! -name '*.partial' | sort -r | head -n 1)
@@ -63,27 +63,90 @@ if [ -z "$backup" ]; then
 fi
 [ -f "$backup/manifest.json" ] || fail "missing manifest: $backup/manifest.json"
 
+# backup.sh writes one "key": value pair per line, so the engine is read
+# before any database client is available.
+engine=$(sed -n 's/^  "engine": "\([a-z]*\)",$/\1/p' "$backup/manifest.json")
+engine=${engine:-pgsql}
+case "$engine" in
+    pgsql)
+        db_file=db.dump
+        db_tools='pg_restore psql createdb dropdb'
+        ;;
+    mysql)
+        db_file=db.sql.gz
+        db_tools='mysql gzip base64'
+        # shellcheck source=scripts/backup/mysql.sh
+        source "$(dirname "${BASH_SOURCE[0]}")/mysql.sh"
+        ;;
+    *) fail "unsupported engine in manifest: $engine" ;;
+esac
+for tool in $db_tools tar sha256sum; do
+    command -v "$tool" >/dev/null 2>&1 || fail "missing tool: $tool"
+done
+
 started_ns=$(date +%s%N)
 work_dir=$(mktemp -d)
 drill_db=''
+drop_database() {
+    if [ "$engine" = pgsql ]; then
+        dropdb --if-exists "$1"
+    else
+        mysql_cli -e "DROP DATABASE IF EXISTS \`$1\`"
+    fi
+}
 cleanup() {
     if [ -n "$drill_db" ]; then
-        dropdb --if-exists "$drill_db" >/dev/null 2>&1 || log error ops.restore.cleanup "could not drop $drill_db"
+        drop_database "$drill_db" >/dev/null 2>&1 || log error ops.restore.cleanup "could not drop $drill_db"
     fi
     rm -rf -- "$work_dir"
 }
 trap cleanup EXIT
+if [ "$engine" = mysql ]; then
+    mysql_prepare "$work_dir"
+fi
 
 # Minimal JSON reading without jq (not present on every host): the manifest
-# is produced by backup.sh with a fixed layout; psql parses it reliably.
+# is produced by backup.sh with a fixed layout; the database client of the
+# backup's engine parses it reliably.
 manifest=$(tr -d '\n' < "$backup/manifest.json")
 # psql interpolates :'var' only in scripts read from stdin, never in -c.
 json_query() {
     printf '%s;\n' "$1" | psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 \
         --dbname=postgres --set manifest="$manifest"
 }
+# MySQL has no client-side variables: the manifest travels base64-encoded.
+mysql_json_query() {
+    local encoded
+    encoded=$(printf '%s' "$manifest" | base64 | tr -d '\n')
+    mysql_cli -e "SET @m = CONVERT(FROM_BASE64('$encoded') USING utf8mb4); $1"
+}
+# "key|value" lines of the manifest object "files" (SHA-256) or "tables".
+manifest_pairs() {
+    if [ "$engine" = pgsql ]; then
+        case "$1" in
+            files) json_query "select key || '|' || (value->>'sha256') from json_each(:'manifest'::json->'files')" ;;
+            tables) json_query "select key || '|' || value from json_each(:'manifest'::json->'tables')" ;;
+        esac
+        return
+    fi
+    local member=''
+    [ "$1" = files ] && member='.sha256'
+    mysql_json_query "SELECT CONCAT(k, '|', JSON_UNQUOTE(JSON_EXTRACT(@m, CONCAT('\$.$1.\"', k, '\"$member')))) FROM JSON_TABLE(JSON_KEYS(@m, '\$.$1'), '\$[*]' COLUMNS (k VARCHAR(255) PATH '\$')) AS t"
+}
+# A top-level scalar of the manifest.
+manifest_value() {
+    if [ "$engine" = pgsql ]; then
+        json_query "select :'manifest'::json->>'$1'"
+    else
+        mysql_json_query "SELECT JSON_UNQUOTE(JSON_EXTRACT(@m, '\$.$1'))"
+    fi
+}
 
-# 1. Checksums of every file listed in the manifest.
+# 1. Checksums of every file listed in the manifest. The list is read into a
+# variable first: a failing query must stop the script (set -e), never yield
+# an empty list that would pass as "no checksum errors".
+manifest_files=$(manifest_pairs files)
+[ "$(grep -c '|' <<< "$manifest_files")" -ge 2 ] || fail "manifest lists no database and storage files: $backup"
 checksum_errors=0
 while IFS='|' read -r file expected; do
     [ -n "$file" ] || continue
@@ -93,11 +156,11 @@ while IFS='|' read -r file expected; do
         log error ops.restore.checksum "checksum mismatch for $file"
         checksum_errors=$((checksum_errors + 1))
     fi
-done < <(json_query "select key || '|' || (value->>'sha256') from json_each(:'manifest'::json->'files')")
+done <<< "$manifest_files"
 [ "$checksum_errors" -eq 0 ] || fail "$checksum_errors checksum error(s) in $backup"
 
 # 2. Decrypt into the work directory when needed.
-encryption=$(json_query "select :'manifest'::json->>'encryption'")
+encryption=$(manifest_value encryption)
 materialize() {
     local file=$1
     case "$encryption" in
@@ -114,7 +177,7 @@ materialize() {
         *) fail "unsupported encryption: $encryption" ;;
     esac
 }
-dump_file=$(materialize db.dump)
+dump_file=$(materialize "$db_file")
 storage_file=$(materialize storage.tar.gz)
 
 # 3. Database restore into a database that must not exist yet.
@@ -126,23 +189,34 @@ else
     [ -n "$storage_target" ] || fail '--storage-target is required'
     [[ "$target_db" =~ ^[a-z_][a-z0-9_]{0,62}$ ]] || fail 'target database name must match [a-z_][a-z0-9_]*'
 fi
-exists=$(printf '%s\n' "select 1 from pg_database where datname = :'name';" \
-    | psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 --dbname=postgres --set name="$target_db")
+if [ "$engine" = pgsql ]; then
+    exists=$(printf '%s\n' "select 1 from pg_database where datname = :'name';" \
+        | psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 --dbname=postgres --set name="$target_db")
+else
+    # target_db matches [a-z0-9_] (validated above or generated).
+    exists=$(mysql_cli -e "SELECT 1 FROM information_schema.schemata WHERE schema_name = '$target_db'")
+fi
 [ -z "$exists" ] || fail "database $target_db already exists; refusing to overwrite"
 
-createdb "$target_db"
-pg_restore --exit-on-error --no-owner --no-privileges --dbname="$target_db" "$dump_file"
+if [ "$engine" = pgsql ]; then
+    createdb "$target_db"
+    pg_restore --exit-on-error --no-owner --no-privileges --dbname="$target_db" "$dump_file"
+else
+    mysql_cli -e "CREATE DATABASE \`$target_db\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    gzip -dc "$dump_file" | mysql_cli --database="$target_db"
+fi
 db_restored_ns=$(date +%s%N)
 
 # 4. Verify tables and exact row counts against the manifest.
-restored_counts=$(psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 --dbname="$target_db" <<'SQL'
+if [ "$engine" = pgsql ]; then
+    restored_counts=$(psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 --dbname="$target_db" <<'SQL'
 SELECT coalesce(json_object_agg(t.table_name, (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I.%I', t.table_schema, t.table_name), false, true, '')))[1]::text::bigint), '{}'::json)
 FROM information_schema.tables t
 WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE';
 SQL
 )
-comparison=$(psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 --dbname=postgres \
-    --set manifest="$manifest" --set restored="$restored_counts" <<'SQL'
+    comparison=$(psql --no-psqlrc --tuples-only --no-align --quiet --set ON_ERROR_STOP=1 --dbname=postgres \
+        --set manifest="$manifest" --set restored="$restored_counts" <<'SQL'
 WITH expected AS (SELECT key, value::text::bigint AS n FROM json_each(:'manifest'::json->'tables')),
      actual AS (SELECT key, value::text::bigint AS n FROM json_each(:'restored'::json))
 SELECT (SELECT count(*) FROM expected) || '|' || (SELECT count(*) FROM actual) || '|' ||
@@ -152,7 +226,32 @@ SELECT (SELECT count(*) FROM expected) || '|' || (SELECT count(*) FROM actual) |
                  WHERE e.n IS DISTINCT FROM a.n), '')
 SQL
 )
-IFS='|' read -r expected_tables restored_tables restored_rows row_differences <<< "$comparison"
+    IFS='|' read -r expected_tables restored_tables restored_rows row_differences <<< "$comparison"
+else
+    # Same report as the PostgreSQL query above, computed in Bash.
+    declare -A expected_rows=() actual_rows=()
+    expected_pairs=$(manifest_pairs tables)
+    actual_pairs=$(mysql_table_counts "$target_db" | tr -d '{} "' | tr ',' '\n' | tr ':' '|')
+    while IFS='|' read -r key value; do
+        [ -n "$key" ] && expected_rows[$key]=$value
+    done <<< "$expected_pairs"
+    while IFS='|' read -r key value; do
+        [ -n "$key" ] && actual_rows[$key]=$value
+    done <<< "$actual_pairs"
+    expected_tables=${#expected_rows[@]}
+    restored_tables=${#actual_rows[@]}
+    restored_rows=0
+    for key in "${!actual_rows[@]}"; do
+        restored_rows=$((restored_rows + actual_rows[$key]))
+    done
+    row_differences=''
+    while IFS= read -r key; do
+        [ -n "$key" ] || continue
+        if [ "${expected_rows[$key]:--}" != "${actual_rows[$key]:--}" ]; then
+            row_differences+="${row_differences:+,}$key:${expected_rows[$key]:--}->${actual_rows[$key]:--}"
+        fi
+    done < <(printf '%s\n' "${!expected_rows[@]}" "${!actual_rows[@]}" | LC_ALL=C sort -u)
+fi
 
 # 5. Storage: extract into an empty directory and count files.
 if [ "$mode" = drill ]; then
@@ -164,7 +263,7 @@ fi
 mkdir -p "$storage_target"
 tar -xzf "$storage_file" -C "$storage_target" --no-same-owner
 restored_files=$(find "$storage_target" -type f | wc -l | tr -d ' ')
-expected_files=$(json_query "select :'manifest'::json->>'storage_files'")
+expected_files=$(manifest_value storage_files)
 finished_ns=$(date +%s%N)
 
 elapsed_ms=$(((finished_ns - started_ns) / 1000000))
@@ -187,6 +286,7 @@ result=$(cat <<JSON
 {
   "mode": "$mode",
   "backup": "$(basename "$backup")",
+  "engine": "$engine",
   "status": "$status",
   "checked_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "checksums": "ok",

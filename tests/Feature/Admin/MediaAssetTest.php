@@ -225,7 +225,7 @@ test('the alternative text is updated with optimistic locking and audited', func
 
     expect($asset->refresh()->alt)->toBe('A red square');
     $audit = AuditLog::query()->where('action', AuditAction::MediaUpdated)->sole();
-    expect($audit->changes)->toBe(['alt' => ['old' => null, 'new' => 'A red square']]);
+    expect($audit->changes)->toEqual(['alt' => ['old' => null, 'new' => 'A red square']]);
 
     $this->actingAs($editor)
         ->put(route('admin.media.update', $asset), ['alt' => 'Stale', 'updated_at' => '2000-01-01T00:00:00Z'])

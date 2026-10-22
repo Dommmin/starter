@@ -1,14 +1,14 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { I18nProvider } from '@/i18n';
 import { PublicHeader } from './public-header';
 
 const currentPage = vi.hoisted(() => ({
     url: '/',
     user: null as Record<string, unknown> | null,
-    canRegister: true,
+    registerUrl: '/register' as string | null,
 }));
 
 vi.mock('@inertiajs/react', () => ({
@@ -17,7 +17,7 @@ vi.mock('@inertiajs/react', () => ({
         props: {
             auth: {
                 user: currentPage.user,
-                canRegister: currentPage.canRegister,
+                registerUrl: currentPage.registerUrl,
             },
             i18n: { alternateUrls: {} },
         },
@@ -48,6 +48,17 @@ vi.mock('@inertiajs/react', () => ({
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const mountedRoots: Root[] = [];
+
+/**
+ * Lets a popup module loaded on first opening (see `lazy-popup.ts`) arrive
+ * and mount.
+ */
+async function settleLazyPopup(load: () => Promise<unknown>): Promise<void> {
+    await act(async () => {
+        await load();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+}
 
 const initialPage = {
     props: {
@@ -84,7 +95,7 @@ async function render(node: ReactNode): Promise<HTMLElement> {
 afterEach(async () => {
     currentPage.url = '/';
     currentPage.user = null;
-    currentPage.canRegister = true;
+    currentPage.registerUrl = '/register';
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
     });
@@ -93,8 +104,8 @@ afterEach(async () => {
 
 describe('PublicHeader', () => {
     it('offers the register action only while sign-up is enabled', async () => {
-        const hasRegister = async (canRegister: boolean) => {
-            currentPage.canRegister = canRegister;
+        const hasRegister = async (registerUrl: string | null) => {
+            currentPage.registerUrl = registerUrl;
             const container = await render(<PublicHeader />);
             const found = Array.from(container.querySelectorAll('a')).some(
                 (link) => link.getAttribute('href') === '/register',
@@ -107,8 +118,8 @@ describe('PublicHeader', () => {
             return found;
         };
 
-        expect(await hasRegister(true)).toBe(true);
-        expect(await hasRegister(false)).toBe(false);
+        expect(await hasRegister('/register')).toBe(true);
+        expect(await hasRegister(null)).toBe(false);
     });
 
     it('keeps the theme and language switchers reachable in the mobile menu without nav items', async () => {
@@ -122,6 +133,7 @@ describe('PublicHeader', () => {
         await act(async () => {
             trigger?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const dialog = document.querySelector('[role="dialog"]');
         const utilityNames = Array.from(
@@ -164,6 +176,7 @@ describe('PublicHeader', () => {
         await act(async () => {
             trigger?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const dialogNav = document.querySelector(
             'nav[aria-label="nav.menuTitle"]',
@@ -182,6 +195,14 @@ describe('PublicHeader', () => {
         expect(
             document.querySelector('nav[aria-label="nav.menuTitle"]'),
         ).toBeNull();
+
+        // Radix returns focus in a timeout scheduled when the dialog unmounts.
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        expect(document.activeElement).toBe(
+            container.querySelector('button[aria-label="a11y.openMenu"]'),
+        );
     });
 
     it('renders each link kind with the element and attributes it requires', async () => {
@@ -417,12 +438,33 @@ describe('PublicHeader', () => {
                 new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
             );
         });
+        await settleLazyPopup(() => import('./account-menu'));
 
         const items = Array.from(
             document.querySelectorAll('[role="menuitemradio"]'),
         ).map((item) => item.textContent);
 
         expect(items).toEqual(['theme.light', 'theme.dark', 'theme.system']);
+        // Opened from the keyboard: focus starts on the first item, Escape
+        // closes the menu and returns focus to the (now Radix) trigger.
+        expect(document.activeElement?.textContent).toBe('theme.light');
+
+        await act(async () => {
+            document.activeElement?.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+            );
+        });
+        // Radix returns focus in a timeout scheduled when the menu unmounts.
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        const radixTrigger = container.querySelector<HTMLButtonElement>(
+            'button[aria-label="a11y.userMenu"]',
+        );
+        expect(document.querySelector('[role="menu"]')).toBeNull();
+        expect(radixTrigger?.getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(radixTrigger);
     });
 
     it('keeps a linked parent out of its own submenu', async () => {
@@ -491,6 +533,7 @@ describe('PublicHeader', () => {
         await act(async () => {
             trigger?.click();
         });
+        await settleLazyPopup(() => import('./mobile-nav-panel'));
 
         const panel = document.querySelector('[role="dialog"]');
         expect(

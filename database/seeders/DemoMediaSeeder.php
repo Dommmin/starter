@@ -19,7 +19,9 @@ use Intervention\Image\ImageManager;
  * Local sample DAM assets with real files generated offline with GD: images
  * of different proportions and formats uploaded over the past weeks, a
  * neutral logo that suits every accent preset, two PDFs, alt texts (some
- * missing), one asset still in quarantine and one rejected.
+ * missing), one rejected asset and, only with the malware scanner enabled,
+ * assets still waiting in quarantine (without a scanner nothing would ever
+ * release them, so they would sit in the dashboard as work to do).
  *
  * Demo data only: the seeder sets the scan status directly instead of
  * running ClamAV, because the files are generated here and never come from
@@ -62,6 +64,10 @@ class DemoMediaSeeder extends Seeder
 
         foreach (self::ASSETS as $definition) {
             $createdAt = $now->copy()->subDays(3 * $remaining--);
+
+            if ($definition['status'] === MediaStatus::Quarantine && ! config('media.scanner.enabled')) {
+                continue;
+            }
 
             if (MediaAsset::query()->where('uuid', $definition['uuid'])->exists()) {
                 continue;

@@ -111,9 +111,9 @@ test('a mapped sort key orders by the mapped column', function () {
     $listQuery = ListQuery::make()
         ->sortable(['label', 'id'], default: 'label', columnMap: ['label' => 'users.name']);
 
-    $sql = $listQuery->apply(User::query(), ['sort' => 'label'])->toSql();
+    $query = $listQuery->apply(User::query(), ['sort' => 'label']);
 
-    expect($sql)->toContain('order by "users"."name" asc');
+    expect($query->toSql())->toContain('order by '.$query->getGrammar()->wrap('users.name').' asc');
 });
 
 test('sort column mappings must be plain identifiers of declared sort keys', function (array $columnMap) {

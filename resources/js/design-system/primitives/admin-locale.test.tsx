@@ -1,6 +1,6 @@
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { I18nProvider, useTranslation } from '@/i18n';
 import type { I18nPayload } from '@/i18n/types';
 import { AdminLocaleSelect } from './admin-locale-select';

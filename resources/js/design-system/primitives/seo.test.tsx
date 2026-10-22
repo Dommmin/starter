@@ -1,7 +1,7 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { I18nProvider } from '@/i18n';
 import { Seo, serializeJsonLd } from './seo';
 

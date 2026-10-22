@@ -1,14 +1,11 @@
-import { home, login, logout, register } from '@/routes';
+import { home, login, logout } from '@/routes';
 import { store as loginStore } from '@/routes/login';
 import {
     home as localizedHome,
     login as localizedLogin,
     logout as localizedLogout,
-    register as localizedRegister,
 } from '@/routes/localized';
 import { store as localizedLoginStore } from '@/routes/localized/login';
-import { store as localizedRegisterStore } from '@/routes/localized/register';
-import { store as registerStore } from '@/routes/register';
 import {
     email as passwordEmail,
     request as passwordRequest,
@@ -49,24 +46,6 @@ export function getLocalizedLoginForm(locale: string, defaultLocale: string) {
     return isDefaultLocale(locale, defaultLocale)
         ? loginStore.form()
         : localizedLoginStore.form({ locale });
-}
-
-export function getLocalizedRegisterRoute(
-    locale: string,
-    defaultLocale: string,
-) {
-    return isDefaultLocale(locale, defaultLocale)
-        ? register()
-        : localizedRegister({ locale });
-}
-
-export function getLocalizedRegisterForm(
-    locale: string,
-    defaultLocale: string,
-) {
-    return isDefaultLocale(locale, defaultLocale)
-        ? registerStore.form()
-        : localizedRegisterStore.form({ locale });
 }
 
 export function getLocalizedForgotPasswordRoute(

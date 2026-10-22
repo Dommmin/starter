@@ -1,6 +1,8 @@
 # Starter — lokalny development
 
-Całe środowisko uruchamia **Makefile + Docker Compose**. Na hoście potrzebujesz Git, Make oraz uruchomionego Docker Engine z Compose v2.20+ (lub Docker Desktop). macOS: Docker Desktop; Linux: Engine i plugin Compose; Windows: checkout i komendy w WSL2. PHP, Composer, Node, PostgreSQL i Redis są w kontenerach.
+Całe środowisko uruchamia **Makefile + Docker Compose**. Na hoście potrzebujesz Git, Make oraz uruchomionego Docker Engine z Compose v2.20+ (lub Docker Desktop). macOS: Docker Desktop; Linux: Engine i plugin Compose; Windows: checkout i komendy w WSL2. PHP, Composer, Node, baza danych (MySQL 8.4 domyślnie albo PostgreSQL 18, wybór przez `DB_CONNECTION=mysql|pgsql` w `.env`) i Redis są w kontenerach.
+
+Instrukcja panelu administracyjnego dla administratora i redaktora (role, moduły krok po kroku, czego nie da się zrobić w panelu): [docs/panel](docs/panel/README.md).
 
 ## Pierwsze uruchomienie
 
@@ -53,6 +55,7 @@ make init-project ARGS='--name="Acme" --locales=pl,en --default-locale=pl --admi
 | `make build`                             | Przebudowa runtime z aktualizacją obrazów bazowych              |
 | `make test`                              | Pest, SQLite w pamięci zgodnie z `.env.testing`                 |
 | `make test-parallel`                     | Pest w 4 procesach; zmień przez `TEST_PROCESSES=8`              |
+| `make test-mysql`                        | Pest na MySQL z compose w osobnej bazie `starter_testing`       |
 | `make test-pgsql`                        | Pest na PostgreSQL z compose w osobnej bazie `starter_testing`  |
 | `make test ARGS='--filter=registration'` | Wybrane testy                                                   |
 | `make check`                             | Istniejący zestaw format/lint, TypeScript, Pint, PHPStan i Pest |
@@ -62,7 +65,7 @@ make init-project ARGS='--name="Acme" --locales=pl,en --default-locale=pl --admi
 | `make composer ARGS='show --direct'`     | Composer                                                        |
 | `make npm ARGS='run types:check'`        | npm                                                             |
 | `make shell`                             | Powłoka użytkownika aplikacji                                   |
-| `make db`                                | Konsola lokalnego PostgreSQL                                    |
+| `make db`                                | Konsola lokalnej bazy (MySQL albo PostgreSQL wg `DB_CONNECTION`) |
 | `make config`                            | Walidacja Compose bez wypisywania konfiguracji z hasłami        |
 | `make hooks`                             | Włącza wersjonowane hooki po instalacji hostowego Gitleaks      |
 | `make backup`                            | Backup lokalnej DB + storage do `./.backups` (manifest SHA-256) |
@@ -110,13 +113,14 @@ Jeżeli po konfiguracji IDE nadal wyświetla jedynie powiadomienie o brakującym
 | `app`       | PHP 8.5 FPM; ten sam obraz zawiera CLI, Composer 2 i Node 24       |
 | `web`       | Nginx 1.28; public/ i FastCGI, tylko index.php wykonywany jako PHP |
 | `vite`      | Vite Plus, HMR i development SSR Inertia; PHP dla Wayfinder        |
-| `postgres`  | PostgreSQL 18, trwała baza developerska                            |
+| `mysql`     | MySQL 8.4, trwała baza developerska (profil `mysql`, domyślnie)    |
+| `postgres`  | PostgreSQL 18, trwała baza developerska (profil `pgsql`)           |
 | `redis`     | Redis 8.2 z AOF; cache, sesje, kolejka                             |
 | `queue`     | Horizon (`config/horizon.php`), timeout 85 s, 100 s na zatrzymanie |
 | `scheduler` | Jeden schedule:work                                                |
 | `mailpit`   | Mailpit 1.27, lokalny SMTP i podgląd wiadomości                    |
 
-Dashboard Horizon: `http://localhost:8080/horizon` (lokalnie każdy zalogowany użytkownik, poza local tylko administrator). Readiness: `/health/ready`. SMTP nie ma fallbacku do realnego dostawcy. PostgreSQL, Redis, SMTP i FPM nie publikują portów hosta. Web, Vite i Mailpit nasłuchują tylko na loopback.
+Dashboard Horizon: `http://localhost:8080/horizon` (lokalnie każdy zalogowany użytkownik, poza local tylko administrator). Readiness: `/health/ready`. SMTP nie ma fallbacku do realnego dostawcy. Baza danych, Redis, SMTP i FPM nie publikują portów hosta. Web, Vite i Mailpit nasłuchują tylko na loopback.
 
 `compose.yaml` opisuje usługi i wolumeny, `docker/local/` zawiera obraz, konfigurację PHP/Nginx i entrypoint. `.dockerignore` ogranicza kontekst budowy do plików runtime — kod, dane i sekrety nie trafiają do obrazu. Runtime jest developerski, nie służy do publikowania produkcji.
 
@@ -124,13 +128,13 @@ Vite współdzieli namespace sieciowy `app`: adres localhost zapisany w `public/
 
 ## Konfiguracja, dane i wiele checkoutów
 
-`.env` jest jedyną lokalną konfiguracją aplikacji i Docker Compose; jest ignorowany przez Git. Lokalnie `ADMIN_REQUIRE_TWO_FACTOR=false` upraszcza dostęp do panelu, ale produkcja musi jawnie używać `ADMIN_REQUIRE_TWO_FACTOR=true`. `.env.testing` zawiera bezpieczne, wersjonowane ustawienia testów (SQLite w pamięci, array cache/session i synchroniczna kolejka). Nie kopiuj sekretów produkcyjnych do `.env`. Hasło w przykładzie służy wyłącznie izolowanej bazie lokalnej. Zmiana hasła PostgreSQL w env nie zmienia hasła już zainicjowanego użytkownika — wymaga osobnej zmiany w bazie.
+`.env` jest jedyną lokalną konfiguracją aplikacji i Docker Compose; jest ignorowany przez Git. Lokalnie `ADMIN_REQUIRE_TWO_FACTOR=false` upraszcza dostęp do panelu, ale produkcja musi jawnie używać `ADMIN_REQUIRE_TWO_FACTOR=true`. `.env.testing` zawiera bezpieczne, wersjonowane ustawienia testów (SQLite w pamięci, array cache/session i synchroniczna kolejka). Nie kopiuj sekretów produkcyjnych do `.env`. Hasło w przykładzie służy wyłącznie izolowanej bazie lokalnej. Zmiana hasła bazy w env nie zmienia hasła już zainicjowanego użytkownika — wymaga osobnej zmiany w bazie. Silnik wybiera `DB_CONNECTION` (`mysql` + `DB_HOST=mysql`, `DB_PORT=3306` albo `pgsql` + `DB_HOST=postgres`, `DB_PORT=5432`); Makefile uruchamia usługę o profilu równym `DB_CONNECTION` i dokłada profile z `COMPOSE_PROFILES` w `.env`. Zmiana silnika w istniejącym projekcie nie przenosi danych — dane są w osobnych wolumenach `mysql` i `postgres`.
 
-Wolumeny Compose przechowują PostgreSQL, Redis, storage, bootstrap/cache, vendor i node_modules. Zależności Linux nie mieszają się z macOS; IDE na hoście może nie widzieć nowych paczek z kontenerów. Kod, generowane trasy Wayfinder i public/build pozostają w checkoutcie. Hostowy public/storage jest symlinkiem do storage kontenera, poprawnie rozwiązywanym przez Nginx. Po zatrzymaniu Makefile usuwa public/hot, aby Laravel nie wskazywał na nieczynny Vite.
+Wolumeny Compose przechowują bazę (MySQL lub PostgreSQL), Redis, storage, bootstrap/cache, vendor i node_modules. Zależności Linux nie mieszają się z macOS; IDE na hoście może nie widzieć nowych paczek z kontenerów. Kod, generowane trasy Wayfinder i public/build pozostają w checkoutcie. Hostowy public/storage jest symlinkiem do storage kontenera, poprawnie rozwiązywanym przez Nginx. Po zatrzymaniu Makefile usuwa public/hot, aby Laravel nie wskazywał na nieczynny Vite.
 
 Drugi checkout: przed setup uruchom `make env`, ustaw w `.env` unikalne `COMPOSE_PROJECT_NAME`, `APP_PORT`, `VITE_PORT`, `MAILPIT_PORT` oraz zgodne `APP_URL`. Potem `make setup`. Nazwa projektu izoluje sieć i wolumeny; porty muszą być wolne. Nie zmieniaj nazwy istniejącego projektu bez wcześniejszego `make down`, bo stare kontenery pozostaną uruchomione.
 
-Nie ma komendy automatycznie kasującej wolumeny. `down` nie usuwa DB, uploadów ani zależności. Migracja danych SQLite i reset bazy są osobnymi świadomymi operacjami. `make test` używa SQLite w pamięci i nie potwierdza wszystkich zachowań PostgreSQL — do tego służy `make test-pgsql` (i job CI `tests-pgsql`); `doctor` i setup sprawdzają rzeczywiste połączenie i migracje PostgreSQL.
+Nie ma komendy automatycznie kasującej wolumeny. `down` nie usuwa DB, uploadów ani zależności. Migracja danych SQLite i reset bazy są osobnymi świadomymi operacjami. `make test` używa SQLite w pamięci i nie potwierdza wszystkich zachowań produkcyjnych silników — do tego służą `make test-mysql` i `make test-pgsql` (oraz joby CI `tests-mysql` i `tests-pgsql`); `doctor` i setup sprawdzają rzeczywiste połączenie i migracje wybranej bazy. MySQL normalizuje kolumny `json` (sortuje klucze), dlatego modele używają castu `App\Casts\JsonArray`, który porównuje dane bez względu na kolejność kluczy.
 
 ## Problemy
 

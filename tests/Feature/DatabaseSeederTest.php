@@ -78,6 +78,7 @@ test('the local seed fills every module and a second run adds nothing', function
 
 test('the local seed gives every admin list two pages and every state to review', function () {
     $this->app['env'] = 'local';
+    config(['media.scanner.enabled' => true]);
 
     $this->seed(DatabaseSeeder::class);
 
@@ -141,6 +142,20 @@ test('the local seed has no sample that only repeats its title or describes the 
         ->and(Faq::query()->pluck('question')->reject(fn (string $question): bool => str_ends_with($question, '?')))->toBeEmpty()
         ->and(Article::query()->whereNotNull('cover_media_id')->count())->toBeGreaterThan(Article::query()->whereNull('cover_media_id')->count())
         ->and($hero->content->title)->toBe(HomeSectionSeeder::BRAND['en']['title']);
+});
+
+test('the local seed reads as a real site: no test titles, no work for a disabled scanner', function () {
+    $this->app['env'] = 'local';
+    config(['media.scanner.enabled' => false]);
+
+    $this->seed(DatabaseSeeder::class);
+
+    $titles = ArticleTranslation::query()->pluck('title')->merge(PageTranslation::query()->pluck('title'));
+
+    expect($titles->filter(fn (string $title): bool => preg_match('/\btest\b/i', $title) === 1 || mb_strlen($title) < 4))->toBeEmpty()
+        ->and(MenuItem::query()->where('url', 'like', '%github.com%')->exists())->toBeFalse()
+        ->and(MediaAsset::query()->where('status', MediaStatus::Quarantine)->exists())->toBeFalse()
+        ->and(MediaAsset::query()->where('status', MediaStatus::Rejected)->exists())->toBeTrue();
 });
 
 test('the local seed keeps a site name that is already saved', function () {

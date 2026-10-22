@@ -18,7 +18,6 @@ import { focusFirstError } from '@/lib/focus-first-error';
 import {
     getLocalizedForgotPasswordRoute,
     getLocalizedLoginForm,
-    getLocalizedRegisterRoute,
 } from '@/lib/localized-routes';
 
 type Props = {
@@ -38,9 +37,7 @@ export default function Login({
     devLoginUrl = null,
     demoLoginUrl = null,
 }: Props) {
-    const canRegister =
-        usePage<{ auth?: { canRegister?: boolean } }>().props.auth
-            ?.canRegister ?? false;
+    const registerUrl = usePage().props.auth.registerUrl;
     const { t, locale, defaultLocale } = useTranslation();
     const form = useForm({ email: '', password: '', remember: false });
     const [isDevLoginPending, setIsDevLoginPending] = useState(false);
@@ -169,17 +166,10 @@ export default function Login({
                     </Button>
                 )}
 
-                {canRegister && (
+                {registerUrl !== null && (
                     <Text variant="caption" align="center">
                         {t('auth.login.noAccount')}{' '}
-                        <Link
-                            href={getLocalizedRegisterRoute(
-                                locale,
-                                defaultLocale,
-                            )}
-                        >
-                            {t('auth.login.signUp')}
-                        </Link>
+                        <Link href={registerUrl}>{t('auth.login.signUp')}</Link>
                     </Text>
                 )}
             </Stack>

@@ -1,7 +1,7 @@
 import type { Page, PageProps, SharedPageProps } from '@inertiajs/core';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { SiteLaunchPanel } from '@/components/admin/site-launch-panel';
 import { I18nProvider } from '@/i18n';
 

@@ -11,6 +11,10 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\Geometry\Factories\EllipseFactory;
 use Intervention\Image\Geometry\Factories\RectangleFactory;
 use Intervention\Image\ImageManager;
@@ -155,21 +159,23 @@ class DemoMediaSeeder extends Seeder
             return self::logo($width, $definition['color'] ?? '27272a');
         }
 
-        $image = ImageManager::gd()->create($width, $height)->fill($definition['color'] ?? '64748b');
+        $image = ImageManager::usingDriver(GdDriver::class)->createImage($width, $height)->fill($definition['color'] ?? '64748b');
 
-        $image->drawEllipse(intdiv($width, 3), intdiv($height, 2), function (EllipseFactory $ellipse) use ($width, $height): void {
+        $image->drawEllipse(function (EllipseFactory $ellipse) use ($width, $height): void {
+            $ellipse->at(intdiv($width, 3), intdiv($height, 2));
             $ellipse->size(intdiv(min($width, $height) * 3, 4), intdiv(min($width, $height) * 3, 4));
             $ellipse->background('ffffff66');
         });
-        $image->drawRectangle(intdiv($width, 2), intdiv($height, 4), function (RectangleFactory $rectangle) use ($width, $height): void {
+        $image->drawRectangle(function (RectangleFactory $rectangle) use ($width, $height): void {
+            $rectangle->at(intdiv($width, 2), intdiv($height, 4));
             $rectangle->size(intdiv($width, 3), intdiv($height, 2));
             $rectangle->background('00000033');
         });
 
         return match ($definition['mime']) {
-            'image/png' => $image->toPng()->toString(),
-            'image/webp' => $image->toWebp(80)->toString(),
-            default => $image->toJpeg(80)->toString(),
+            'image/png' => $image->encode(new PngEncoder)->toString(),
+            'image/webp' => $image->encode(new WebpEncoder(80))->toString(),
+            default => $image->encode(new JpegEncoder(80))->toString(),
         };
     }
 
@@ -179,20 +185,22 @@ class DemoMediaSeeder extends Seeder
      */
     private static function logo(int $size, string $color): string
     {
-        $image = ImageManager::gd()->create($size, $size);
+        $image = ImageManager::usingDriver(GdDriver::class)->createImage($size, $size);
         $center = intdiv($size, 2);
 
-        $image->drawEllipse($center, $center, function (EllipseFactory $ellipse) use ($size, $color): void {
+        $image->drawEllipse(function (EllipseFactory $ellipse) use ($center, $size, $color): void {
+            $ellipse->at($center, $center);
             $ellipse->size($size - 8, $size - 8);
             $ellipse->background($color);
             $ellipse->border('ffffff', intdiv($size, 32));
         });
-        $image->drawEllipse($center, $center, function (EllipseFactory $ellipse) use ($size): void {
+        $image->drawEllipse(function (EllipseFactory $ellipse) use ($center, $size): void {
+            $ellipse->at($center, $center);
             $ellipse->size(intdiv($size, 3), intdiv($size, 3));
             $ellipse->background('fafafa');
         });
 
-        return $image->toPng()->toString();
+        return $image->encode(new PngEncoder)->toString();
     }
 
     /**

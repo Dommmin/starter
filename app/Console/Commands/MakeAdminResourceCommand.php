@@ -33,11 +33,11 @@ class MakeAdminResourceCommand extends Command
     {
         try {
             $resource = ResourceBlueprint::parse(
-                (string) $this->argument('name'),
-                (string) $this->option('fields'),
-                (string) $this->option('searchable'),
-                (string) $this->option('sortable'),
-                (string) $this->option('filters'),
+                $this->stringInput($this->argument('name')),
+                $this->stringInput($this->option('fields')),
+                $this->stringInput($this->option('searchable')),
+                $this->stringInput($this->option('sortable')),
+                $this->stringInput($this->option('filters')),
                 (bool) $this->option('export'),
                 (bool) $this->option('owned'),
                 (bool) $this->option('public'),
@@ -151,5 +151,13 @@ class MakeAdminResourceCommand extends Command
                 $this->warn("{$label} failed; format the generated files before committing.".PHP_EOL.$result->errorOutput());
             }
         }
+    }
+
+    /**
+     * Narrow a console argument or option to a string, treating anything else as empty.
+     */
+    private function stringInput(mixed $value): string
+    {
+        return is_string($value) ? $value : '';
     }
 }

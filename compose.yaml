@@ -273,7 +273,7 @@ services:
     # browsers never install on the host. Reuses the node_modules volume and
     # reaches the app through nginx (http://web) on the compose network.
     playwright:
-        image: mcr.microsoft.com/playwright:v1.63.0-noble
+        image: mcr.microsoft.com/playwright:v1.64.1-noble
         profiles: [e2e]
         init: true
         user: '${LOCAL_UID:-1000}:${LOCAL_GID:-1000}'

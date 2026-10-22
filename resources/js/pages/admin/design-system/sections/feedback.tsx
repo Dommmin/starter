@@ -35,7 +35,7 @@ type ConnectionDemoStatus = 'online' | 'offline' | 'restored';
 /** ADM-16 — feedback: messages, retry, offline and progress in context. */
 function FeedbackSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.feedback.${key}`);
+    const demo = (key: string) => t(`showcase.feedback.${key}`);
     const [retryStatus, setRetryStatus] = useState<RetryDemoStatus>('failed');
     const [isAlertVisible, setAlertVisible] = useState(true);
     const [connection, setConnection] =
@@ -409,7 +409,7 @@ function FeedbackSection() {
 
 export const feedbackFamily: ShowcaseFamily = {
     id: 'adm-16',
-    titleKey: 'admin.designSystem.feedback.title',
-    descriptionKey: 'admin.designSystem.feedback.description',
+    titleKey: 'showcase.feedback.title',
+    descriptionKey: 'showcase.feedback.description',
     Component: FeedbackSection,
 };

@@ -30,7 +30,7 @@ export const demoLogo: BrandLogoImage = {
  * new tab and a long label. Anchors point at the showcase families.
  */
 export function demoNavItems(t: TranslationFunction): NavItem[] {
-    const demo = (key: string) => t(`admin.designSystem.web.nav.${key}`);
+    const demo = (key: string) => t(`showcase.web.nav.${key}`);
 
     return [
         {
@@ -91,7 +91,7 @@ export function demoNavItems(t: TranslationFunction): NavItem[] {
 
 /** Footer columns: a group, a single link and an external link. */
 export function demoFooterGroups(t: TranslationFunction): NavItem[] {
-    const demo = (key: string) => t(`admin.designSystem.web.nav.${key}`);
+    const demo = (key: string) => t(`showcase.web.nav.${key}`);
 
     return [
         {

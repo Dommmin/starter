@@ -16,7 +16,7 @@ const emptyRange: DateRangeValue = { from: '', to: '' };
 /** ADM-05 — dates and ranges: DateRangeField (native inputs, no picker library). */
 function DatesSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.dates.${key}`);
+    const demo = (key: string) => t(`showcase.dates.${key}`);
     const [ranges, setRanges] = useState<Record<string, DateRangeValue>>({
         value: { from: '2026-10-01', to: '2026-10-03' },
         disabled: { from: '2026-09-01', to: '2026-09-30' },
@@ -125,7 +125,7 @@ function DatesSection() {
 
 export const datesFamily: ShowcaseFamily = {
     id: 'adm-05',
-    titleKey: 'admin.designSystem.dates.title',
-    descriptionKey: 'admin.designSystem.dates.description',
+    titleKey: 'showcase.dates.title',
+    descriptionKey: 'showcase.dates.description',
     Component: DatesSection,
 };

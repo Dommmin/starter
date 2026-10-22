@@ -22,7 +22,7 @@ type DemoStatus = 'editing' | 'pending' | 'sent';
 /** WEB-05 — the contact form in every state, without any request. */
 function ContactFamilySection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.web.contact.${key}`);
+    const demo = (key: string) => t(`showcase.web.contact.${key}`);
     const [values, setValues] = useState<ContactSectionValues>(emptyValues);
     const [errors, setErrors] = useState<ContactSectionErrors>({});
     const [extraBudget, setExtraBudget] = useState('');
@@ -65,7 +65,7 @@ function ContactFamilySection() {
     const filled: ContactSectionValues = {
         name: 'Łucja Żółtowska-Wiśniewska',
         email: 'lucja@example.test',
-        message: t('admin.designSystem.web.longText'),
+        message: t('showcase.web.longText'),
     };
 
     /** Local validation standing in for the backend's 422 response. */
@@ -226,7 +226,7 @@ function ContactFamilySection() {
             <ShowcaseState state="longContent" fill>
                 <ContactSection
                     {...common}
-                    title={t('admin.designSystem.web.longName')}
+                    title={t('showcase.web.longName')}
                     values={filled}
                     formError={t('contact.genericError')}
                 />
@@ -237,7 +237,7 @@ function ContactFamilySection() {
 
 export const contactFamily: ShowcaseFamily = {
     id: 'web-05',
-    titleKey: 'admin.designSystem.web.contact.title',
-    descriptionKey: 'admin.designSystem.web.contact.description',
+    titleKey: 'showcase.web.contact.title',
+    descriptionKey: 'showcase.web.contact.description',
     Component: ContactFamilySection,
 };

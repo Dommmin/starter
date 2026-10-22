@@ -146,9 +146,7 @@ describe('DesignSystemShowcase', () => {
     it('lists the states that do not apply to a component', async () => {
         const section = await renderFamily('adm-01');
 
-        expect(section?.textContent).toContain(
-            'admin.designSystem.notApplicable',
-        );
+        expect(section?.textContent).toContain('showcase.notApplicable');
         expect(section?.querySelectorAll('h3').length).toBeGreaterThanOrEqual(
             13,
         );
@@ -157,15 +155,14 @@ describe('DesignSystemShowcase', () => {
     it('dismisses and restores the dismissible alert demo', async () => {
         const container = await renderFamily('adm-01');
         const dismiss = container.querySelector<HTMLButtonElement>(
-            'button[aria-label="admin.designSystem.foundations.dismiss"]',
+            'button[aria-label="showcase.foundations.dismiss"]',
         );
 
         await act(async () => dismiss?.click());
 
         const restore = Array.from(container.querySelectorAll('button')).find(
             (button) =>
-                button.textContent ===
-                'admin.designSystem.foundations.restoreAlert',
+                button.textContent === 'showcase.foundations.restoreAlert',
         );
         expect(restore).toBeDefined();
 
@@ -173,7 +170,7 @@ describe('DesignSystemShowcase', () => {
 
         expect(
             container.querySelector(
-                'button[aria-label="admin.designSystem.foundations.dismiss"]',
+                'button[aria-label="showcase.foundations.dismiss"]',
             ),
         ).not.toBeNull();
     });
@@ -182,8 +179,7 @@ describe('DesignSystemShowcase', () => {
         const container = await renderFamily('adm-15');
         const open = Array.from(container.querySelectorAll('button')).find(
             (button) =>
-                button.textContent ===
-                'admin.designSystem.panelNavigation.openPalette',
+                button.textContent === 'showcase.panelNavigation.openPalette',
         );
 
         await act(async () => open?.click());
@@ -201,8 +197,7 @@ describe('DesignSystemShowcase', () => {
                 section?.querySelectorAll('button') ?? [],
             ).find(
                 (button) =>
-                    button.textContent ===
-                        'admin.designSystem.feedback.retryLabel' &&
+                    button.textContent === 'showcase.feedback.retryLabel' &&
                     !button.disabled,
             );
 
@@ -213,7 +208,7 @@ describe('DesignSystemShowcase', () => {
                 vi.advanceTimersByTime(1500);
             });
             expect(section?.textContent).toContain(
-                'admin.designSystem.feedback.recoveredTitle',
+                'showcase.feedback.recoveredTitle',
             );
         } finally {
             vi.useRealTimers();
@@ -231,15 +226,13 @@ describe('DesignSystemShowcase', () => {
     it('clears the filters of the no-results table demo', async () => {
         const section = await renderFamily('adm-09');
         const noResults = () =>
-            section?.textContent?.split(
-                'admin.designSystem.tables.noResultsTitle',
-            ).length ?? 0;
+            section?.textContent?.split('showcase.tables.noResultsTitle')
+                .length ?? 0;
         const before = noResults();
         const clear = Array.from(
             section?.querySelectorAll('button') ?? [],
         ).find(
-            (button) =>
-                button.textContent === 'admin.designSystem.tables.clearFilters',
+            (button) => button.textContent === 'showcase.tables.clearFilters',
         );
 
         expect(before).toBeGreaterThan(1);
@@ -265,7 +258,7 @@ describe('DesignSystemShowcase', () => {
             ) ?? [],
         ).find(
             (button) =>
-                button.textContent === 'admin.designSystem.forms.submit' &&
+                button.textContent === 'showcase.forms.submit' &&
                 !button.disabled,
         );
 
@@ -283,7 +276,7 @@ describe('DesignSystemShowcase', () => {
             .at(-1);
         expect(
             errorId ? document.getElementById(errorId)?.textContent : null,
-        ).toBe('admin.designSystem.forms.nameRequired');
+        ).toBe('showcase.forms.nameRequired');
         expect(
             form?.querySelectorAll('[role="alert"] li').length,
         ).toBeGreaterThanOrEqual(5);
@@ -294,9 +287,7 @@ describe('DesignSystemShowcase', () => {
         const pickers = Array.from(
             section.querySelectorAll('[role="group"]'),
         ).filter((group) =>
-            group.textContent?.includes(
-                'admin.designSystem.forms.projectImageLabel',
-            ),
+            group.textContent?.includes('showcase.forms.projectImageLabel'),
         );
 
         expect(pickers).toHaveLength(2);

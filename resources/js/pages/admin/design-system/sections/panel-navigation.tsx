@@ -25,8 +25,7 @@ import {
  */
 function PanelNavigationSection() {
     const { t } = useTranslation();
-    const demo = (key: string) =>
-        t(`admin.designSystem.panelNavigation.${key}`);
+    const demo = (key: string) => t(`showcase.panelNavigation.${key}`);
     const [isPaletteOpen, setPaletteOpen] = useState(false);
     const [isLongPaletteOpen, setLongPaletteOpen] = useState(false);
     const [isSearchPaletteOpen, setSearchPaletteOpen] = useState(false);
@@ -70,7 +69,7 @@ function PanelNavigationSection() {
                         {
                             id: 'found-page',
                             label: t(
-                                'admin.designSystem.panelNavigation.searchFoundLabel',
+                                'showcase.panelNavigation.searchFoundLabel',
                                 { query },
                             ),
                             description: 'EN · offer',
@@ -205,7 +204,7 @@ function PanelNavigationSection() {
 
 export const panelNavigationFamily: ShowcaseFamily = {
     id: 'adm-15',
-    titleKey: 'admin.designSystem.panelNavigation.title',
-    descriptionKey: 'admin.designSystem.panelNavigation.description',
+    titleKey: 'showcase.panelNavigation.title',
+    descriptionKey: 'showcase.panelNavigation.description',
     Component: PanelNavigationSection,
 };

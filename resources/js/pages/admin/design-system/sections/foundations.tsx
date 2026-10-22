@@ -78,7 +78,7 @@ const demoExternalHref = 'https://example.com/';
 function FoundationsSection() {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.foundations.${key}`, params);
+        t(`showcase.foundations.${key}`, params);
     const [isAlertVisible, setAlertVisible] = useState(true);
 
     return (
@@ -626,7 +626,7 @@ function FoundationsSection() {
 
 export const foundationsFamily: ShowcaseFamily = {
     id: 'adm-01',
-    titleKey: 'admin.designSystem.foundations.title',
-    descriptionKey: 'admin.designSystem.foundations.description',
+    titleKey: 'showcase.foundations.title',
+    descriptionKey: 'showcase.foundations.description',
     Component: FoundationsSection,
 };

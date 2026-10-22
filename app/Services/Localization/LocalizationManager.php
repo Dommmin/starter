@@ -204,6 +204,10 @@ class LocalizationManager
      * - admin: panel and account settings; passkey management and the
      *   password confirmation dialog reuse `auth.passkey`/`auth.confirmPassword`.
      *
+     * The `showcase` group (local design-system pages) belongs to no scope:
+     * its controllers add it to their own payload, so regular pages never
+     * carry its labels.
+     *
      * @var array<string, list<string>>
      */
     public const array CATALOG_SCOPES = [

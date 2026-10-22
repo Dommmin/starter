@@ -24,18 +24,18 @@ export default function DesignSystemShowcase() {
 
     return (
         <>
-            <Head title={t('admin.designSystem.title')} />
+            <Head title={t('showcase.title')} />
 
             <Stack gap="relaxed">
                 <PageHeader
-                    title={t('admin.designSystem.title')}
-                    description={t('admin.designSystem.description')}
+                    title={t('showcase.title')}
+                    description={t('showcase.description')}
                 />
 
                 <Card padding="compact">
                     <CardHeader>
                         <Heading level={2} variant="group">
-                            {t('admin.designSystem.tocTitle')}
+                            {t('showcase.tocTitle')}
                         </Heading>
                     </CardHeader>
                     <CardContent>
@@ -92,7 +92,7 @@ DesignSystemShowcase.layout = {
             href: adminIndex(),
         },
         {
-            title: 'admin.designSystem.title',
+            title: 'showcase.title',
             href: '/admin/design-system',
         },
     ],

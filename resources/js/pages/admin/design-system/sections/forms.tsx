@@ -50,7 +50,7 @@ const summaryFieldId = (name: string) => `adm-08-summary-${name}`;
 
 function useDemoFormSections(): ResourceFormSection<DemoFormValues>[] {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.forms.${key}`);
+    const demo = (key: string) => t(`showcase.forms.${key}`);
 
     return [
         {
@@ -170,7 +170,7 @@ function validateDemo(
  */
 function InteractiveResourceForm() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.forms.${key}`);
+    const demo = (key: string) => t(`showcase.forms.${key}`);
     const sections = useDemoFormSections();
     const [values, setValues] = useState<DemoFormValues>(emptyValues);
     const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
@@ -243,7 +243,7 @@ function StaticResourceForm({
     recentlySuccessful?: boolean;
 }) {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.forms.${key}`);
+    const demo = (key: string) => t(`showcase.forms.${key}`);
     const sections = useDemoFormSections();
     const [values, setValues] = useState<DemoFormValues>(() => ({
         ...emptyValues,
@@ -257,7 +257,7 @@ function StaticResourceForm({
             sections={sections.slice(0, 1).map((section) => ({
                 ...section,
                 title: `${section.title} · ${t(
-                    `admin.designSystem.states.${isPending ? 'pending' : 'success'}`,
+                    `showcase.states.${isPending ? 'pending' : 'success'}`,
                 )}`,
             }))}
             values={values}
@@ -283,7 +283,7 @@ function StaticResourceForm({
 function RepeaterImageResourceForm() {
     const { t } = useTranslation();
     const demo = (key: string, params?: Record<string, string>) =>
-        t(`admin.designSystem.forms.${key}`, params);
+        t(`showcase.forms.${key}`, params);
     const { pickers, pickerLabels } = useDemoImagePicker();
     const [values, setValues] = useState<{
         projects: ResourceFormRepeaterItem[];
@@ -350,7 +350,7 @@ function RepeaterImageResourceForm() {
 /** ADM-08 — the form as a whole: sections, actions, summary, ResourceForm. */
 function FormsSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.forms.${key}`);
+    const demo = (key: string) => t(`showcase.forms.${key}`);
     const [sectionName, setSectionName] = useState('');
     const [summaryName, setSummaryName] = useState('');
     const [summaryEmail, setSummaryEmail] = useState('anna.example.com');
@@ -568,7 +568,7 @@ function FormsSection() {
 
 export const formsFamily: ShowcaseFamily = {
     id: 'adm-08',
-    titleKey: 'admin.designSystem.forms.title',
-    descriptionKey: 'admin.designSystem.forms.description',
+    titleKey: 'showcase.forms.title',
+    descriptionKey: 'showcase.forms.description',
     Component: FormsSection,
 };

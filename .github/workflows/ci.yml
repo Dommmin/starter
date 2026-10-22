@@ -32,8 +32,10 @@ jobs:
           cache: npm
       - name: Install JavaScript dependencies
         run: npm ci
+      # Dependabot titles name the bumped action and both versions, which
+      # can exceed the 72-character header limit; the format is fixed upstream.
       - name: Validate pull request title
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.user.login != 'dependabot[bot]'
         env:
           COMMIT_MESSAGE: ${{ github.event.pull_request.title }}
         run: printf '%s\n' "$COMMIT_MESSAGE" | npx commitlint --verbose
@@ -258,7 +260,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.5'
           extensions: pdo_mysql

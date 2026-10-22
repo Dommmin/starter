@@ -51,3 +51,4 @@ Glob: `lefthook.yml`, `commitlint.config.mjs`, `.githooks/**`, `.github/workflow
 
 - PR do `develop`/`main`: commit-convention, secrets (Gitleaks), quality (Pint, PHPStan, testy, build, testy AI).
 - CI jest niezależne od lokalnych hooków — obowiązkowe również po ich pominięciu.
+- Wyjątek commit-convention (decyzja właściciela 2026-10-22): tytuł PR od `dependabot[bot]` i commity z `Signed-off-by: dependabot[bot]` nie są walidowane, bo Dependabot generuje tytuły dłuższe niż 72 znaki. Wyjątek nie obejmuje innych autorów.

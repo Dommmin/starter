@@ -68,6 +68,13 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('name: secrets', ci)
         self.assertIn('name: quality', ci)
         self.assertIn('name: audit', ci)
+        # Pushed commits are validated from the previous head; only the first
+        # push of a branch skips its inherited history.
+        pushed = ci.split("- name: Validate pushed commits", 1)[1].split("\n  audit:", 1)[0]
+        self.assertIn('npx commitlint --from "$BEFORE" --to "$AFTER" --verbose', pushed)
+        self.assertNotIn("--max-parents=0", pushed)
+        self.assertIn("First push of this branch", pushed)
+        self.assertIn('printf \'%s\\n\' "$COMMIT_MESSAGE" | npx commitlint --verbose', ci)
         self.assertIn('composer audit --locked --no-dev --format=plain', ci)
         self.assertIn('npm audit --omit=dev --audit-level=high', ci)
         self.assertIn('gitleaks/gitleaks-action@', ci)

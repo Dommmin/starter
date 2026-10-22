@@ -196,10 +196,7 @@ describe('PublicDesignSystemShowcase', () => {
         const section = await renderFamily('web-05');
 
         await act(async () =>
-            buttonWithText(
-                section,
-                'admin.designSystem.web.contact.showErrors',
-            )?.click(),
+            buttonWithText(section, 'showcase.web.contact.showErrors')?.click(),
         );
 
         const focused = document.activeElement as HTMLInputElement | null;
@@ -215,10 +212,7 @@ describe('PublicDesignSystemShowcase', () => {
         expect(section.textContent).not.toContain('home.latestArticlesEmpty');
 
         await act(async () =>
-            buttonWithText(
-                section,
-                'admin.designSystem.web.landing.showEmpty',
-            )?.click(),
+            buttonWithText(section, 'showcase.web.landing.showEmpty')?.click(),
         );
 
         expect(section.textContent).toContain('home.latestArticlesEmpty');
@@ -233,7 +227,7 @@ describe('PublicDesignSystemShowcase', () => {
 
         expect(counts).toEqual([4, 3, 2, 3]);
         expect(section.textContent).toContain(
-            'admin.designSystem.web.landing.statsEmptyNote',
+            'showcase.web.landing.statsEmptyNote',
         );
     });
 
@@ -256,8 +250,6 @@ describe('PublicDesignSystemShowcase', () => {
         expect(
             dialog?.querySelector('a[target="_blank"]')?.getAttribute('rel'),
         ).toBe('noopener noreferrer');
-        expect(dialog?.textContent).toContain(
-            'admin.designSystem.web.nav.resources',
-        );
+        expect(dialog?.textContent).toContain('showcase.web.nav.resources');
     });
 });

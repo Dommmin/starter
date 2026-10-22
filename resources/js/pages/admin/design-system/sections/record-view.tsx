@@ -19,7 +19,7 @@ import {
 /** ADM-11 — record view: DescriptionList and RecordDetails. */
 function RecordViewSection() {
     const { t, formatDate } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.recordView.${key}`);
+    const demo = (key: string) => t(`showcase.recordView.${key}`);
 
     const defaultItems: DescriptionListItem[] = [
         { id: 'name', label: demo('labels.name'), value: 'Zofia Łęcka' },
@@ -165,7 +165,7 @@ function RecordViewSection() {
 
 export const recordViewFamily: ShowcaseFamily = {
     id: 'adm-11',
-    titleKey: 'admin.designSystem.recordView.title',
-    descriptionKey: 'admin.designSystem.recordView.description',
+    titleKey: 'showcase.recordView.title',
+    descriptionKey: 'showcase.recordView.description',
     Component: RecordViewSection,
 };

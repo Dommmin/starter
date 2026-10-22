@@ -17,8 +17,8 @@ class PublicDesignSystemController extends Controller
      * The routes are registered in the `local` environment only (see
      * routes/design-system.php); the environment check here is a second
      * guard in case the route file is ever loaded elsewhere. Public pages
-     * receive only the public catalog, so the showcase labels
-     * (`admin.designSystem.*`) are added to this page's payload alone.
+     * receive only the public catalog, so the `showcase` group is added
+     * to this page's payload alone.
      */
     public function __invoke(Request $request, LocalizationManager $localization): Response
     {
@@ -26,7 +26,7 @@ class PublicDesignSystemController extends Controller
 
         $locale = $localization->getCurrentLocale($request);
 
-        Inertia::share('i18n.messages.admin.designSystem', trans('admin.designSystem', [], $locale));
+        Inertia::share('i18n.messages.showcase', trans('showcase', [], $locale));
 
         $response = Inertia::render('design-system/index')->toResponse($request);
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow');

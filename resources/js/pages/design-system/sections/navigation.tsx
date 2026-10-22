@@ -24,8 +24,8 @@ import {
 /** WEB-01 — public navigation: header, mobile menu, logo and footer. */
 function NavigationSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.web.navigation.${key}`);
-    const longName = t('admin.designSystem.web.longName');
+    const demo = (key: string) => t(`showcase.web.navigation.${key}`);
+    const longName = t('showcase.web.longName');
 
     return (
         <Stack gap="default">
@@ -173,7 +173,7 @@ function NavigationSection() {
 
 export const navigationFamily: ShowcaseFamily = {
     id: 'web-01',
-    titleKey: 'admin.designSystem.web.navigation.title',
-    descriptionKey: 'admin.designSystem.web.navigation.description',
+    titleKey: 'showcase.web.navigation.title',
+    descriptionKey: 'showcase.web.navigation.description',
     Component: NavigationSection,
 };

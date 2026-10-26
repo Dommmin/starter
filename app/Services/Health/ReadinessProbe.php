@@ -86,10 +86,15 @@ class ReadinessProbe
         return $reply === true || $reply === 'PONG' || $reply === '+PONG';
     }
 
+    /**
+     * Writes at the disk root on purpose: a directory created by the deploy
+     * user (pre-switch CLI smoke) gets the private 0700 mode, which locks
+     * PHP-FPM out of it and fails every later HTTP probe.
+     */
     private function storage(): bool
     {
         $disk = Storage::disk((string) config('ops.health.storage_disk'));
-        $path = 'health/'.Str::uuid()->toString();
+        $path = 'health-check-'.Str::uuid()->toString();
 
         try {
             return $disk->put($path, 'ok') && $disk->get($path) === 'ok';

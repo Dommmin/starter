@@ -57,10 +57,14 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --force --no-interaction
-      - name: Verify revision
-        run: composer ci:check
+      # Wayfinder output is git-ignored; lint and types need it (as in CI).
+      - name: Generate Wayfinder types
+        run: php artisan wayfinder:generate --with-form --no-interaction
+      # Same order as CI: tests render pages against the built Vite manifest.
       - name: Build production assets
         run: npm run build:ssr
+      - name: Verify revision
+        run: composer ci:check
       - name: Strip development PHP dependencies from artifact
         run: composer install --no-dev --classmap-authoritative --no-interaction --prefer-dist --no-progress
       - name: Create release artifact
@@ -88,6 +92,8 @@ jobs:
         with:
           name: release-${{ github.sha }}
           path: .release/
+          # .release/ is a dot-directory, which upload-artifact skips by default.
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
 

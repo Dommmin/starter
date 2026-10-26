@@ -68,6 +68,13 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('name: secrets', ci)
         self.assertIn('name: quality', ci)
         self.assertIn('name: audit', ci)
+        # Pushed commits are validated from the previous head; only the first
+        # push of a branch skips its inherited history.
+        pushed = ci.split("- name: Validate pushed commits", 1)[1].split("\n  audit:", 1)[0]
+        self.assertIn('npx commitlint --from "$BEFORE" --to "$AFTER" --verbose', pushed)
+        self.assertNotIn("--max-parents=0", pushed)
+        self.assertIn("First push of this branch", pushed)
+        self.assertIn('printf \'%s\\n\' "$COMMIT_MESSAGE" | npx commitlint --verbose', ci)
         self.assertIn('composer audit --locked --no-dev --format=plain', ci)
         self.assertIn('npm audit --omit=dev --audit-level=high', ci)
         self.assertIn('gitleaks/gitleaks-action@', ci)
@@ -91,6 +98,12 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}', deploy)
         self.assertIn('DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}', deploy)
         self.assertIn('sha256sum -c .release/starter.tar.gz.sha256', deploy)
+        build_steps = deploy.split("  build-release:", 1)[1].split("\n  deploy:", 1)[0]
+        self.assertLess(build_steps.index("wayfinder:generate --with-form"), build_steps.index("composer ci:check"))
+        self.assertLess(build_steps.index("npm run build:ssr"), build_steps.index("composer ci:check"))
+        upload = build_steps.split("- name: Upload release artifact", 1)[1]
+        self.assertIn("path: .release/", upload)
+        self.assertIn("include-hidden-files: true", upload)
         # The git-ignored SSR bundle must ship in the artifact and is checked
         # on the candidate release before the switch.
         self.assertIn('cp -R bootstrap/ssr .release/app/bootstrap/ssr', deploy)

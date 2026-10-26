@@ -109,6 +109,7 @@ task('deploy:migrate', function (): void {
  */
 task('deploy:smoke', function (): void {
     run('test -f {{release_path}}/public/build/manifest.json');
+    run('test -f {{release_path}}/bootstrap/ssr/app.js');
     run('cd {{release_path}} && php artisan about --only=environment --no-interaction');
     run('cd {{release_path}} && php artisan ops:readiness --no-interaction');
 });

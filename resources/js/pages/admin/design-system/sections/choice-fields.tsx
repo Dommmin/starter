@@ -37,7 +37,7 @@ function useDemoChoices<Value>(initial: Record<string, Value>, empty: Value) {
 /** ADM-04 — value choice: every implemented control in its applicable states. */
 function ChoiceFieldsSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.choiceFields.${key}`);
+    const demo = (key: string) => t(`showcase.choiceFields.${key}`);
     const checks = useDemoChoices<boolean>(
         {
             checkboxValue: true,
@@ -684,7 +684,7 @@ function ChoiceFieldsSection() {
 
 export const choiceFieldsFamily: ShowcaseFamily = {
     id: 'adm-04',
-    titleKey: 'admin.designSystem.choiceFields.title',
-    descriptionKey: 'admin.designSystem.choiceFields.description',
+    titleKey: 'showcase.choiceFields.title',
+    descriptionKey: 'showcase.choiceFields.description',
     Component: ChoiceFieldsSection,
 };

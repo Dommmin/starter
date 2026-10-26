@@ -2,12 +2,14 @@ import { Rocket, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { HomeSections } from '@/components/home/home-sections';
 import {
+    AppearancePreview,
     Button,
     CTA,
     FeatureGrid,
     Heading,
     Hero,
     Image,
+    Inline,
     Stack,
     StatList,
     Text,
@@ -28,9 +30,9 @@ type HomeSection = App.Data.Home.HomeSectionData;
 /** WEB-02 — landing: hero, key figures, feature grid, call to action, home sections. */
 function LandingSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.web.landing.${key}`);
-    const longName = t('admin.designSystem.web.longName');
-    const longText = t('admin.designSystem.web.longText');
+    const demo = (key: string) => t(`showcase.web.landing.${key}`);
+    const longName = t('showcase.web.longName');
+    const longText = t('showcase.web.longText');
     const [isHomeEmpty, setHomeEmpty] = useState(false);
 
     const actions = (
@@ -201,6 +203,42 @@ function LandingSection() {
                                 </Text>
                             </Stack>
                         </TypographyPreview>
+                    </ShowcaseState>
+                ))}
+            </ShowcaseComponent>
+
+            <ShowcaseComponent
+                name="AppearancePreview · data-accent + data-typography"
+                layout="wide"
+                notApplicable={['loading', 'empty', 'error', 'disabled']}
+            >
+                {(
+                    [
+                        ['blue', 'classic'],
+                        ['green', 'default'],
+                    ] as const
+                ).map(([accent, typography]) => (
+                    <ShowcaseState
+                        key={accent}
+                        state={accent === 'blue' ? 'default' : 'variants'}
+                        detail={`accent=${accent} typography=${typography}`}
+                    >
+                        <AppearancePreview
+                            accent={accent}
+                            typography={typography}
+                            label={demo('typography.heading')}
+                        >
+                            <Stack gap="tight">
+                                <Heading level={3} variant="section">
+                                    {demo('typography.heading')}
+                                </Heading>
+                                <Inline gap="tight">
+                                    <Button variant="primary">
+                                        {demo('primaryAction')}
+                                    </Button>
+                                </Inline>
+                            </Stack>
+                        </AppearancePreview>
                     </ShowcaseState>
                 ))}
             </ShowcaseComponent>
@@ -392,7 +430,7 @@ function LandingSection() {
 
 export const landingFamily: ShowcaseFamily = {
     id: 'web-02',
-    titleKey: 'admin.designSystem.web.landing.title',
-    descriptionKey: 'admin.designSystem.web.landing.description',
+    titleKey: 'showcase.web.landing.title',
+    descriptionKey: 'showcase.web.landing.description',
     Component: LandingSection,
 };

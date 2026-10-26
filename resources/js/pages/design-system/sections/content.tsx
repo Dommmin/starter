@@ -37,7 +37,7 @@ const demoJsonLd = {
 /** WEB-04 — content: server-sanitised rich text and article tags. */
 function ContentSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.web.content.${key}`);
+    const demo = (key: string) => t(`showcase.web.content.${key}`);
     const tags = [
         { id: 'news', label: demo('tagNews'), href: '#web-04' },
         { id: 'guides', label: demo('tagGuides'), href: '#web-04' },
@@ -120,15 +120,15 @@ function ContentSection() {
 
 export const contentFamily: ShowcaseFamily = {
     id: 'web-04',
-    titleKey: 'admin.designSystem.web.content.title',
-    descriptionKey: 'admin.designSystem.web.content.description',
+    titleKey: 'showcase.web.content.title',
+    descriptionKey: 'showcase.web.content.description',
     Component: ContentSection,
 };
 
 /** WEB-SEO — the `Seo` head of this page and JSON-LD escaping. */
 function SeoSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.web.seo.${key}`);
+    const demo = (key: string) => t(`showcase.web.seo.${key}`);
 
     return (
         <ShowcaseComponent
@@ -158,7 +158,7 @@ function SeoSection() {
 
 export const seoFamily: ShowcaseFamily = {
     id: 'web-seo',
-    titleKey: 'admin.designSystem.web.seo.title',
-    descriptionKey: 'admin.designSystem.web.seo.description',
+    titleKey: 'showcase.web.seo.title',
+    descriptionKey: 'showcase.web.seo.description',
     Component: SeoSection,
 };

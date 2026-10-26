@@ -43,7 +43,7 @@ const demoPasswordRules =
 /** ADM-03 — text fields: every implemented field in its applicable states. */
 function TextFieldsSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.textFields.${key}`);
+    const demo = (key: string) => t(`showcase.textFields.${key}`);
     const polishValue = demo('polishValue');
     const { value, onChange } = useDemoValues({
         textValue: demo('nameValue'),
@@ -673,7 +673,7 @@ function TextFieldsSection() {
 
 export const textFieldsFamily: ShowcaseFamily = {
     id: 'adm-03',
-    titleKey: 'admin.designSystem.textFields.title',
-    descriptionKey: 'admin.designSystem.textFields.description',
+    titleKey: 'showcase.textFields.title',
+    descriptionKey: 'showcase.textFields.description',
     Component: TextFieldsSection,
 };

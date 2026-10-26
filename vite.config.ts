@@ -86,6 +86,11 @@ export default defineConfig({
             },
         },
     },
+    // The release artifact ships no node_modules, so the SSR bundle must be
+    // self-contained (deploy.yml copies bootstrap/ssr as built).
+    ssr: {
+        noExternal: true,
+    },
     server: {
         ...(process.env.DOCKER_LOCAL === '1'
             ? {

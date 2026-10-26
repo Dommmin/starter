@@ -44,7 +44,7 @@ const splitRatios = ['even', 'primary-wide', 'primary-narrow'] as const;
 /** ADM-02 — layouts and schemas: every layout primitive in its states. */
 function LayoutsSection() {
     const { t } = useTranslation();
-    const demo = (key: string) => t(`admin.designSystem.layouts.${key}`);
+    const demo = (key: string) => t(`showcase.layouts.${key}`);
     const [fieldValue, setFieldValue] = useState(() => demo('fieldValue'));
     const tile = (label: string) => (
         <Surface tone="subtle" padding="compact" radius="sm" border>
@@ -618,7 +618,7 @@ function LayoutsSection() {
 
 export const layoutsFamily: ShowcaseFamily = {
     id: 'adm-02',
-    titleKey: 'admin.designSystem.layouts.title',
-    descriptionKey: 'admin.designSystem.layouts.description',
+    titleKey: 'showcase.layouts.title',
+    descriptionKey: 'showcase.layouts.description',
     Component: LayoutsSection,
 };

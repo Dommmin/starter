@@ -27,6 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
+      # Defence in depth next to the production environment's deployment
+      # branch policy: nothing is built for production from another ref.
+      - name: Require main for production
+        if: inputs.environment == 'production' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Production deploys run only from main (got $GITHUB_REF)."
+          exit 1
       - name: Checkout approved revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,10 +57,14 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --force --no-interaction
-      - name: Verify revision
-        run: composer ci:check
+      # Wayfinder output is git-ignored; lint and types need it (as in CI).
+      - name: Generate Wayfinder types
+        run: php artisan wayfinder:generate --with-form --no-interaction
+      # Same order as CI: tests render pages against the built Vite manifest.
       - name: Build production assets
         run: npm run build:ssr
+      - name: Verify revision
+        run: composer ci:check
       - name: Strip development PHP dependencies from artifact
         run: composer install --no-dev --classmap-authoritative --no-interaction --prefer-dist --no-progress
       - name: Create release artifact
@@ -62,6 +73,9 @@ jobs:
           git archive --format=tar "$GITHUB_SHA" | tar -x -C .release/app
           cp -R vendor .release/app/vendor
           cp -R public/build .release/app/public/build
+          # The SSR bundle is git-ignored, so git archive leaves it out.
+          test -f bootstrap/ssr/app.js
+          cp -R bootstrap/ssr .release/app/bootstrap/ssr
           tar -C .release/app -czf .release/starter.tar.gz .
           sha256sum .release/starter.tar.gz | tee .release/starter.tar.gz.sha256
           jq -n \
@@ -78,6 +92,8 @@ jobs:
         with:
           name: release-${{ github.sha }}
           path: .release/
+          # .release/ is a dot-directory, which upload-artifact skips by default.
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
 

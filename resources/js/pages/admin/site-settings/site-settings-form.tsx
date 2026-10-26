@@ -18,6 +18,7 @@ import {
     edit as siteSettingsEdit,
     update as siteSettingsUpdate,
 } from '@/routes/admin/site-settings';
+import { SiteSkins } from './site-skins';
 
 type EditorData = App.Data.Admin.Settings.SiteSettingsEditorData;
 type SocialNetwork = App.Enums.SocialNetwork;
@@ -737,6 +738,19 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                     })}
                 />
             )}
+
+            <SiteSkins
+                accent={form.data.accent}
+                typography={form.data.typography}
+                disabled={form.processing}
+                onApply={(skin) =>
+                    form.setData((data) => ({
+                        ...data,
+                        accent: skin.accent,
+                        typography: skin.typography,
+                    }))
+                }
+            />
 
             <Tabs
                 ariaLabel={t('admin.siteSettings.languagesLabel')}

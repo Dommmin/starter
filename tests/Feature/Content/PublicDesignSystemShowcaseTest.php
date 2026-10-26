@@ -31,9 +31,9 @@ test('a guest opens the public showcase in the local environment, not indexable'
             ->component('design-system/index')
             ->where('i18n.area', 'public')
             ->where('i18n.locale', 'en')
-            ->where('i18n.messages.admin.designSystem.web.title', 'Design system — public website')
-            ->has('i18n.messages.admin.designSystem.states.submenu')
-            ->missing('i18n.messages.admin.dashboard')
+            ->where('i18n.messages.showcase.web.title', 'Design system — public website')
+            ->has('i18n.messages.showcase.states.submenu')
+            ->missing('i18n.messages.admin')
             ->has('navigation'),
         );
 });
@@ -46,7 +46,7 @@ test('the public showcase is served in the other public locales', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('design-system/index')
             ->where('i18n.locale', 'pl')
-            ->where('i18n.messages.admin.designSystem.web.title', 'Design system — strona publiczna'),
+            ->where('i18n.messages.showcase.web.title', 'Design system — strona publiczna'),
         );
 });
 
@@ -55,7 +55,9 @@ test('other public pages do not receive the showcase catalog', function () {
 
     $this->get('/')
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->missing('i18n.messages.admin'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->missing('i18n.messages.admin')
+            ->missing('i18n.messages.showcase'));
 });
 
 test('the public showcase is not listed in the sitemap', function () {

@@ -5,6 +5,11 @@ namespace App\Services\Media;
 use App\Models\MediaAsset;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Encoders\AvifEncoder;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\EncodedImageInterface;
 use Intervention\Image\Interfaces\ImageInterface;
@@ -32,8 +37,8 @@ final class ImageVariantGenerator
 
         $this->assertDecodable($absolutePath);
 
-        $manager = ImageManager::gd(autoOrientation: true, decodeAnimation: false, strip: true);
-        $image = $manager->read($absolutePath);
+        $manager = ImageManager::usingDriver(GdDriver::class, autoOrientation: true, decodeAnimation: false, strip: true);
+        $image = $manager->decodePath($absolutePath);
         $originalWidth = $image->width();
         $originalHeight = $image->height();
 
@@ -125,10 +130,10 @@ final class ImageVariantGenerator
         $quality = config('media.quality');
 
         return match ($format) {
-            'avif' => $image->toAvif(quality: $quality['avif'], strip: true),
-            'webp' => $image->toWebp(quality: $quality['webp'], strip: true),
-            'png' => $image->toPng(),
-            default => $image->toJpeg(quality: $quality['jpeg'], progressive: true, strip: true),
+            'avif' => $image->encode(new AvifEncoder(quality: $quality['avif'], strip: true)),
+            'webp' => $image->encode(new WebpEncoder(quality: $quality['webp'], strip: true)),
+            'png' => $image->encode(new PngEncoder(strip: true)),
+            default => $image->encode(new JpegEncoder(quality: $quality['jpeg'], progressive: true, strip: true)),
         };
     }
 

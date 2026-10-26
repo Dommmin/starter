@@ -30,9 +30,11 @@ use Spatie\LaravelData\Data;
  * English and German copy) and a header menu of section anchors in every
  * public locale.
  *
- * Run after the default seeders: `make artisan ARGS='db:seed --class=SoftwareHouseSeeder'`.
- * Local only, because the placeholder images skip the malware scan like
- * {@see DemoMediaSeeder}. Idempotent and safe for edits: a locale is
+ * Run after the default seeders: `make artisan ARGS='db:seed --class=SoftwareHouseSeeder'`,
+ * or on a showcase server through {@see SoftwareHouseShowcaseSeeder}. Only
+ * where sample content is enabled, because the placeholder images skip the
+ * malware scan like {@see DemoMediaSeeder} (they are drawn in process,
+ * never uploaded). Idempotent and safe for edits: a locale is
  * rewritten only while none of its sections was changed by a person (every
  * panel edit, toggle and reorder is audited; seeders never are) or each
  * still holds seeded content, its header and footer menus only while no
@@ -46,8 +48,8 @@ class SoftwareHouseSeeder extends Seeder
 
     public function run(LocalizationConfig $config, EnsureHomeSections $ensure, PublicNavigation $navigation, UpdateSiteSettings $settings): void
     {
-        if (! app()->environment('local')) {
-            throw new RuntimeException('SoftwareHouseSeeder seeds placeholder media without a malware scan and runs only in the local environment.');
+        if (! DemoContent::samplesEnabled()) {
+            throw new RuntimeException('SoftwareHouseSeeder seeds placeholder media without a malware scan and runs only where sample content is enabled (local, demo or SoftwareHouseShowcaseSeeder).');
         }
 
         $this->call([SoftwareHouseMediaSeeder::class, SoftwareHouseArticleSeeder::class, SoftwareHouseFaqSeeder::class, SoftwareHouseOfferPageSeeder::class]);

@@ -22,6 +22,7 @@ use Database\Seeders\SoftwareHouseFaqSeeder;
 use Database\Seeders\SoftwareHouseMediaSeeder;
 use Database\Seeders\SoftwareHouseOfferPageSeeder;
 use Database\Seeders\SoftwareHouseSeeder;
+use Database\Seeders\SoftwareHouseShowcaseSeeder;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -61,13 +62,21 @@ function showcaseHeader(string $locale): array
         ->all();
 }
 
-test('the showcase seeder refuses to run outside the local environment', function () {
+test('the showcase seeder refuses to run where sample content is disabled', function () {
     $this->seed(DatabaseSeeder::class);
     $before = HomeSection::query()->orderBy('id')->get()->toArray();
 
     expect(fn () => $this->seed(SoftwareHouseSeeder::class))->toThrow(RuntimeException::class);
 
     expect(HomeSection::query()->orderBy('id')->get()->toArray())->toBe($before);
+});
+
+test('a showcase server gets the samples and the software house content without sample accounts', function () {
+    $this->seed(SoftwareHouseShowcaseSeeder::class);
+
+    expect(showcaseOrder('pl'))->toContain(HomeSectionType::Portfolio)
+        ->and(User::query()->pluck('email')->all())->toBe([DemoContent::USER_EMAIL])
+        ->and(config('demo.samples'))->toBeTrue();
 });
 
 test('the showcase seeder turns the demo into the software house home page', function () {

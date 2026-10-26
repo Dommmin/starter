@@ -113,10 +113,10 @@ class AiConfigurationTest(unittest.TestCase):
         deployer = (ROOT / "deploy.php").read_text()
         smoke = deployer.split("task('deploy:smoke', function", 1)[1].split("});", 1)[0]
         self.assertIn("bootstrap/ssr/app.js", smoke)
-        # Production is built and deployed only from main.
+        # Production is built and deployed only from main (or the showcase branch).
         build = deploy.split("  build-release:", 1)[1].split("\n  deploy:", 1)[0]
         guard = build.split("- name: Require main for production", 1)[1].split("- name:", 1)[0]
-        self.assertIn("inputs.environment == 'production' && github.ref != 'refs/heads/main'", guard)
+        self.assertIn("inputs.environment == 'production' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/feat/sh-showcase'", guard)
         self.assertIn("exit 1", guard)
         self.assertLess(build.index("Require main for production"), build.index("Checkout approved revision"))
 

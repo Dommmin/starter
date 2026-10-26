@@ -17,4 +17,19 @@ return [
 
     'enabled' => (bool) env('APP_DEMO', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sample content outside the demo
+    |--------------------------------------------------------------------------
+    |
+    | Switched on only at runtime by SoftwareHouseShowcaseSeeder, so that an
+    | explicit seeder run fills a showcase installation with sample content
+    | without the sample accounts (known password) of the local environment.
+    | Deliberately not read from the environment: a cached configuration
+    | must never keep it on.
+    |
+    */
+
+    'samples' => false,
+
 ];

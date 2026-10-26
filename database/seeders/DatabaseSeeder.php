@@ -15,9 +15,9 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database. Idempotent: a second run adds nothing.
      * The sample administrator and the sample content of every module are
-     * created only in the local environment and on the public demo; legal
-     * page templates, contact forms, menus and home sections exist
-     * everywhere.
+     * created only in the local environment, on the public demo and during a
+     * showcase seed (without the sample accounts); legal page templates,
+     * contact forms, menus and home sections exist everywhere.
      */
     public function run(): void
     {
@@ -33,8 +33,11 @@ class DatabaseSeeder extends Seeder
                 ])->save();
             }
 
+            if (DemoContent::sampleAccountsEnabled()) {
+                $this->call(DemoUserSeeder::class);
+            }
+
             $this->call([
-                DemoUserSeeder::class,
                 DemoMediaSeeder::class,
                 PageSeeder::class,
                 ArticleSeeder::class,

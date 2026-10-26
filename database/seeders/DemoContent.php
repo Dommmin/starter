@@ -108,10 +108,20 @@ final class DemoContent
     ];
 
     /**
-     * Whether sample content is seeded: in the local environment and on the
-     * public demo (`config('demo.enabled')`).
+     * Whether sample content is seeded: in the local environment, on the
+     * public demo (`config('demo.enabled')`) and during an explicit showcase
+     * seed (`config('demo.samples')`).
      */
     public static function samplesEnabled(): bool
+    {
+        return self::sampleAccountsEnabled() || (bool) config('demo.samples');
+    }
+
+    /**
+     * Whether the sample accounts with the known password `password` are
+     * seeded: never on a showcase installation, which is public.
+     */
+    public static function sampleAccountsEnabled(): bool
     {
         return app()->environment('local') || (bool) config('demo.enabled');
     }

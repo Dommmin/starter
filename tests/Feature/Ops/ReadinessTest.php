@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 
 beforeEach(function () {
@@ -55,6 +56,17 @@ test('a valid health token reveals the per-check results', function () {
                 'scanner' => 'skipped',
             ],
         ]);
+});
+
+test('the storage check leaves no directory or file behind', function () {
+    Storage::fake('local');
+
+    $this->get('/health/ready', readinessDetails())
+        ->assertOk()
+        ->assertJsonPath('checks.storage', 'ok');
+
+    expect(Storage::disk('local')->allDirectories())->toBe([])
+        ->and(Storage::disk('local')->allFiles())->toBe([]);
 });
 
 test('a wrong health token does not reveal details', function () {

@@ -119,6 +119,9 @@ function hoursField(
     return `opening_hours.${day}.${edge}`;
 }
 
+/** Value of the tab with the settings shared by every language. */
+const SHARED_TAB = 'shared';
+
 function translationPrefix(locale: string): string {
     return `translations.${locale}.`;
 }
@@ -146,11 +149,11 @@ export type SiteSettingsFormProps = {
 };
 
 /**
- * Site settings screen: one tab per active public locale, each a
- * `ResourceForm` with the shared settings (brand, contact, social links,
- * sharing image, contact form recipient) and the texts of that language.
- * Submitting any tab saves everything; a stale version opens the conflict
- * dialog.
+ * Site settings screen: a first tab with the settings shared by every
+ * language (brand, appearance, contact, social links, sharing image, contact
+ * form recipients), then one tab per active public locale with only the texts
+ * of that language. Each tab is a `ResourceForm`; submitting any tab saves
+ * everything. A stale version opens the conflict dialog.
  */
 export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
     const { settings, locales, socialNetworks } = editor;
@@ -195,7 +198,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         ),
     });
 
-    const [activeLocale, setActiveLocale] = useState(locales.default);
+    const [activeTab, setActiveTab] = useState(SHARED_TAB);
     const [isConflictOpen, setIsConflictOpen] = useState(false);
 
     const errors = form.errors as Partial<Record<string, string>>;
@@ -227,6 +230,19 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
     const localeHasErrors = (code: string, keys: string[] = errorKeys) =>
         keys.some((key) => key.startsWith(translationPrefix(code)));
+
+    const sharedHasErrors = (keys: string[] = errorKeys) =>
+        keys.some(
+            (key) => inlineKeys.has(key) && !key.startsWith('translations.'),
+        );
+
+    const tabHasErrors = (tab: string, keys: string[] = errorKeys) =>
+        tab === SHARED_TAB ? sharedHasErrors(keys) : localeHasErrors(tab, keys);
+
+    const tabs = [
+        SHARED_TAB,
+        ...locales.available.map((locale) => locale.code),
+    ];
 
     useEffect(() => {
         if (!form.isDirty) {
@@ -359,16 +375,14 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
                 const keys = Object.keys(received);
 
-                if (localeHasErrors(activeLocale, keys)) {
+                if (tabHasErrors(activeTab, keys)) {
                     return;
                 }
 
-                const target = locales.available.find((locale) =>
-                    localeHasErrors(locale.code, keys),
-                )?.code;
+                const target = tabs.find((tab) => tabHasErrors(tab, keys));
 
                 if (target) {
-                    setActiveLocale(target);
+                    setActiveTab(target);
                 }
             },
         });
@@ -408,17 +422,24 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             : t('admin.siteSettings.localeMissing');
     }
 
-    const otherLocalesWithErrors = locales.available
-        .filter(
-            (locale) =>
-                locale.code !== activeLocale && localeHasErrors(locale.code),
-        )
-        .map((locale) => locale.native);
+    function sharedState(): string {
+        return sharedHasErrors()
+            ? t('admin.siteSettings.localeHasErrors')
+            : t('admin.siteSettings.sharedTabState');
+    }
 
-    function sections(
-        locale: App.Data.Content.ContentLocaleData,
-        values: TabValues,
-    ): ResourceFormSection<TabValues>[] {
+    function tabName(tab: string): string {
+        return tab === SHARED_TAB
+            ? t('admin.siteSettings.sharedTab')
+            : (locales.available.find((locale) => locale.code === tab)
+                  ?.native ?? tab);
+    }
+
+    const otherTabsWithErrors = tabs
+        .filter((tab) => tab !== activeTab && tabHasErrors(tab))
+        .map(tabName);
+
+    function sharedSections(): ResourceFormSection<TabValues>[] {
         return [
             {
                 id: 'general',
@@ -630,6 +651,52 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                 ],
             },
             {
+                id: 'notifications',
+                title: t('admin.siteSettings.sections.notifications.title'),
+                description: t(
+                    'admin.siteSettings.sections.notifications.description',
+                ),
+                fields: [
+                    {
+                        type: 'repeater',
+                        name: 'contact_recipients',
+                        label: t('admin.siteSettings.fields.recipients'),
+                        hint: t('admin.siteSettings.fields.recipientsHelp'),
+                        maxItems: MAX_RECIPIENTS,
+                        newItem: () => ({ email: '' }),
+                        labels: {
+                            add: t('admin.siteSettings.fields.recipientAdd'),
+                            item: (position) =>
+                                t('admin.siteSettings.fields.recipientItem', {
+                                    position,
+                                }),
+                        },
+                        itemFields: [
+                            {
+                                type: 'text',
+                                name: 'email',
+                                label: t('admin.siteSettings.fields.recipient'),
+                                required: true,
+                            },
+                        ],
+                    },
+                    {
+                        type: 'switch',
+                        name: 'contact_auto_reply',
+                        label: t('admin.siteSettings.fields.autoReply'),
+                        hint: t('admin.siteSettings.fields.autoReplyHelp'),
+                    },
+                ],
+            },
+        ];
+    }
+
+    function textSections(
+        locale: App.Data.Content.ContentLocaleData,
+        values: TabValues,
+    ): ResourceFormSection<TabValues>[] {
+        return [
+            {
                 id: `texts-${locale.code}`,
                 title: t('admin.siteSettings.sections.texts.title', {
                     language: locale.native,
@@ -676,44 +743,6 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                     },
                 ],
             },
-            {
-                id: 'notifications',
-                title: t('admin.siteSettings.sections.notifications.title'),
-                description: t(
-                    'admin.siteSettings.sections.notifications.description',
-                ),
-                fields: [
-                    {
-                        type: 'repeater',
-                        name: 'contact_recipients',
-                        label: t('admin.siteSettings.fields.recipients'),
-                        hint: t('admin.siteSettings.fields.recipientsHelp'),
-                        maxItems: MAX_RECIPIENTS,
-                        newItem: () => ({ email: '' }),
-                        labels: {
-                            add: t('admin.siteSettings.fields.recipientAdd'),
-                            item: (position) =>
-                                t('admin.siteSettings.fields.recipientItem', {
-                                    position,
-                                }),
-                        },
-                        itemFields: [
-                            {
-                                type: 'text',
-                                name: 'email',
-                                label: t('admin.siteSettings.fields.recipient'),
-                                required: true,
-                            },
-                        ],
-                    },
-                    {
-                        type: 'switch',
-                        name: 'contact_auto_reply',
-                        label: t('admin.siteSettings.fields.autoReply'),
-                        hint: t('admin.siteSettings.fields.autoReplyHelp'),
-                    },
-                ],
-            },
         ];
     }
 
@@ -732,11 +761,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                 />
             )}
 
-            {otherLocalesWithErrors.length > 0 && (
+            {otherTabsWithErrors.length > 0 && (
                 <Alert
                     tone="danger"
-                    title={t('admin.siteSettings.errorsInOtherLanguages', {
-                        languages: otherLocalesWithErrors.join(', '),
+                    title={t('admin.siteSettings.errorsInOtherTabs', {
+                        tabs: otherTabsWithErrors.join(', '),
                     })}
                 />
             )}
@@ -771,10 +800,12 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
             <Tabs
                 ariaLabel={t('admin.siteSettings.languagesLabel')}
-                value={activeLocale}
-                onValueChange={setActiveLocale}
-                items={locales.available.map((locale) => {
-                    const code = locale.code;
+                value={activeTab}
+                onValueChange={setActiveTab}
+                items={tabs.map((code) => {
+                    const locale = locales.available.find(
+                        (available) => available.code === code,
+                    );
                     const prefix = translationPrefix(code);
                     const values: TabValues = {
                         ...Object.fromEntries(
@@ -801,7 +832,9 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                                 ],
                             ]),
                         ),
-                        ...form.data.translations[code],
+                        ...(locale
+                            ? form.data.translations[code]
+                            : toTranslationState(undefined)),
                         contact_recipients: form.data.contact_recipients,
                         contact_auto_reply: form.data.contact_auto_reply,
                     } as TabValues;
@@ -809,8 +842,8 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                     return {
                         value: code,
                         label: t('admin.siteSettings.localeTabLabel', {
-                            language: locale.native,
-                            state: localeState(code),
+                            language: tabName(code),
+                            state: locale ? localeState(code) : sharedState(),
                         }),
                         content: (
                             <ResourceForm<TabValues>
@@ -853,7 +886,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                                     ),
                                     saved: t('admin.siteSettings.updated'),
                                 }}
-                                sections={sections(locale, values)}
+                                sections={
+                                    locale
+                                        ? textSections(locale, values)
+                                        : sharedSections()
+                                }
                             />
                         ),
                     };

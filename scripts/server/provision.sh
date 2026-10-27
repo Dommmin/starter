@@ -152,15 +152,20 @@ mysql-community-server mysql-community-server/root-pass password
 mysql-community-server mysql-community-server/re-root-pass password
 EOF
     # Extensions mirror docker/local/Dockerfile (GD for intervention/image;
-    # OPcache is built into PHP 8.5).
+    # OPcache is built into PHP 8.5). libgd3 is named explicitly so the
+    # ondrej build (with AVIF) replaces the Ubuntu one already on the image,
+    # which reports AVIF support but cannot write it.
     apt-get install -yq --no-install-recommends \
         "php$PHP_VERSION-fpm" "php$PHP_VERSION-cli" "php$PHP_VERSION-common" \
         "php$PHP_VERSION-mysql" "php$PHP_VERSION-redis" "php$PHP_VERSION-mbstring" \
         "php$PHP_VERSION-xml" "php$PHP_VERSION-curl" "php$PHP_VERSION-zip" \
-        "php$PHP_VERSION-intl" "php$PHP_VERSION-bcmath" "php$PHP_VERSION-gd" \
+        "php$PHP_VERSION-intl" "php$PHP_VERSION-bcmath" "php$PHP_VERSION-gd" libgd3 \
         nginx mysql-server redis nodejs
 
     php -m | grep -qi '^Zend OPcache$' || fail 'OPcache is not available in PHP CLI'
+    # Without AVIF the app still serves WebP and JPEG/PNG; ops:doctor warns.
+    php -r 'error_reporting(E_ALL); set_error_handler(fn () => exit(1)); ob_start(); imageavif(imagecreatetruecolor(1, 1)); exit(ob_get_clean() === "" ? 1 : 0);' \
+        || log 'warning: GD cannot write AVIF; image variants will skip it'
     nginx_version=$(nginx -v 2>&1 | sed -E 's/.*nginx\/([0-9.]+).*/\1/')
     dpkg --compare-versions "$nginx_version" ge 1.28 || fail "nginx >= 1.28 required, found $nginx_version"
     mysql --version | grep -q ' 8\.4\.' || fail 'MySQL 8.4 expected'

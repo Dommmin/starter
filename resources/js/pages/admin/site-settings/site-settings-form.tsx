@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
     Alert,
     ConflictDialog,
+    Link,
     PageHeader,
     ResourceForm,
     Stack,
@@ -14,6 +15,7 @@ import {
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
+import { index as systemIndex } from '@/routes/admin/system';
 import {
     edit as siteSettingsEdit,
     update as siteSettingsUpdate,
@@ -742,6 +744,8 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             <SiteSkins
                 accent={form.data.accent}
                 typography={form.data.typography}
+                savedAccent={settings.accent ?? ''}
+                savedTypography={settings.typography ?? ''}
                 disabled={form.processing}
                 onApply={(skin) =>
                     form.setData((data) => ({
@@ -749,6 +753,19 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         accent: skin.accent,
                         typography: skin.typography,
                     }))
+                }
+            />
+
+            <Alert
+                tone="neutral"
+                title={t('admin.siteSettings.searchVisibility.title')}
+                description={
+                    <>
+                        {t('admin.siteSettings.searchVisibility.description')}{' '}
+                        <Link href={systemIndex()}>
+                            {t('admin.siteSettings.searchVisibility.link')}
+                        </Link>
+                    </>
                 }
             />
 

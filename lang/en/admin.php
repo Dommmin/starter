@@ -1192,6 +1192,11 @@ return [
             'default' => 'Modern — sans-serif headings',
             'classic' => 'Classic — serif headings (Fraunces)',
         ],
+        'searchVisibility' => [
+            'title' => 'Search engine visibility',
+            'description' => 'Hiding the whole site from search engines (noindex) and the coming soon page are switched on the System page.',
+            'link' => 'Go to the System page',
+        ],
         'skins' => [
             'title' => 'Skins',
             'description' => 'Ready-made pairs of an accent colour and typography. “Apply” fills the appearance fields below; the change takes effect once you save the settings.',
@@ -1202,6 +1207,7 @@ return [
             'apply' => 'Apply',
             'applyNamed' => 'Apply the :name skin',
             'current' => 'Selected',
+            'unsaved' => 'Not saved yet',
             'studio' => [
                 'name' => 'Studio',
                 'description' => 'Orange accent and modern headings. For agencies, creative services and tech companies.',

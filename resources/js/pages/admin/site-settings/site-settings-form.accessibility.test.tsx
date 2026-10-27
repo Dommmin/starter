@@ -211,6 +211,17 @@ async function type(element: HTMLInputElement, value: string) {
     });
 }
 
+/** Selects a tab by value (Radix trigger ids end with `-trigger-{value}`). */
+async function selectTab(container: HTMLElement, value: string) {
+    await act(async () => {
+        container
+            .querySelector<HTMLButtonElement>(
+                `[role="tab"][id$="-trigger-${value}"]`,
+            )
+            ?.focus();
+    });
+}
+
 async function submit(container: HTMLElement) {
     const button = container.querySelector<HTMLButtonElement>(
         '[role="tabpanel"] button[type="submit"]',
@@ -219,6 +230,13 @@ async function submit(container: HTMLElement) {
     await act(async () => {
         button.click();
     });
+}
+
+/** Value of the selected tab (Radix trigger ids end with `-trigger-{value}`). */
+function activeTab(container: HTMLElement): string | undefined {
+    return container
+        .querySelector('[role="tab"][aria-selected="true"]')
+        ?.id.split('-trigger-')[1];
 }
 
 function describedByTexts(element: HTMLElement): (string | null)[] {
@@ -240,14 +258,14 @@ afterEach(async () => {
 });
 
 describe('SiteSettingsForm', () => {
-    it('renders the shared settings, one field per social network and the texts of the active language', async () => {
+    it('renders the shared settings in their own tab and only the texts in each language tab', async () => {
         editorProps = makeEditor();
         const container = await render(<AdminSiteSettingsEdit />);
 
+        expect(container.querySelectorAll('[role="tab"]')).toHaveLength(3);
         expect(field(container, 'site_name').value).toBe('Starter');
         expect(field(container, 'social_links.facebook')).not.toBeNull();
         expect(field(container, 'social_links.linkedin')).not.toBeNull();
-        expect(field(container, 'auto_reply_text')).not.toBeNull();
         expect(
             [...container.querySelectorAll('button')].some(
                 (button) =>
@@ -260,8 +278,15 @@ describe('SiteSettingsForm', () => {
                 '[role="switch"][id$="contact_auto_reply"]',
             ),
         ).not.toBeNull();
+        expect(field(container, 'seo_title')).toBeNull();
+
+        await selectTab(container, 'en');
+
         expect(field(container, 'seo_title')).not.toBeNull();
-        expect(container.querySelectorAll('[role="tab"]')).toHaveLength(2);
+        expect(field(container, 'auto_reply_text')).not.toBeNull();
+        expect(field(container, 'site_name')).toBeNull();
+        expect(field(container, 'contact_email')).toBeNull();
+        expect(field(container, 'social_links.facebook')).toBeNull();
     });
 
     it('submits empty optional values as null with the version, social links and translations', async () => {
@@ -273,6 +298,7 @@ describe('SiteSettingsForm', () => {
             field(container, 'social_links.linkedin'),
             'https://www.linkedin.com/company/acme',
         );
+        await selectTab(container, 'en');
         await type(field(container, 'tagline'), 'We build things');
         await submit(container);
 
@@ -315,12 +341,32 @@ describe('SiteSettingsForm', () => {
         expect(
             describedByTexts(field(container, 'social_links.facebook')),
         ).toContain('The link must start with https://.');
-        expect(describedByTexts(field(container, 'seo_title'))).toContain(
-            'The title may not exceed 70 characters.',
-        );
         expect(
             field(container, 'contact_email').getAttribute('aria-invalid'),
         ).toBe('true');
+        expect(container.textContent).toContain(
+            'admin.siteSettings.errorsInOtherTabs',
+        );
+
+        await selectTab(container, 'en');
+
+        expect(describedByTexts(field(container, 'seo_title'))).toContain(
+            'The title may not exceed 70 characters.',
+        );
+    });
+
+    it('switches to the shared tab when only shared settings have errors', async () => {
+        editorProps = makeEditor();
+        nextErrors = { site_name: 'The site name is required.' };
+        const container = await render(<AdminSiteSettingsEdit />);
+
+        await selectTab(container, 'pl');
+        await submit(container);
+
+        expect(activeTab(container)).toBe('shared');
+        expect(describedByTexts(field(container, 'site_name'))).toContain(
+            'The site name is required.',
+        );
     });
 
     it('switches to the language whose texts have errors', async () => {
@@ -332,9 +378,7 @@ describe('SiteSettingsForm', () => {
 
         await submit(container);
 
-        const tabs = container.querySelectorAll<HTMLElement>('[role="tab"]');
-        expect(tabs[0].getAttribute('aria-selected')).toBe('false');
-        expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+        expect(activeTab(container)).toBe('pl');
         const description = container.querySelector<HTMLTextAreaElement>(
             '[role="tabpanel"] textarea[name="seo_description"]',
         )!;

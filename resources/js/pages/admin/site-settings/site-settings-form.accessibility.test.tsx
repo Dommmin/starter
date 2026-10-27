@@ -341,6 +341,18 @@ describe('SiteSettingsForm', () => {
         expect(describedByTexts(description)).toContain('Too long.');
     });
 
+    it('links to the System page for the site-wide noindex switch', async () => {
+        editorProps = makeEditor({});
+        const container = await render(<AdminSiteSettingsEdit />);
+
+        const link = Array.from(container.querySelectorAll('a')).find(
+            (anchor) =>
+                anchor.textContent ===
+                'admin.siteSettings.searchVisibility.link',
+        );
+        expect(link?.getAttribute('href')).toBe('/admin/system');
+    });
+
     it('applies a skin to the accent and typography fields and saves it with the form', async () => {
         editorProps = makeEditor({ accent: 'default', typography: null });
         const container = await render(<AdminSiteSettingsEdit />);
@@ -354,6 +366,13 @@ describe('SiteSettingsForm', () => {
             ),
         ).toHaveLength(2);
 
+        expect(container.textContent).toContain(
+            'admin.siteSettings.skins.current',
+        );
+        expect(container.textContent).not.toContain(
+            'admin.siteSettings.skins.unsaved',
+        );
+
         await act(async () => {
             container
                 .querySelectorAll<HTMLButtonElement>(
@@ -361,6 +380,15 @@ describe('SiteSettingsForm', () => {
                 )[0]
                 .click();
         });
+
+        // Applied but not saved: no skin claims to be the selected one.
+        expect(container.textContent).toContain(
+            'admin.siteSettings.skins.unsaved',
+        );
+        expect(container.textContent).not.toContain(
+            'admin.siteSettings.skins.current',
+        );
+
         await submit(container);
 
         expect(submitMock.mock.lastCall![1]).toMatchObject({

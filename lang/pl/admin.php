@@ -1194,6 +1194,11 @@ return [
             'default' => 'Nowoczesny — nagłówki bezszeryfowe',
             'classic' => 'Klasyczny — nagłówki szeryfowe (Fraunces)',
         ],
+        'searchVisibility' => [
+            'title' => 'Widoczność w wyszukiwarkach',
+            'description' => 'Ukrycie całego serwisu przed wyszukiwarkami (noindex) i stronę „wkrótce” włączysz na stronie System.',
+            'link' => 'Przejdź do strony System',
+        ],
         'skins' => [
             'title' => 'Skórki',
             'description' => 'Gotowe połączenia koloru akcentu i typografii. „Zastosuj” wypełnia pola wyglądu poniżej; zmiana działa po zapisaniu ustawień.',
@@ -1204,6 +1209,7 @@ return [
             'apply' => 'Zastosuj',
             'applyNamed' => 'Zastosuj skórkę :name',
             'current' => 'Wybrana',
+            'unsaved' => 'Nie zapisano',
             'studio' => [
                 'name' => 'Studio',
                 'description' => 'Pomarańczowy akcent i nowoczesne nagłówki. Dla agencji, usług kreatywnych i firm technologicznych.',

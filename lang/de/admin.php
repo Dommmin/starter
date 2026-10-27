@@ -1192,6 +1192,11 @@ return [
             'default' => 'Modern — serifenlose Überschriften',
             'classic' => 'Klassisch — Serifen-Überschriften (Fraunces)',
         ],
+        'searchVisibility' => [
+            'title' => 'Sichtbarkeit in Suchmaschinen',
+            'description' => 'Das Ausblenden der ganzen Website für Suchmaschinen (noindex) und die Bald-verfügbar-Seite schalten Sie auf der Seite System.',
+            'link' => 'Zur Seite System',
+        ],
         'skins' => [
             'title' => 'Designs',
             'description' => 'Fertige Kombinationen aus Akzentfarbe und Typografie. „Übernehmen“ füllt die Felder zum Erscheinungsbild unten aus; die Änderung gilt nach dem Speichern.',
@@ -1202,6 +1207,7 @@ return [
             'apply' => 'Übernehmen',
             'applyNamed' => 'Design :name übernehmen',
             'current' => 'Ausgewählt',
+            'unsaved' => 'Noch nicht gespeichert',
             'studio' => [
                 'name' => 'Studio',
                 'description' => 'Orangefarbener Akzent und moderne Überschriften. Für Agenturen, Kreativdienstleister und Tech-Firmen.',

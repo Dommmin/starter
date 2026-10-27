@@ -9,13 +9,15 @@ use App\Models\User;
 use App\Notifications\AccountInvitation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use SensitiveParameter;
 
 /**
  * Create an account on behalf of an administrator (or the console): an
  * unusable random password, the chosen panel role (or none) and
  * `user.created` in the audit log, all in one transaction. The invitation
  * with a set-password link is queued after the commit; nobody sets or sees
- * a password.
+ * a password. Only the console may pass a password instead (a server
+ * without outgoing mail): the account is then verified and not invited.
  */
 class CreateUser
 {
@@ -23,15 +25,20 @@ class CreateUser
 
     /**
      * @param  User|null  $actor  Null when the account is created from the console.
+     * @param  string|null  $password  Console only: a validated password chosen by the operator.
      */
-    public function handle(?User $actor, string $name, string $email, ?UserRole $role): User
+    public function handle(?User $actor, string $name, string $email, ?UserRole $role, #[SensitiveParameter] ?string $password = null): User
     {
-        $user = DB::transaction(function () use ($actor, $name, $email, $role): User {
+        $user = DB::transaction(function () use ($actor, $name, $email, $role, $password): User {
             $user = User::query()->create([
                 'name' => $name,
                 'email' => $email,
-                'password' => Str::password(64),
+                'password' => $password ?? Str::password(64),
             ]);
+
+            if ($password !== null) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
 
             if ($role !== null) {
                 $user->assignRole($role);
@@ -46,7 +53,9 @@ class CreateUser
             return $user;
         });
 
-        $user->notify(new AccountInvitation);
+        if ($password === null) {
+            $user->notify(new AccountInvitation);
+        }
 
         return $user;
     }

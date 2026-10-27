@@ -245,6 +245,8 @@ class AiConfigurationTest(unittest.TestCase):
                      "LOG_STACK=json", "DB_CONNECTION=mysql"):
             self.assertRegex(template, rf"(?m)^{re.escape(line)}$")
         self.assertNotIn("clamav", script.lower().replace("clamav is intentionally not installed", ""))
+        # The ondrej libgd3 replaces the Ubuntu build without AVIF.
+        self.assertRegex(script, r'"php\$PHP_VERSION-gd" libgd3')
 
         # Every secret is a placeholder filled on the server, and the script
         # substitutes each placeholder of the template.

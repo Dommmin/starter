@@ -7,6 +7,7 @@ use App\Jobs\ScanMediaAsset;
 use App\Models\AuditLog;
 use App\Models\MediaAsset;
 use App\Services\Media\Exceptions\MalwareScannerUnavailable;
+use App\Services\Media\ImageFormatSupport;
 use App\Services\Media\MalwareScanner;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -174,6 +175,22 @@ test('png images keep a png fallback', function () {
 
     expect(collect($asset->refresh()->variants)->pluck('format')->all())->toBe(['avif', 'webp', 'png'])
         ->and($asset->variants[0]['width'])->toBe(30);
+});
+
+test('a host whose GD cannot write avif gets webp and the fallback only', function () {
+    app()->instance(ImageFormatSupport::class, new class extends ImageFormatSupport
+    {
+        public function encodes(string $format): bool
+        {
+            return $format !== 'avif';
+        }
+    });
+    $asset = quarantinedMedia(MediaFixtures::jpegBytes(40, 20));
+    $asset->forceFill(['status' => MediaStatus::Clean])->save();
+
+    app()->call([new GenerateImageVariants($asset->id), 'handle']);
+
+    expect(collect($asset->refresh()->variants)->pluck('format')->all())->toBe(['webp', 'jpeg']);
 });
 
 test('variants are never generated for quarantined or rejected assets', function (string $state) {

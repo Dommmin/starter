@@ -101,6 +101,8 @@ function blankTranslation(): App.Data.Admin.Settings.SiteSettingTranslationFormD
         seoTitle: null,
         seoDescription: null,
         autoReplyText: null,
+        announcementText: null,
+        announcementLinkLabel: null,
     };
 }
 
@@ -149,6 +151,11 @@ function makeEditor(
             plausibleDomain: null,
             contactRecipients: [],
             contactAutoReply: false,
+            announcementEnabled: false,
+            announcementTone: 'info',
+            announcementLinkUrl: null,
+            announcementStartsOn: null,
+            announcementEndsOn: null,
             ...settings,
         },
         locales: {
@@ -320,6 +327,46 @@ describe('SiteSettingsForm', () => {
             translations: {
                 en: { tagline: 'We build things', seo_title: '' },
                 pl: { tagline: '' },
+            },
+        });
+    });
+
+    it('edits the announcement bar: shared switch, tone, link and dates, texts per language', async () => {
+        editorProps = makeEditor({
+            announcementEnabled: true,
+            announcementTone: 'warning',
+            announcementStartsOn: '2026-12-24',
+        });
+        const container = await render(<AdminSiteSettingsEdit />);
+
+        expect(
+            container.querySelector(
+                '[role="switch"][id$="announcement_enabled"]',
+            ),
+        ).not.toBeNull();
+        expect(field(container, 'announcement_starts_on').value).toBe(
+            '2026-12-24',
+        );
+        await type(field(container, 'announcement_link_url'), '/contact');
+        expect(field(container, 'announcement_text')).toBeNull();
+
+        await selectTab(container, 'pl');
+        await type(field(container, 'announcement_text'), 'Nieczynne 24–26.12');
+        await type(field(container, 'announcement_link_label'), 'Godziny');
+        await submit(container);
+
+        expect(submitMock.mock.lastCall![1]).toMatchObject({
+            announcement_enabled: true,
+            announcement_tone: 'warning',
+            announcement_link_url: '/contact',
+            announcement_starts_on: '2026-12-24',
+            announcement_ends_on: null,
+            translations: {
+                pl: {
+                    announcement_text: 'Nieczynne 24–26.12',
+                    announcement_link_label: 'Godziny',
+                },
+                en: { announcement_text: '' },
             },
         });
     });

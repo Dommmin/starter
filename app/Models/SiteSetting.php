@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\JsonArray;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
 use Carbon\CarbonImmutable;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * contact details, social profiles, default SEO image, the recipient of
  * contact form messages, appearance (accent, typography, default theme,
  * favicon), company details and publication switches (coming soon,
- * noindex, maintenance). Singleton: the only row has id
+ * noindex, maintenance) and the announcement bar. Singleton: the only row has id
  * {@see self::SINGLETON_ID}; the application never inserts another one.
  * Attributes are written by UpdateSiteSettings only (no mass assignment).
  *
@@ -50,6 +51,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $noindex
  * @property bool $maintenance
  * @property CarbonImmutable|null $maintenance_until Planned end of the works; null = not given.
+ * @property bool $announcement_enabled
+ * @property AnnouncementTone $announcement_tone
+ * @property string|null $announcement_link_url Relative path or http(s) URL.
+ * @property CarbonImmutable|null $announcement_starts_at Null = shown right away.
+ * @property CarbonImmutable|null $announcement_ends_at Last moment shown; null = no end.
  * @property int|null $updated_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -104,6 +110,11 @@ class SiteSetting extends Model
             'noindex' => 'boolean',
             'maintenance' => 'boolean',
             'maintenance_until' => 'datetime',
+            'announcement_enabled' => 'boolean',
+            'announcement_tone' => AnnouncementTone::class,
+            'announcement_link_url' => 'string',
+            'announcement_starts_at' => 'datetime',
+            'announcement_ends_at' => 'datetime',
             'updated_by' => 'integer',
         ];
     }

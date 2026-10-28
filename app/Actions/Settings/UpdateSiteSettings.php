@@ -69,9 +69,22 @@ class UpdateSiteSettings
         'maintenance',
         'maintenance_until',
         'contact_auto_reply',
+        'announcement_enabled',
+        'announcement_tone',
+        'announcement_link_url',
+        'announcement_starts_at',
+        'announcement_ends_at',
     ];
 
-    private const array TRANSLATION_FIELDS = ['tagline', 'footer_text', 'seo_title', 'seo_description', 'auto_reply_text'];
+    private const array TRANSLATION_FIELDS = [
+        'tagline',
+        'footer_text',
+        'seo_title',
+        'seo_description',
+        'auto_reply_text',
+        'announcement_text',
+        'announcement_link_label',
+    ];
 
     public function __construct(
         private readonly RecordAuditEvent $audit,
@@ -122,6 +135,11 @@ class UpdateSiteSettings
                     : array_map(fn (OpeningHoursDayData $day): array => $day->toRow(), $input->openingHours),
                 'google_site_verification' => $input->googleSiteVerification,
                 'plausible_domain' => $input->plausibleDomain,
+                'announcement_enabled' => $input->announcementEnabled,
+                'announcement_tone' => $input->announcementTone,
+                'announcement_link_url' => $input->announcementLinkUrl,
+                'announcement_starts_at' => $input->announcementStartsAt,
+                'announcement_ends_at' => $input->announcementEndsAt,
             ]);
 
             return [
@@ -294,6 +312,8 @@ class UpdateSiteSettings
                 'seo_title' => $input->seoTitle,
                 'seo_description' => $input->seoDescription,
                 'auto_reply_text' => $input->autoReplyText,
+                'announcement_text' => $input->announcementText,
+                'announcement_link_label' => $input->announcementLinkLabel,
             ]);
 
             foreach (self::TRANSLATION_FIELDS as $field) {

@@ -45,6 +45,7 @@ const ACCENTS: App.Enums.AccentColor[] = [
 ];
 const TYPOGRAPHY_PRESETS: App.Enums.TypographyPreset[] = ['default', 'classic'];
 const THEMES: App.Enums.ThemePreference[] = ['system', 'light', 'dark'];
+const ANNOUNCEMENT_TONES: App.Enums.AnnouncementTone[] = ['info', 'warning'];
 
 /** Request keys of the settings shared by every language. */
 const SHARED_FIELDS = [
@@ -66,6 +67,10 @@ const SHARED_FIELDS = [
     'map_url',
     'google_site_verification',
     'plausible_domain',
+    'announcement_tone',
+    'announcement_link_url',
+    'announcement_starts_on',
+    'announcement_ends_on',
 ] as const;
 
 /** Request keys of the texts of one language (`translations.{locale}.*`). */
@@ -75,6 +80,8 @@ const TRANSLATION_FIELDS = [
     'seo_title',
     'seo_description',
     'auto_reply_text',
+    'announcement_text',
+    'announcement_link_label',
 ] as const;
 
 type SharedField = (typeof SHARED_FIELDS)[number];
@@ -89,6 +96,7 @@ type SiteSettingsFormState = Record<SharedField, string> & {
     opening_hours: OpeningHoursState;
     contact_recipients: ResourceFormRepeaterItem[];
     contact_auto_reply: boolean;
+    announcement_enabled: boolean;
 };
 
 /** Contact form recipients the settings accept (UpdateSiteSettingsRequest). */
@@ -107,6 +115,7 @@ type TextKey =
 type TabValues = Record<TextKey, string> & {
     contact_recipients: ResourceFormRepeaterItem[];
     contact_auto_reply: boolean;
+    announcement_enabled: boolean;
 };
 
 function socialField(network: SocialNetwork): `social_links.${SocialNetwork}` {
@@ -138,6 +147,8 @@ function toTranslationState(
         seo_title: translation?.seoTitle ?? '',
         seo_description: translation?.seoDescription ?? '',
         auto_reply_text: translation?.autoReplyText ?? '',
+        announcement_text: translation?.announcementText ?? '',
+        announcement_link_label: translation?.announcementLinkLabel ?? '',
     };
 }
 
@@ -191,6 +202,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             email,
         })),
         contact_auto_reply: settings.contactAutoReply,
+        announcement_enabled: settings.announcementEnabled,
+        announcement_tone: settings.announcementTone,
+        announcement_link_url: settings.announcementLinkUrl ?? '',
+        announcement_starts_on: settings.announcementStartsOn ?? '',
+        announcement_ends_on: settings.announcementEndsOn ?? '',
         social_links: { ...settings.socialLinks },
         translations: Object.fromEntries(
             locales.available.map((locale) => [
@@ -220,6 +236,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         ),
         'contact_recipients',
         'contact_auto_reply',
+        'announcement_enabled',
         ...form.data.contact_recipients.map(
             (_, position) => `contact_recipients.${position}`,
         ),
@@ -280,6 +297,12 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
         if (name === 'contact_auto_reply' && typeof value === 'boolean') {
             form.setData('contact_auto_reply', value);
+
+            return;
+        }
+
+        if (name === 'announcement_enabled' && typeof value === 'boolean') {
+            form.setData('announcement_enabled', value);
 
             return;
         }
@@ -361,6 +384,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             map_url: nullable(data.map_url),
             google_site_verification: nullable(data.google_site_verification),
             plausible_domain: nullable(data.plausible_domain),
+            announcement_enabled: data.announcement_enabled,
+            announcement_tone: data.announcement_tone,
+            announcement_link_url: nullable(data.announcement_link_url),
+            announcement_starts_on: nullable(data.announcement_starts_on),
+            announcement_ends_on: nullable(data.announcement_ends_on),
             opening_hours: data.opening_hours,
             social_links: data.social_links,
             translations: data.translations,
@@ -700,6 +728,70 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                     },
                 ],
             },
+            {
+                id: 'announcement',
+                title: t('admin.siteSettings.sections.announcement.title'),
+                description: t(
+                    'admin.siteSettings.sections.announcement.description',
+                ),
+                fields: [
+                    {
+                        type: 'switch',
+                        name: 'announcement_enabled',
+                        label: t(
+                            'admin.siteSettings.fields.announcementEnabled',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementEnabledHelp',
+                        ),
+                    },
+                    {
+                        type: 'select',
+                        name: 'announcement_tone',
+                        label: t('admin.siteSettings.fields.announcementTone'),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementToneHelp',
+                        ),
+                        required: true,
+                        options: ANNOUNCEMENT_TONES.map((tone) => ({
+                            value: tone,
+                            label: t(
+                                `admin.siteSettings.announcementTones.${tone}`,
+                            ),
+                        })),
+                    },
+                    {
+                        type: 'text',
+                        name: 'announcement_link_url',
+                        label: t(
+                            'admin.siteSettings.fields.announcementLinkUrl',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementLinkUrlHelp',
+                        ),
+                    },
+                    {
+                        type: 'date',
+                        name: 'announcement_starts_on',
+                        label: t(
+                            'admin.siteSettings.fields.announcementStartsOn',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementStartsOnHelp',
+                        ),
+                    },
+                    {
+                        type: 'date',
+                        name: 'announcement_ends_on',
+                        label: t(
+                            'admin.siteSettings.fields.announcementEndsOn',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementEndsOnHelp',
+                        ),
+                    },
+                ],
+            },
         ];
     }
 
@@ -752,6 +844,25 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         rows: 4,
                         label: t('admin.siteSettings.fields.autoReplyText'),
                         hint: t('admin.siteSettings.fields.autoReplyTextHelp'),
+                    },
+                    {
+                        type: 'text',
+                        name: 'announcement_text',
+                        label: t('admin.siteSettings.fields.announcementText'),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementTextCounter',
+                            { length: String(values.announcement_text).length },
+                        ),
+                    },
+                    {
+                        type: 'text',
+                        name: 'announcement_link_label',
+                        label: t(
+                            'admin.siteSettings.fields.announcementLinkLabel',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementLinkLabelHelp',
+                        ),
                     },
                 ],
             },
@@ -849,6 +960,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                             : toTranslationState(undefined)),
                         contact_recipients: form.data.contact_recipients,
                         contact_auto_reply: form.data.contact_auto_reply,
+                        announcement_enabled: form.data.announcement_enabled,
                     } as TabValues;
 
                     return {

@@ -1136,6 +1136,10 @@ return [
                 'title' => 'Texte und Suchmaschinen — :language',
                 'description' => 'Slogan, Fußzeilentext und Suchmaschinen-Standards in dieser Sprache. Leere Felder verwenden die Ersatzsprache.',
             ],
+            'announcement' => [
+                'title' => 'Ankündigungsleiste',
+                'description' => 'Eine kurze Mitteilung über dem Kopfbereich der öffentlichen Website, z. B. Betriebsferien. Den Text jeder Sprache legen Sie in ihrem Tab fest.',
+            ],
             'notifications' => [
                 'title' => 'Benachrichtigungen',
                 'description' => 'Adresse, an die Nachrichten aus dem Kontaktformular zugestellt werden.',
@@ -1203,6 +1207,20 @@ return [
             'autoReplyHelp' => 'Sendet den Text aus dem Abschnitt „Texte“ in der Sprache des Absenders. Die Antwort wiederholt nie die gesendete Nachricht.',
             'autoReplyText' => 'Text der automatischen Antwort',
             'autoReplyTextHelp' => 'Wird gesendet, wenn die automatische Antwort aktiv ist. Bis zu 1000 Zeichen; leer = Ersatzsprache.',
+            'announcementEnabled' => 'Ankündigungsleiste anzeigen',
+            'announcementEnabledHelp' => 'Nur sichtbar, solange sie aktiv ist und im unten gewählten Zeitraum; sie braucht einen Text in der Ersatzsprache.',
+            'announcementTone' => 'Ton',
+            'announcementToneHelp' => 'Information für allgemeine Neuigkeiten, Warnung für Schließungen und Störungen.',
+            'announcementLinkUrl' => 'Link (optional)',
+            'announcementLinkUrlHelp' => 'Ein Seitenpfad wie /kontakt oder eine vollständige Adresse mit https://. Die Linkbeschriftung legen Sie im Tab jeder Sprache fest.',
+            'announcementStartsOn' => 'Anzeigen ab',
+            'announcementStartsOnHelp' => 'Leer = sofort.',
+            'announcementEndsOn' => 'Anzeigen bis (einschließlich)',
+            'announcementEndsOnHelp' => 'Leer = bis zum Ausschalten.',
+            'announcementText' => 'Ankündigungstext',
+            'announcementTextCounter' => ':length/160 Zeichen, reiner Text. Leer = Ersatzsprache.',
+            'announcementLinkLabel' => 'Linkbeschriftung',
+            'announcementLinkLabelHelp' => 'Erforderlich, wenn ein Link gesetzt ist, z. B. „Öffnungszeiten“.',
         ],
         'image' => [
             'choose' => 'Bild auswählen',
@@ -1250,6 +1268,16 @@ return [
                 'name' => 'Natur',
                 'description' => 'Grüner Akzent und moderne Überschriften. Für Praxen, Gastronomie und lokale Betriebe.',
             ],
+        ],
+        'announcementTones' => [
+            'info' => 'Information',
+            'warning' => 'Warnung',
+        ],
+        'announcementErrors' => [
+            'linkUrl' => 'Geben Sie einen Seitenpfad mit / oder eine vollständige Adresse mit http:// oder https:// ein.',
+            'textRequired' => 'Geben Sie den Ankündigungstext in der Ersatzsprache ein, um die Leiste anzuzeigen.',
+            'linkLabelRequired' => 'Geben Sie eine Linkbeschriftung für diese Sprache ein.',
+            'plainText' => 'Geben Sie reinen Text in einer Zeile ohne HTML ein.',
         ],
         'themes' => [
             'system' => 'Wie das Gerät',

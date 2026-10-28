@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
+import { AnnouncementBar } from './announcement-bar';
 import type { BrandLogoImage } from './brand-logo';
 import { CookieConsent, useCookieConsent } from './cookie-consent';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
@@ -55,7 +56,9 @@ function withoutNull<Value>(
  * Brand, logo, copyright, contact details and social links default to the
  * shared `site` prop (site settings); a page may override each of them. The
  * saved site name replaces the two-tone catalog text logo only once the
- * settings were saved (`site.isCustomized`).
+ * settings were saved (`site.isCustomized`). The announcement bar of the
+ * settings (`site.announcement`, already filtered by locale and time window
+ * on the server) is rendered above the header.
  */
 export function PublicChrome({
     navItems,
@@ -94,6 +97,7 @@ export function PublicChrome({
                       : undefined,
               }
             : undefined);
+    const announcement = site?.announcement;
     const social: FooterSocialLink[] | undefined =
         footer?.social ??
         site?.social.map(({ network, label, url }) => ({
@@ -104,6 +108,22 @@ export function PublicChrome({
 
     return (
         <div className="flex min-h-svh flex-col">
+            {announcement && (
+                <AnnouncementBar
+                    message={announcement.message}
+                    tone={announcement.tone}
+                    link={
+                        announcement.linkUrl && announcement.linkLabel
+                            ? {
+                                  href: announcement.linkUrl,
+                                  label: announcement.linkLabel,
+                              }
+                            : undefined
+                    }
+                    regionLabel={t('announcement.label')}
+                />
+            )}
+
             <PublicHeader
                 navItems={navItems ?? navigation?.header}
                 logo={resolvedLogo}

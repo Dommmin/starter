@@ -6,6 +6,7 @@ use App\Data\Settings\OpeningHoursDayData;
 use App\Data\Settings\SiteSettingsInputData;
 use App\Data\Settings\SiteSettingTranslationInputData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\MediaStatus;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
@@ -14,6 +15,7 @@ use App\Enums\Weekday;
 use App\Models\MediaAsset;
 use App\Models\SiteSetting;
 use App\Services\Localization\LocalizationConfig;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,6 +26,10 @@ use Illuminate\Validation\Rules\Exists;
  * (ConvertEmptyStringsToNull). `translations` accepts only active public
  * locales; `social_links` only SocialNetwork keys with https URLs.
  * `opening_hours` is keyed by Weekday; a day without both times is closed.
+ * The announcement bar runs from the start of `announcement_starts_on` to
+ * the end of `announcement_ends_on` (dates in the application timezone);
+ * its text is plain, single-line and required in the public fallback
+ * locale while the bar is on.
  */
 class UpdateSiteSettingsRequest extends FormRequest
 {
@@ -39,6 +45,15 @@ class UpdateSiteSettingsRequest extends FormRequest
      * a scheme, path, port or spaces.
      */
     private const string HOSTNAME = '/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\z/i';
+
+    /**
+     * A relative path (not `//host`) or an absolute http(s) URL, without
+     * whitespace.
+     */
+    private const string ANNOUNCEMENT_LINK = '/^(\/(?![\/\\\\])\S*|https?:\/\/\S+)$/i';
+
+    /** Text that looks like an HTML tag or comment (the bar shows plain text). */
+    private const string HTML_TAG = '/<[a-z\/!?]/i';
 
     /** Contact form recipients the settings accept. */
     public const int MAX_RECIPIENTS = 5;
@@ -97,6 +112,11 @@ class UpdateSiteSettingsRequest extends FormRequest
             'contact_recipients' => ['nullable', 'array', 'list', 'max:'.self::MAX_RECIPIENTS],
             'contact_recipients.*' => ['required', 'string', 'max:254', $singleLine, 'email:rfc,strict', 'distinct:ignore_case'],
             'contact_auto_reply' => ['required', 'boolean'],
+            'announcement_enabled' => ['required', 'boolean'],
+            'announcement_tone' => ['required', Rule::enum(AnnouncementTone::class)],
+            'announcement_link_url' => ['nullable', 'string', 'max:2048', $singleLine, 'regex:'.self::ANNOUNCEMENT_LINK],
+            'announcement_starts_on' => ['nullable', 'date_format:Y-m-d'],
+            'announcement_ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:announcement_starts_on'],
         ];
 
         foreach (Weekday::cases() as $day) {
@@ -110,6 +130,8 @@ class UpdateSiteSettingsRequest extends FormRequest
             $rules["social_links.{$network}"] = ['nullable', 'string', 'max:2048', $singleLine, 'starts_with:https://', 'url:https'];
         }
 
+        $fallback = app(LocalizationConfig::class)->getPublicFallback();
+
         foreach ($this->locales() as $locale) {
             $prefix = "translations.{$locale}";
             $rules[$prefix] = ['nullable', 'array'];
@@ -118,9 +140,31 @@ class UpdateSiteSettingsRequest extends FormRequest
             $rules["{$prefix}.seo_title"] = ['nullable', 'string', 'max:70', $singleLine];
             $rules["{$prefix}.seo_description"] = ['nullable', 'string', 'max:320'];
             $rules["{$prefix}.auto_reply_text"] = ['nullable', 'string', 'max:1000'];
+            $rules["{$prefix}.announcement_text"] = [
+                Rule::requiredIf(fn (): bool => $locale === $fallback && $this->boolean('announcement_enabled')),
+                'nullable', 'string', 'max:160', $singleLine, 'not_regex:'.self::HTML_TAG,
+            ];
+            $rules["{$prefix}.announcement_link_label"] = [
+                Rule::requiredIf(fn (): bool => $this->filled('announcement_link_url') && $this->filled("{$prefix}.announcement_text")),
+                'nullable', 'string', 'max:60', $singleLine, 'not_regex:'.self::HTML_TAG,
+            ];
         }
 
         return $rules;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'announcement_link_url.regex' => __('admin.siteSettings.announcementErrors.linkUrl'),
+            'translations.*.announcement_text.required' => __('admin.siteSettings.announcementErrors.textRequired'),
+            'translations.*.announcement_text.not_regex' => __('admin.siteSettings.announcementErrors.plainText'),
+            'translations.*.announcement_link_label.required' => __('admin.siteSettings.announcementErrors.linkLabelRequired'),
+            'translations.*.announcement_link_label.not_regex' => __('admin.siteSettings.announcementErrors.plainText'),
+        ];
     }
 
     public function expectedUpdatedAt(): ?string
@@ -163,6 +207,8 @@ class UpdateSiteSettingsRequest extends FormRequest
                 seoTitle: self::text($translation['seo_title'] ?? null),
                 seoDescription: self::text($translation['seo_description'] ?? null),
                 autoReplyText: self::text($translation['auto_reply_text'] ?? null),
+                announcementText: self::text($translation['announcement_text'] ?? null),
+                announcementLinkLabel: self::text($translation['announcement_link_label'] ?? null),
             );
         }
 
@@ -193,6 +239,15 @@ class UpdateSiteSettingsRequest extends FormRequest
                 (array) ($validated['contact_recipients'] ?? []),
             )),
             contactAutoReply: (bool) $validated['contact_auto_reply'],
+            announcementEnabled: (bool) $validated['announcement_enabled'],
+            announcementTone: AnnouncementTone::from((string) $validated['announcement_tone']),
+            announcementLinkUrl: self::text($validated['announcement_link_url'] ?? null),
+            announcementStartsAt: isset($validated['announcement_starts_on'])
+                ? CarbonImmutable::createFromFormat('!Y-m-d', (string) $validated['announcement_starts_on'])?->startOfDay()
+                : null,
+            announcementEndsAt: isset($validated['announcement_ends_on'])
+                ? CarbonImmutable::createFromFormat('!Y-m-d', (string) $validated['announcement_ends_on'])?->endOfDay()
+                : null,
         );
     }
 

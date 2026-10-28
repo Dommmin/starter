@@ -141,6 +141,7 @@ test('public pages share the site settings without the contact form recipient', 
                 ['network' => 'facebook', 'label' => 'Facebook', 'url' => 'https://facebook.com/acme'],
                 ['network' => 'github', 'label' => 'GitHub', 'url' => 'https://github.com/acme'],
             ],
+            'announcement' => null,
         ])
         ->where('seo.siteName', 'Acme')
         ->where('seo.defaultTitle', 'Acme — software house')

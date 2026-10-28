@@ -5,6 +5,7 @@ use App\Http\Middleware\BlockChangesInDemo;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventIndexingOfPrivateAreas;
+use App\Http\Middleware\RedirectManagedPaths;
 use App\Http\Middleware\RequirePasswordConfirmation;
 use App\Http\Middleware\ResolveLocalization;
 use App\Http\Middleware\SetContentSecurityPolicy;
@@ -32,6 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustHosts();
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', CookieConsent::COOKIE]);
+
+        // Global and before routing: former-site addresses match no route.
+        // Appended after the framework stack, so trusted hosts and proxies
+        // are resolved before a relative target becomes an absolute URL.
+        $middleware->append(RedirectManagedPaths::class);
 
         // Global, so error pages rendered outside the web group (404, 403)
         // carry the policy and the nonce used by their root template.

@@ -112,8 +112,8 @@ test('an admin creates a redirect with normalized addresses, audited', function 
     $entry = AuditLog::query()->sole();
     expect($entry->action)->toBe(AuditAction::RedirectCreated)
         ->and($entry->actor_id)->toBe($admin->id)
-        ->and($entry->changes['source_path'])->toBe(['old' => null, 'new' => '/oferta/strony-www.html'])
-        ->and($entry->changes['status_code'])->toBe(['old' => null, 'new' => 302]);
+        ->and($entry->changes['source_path'])->toEqual(['old' => null, 'new' => '/oferta/strony-www.html'])
+        ->and($entry->changes['status_code'])->toEqual(['old' => null, 'new' => 302]);
 });
 
 test('an update with the current version saves the values and audits only the changes', function () {

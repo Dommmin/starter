@@ -34,6 +34,8 @@ class BuildSiteLaunchChecklist
         return new SiteLaunchData(
             comingSoon: $this->settings->isComingSoon(),
             noindex: $this->settings->isNoindexSwitchOn(),
+            maintenance: $this->settings->isMaintenance(),
+            maintenanceUntil: $this->settings->maintenanceUntil()?->toIso8601String(),
             checklist: [
                 new LaunchCheckData(LaunchCheck::AdminTwoFactor, $this->adminsHaveTwoFactor()),
                 new LaunchCheckData(LaunchCheck::TestMail, Cache::has(self::TEST_MAIL_SENT_KEY)),

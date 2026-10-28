@@ -9,6 +9,7 @@ use App\Http\Middleware\RequirePasswordConfirmation;
 use App\Http\Middleware\ResolveLocalization;
 use App\Http\Middleware\SetContentSecurityPolicy;
 use App\Http\Middleware\ShowComingSoonPage;
+use App\Http\Middleware\ShowMaintenancePage;
 use App\Services\Consent\CookieConsent;
 use App\Services\Localization\LocalizationManager;
 use Illuminate\Foundation\Application;
@@ -42,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
             PreventIndexingOfPrivateAreas::class,
             HandleInertiaRequests::class,
             BlockChangesInDemo::class,
+            ShowMaintenancePage::class,
             ShowComingSoonPage::class,
             // The HTML still carries every modulepreload tag; the header is
             // capped so a split bundle cannot overflow proxy/FastCGI header buffers.

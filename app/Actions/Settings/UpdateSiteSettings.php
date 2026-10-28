@@ -14,6 +14,7 @@ use App\Models\SiteSettingTranslation;
 use App\Models\User;
 use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
+use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,8 @@ use Illuminate\Validation\ValidationException;
  *   version check (console / init-project; `$actor` = null).
  * - updatePublication(): the coming soon and noindex switches of the
  *   System page, without a version check.
+ * - updateMaintenance(): the maintenance switch and its planned end, also
+ *   without a version check.
  */
 class UpdateSiteSettings
 {
@@ -62,6 +65,8 @@ class UpdateSiteSettings
         'google_site_verification',
         'coming_soon',
         'noindex',
+        'maintenance',
+        'maintenance_until',
         'contact_auto_reply',
     ];
 
@@ -155,6 +160,22 @@ class UpdateSiteSettings
     {
         return $this->persist($actor, function (SiteSetting $settings) use ($comingSoon, $noindex): array {
             $settings->forceFill(['coming_soon' => $comingSoon, 'noindex' => $noindex]);
+
+            return $this->settingChanges($settings);
+        });
+    }
+
+    /**
+     * Turn the maintenance page on (with the planned end, null = not given)
+     * or off; turning it off clears the planned end.
+     */
+    public function updateMaintenance(bool $maintenance, ?CarbonInterface $until, User $actor): SiteSetting
+    {
+        return $this->persist($actor, function (SiteSetting $settings) use ($maintenance, $until): array {
+            $settings->forceFill([
+                'maintenance' => $maintenance,
+                'maintenance_until' => $maintenance ? $until : null,
+            ]);
 
             return $this->settingChanges($settings);
         });

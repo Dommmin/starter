@@ -4,11 +4,13 @@ namespace App\Repositories\Settings;
 
 use App\Data\Media\MediaImageData;
 use App\Data\Settings\OpeningHoursDayData;
+use App\Data\Settings\SiteAnnouncementData;
 use App\Data\Settings\SiteAppearanceData;
 use App\Data\Settings\SiteContactData;
 use App\Data\Settings\SiteSettingsData;
 use App\Data\Settings\SiteSocialLinkData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -34,7 +36,7 @@ use Throwable;
  * locale, then the defaults in `lang/{locale}/public.php` (`site.*`) or the
  * site name.
  *
- * @phpstan-type TranslationRow array{tagline: string|null, footer_text: string|null, seo_title: string|null, seo_description: string|null, auto_reply_text: string|null}
+ * @phpstan-type TranslationRow array{tagline: string|null, footer_text: string|null, seo_title: string|null, seo_description: string|null, auto_reply_text: string|null, announcement_text: string|null, announcement_link_label: string|null}
  * @phpstan-type Snapshot array{
  *     exists: bool,
  *     site_name: string|null,
@@ -63,11 +65,12 @@ use Throwable;
  *     noindex: bool,
  *     maintenance: bool,
  *     maintenance_until: string|null,
+ *     announcement: array{enabled: bool, tone: string, link_url: string|null, starts_at: string|null, ends_at: string|null},
  * }
  */
 class SiteSettingsRepository
 {
-    public const string CACHE_KEY = 'site_settings:v4';
+    public const string CACHE_KEY = 'site_settings:v5';
 
     /**
      * Snapshot memoized for the current process (one cache read per request).
@@ -110,6 +113,7 @@ class SiteSettingsRepository
                 openingHours: OpeningHoursDayData::week($snapshot['opening_hours']),
             ),
             social: $social,
+            announcement: $this->announcement($locale),
         );
     }
 
@@ -281,6 +285,46 @@ class SiteSettingsRepository
     }
 
     /**
+     * Announcement bar in the given locale while it is on and the current
+     * time is within its window; null otherwise. The message and the link
+     * label come from the same locale: the given one, then the public
+     * fallback locale.
+     */
+    public function announcement(?string $locale = null): ?SiteAnnouncementData
+    {
+        $bar = $this->snapshot()['announcement'];
+        $now = CarbonImmutable::now();
+
+        if (! $bar['enabled']
+            || ($bar['starts_at'] !== null && $now->lt(CarbonImmutable::parse($bar['starts_at'])))
+            || ($bar['ends_at'] !== null && $now->gt(CarbonImmutable::parse($bar['ends_at'])))) {
+            return null;
+        }
+
+        $translations = $this->snapshot()['translations'];
+
+        foreach ([$locale ?? app()->getLocale(), $this->localization->getPublicFallback()] as $candidate) {
+            $message = $translations[$candidate]['announcement_text'] ?? null;
+
+            if (! is_string($message) || $message === '') {
+                continue;
+            }
+
+            $label = $translations[$candidate]['announcement_link_label'] ?? null;
+            $hasLink = $bar['link_url'] !== null && is_string($label) && $label !== '';
+
+            return new SiteAnnouncementData(
+                message: $message,
+                tone: AnnouncementTone::tryFrom($bar['tone']) ?? AnnouncementTone::Info,
+                linkUrl: $hasLink ? $bar['link_url'] : null,
+                linkLabel: $hasLink ? $label : null,
+            );
+        }
+
+        return null;
+    }
+
+    /**
      * Whether an administrator has saved the settings at least once.
      */
     public function exists(): bool
@@ -392,6 +436,8 @@ class SiteSettingsRepository
                 'seo_title' => $translation->seo_title,
                 'seo_description' => $translation->seo_description,
                 'auto_reply_text' => $translation->auto_reply_text,
+                'announcement_text' => $translation->announcement_text,
+                'announcement_link_label' => $translation->announcement_link_label,
             ];
         }
 
@@ -423,6 +469,13 @@ class SiteSettingsRepository
             'noindex' => $settings->noindex,
             'maintenance' => $settings->maintenance,
             'maintenance_until' => $settings->maintenance_until?->toIso8601String(),
+            'announcement' => [
+                'enabled' => $settings->announcement_enabled,
+                'tone' => $settings->announcement_tone->value,
+                'link_url' => $settings->announcement_link_url,
+                'starts_at' => $settings->announcement_starts_at?->toIso8601String(),
+                'ends_at' => $settings->announcement_ends_at?->toIso8601String(),
+            ],
         ];
     }
 
@@ -461,6 +514,7 @@ class SiteSettingsRepository
             'noindex' => false,
             'maintenance' => false,
             'maintenance_until' => null,
+            'announcement' => ['enabled' => false, 'tone' => AnnouncementTone::Info->value, 'link_url' => null, 'starts_at' => null, 'ends_at' => null],
         ];
     }
 

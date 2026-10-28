@@ -649,6 +649,8 @@ declare namespace App {
                     seoTitle: string | null;
                     seoDescription: string | null;
                     autoReplyText: string | null;
+                    announcementText: string | null;
+                    announcementLinkLabel: string | null;
                 };
                 export type SiteSettingsEditorData = {
                     settings: App.Data.Admin.Settings.SiteSettingsFormData;
@@ -689,6 +691,11 @@ declare namespace App {
                     googleSiteVerification: string | null;
                     contactRecipients: string[];
                     contactAutoReply: boolean;
+                    announcementEnabled: boolean;
+                    announcementTone: App.Enums.AnnouncementTone;
+                    announcementLinkUrl: string | null;
+                    announcementStartsOn: string | null;
+                    announcementEndsOn: string | null;
                 };
                 export type SocialNetworkOptionData = {
                     network: App.Enums.SocialNetwork;
@@ -1173,6 +1180,12 @@ declare namespace App {
                 opens: string | null;
                 closes: string | null;
             };
+            export type SiteAnnouncementData = {
+                message: string;
+                tone: App.Enums.AnnouncementTone;
+                linkUrl: string | null;
+                linkLabel: string | null;
+            };
             export type SiteContactData = {
                 email: string | null;
                 phone: string | null;
@@ -1189,6 +1202,7 @@ declare namespace App {
                 footerText: string | null;
                 contact: App.Data.Settings.SiteContactData;
                 social: App.Data.Settings.SiteSocialLinkData[];
+                announcement: App.Data.Settings.SiteAnnouncementData | null;
             };
             export type SiteSocialLinkData = {
                 network: App.Enums.SocialNetwork;
@@ -1204,6 +1218,7 @@ declare namespace App {
             | 'violet'
             | 'rose'
             | 'green';
+        export type AnnouncementTone = 'info' | 'warning';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

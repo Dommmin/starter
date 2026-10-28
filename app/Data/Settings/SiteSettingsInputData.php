@@ -3,8 +3,10 @@
 namespace App\Data\Settings;
 
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
+use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\Hidden;
 
@@ -21,6 +23,8 @@ class SiteSettingsInputData extends Data
      * @param  array<string, SiteSettingTranslationInputData>  $translations  Keyed by public locale; missing locales lose their translation.
      * @param  list<OpeningHoursDayData>|null  $openingHours  Seven days Monday first, or null when no hours are published.
      * @param  list<string>  $contactRecipients  Up to five distinct addresses; empty = the configured fallback.
+     * @param  CarbonImmutable|null  $announcementStartsAt  First moment the bar is shown; null = right away.
+     * @param  CarbonImmutable|null  $announcementEndsAt  Last moment the bar is shown; null = no end.
      */
     public function __construct(
         public string $siteName,
@@ -45,5 +49,10 @@ class SiteSettingsInputData extends Data
         public ?string $googleSiteVerification = null,
         public array $contactRecipients = [],
         public bool $contactAutoReply = false,
+        public bool $announcementEnabled = false,
+        public AnnouncementTone $announcementTone = AnnouncementTone::Info,
+        public ?string $announcementLinkUrl = null,
+        public ?CarbonImmutable $announcementStartsAt = null,
+        public ?CarbonImmutable $announcementEndsAt = null,
     ) {}
 }

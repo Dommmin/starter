@@ -35,6 +35,9 @@ return [
         'menuTitle' => 'Menü',
         'submenu' => 'Untermenü: :label',
     ],
+    'announcement' => [
+        'label' => 'Ankündigung',
+    ],
     'cookies' => [
         'title' => 'Wir respektieren Ihre Privatsphäre',
         'description' => 'Notwendige Cookies sorgen dafür, dass die Website funktioniert. Mit Ihrer Einwilligung nutzen wir zusätzlich Tools, die uns helfen, sie zu verbessern. Ihre Auswahl können Sie jederzeit im Seitenfuß ändern.',

@@ -45,6 +45,11 @@ class SiteSettingFactory extends Factory
             'noindex' => false,
             'maintenance' => false,
             'maintenance_until' => null,
+            'announcement_enabled' => false,
+            'announcement_tone' => 'info',
+            'announcement_link_url' => null,
+            'announcement_starts_at' => null,
+            'announcement_ends_at' => null,
             'updated_by' => null,
         ];
     }

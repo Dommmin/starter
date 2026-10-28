@@ -2,6 +2,7 @@
 
 use App\Actions\Settings\UpdateSiteSettings;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\AuditAction;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -42,6 +43,8 @@ function siteSettingsPayload(array $overrides = []): array
         ],
         'default_theme' => 'system',
         'contact_auto_reply' => false,
+        'announcement_enabled' => false,
+        'announcement_tone' => 'info',
         'translations' => [
             'en' => [
                 'tagline' => 'We build things',
@@ -201,7 +204,77 @@ test('invalid settings are rejected without saving anything', function (Closure 
     'invalid recipient' => [fn () => ['contact_recipients' => ['not-an-email']], 'contact_recipients.0'],
     'header injection in a recipient' => [fn () => ['contact_recipients' => ["a@acme.test\r\nBcc: x@evil.test"]], 'contact_recipients.0'],
     'too long auto-reply' => [fn () => ['translations' => ['en' => ['auto_reply_text' => str_repeat('a', 1001)]]], 'translations.en.auto_reply_text'],
+    'unknown announcement tone' => [fn () => ['announcement_tone' => 'danger'], 'announcement_tone'],
+    'announcement on without fallback text' => [fn () => ['announcement_enabled' => true, 'translations' => ['pl' => ['announcement_text' => 'Nieczynne']]], 'translations.en.announcement_text'],
+    'too long announcement' => [fn () => ['translations' => ['en' => ['announcement_text' => str_repeat('a', 161)]]], 'translations.en.announcement_text'],
+    'html in the announcement' => [fn () => ['translations' => ['en' => ['announcement_text' => 'Closed <a href="x">here</a>']]], 'translations.en.announcement_text'],
+    'line break in the announcement' => [fn () => ['translations' => ['en' => ['announcement_text' => "Closed\ntoday"]]], 'translations.en.announcement_text'],
+    'announcement link without a label' => [fn () => ['announcement_link_url' => '/contact', 'translations' => ['en' => ['announcement_text' => 'Closed']]], 'translations.en.announcement_link_label'],
+    'javascript announcement link' => [fn () => ['announcement_link_url' => 'javascript:alert(1)'], 'announcement_link_url'],
+    'protocol-relative announcement link' => [fn () => ['announcement_link_url' => '//evil.test/x'], 'announcement_link_url'],
+    'announcement link with spaces' => [fn () => ['announcement_link_url' => '/a b'], 'announcement_link_url'],
+    'announcement ending before it starts' => [fn () => ['announcement_starts_on' => '2026-12-26', 'announcement_ends_on' => '2026-12-24'], 'announcement_ends_on'],
+    'malformed announcement date' => [fn () => ['announcement_starts_on' => '24.12.2026'], 'announcement_starts_on'],
 ]);
+
+test('the announcement bar is saved with whole days, audited and shown in the form', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.site-settings.update'), siteSettingsPayload([
+            'announcement_enabled' => true,
+            'announcement_tone' => 'warning',
+            'announcement_link_url' => 'https://example.com/hours',
+            'announcement_starts_on' => '2026-12-24',
+            'announcement_ends_on' => '2026-12-26',
+            'translations' => [
+                'en' => ['announcement_text' => 'Closed 24–26.12', 'announcement_link_label' => 'Opening hours'],
+                'pl' => ['announcement_text' => '', 'announcement_link_label' => ''],
+            ],
+        ]))
+        ->assertSessionHasNoErrors();
+
+    $settings = SiteSetting::query()->sole();
+    expect($settings->announcement_enabled)->toBeTrue()
+        ->and($settings->announcement_tone)->toBe(AnnouncementTone::Warning)
+        ->and($settings->announcement_link_url)->toBe('https://example.com/hours')
+        ->and($settings->announcement_starts_at?->toDateTimeString())->toBe('2026-12-24 00:00:00')
+        ->and($settings->announcement_ends_at?->toDateTimeString())->toBe('2026-12-26 23:59:59');
+
+    expect(SiteSettingTranslation::query()->pluck('locale')->all())->toBe(['en']);
+
+    $changes = AuditLog::query()->sole()->changes;
+    expect($changes['announcement_enabled'])->toEqual(['old' => null, 'new' => true])
+        ->and($changes['announcement_tone']['new'])->toBe('warning')
+        ->and($changes['en.announcement_text'])->toEqual(['old' => null, 'new' => 'Closed 24–26.12']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.site-settings.edit'))
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('settings.announcementEnabled', true)
+            ->where('settings.announcementTone', 'warning')
+            ->where('settings.announcementStartsOn', '2026-12-24')
+            ->where('settings.announcementEndsOn', '2026-12-26')
+            ->where('settings.translations.en.announcementText', 'Closed 24–26.12')
+            ->where('settings.translations.en.announcementLinkLabel', 'Opening hours')
+        );
+});
+
+test('an editor cannot turn on the announcement bar', function () {
+    $settings = SiteSetting::factory()->create();
+
+    $this->actingAs(User::factory()->editor()->create())
+        ->put(route('admin.site-settings.update'), siteSettingsPayload([
+            'updated_at' => $settings->updated_at?->toIso8601String(),
+            'announcement_enabled' => true,
+            'translations' => ['en' => ['announcement_text' => 'Hacked']],
+        ]))
+        ->assertForbidden();
+
+    expect($settings->refresh()->announcement_enabled)->toBeFalse()
+        ->and(SiteSettingTranslation::query()->exists())->toBeFalse()
+        ->and(AuditLog::query()->exists())->toBeFalse();
+});
 
 test('recipients and the auto-reply are saved, the recipients audited without their addresses', function () {
     $admin = User::factory()->admin()->create();

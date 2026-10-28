@@ -1127,6 +1127,10 @@ return [
                 'title' => 'Texts and search engines — :language',
                 'description' => 'Tagline, footer text and defaults for search engines in this language. Empty fields use the fallback language.',
             ],
+            'announcement' => [
+                'title' => 'Announcement bar',
+                'description' => 'A short message above the header of the public website, e.g. holiday closing. The text for each language is set in its tab.',
+            ],
             'notifications' => [
                 'title' => 'Notifications',
                 'description' => 'Where messages from the contact form are delivered.',
@@ -1192,6 +1196,20 @@ return [
             'autoReplyHelp' => 'Sends the text from the “Texts” section in the sender’s language. The reply never repeats the submitted message.',
             'autoReplyText' => 'Automatic reply text',
             'autoReplyTextHelp' => 'Sent to the sender when the automatic reply is on. Up to 1000 characters; the fallback language is used when empty.',
+            'announcementEnabled' => 'Show the announcement bar',
+            'announcementEnabledHelp' => 'Shown only while switched on and between the dates below; it needs a text in the fallback language.',
+            'announcementTone' => 'Tone',
+            'announcementToneHelp' => 'Information for general news, warning for closures and disruptions.',
+            'announcementLinkUrl' => 'Link (optional)',
+            'announcementLinkUrlHelp' => 'A page path such as /contact or a full address starting with https://. The link label is set in each language tab.',
+            'announcementStartsOn' => 'Show from',
+            'announcementStartsOnHelp' => 'Empty = right away.',
+            'announcementEndsOn' => 'Show until (inclusive)',
+            'announcementEndsOnHelp' => 'Empty = until switched off.',
+            'announcementText' => 'Announcement text',
+            'announcementTextCounter' => ':length/160 characters, plain text. Empty fields use the fallback language.',
+            'announcementLinkLabel' => 'Link label',
+            'announcementLinkLabelHelp' => 'Required when a link is set, e.g. “Opening hours”.',
         ],
         'image' => [
             'choose' => 'Choose image',
@@ -1239,6 +1257,16 @@ return [
                 'name' => 'Nature',
                 'description' => 'Green accent and modern headings. For clinics, restaurants and local businesses.',
             ],
+        ],
+        'announcementTones' => [
+            'info' => 'Information',
+            'warning' => 'Warning',
+        ],
+        'announcementErrors' => [
+            'linkUrl' => 'Enter a page path starting with / or a full address starting with http:// or https://.',
+            'textRequired' => 'Enter the announcement text in the fallback language to show the bar.',
+            'linkLabelRequired' => 'Enter a link label for this language.',
+            'plainText' => 'Enter plain text on a single line, without HTML.',
         ],
         'themes' => [
             'system' => 'Follow the device',

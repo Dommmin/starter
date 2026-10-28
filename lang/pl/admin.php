@@ -1129,6 +1129,10 @@ return [
                 'title' => 'Teksty i wyszukiwarki — :language',
                 'description' => 'Hasło, tekst stopki i domyślne wartości dla wyszukiwarek w tym języku. Puste pola korzystają z języka zapasowego.',
             ],
+            'announcement' => [
+                'title' => 'Pasek ogłoszeń',
+                'description' => 'Krótki komunikat nad nagłówkiem strony publicznej, np. o nieczynnym biurze w święta. Treść dla każdego języka ustawisz w jego zakładce.',
+            ],
             'notifications' => [
                 'title' => 'Powiadomienia',
                 'description' => 'Adres, na który trafiają wiadomości z formularza kontaktowego.',
@@ -1194,6 +1198,20 @@ return [
             'autoReplyHelp' => 'Wysyła tekst z sekcji „Teksty” w języku nadawcy. Odpowiedź nigdy nie powtarza treści wysłanej wiadomości.',
             'autoReplyText' => 'Treść automatycznej odpowiedzi',
             'autoReplyTextHelp' => 'Wysyłana nadawcy, gdy automatyczna odpowiedź jest włączona. Do 1000 znaków; pusta = język zapasowy.',
+            'announcementEnabled' => 'Pokazuj pasek ogłoszeń',
+            'announcementEnabledHelp' => 'Widoczny tylko, gdy jest włączony, i w terminie poniżej; wymaga treści w języku zapasowym.',
+            'announcementTone' => 'Ton',
+            'announcementToneHelp' => 'Informacja dla zwykłych wiadomości, ostrzeżenie dla przerw i utrudnień.',
+            'announcementLinkUrl' => 'Link (opcjonalnie)',
+            'announcementLinkUrlHelp' => 'Ścieżka strony, np. /kontakt, albo pełny adres zaczynający się od https://. Etykietę linku ustawisz w zakładce każdego języka.',
+            'announcementStartsOn' => 'Pokazuj od',
+            'announcementStartsOnHelp' => 'Puste = od razu.',
+            'announcementEndsOn' => 'Pokazuj do (włącznie)',
+            'announcementEndsOnHelp' => 'Puste = do wyłączenia.',
+            'announcementText' => 'Treść ogłoszenia',
+            'announcementTextCounter' => ':length/160 znaków, zwykły tekst. Puste pole = język zapasowy.',
+            'announcementLinkLabel' => 'Etykieta linku',
+            'announcementLinkLabelHelp' => 'Wymagana, gdy ustawiono link, np. „Godziny otwarcia”.',
         ],
         'image' => [
             'choose' => 'Wybierz obraz',
@@ -1241,6 +1259,16 @@ return [
                 'name' => 'Natura',
                 'description' => 'Zielony akcent i nowoczesne nagłówki. Dla gabinetów, gastronomii i lokalnych firm.',
             ],
+        ],
+        'announcementTones' => [
+            'info' => 'Informacja',
+            'warning' => 'Ostrzeżenie',
+        ],
+        'announcementErrors' => [
+            'linkUrl' => 'Podaj ścieżkę strony zaczynającą się od / albo pełny adres zaczynający się od http:// lub https://.',
+            'textRequired' => 'Wpisz treść ogłoszenia w języku zapasowym, aby pokazać pasek.',
+            'linkLabelRequired' => 'Wpisz etykietę linku w tym języku.',
+            'plainText' => 'Wpisz zwykły tekst w jednej linii, bez HTML.',
         ],
         'themes' => [
             'system' => 'Jak w urządzeniu',

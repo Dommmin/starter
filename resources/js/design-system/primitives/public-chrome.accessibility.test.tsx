@@ -106,6 +106,7 @@ function makeSite(
                 url: 'https://github.com/panel',
             },
         ],
+        announcement: null,
         ...overrides,
     };
 }
@@ -395,6 +396,72 @@ describe('PublicChrome site settings defaults', () => {
 });
 
 describe('BrandLogo', () => {
+    it('renders the site announcement as a named region above the header', async () => {
+        sharedProps.current = {
+            site: makeSite({
+                announcement: {
+                    message: 'Closed 24–26.12',
+                    tone: 'warning',
+                    linkUrl: '/contact',
+                    linkLabel: 'Opening hours',
+                },
+            }),
+        };
+
+        const container = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        const region = container.querySelector('section[aria-label]');
+        expect(region?.getAttribute('aria-label')).toBe('announcement.label');
+        expect(region?.textContent).toContain('Closed 24–26.12');
+        expect(region?.querySelector('a[href="/contact"]')?.textContent).toBe(
+            'Opening hours',
+        );
+        expect(region?.querySelector('a')?.getAttribute('target')).toBeNull();
+        expect(
+            region!.compareDocumentPosition(
+                container.querySelector('header')!,
+            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
+    it('opens an absolute announcement link in a new tab and renders no bar without an announcement', async () => {
+        sharedProps.current = {
+            site: makeSite({
+                announcement: {
+                    message: 'New price list',
+                    tone: 'info',
+                    linkUrl: 'https://example.com/prices',
+                    linkLabel: 'Prices',
+                },
+            }),
+        };
+
+        const withLink = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        expect(
+            withLink
+                .querySelector('section[aria-label] a')
+                ?.getAttribute('rel'),
+        ).toBe('noopener noreferrer');
+
+        sharedProps.current = { site: makeSite() };
+        const without = await render(
+            <PublicChrome>
+                <p>Body</p>
+            </PublicChrome>,
+        );
+
+        expect(without.querySelector('section[aria-label]')).toBeNull();
+    });
+
     it('shows the saved site brand in a header without brand props (auth pages)', async () => {
         sharedProps.current = { site: makeSite() };
         const container = await render(<HeaderUtility />);

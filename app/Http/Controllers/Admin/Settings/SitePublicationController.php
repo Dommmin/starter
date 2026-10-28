@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Settings;
 use App\Actions\Settings\BuildSiteLaunchChecklist;
 use App\Actions\Settings\UpdateSiteSettings;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Settings\UpdateSiteMaintenanceRequest;
 use App\Http\Requests\Admin\Settings\UpdateSitePublicationRequest;
 use App\Mail\TestMail;
 use App\Models\User;
@@ -17,7 +18,8 @@ use Throwable;
 
 /**
  * Launch tools of the System page (administrators only, `can` middleware
- * with SiteSettingPolicy): publication switches and the test e-mail.
+ * with SiteSettingPolicy): publication and maintenance switches and the
+ * test e-mail.
  */
 class SitePublicationController extends Controller
 {
@@ -36,6 +38,26 @@ class SitePublicationController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.launch.publicationSaved')]);
+
+        return to_route('admin.system.index');
+    }
+
+    /**
+     * Turn the maintenance page on or off. The planned end counts from now.
+     */
+    public function updateMaintenance(UpdateSiteMaintenanceRequest $request, UpdateSiteSettings $updateSiteSettings): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $minutes = $request->duration()->minutes();
+
+        $updateSiteSettings->updateMaintenance(
+            maintenance: $request->boolean('maintenance'),
+            until: $minutes === null ? null : now()->addMinutes($minutes),
+            actor: $user,
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.launch.maintenanceSaved')]);
 
         return to_route('admin.system.index');
     }

@@ -56,6 +56,53 @@ test('the publication switches must be booleans', function () {
     expect(SiteSetting::query()->exists())->toBeFalse();
 });
 
+test('an administrator turns maintenance on with a planned end and an audit entry', function () {
+    $this->freezeTime();
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.system.maintenance.update'), ['maintenance' => true, 'duration' => '30'])
+        ->assertRedirect(route('admin.system.index'))
+        ->assertSessionHasNoErrors();
+
+    $settings = SiteSetting::query()->sole();
+    expect($settings->maintenance)->toBeTrue()
+        ->and($settings->maintenance_until?->getTimestamp())->toBe(now()->addMinutes(30)->getTimestamp());
+
+    $audit = AuditLog::query()->sole();
+    expect($audit->action)->toBe(AuditAction::SiteSettingsUpdated)
+        ->and($audit->changes['maintenance'])->toEqual(['old' => false, 'new' => true]);
+});
+
+test('turning maintenance off clears the planned end', function () {
+    SiteSetting::factory()->create(['maintenance' => true, 'maintenance_until' => now()->addHour()]);
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->put(route('admin.system.maintenance.update'), ['maintenance' => false, 'duration' => '60'])
+        ->assertSessionHasNoErrors();
+
+    $settings = SiteSetting::query()->sole();
+    expect($settings->maintenance)->toBeFalse()
+        ->and($settings->maintenance_until)->toBeNull();
+});
+
+test('editors cannot turn maintenance on', function () {
+    $this->actingAs(User::factory()->editor()->create())
+        ->put(route('admin.system.maintenance.update'), ['maintenance' => true, 'duration' => 'unknown'])
+        ->assertForbidden();
+
+    expect(SiteSetting::query()->exists())->toBeFalse()
+        ->and(AuditLog::query()->exists())->toBeFalse();
+});
+
+test('the maintenance duration must be one of the offered lengths', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->put(route('admin.system.maintenance.update'), ['maintenance' => 'maybe', 'duration' => '7'])
+        ->assertSessionHasErrors(['maintenance', 'duration']);
+
+    expect(SiteSetting::query()->exists())->toBeFalse();
+});
+
 test('the test e-mail goes to the signed-in administrator and ticks the checklist', function () {
     Mail::fake();
     $admin = User::factory()->admin()->create(['email' => 'owner@acme.test']);
@@ -97,6 +144,8 @@ test('the System page shows the switches and which launch steps are done', funct
         ->assertInertia(fn (Assert $inertia) => $inertia
             ->where('launch.comingSoon', true)
             ->where('launch.noindex', false)
+            ->where('launch.maintenance', false)
+            ->where('launch.maintenanceUntil', null)
             ->where('launch.testMailRecipient', $admin->email)
             ->where('launch.checklist', [
                 ['key' => 'admin_two_factor', 'done' => true],

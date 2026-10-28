@@ -661,6 +661,8 @@ declare namespace App {
                 export type SiteLaunchData = {
                     comingSoon: boolean;
                     noindex: boolean;
+                    maintenance: boolean;
+                    maintenanceUntil: string | null;
                     checklist: App.Data.Admin.System.LaunchCheckData[];
                     testMailRecipient: string;
                 };
@@ -788,6 +790,10 @@ declare namespace App {
                 state: App.Enums.ContentPreviewState;
                 publishAt: string | null;
                 editUrl: string;
+            };
+            export type MaintenancePageData = {
+                contactEmail: string | null;
+                minutesLeft: number | null;
             };
             export type PublicArticleData = {
                 title: string;
@@ -1250,6 +1256,14 @@ declare namespace App {
             | 'test_mail'
             | 'search_console'
             | 'legal_pages';
+        export type MaintenanceDuration =
+            | 'unknown'
+            | '15'
+            | '30'
+            | '60'
+            | '120'
+            | '240'
+            | '1440';
         export type MediaStatus = 'quarantine' | 'clean' | 'rejected';
         export type MenuItemType =
             | 'page'

@@ -43,6 +43,8 @@ class SiteSettingFactory extends Factory
             'google_site_verification' => null,
             'coming_soon' => false,
             'noindex' => false,
+            'maintenance' => false,
+            'maintenance_until' => null,
             'updated_by' => null,
         ];
     }

@@ -16,6 +16,7 @@ use App\Models\MediaAsset;
 use App\Models\SiteSetting;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Media\ImageVariantGenerator;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 
@@ -60,11 +61,13 @@ use Throwable;
  *     google_site_verification: string|null,
  *     coming_soon: bool,
  *     noindex: bool,
+ *     maintenance: bool,
+ *     maintenance_until: string|null,
  * }
  */
 class SiteSettingsRepository
 {
-    public const string CACHE_KEY = 'site_settings:v3';
+    public const string CACHE_KEY = 'site_settings:v4';
 
     /**
      * Snapshot memoized for the current process (one cache read per request).
@@ -258,6 +261,26 @@ class SiteSettingsRepository
     }
 
     /**
+     * Whether visitors without panel access get the maintenance page (503)
+     * instead of the public site.
+     */
+    public function isMaintenance(): bool
+    {
+        return $this->snapshot()['maintenance'];
+    }
+
+    /**
+     * Planned end of the maintenance works; null when not given or when
+     * maintenance is off.
+     */
+    public function maintenanceUntil(): ?CarbonImmutable
+    {
+        $until = $this->snapshot()['maintenance_until'];
+
+        return $this->isMaintenance() && $until !== null ? CarbonImmutable::parse($until) : null;
+    }
+
+    /**
      * Whether an administrator has saved the settings at least once.
      */
     public function exists(): bool
@@ -398,6 +421,8 @@ class SiteSettingsRepository
             'google_site_verification' => $settings->google_site_verification,
             'coming_soon' => $settings->coming_soon,
             'noindex' => $settings->noindex,
+            'maintenance' => $settings->maintenance,
+            'maintenance_until' => $settings->maintenance_until?->toIso8601String(),
         ];
     }
 
@@ -434,6 +459,8 @@ class SiteSettingsRepository
             'google_site_verification' => null,
             'coming_soon' => false,
             'noindex' => false,
+            'maintenance' => false,
+            'maintenance_until' => null,
         ];
     }
 

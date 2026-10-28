@@ -18,7 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Site-wide settings managed by administrators: brand name, logo, public
  * contact details, social profiles, default SEO image, the recipient of
  * contact form messages, appearance (accent, typography, default theme,
- * favicon), company details and publication switches (coming soon, noindex). Singleton: the only row has id
+ * favicon), company details and publication switches (coming soon,
+ * noindex, maintenance). Singleton: the only row has id
  * {@see self::SINGLETON_ID}; the application never inserts another one.
  * Attributes are written by UpdateSiteSettings only (no mass assignment).
  *
@@ -46,6 +47,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $google_site_verification
  * @property bool $coming_soon
  * @property bool $noindex
+ * @property bool $maintenance
+ * @property CarbonImmutable|null $maintenance_until Planned end of the works; null = not given.
  * @property int|null $updated_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -97,6 +100,8 @@ class SiteSetting extends Model
             'google_site_verification' => 'string',
             'coming_soon' => 'boolean',
             'noindex' => 'boolean',
+            'maintenance' => 'boolean',
+            'maintenance_until' => 'datetime',
             'updated_by' => 'integer',
         ];
     }

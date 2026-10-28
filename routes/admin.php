@@ -50,6 +50,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::put('/system/publication', [SitePublicationController::class, 'update'])
             ->name('system.publication.update')
             ->can('update', SiteSetting::class);
+        Route::put('/system/maintenance', [SitePublicationController::class, 'updateMaintenance'])
+            ->name('system.maintenance.update')
+            ->can('update', SiteSetting::class);
         Route::post('/system/test-mail', [SitePublicationController::class, 'sendTestMail'])
             ->name('system.test-mail.store')
             ->can('update', SiteSetting::class)

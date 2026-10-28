@@ -20,6 +20,7 @@ export type AuthAbilities = {
     manageSiteSettings: boolean;
     viewContactMessages: boolean;
     manageTrash: boolean;
+    manageRedirects: boolean;
 };
 
 export type Auth = {

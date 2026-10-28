@@ -46,6 +46,9 @@ enum AuditAction: string
     case TagCreated = 'tag.created';
     case TagUpdated = 'tag.updated';
     case TagDeleted = 'tag.deleted';
+    case RedirectCreated = 'redirect.created';
+    case RedirectUpdated = 'redirect.updated';
+    case RedirectDeleted = 'redirect.deleted';
 
     /**
      * @return list<string>

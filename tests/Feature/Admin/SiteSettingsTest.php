@@ -219,7 +219,7 @@ test('the plausible domain is saved lowercase, audited and shown in the form', f
         ->assertSessionHasNoErrors();
 
     expect(SiteSetting::query()->sole()->plausible_domain)->toBe('shop.acme.test')
-        ->and(AuditLog::query()->sole()->changes['plausible_domain'])->toBe(['old' => null, 'new' => 'shop.acme.test']);
+        ->and(AuditLog::query()->sole()->changes['plausible_domain'])->toEqual(['old' => null, 'new' => 'shop.acme.test']);
 
     $this->actingAs($admin)->get(route('admin.site-settings.edit'))
         ->assertInertia(fn (Assert $inertia) => $inertia->where('settings.plausibleDomain', 'shop.acme.test'));

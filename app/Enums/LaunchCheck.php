@@ -16,6 +16,9 @@ enum LaunchCheck: string
     /** The Google Search Console token is saved in the site settings. */
     case SearchConsole = 'search_console';
 
+    /** Plausible analytics has a domain (panel or environment) and an https script. */
+    case Analytics = 'analytics';
+
     /** Privacy policy, cookie policy and terms are published in the default language. */
     case LegalPages = 'legal_pages';
 }

@@ -63,6 +63,7 @@ class UpdateSiteSettings
         'map_url',
         'opening_hours',
         'google_site_verification',
+        'plausible_domain',
         'coming_soon',
         'noindex',
         'maintenance',
@@ -120,6 +121,7 @@ class UpdateSiteSettings
                     ? null
                     : array_map(fn (OpeningHoursDayData $day): array => $day->toRow(), $input->openingHours),
                 'google_site_verification' => $input->googleSiteVerification,
+                'plausible_domain' => $input->plausibleDomain,
             ]);
 
             return [

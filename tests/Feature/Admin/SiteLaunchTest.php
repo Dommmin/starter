@@ -128,7 +128,8 @@ test('a failing mailer reports an error toast and leaves the checklist item open
 
 test('the System page shows the switches and which launch steps are done', function () {
     $admin = User::factory()->admin()->withTwoFactor()->create();
-    SiteSetting::factory()->create(['coming_soon' => true, 'google_site_verification' => 'token']);
+    config(['services.plausible.domain' => null]);
+    SiteSetting::factory()->create(['coming_soon' => true, 'google_site_verification' => 'token', 'plausible_domain' => 'starter.example']);
 
     foreach (LegalPages::SLUGS as $slugs) {
         PageTranslation::factory()->for(Page::factory())->create([
@@ -151,17 +152,20 @@ test('the System page shows the switches and which launch steps are done', funct
                 ['key' => 'admin_two_factor', 'done' => true],
                 ['key' => 'test_mail', 'done' => false],
                 ['key' => 'search_console', 'done' => true],
+                ['key' => 'analytics', 'done' => true],
                 ['key' => 'legal_pages', 'done' => true],
             ])
         );
 });
 
 test('an administrator without two-factor authentication leaves the first step open', function () {
+    config(['services.plausible.domain' => null]);
     $admin = User::factory()->admin()->create();
 
     $this->actingAs($admin)->get(route('admin.system.index'))
         ->assertInertia(fn (Assert $inertia) => $inertia
             ->where('launch.checklist.0', ['key' => 'admin_two_factor', 'done' => false])
-            ->where('launch.checklist.3', ['key' => 'legal_pages', 'done' => false])
+            ->where('launch.checklist.3', ['key' => 'analytics', 'done' => false])
+            ->where('launch.checklist.4', ['key' => 'legal_pages', 'done' => false])
         );
 });

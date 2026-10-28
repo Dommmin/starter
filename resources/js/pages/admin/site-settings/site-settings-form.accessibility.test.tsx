@@ -146,6 +146,7 @@ function makeEditor(
                 sunday: { opens: '', closes: '' },
             },
             googleSiteVerification: null,
+            plausibleDomain: null,
             contactRecipients: [],
             contactAutoReply: false,
             ...settings,

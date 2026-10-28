@@ -6,6 +6,7 @@ use App\Data\Consent\ConsentData;
 use App\Data\Consent\PlausibleData;
 use App\Enums\ConsentCategory;
 use App\Models\PageTranslation;
+use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizedUrlGenerator;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,10 @@ class CookieConsent
     /** Excluded from cookie encryption in bootstrap/app.php. */
     public const string COOKIE = 'cookie_consent';
 
-    public function __construct(private readonly LocalizedUrlGenerator $urls) {}
+    public function __construct(
+        private readonly LocalizedUrlGenerator $urls,
+        private readonly SiteSettingsRepository $settings,
+    ) {}
 
     public function forRequest(Request $request, string $locale): ConsentData
     {
@@ -101,12 +105,7 @@ class CookieConsent
 
     private function plausible(): ?PlausibleData
     {
-        $domain = config('services.plausible.domain');
-        $scriptUrl = config('services.plausible.script_url');
-
-        return is_string($domain) && $domain !== '' && is_string($scriptUrl) && str_starts_with($scriptUrl, 'https://')
-            ? new PlausibleData($domain, $scriptUrl)
-            : null;
+        return $this->settings->plausible();
     }
 
     /**

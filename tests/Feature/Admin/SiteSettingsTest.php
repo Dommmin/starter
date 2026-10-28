@@ -201,7 +201,40 @@ test('invalid settings are rejected without saving anything', function (Closure 
     'invalid recipient' => [fn () => ['contact_recipients' => ['not-an-email']], 'contact_recipients.0'],
     'header injection in a recipient' => [fn () => ['contact_recipients' => ["a@acme.test\r\nBcc: x@evil.test"]], 'contact_recipients.0'],
     'too long auto-reply' => [fn () => ['translations' => ['en' => ['auto_reply_text' => str_repeat('a', 1001)]]], 'translations.en.auto_reply_text'],
+    'plausible domain with a scheme' => [fn () => ['plausible_domain' => 'https://acme.test'], 'plausible_domain'],
+    'plausible domain with a path' => [fn () => ['plausible_domain' => 'acme.test/blog'], 'plausible_domain'],
+    'plausible domain with a port' => [fn () => ['plausible_domain' => 'acme.test:8080'], 'plausible_domain'],
+    'plausible domain with a space' => [fn () => ['plausible_domain' => 'acme .test'], 'plausible_domain'],
+    'plausible domain without a dot' => [fn () => ['plausible_domain' => 'localhost'], 'plausible_domain'],
+    'plausible domain with a leading hyphen' => [fn () => ['plausible_domain' => '-acme.test'], 'plausible_domain'],
+    'plausible domain with user info' => [fn () => ['plausible_domain' => 'user@acme.test'], 'plausible_domain'],
+    'too long plausible domain' => [fn () => ['plausible_domain' => str_repeat('a', 250).'.test'], 'plausible_domain'],
 ]);
+
+test('the plausible domain is saved lowercase, audited and shown in the form', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.site-settings.update'), siteSettingsPayload(['plausible_domain' => ' Shop.Acme.TEST ']))
+        ->assertSessionHasNoErrors();
+
+    expect(SiteSetting::query()->sole()->plausible_domain)->toBe('shop.acme.test')
+        ->and(AuditLog::query()->sole()->changes['plausible_domain'])->toBe(['old' => null, 'new' => 'shop.acme.test']);
+
+    $this->actingAs($admin)->get(route('admin.site-settings.edit'))
+        ->assertInertia(fn (Assert $inertia) => $inertia->where('settings.plausibleDomain', 'shop.acme.test'));
+});
+
+test('an editor cannot change the plausible domain', function () {
+    SiteSetting::factory()->create(['plausible_domain' => 'acme.test']);
+
+    $this->actingAs(User::factory()->editor()->create())
+        ->put(route('admin.site-settings.update'), siteSettingsPayload(['plausible_domain' => 'evil.test']))
+        ->assertForbidden();
+
+    expect(SiteSetting::query()->sole()->plausible_domain)->toBe('acme.test')
+        ->and(AuditLog::query()->exists())->toBeFalse();
+});
 
 test('recipients and the auto-reply are saved, the recipients audited without their addresses', function () {
     $admin = User::factory()->admin()->create();

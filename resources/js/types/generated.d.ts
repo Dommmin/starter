@@ -689,6 +689,7 @@ declare namespace App {
                         };
                     };
                     googleSiteVerification: string | null;
+                    plausibleDomain: string | null;
                     contactRecipients: string[];
                     contactAutoReply: boolean;
                     announcementEnabled: boolean;
@@ -1315,6 +1316,7 @@ declare namespace App {
             | 'admin_two_factor'
             | 'test_mail'
             | 'search_console'
+            | 'analytics'
             | 'legal_pages';
         export type MaintenanceDuration =
             | 'unknown'

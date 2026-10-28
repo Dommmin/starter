@@ -40,6 +40,13 @@ class UpdateSiteSettingsRequest extends FormRequest
     private const string CONTROL_CHARACTERS = '/\p{Cc}/u';
 
     /**
+     * Bare host name of the Plausible site (e.g. `example.com`): at least
+     * two dot-separated labels of letters, digits and inner hyphens, without
+     * a scheme, path, port or spaces.
+     */
+    private const string HOSTNAME = '/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\z/i';
+
+    /**
      * A relative path (not `//host`) or an absolute http(s) URL, without
      * whitespace.
      */
@@ -100,6 +107,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             'tax_id' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9 \-]+$/'],
             'map_url' => ['nullable', 'string', 'max:500', $singleLine, 'starts_with:https://', 'url:https'],
             'google_site_verification' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9_\-]+$/'],
+            'plausible_domain' => ['nullable', 'string', 'max:253', 'regex:'.self::HOSTNAME],
             'opening_hours' => ['nullable', 'array:'.implode(',', array_column(Weekday::cases(), 'value'))],
             'contact_recipients' => ['nullable', 'array', 'list', 'max:'.self::MAX_RECIPIENTS],
             'contact_recipients.*' => ['required', 'string', 'max:254', $singleLine, 'email:rfc,strict', 'distinct:ignore_case'],
@@ -225,6 +233,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             mapUrl: self::text($validated['map_url'] ?? null),
             openingHours: self::openingHours($validated['opening_hours'] ?? null),
             googleSiteVerification: self::text($validated['google_site_verification'] ?? null),
+            plausibleDomain: self::hostname($validated['plausible_domain'] ?? null),
             contactRecipients: array_values(array_map(
                 fn (mixed $email): string => trim((string) $email),
                 (array) ($validated['contact_recipients'] ?? []),
@@ -299,5 +308,15 @@ class UpdateSiteSettingsRequest extends FormRequest
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * Host names are case-insensitive; Plausible matches the lowercase form.
+     */
+    private static function hostname(mixed $value): ?string
+    {
+        $value = self::text($value);
+
+        return $value === null ? null : strtolower($value);
     }
 }

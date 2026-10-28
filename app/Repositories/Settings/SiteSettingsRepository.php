@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Settings;
 
+use App\Data\Consent\PlausibleData;
 use App\Data\Media\MediaImageData;
 use App\Data\Settings\OpeningHoursDayData;
 use App\Data\Settings\SiteAnnouncementData;
@@ -31,7 +32,8 @@ use Throwable;
  * forget the key after commit.
  *
  * Fallbacks: without a row the site name and default og:image come from
- * `config/seo.php`, the contact form recipient from `config/contact.php`;
+ * `config/seo.php`, the contact form recipient from `config/contact.php`,
+ * the Plausible domain and script from `config/services.php`;
  * translated texts use the current locale, then the public fallback
  * locale, then the defaults in `lang/{locale}/public.php` (`site.*`) or the
  * site name.
@@ -61,6 +63,7 @@ use Throwable;
  *     map_url: string|null,
  *     opening_hours: list<array{day: string, opens: string|null, closes: string|null}>|null,
  *     google_site_verification: string|null,
+ *     plausible_domain: string|null,
  *     coming_soon: bool,
  *     noindex: bool,
  *     maintenance: bool,
@@ -70,7 +73,7 @@ use Throwable;
  */
 class SiteSettingsRepository
 {
-    public const string CACHE_KEY = 'site_settings:v5';
+    public const string CACHE_KEY = 'site_settings:v6';
 
     /**
      * Snapshot memoized for the current process (one cache read per request).
@@ -237,6 +240,23 @@ class SiteSettingsRepository
         ];
 
         return array_filter($schema, fn (mixed $value): bool => $value !== null && $value !== '');
+    }
+
+    /**
+     * Plausible analytics of the public pages: the domain saved in the
+     * panel, then `services.plausible.domain`, with the script URL from
+     * `services.plausible.script_url` (environment only, it decides the CSP
+     * origin). Null without a domain or when the script is not served over
+     * https.
+     */
+    public function plausible(): ?PlausibleData
+    {
+        $domain = $this->snapshot()['plausible_domain'] ?? config('services.plausible.domain');
+        $scriptUrl = config('services.plausible.script_url');
+
+        return is_string($domain) && $domain !== '' && is_string($scriptUrl) && str_starts_with($scriptUrl, 'https://')
+            ? new PlausibleData($domain, $scriptUrl)
+            : null;
     }
 
     /**
@@ -465,6 +485,7 @@ class SiteSettingsRepository
             'map_url' => $settings->map_url,
             'opening_hours' => $settings->opening_hours,
             'google_site_verification' => $settings->google_site_verification,
+            'plausible_domain' => $settings->plausible_domain,
             'coming_soon' => $settings->coming_soon,
             'noindex' => $settings->noindex,
             'maintenance' => $settings->maintenance,
@@ -510,6 +531,7 @@ class SiteSettingsRepository
             'map_url' => null,
             'opening_hours' => null,
             'google_site_verification' => null,
+            'plausible_domain' => null,
             'coming_soon' => false,
             'noindex' => false,
             'maintenance' => false,

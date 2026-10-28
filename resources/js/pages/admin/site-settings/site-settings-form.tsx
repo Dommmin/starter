@@ -66,6 +66,7 @@ const SHARED_FIELDS = [
     'tax_id',
     'map_url',
     'google_site_verification',
+    'plausible_domain',
     'announcement_tone',
     'announcement_link_url',
     'announcement_starts_on',
@@ -195,6 +196,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         tax_id: settings.taxId ?? '',
         map_url: settings.mapUrl ?? '',
         google_site_verification: settings.googleSiteVerification ?? '',
+        plausible_domain: settings.plausibleDomain ?? '',
         opening_hours: { ...settings.openingHours },
         contact_recipients: settings.contactRecipients.map((email) => ({
             email,
@@ -381,6 +383,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             tax_id: nullable(data.tax_id),
             map_url: nullable(data.map_url),
             google_site_verification: nullable(data.google_site_verification),
+            plausible_domain: nullable(data.plausible_domain),
             announcement_enabled: data.announcement_enabled,
             announcement_tone: data.announcement_tone,
             announcement_link_url: nullable(data.announcement_link_url),
@@ -675,6 +678,15 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         hint: t(
                             'admin.siteSettings.fields.googleVerificationHelp',
                         ),
+                    },
+                    {
+                        type: 'text',
+                        name: 'plausible_domain',
+                        label: t('admin.siteSettings.fields.plausibleDomain'),
+                        hint: t(
+                            'admin.siteSettings.fields.plausibleDomainHelp',
+                        ),
+                        placeholder: 'example.com',
                     },
                 ],
             },

@@ -47,6 +47,7 @@ class SiteSettingsInputData extends Data
         public ?string $mapUrl = null,
         public ?array $openingHours = null,
         public ?string $googleSiteVerification = null,
+        public ?string $plausibleDomain = null,
         public array $contactRecipients = [],
         public bool $contactAutoReply = false,
         public bool $announcementEnabled = false,

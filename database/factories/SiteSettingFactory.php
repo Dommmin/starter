@@ -41,6 +41,7 @@ class SiteSettingFactory extends Factory
             'map_url' => null,
             'opening_hours' => null,
             'google_site_verification' => null,
+            'plausible_domain' => null,
             'coming_soon' => false,
             'noindex' => false,
             'maintenance' => false,

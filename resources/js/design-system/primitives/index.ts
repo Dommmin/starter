@@ -3,6 +3,7 @@ export * from './action-menu';
 export * from './admin-locale-select';
 export * from './admin-shell';
 export * from './alert';
+export * from './announcement-bar';
 export * from './appearance-preview';
 export * from './auth-heading';
 export * from './avatar';

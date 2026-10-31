@@ -4,6 +4,7 @@ namespace App\Data\Admin\Settings;
 
 use App\Data\Settings\OpeningHoursDayData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -20,6 +21,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * string = no link) and `translations` every active public locale.
  * `openingHours` lists every Weekday with `HH:MM` times (empty strings =
  * closed); `accent` and `typography` are null while the defaults apply.
+ * The announcement dates are `YYYY-MM-DD` days in the application timezone
+ * (null = no limit).
  */
 #[TypeScript]
 class SiteSettingsFormData extends Data
@@ -54,8 +57,14 @@ class SiteSettingsFormData extends Data
         #[LiteralTypeScriptType('{ [day in App.Enums.Weekday]: { opens: string; closes: string } }')]
         public array $openingHours,
         public ?string $googleSiteVerification,
+        public ?string $plausibleDomain,
         public array $contactRecipients,
         public bool $contactAutoReply,
+        public bool $announcementEnabled,
+        public AnnouncementTone $announcementTone,
+        public ?string $announcementLinkUrl,
+        public ?string $announcementStartsOn,
+        public ?string $announcementEndsOn,
     ) {}
 
     /**
@@ -94,8 +103,14 @@ class SiteSettingsFormData extends Data
             mapUrl: null,
             openingHours: self::openingHours(null),
             googleSiteVerification: null,
+            plausibleDomain: null,
             contactRecipients: [],
             contactAutoReply: false,
+            announcementEnabled: false,
+            announcementTone: AnnouncementTone::Info,
+            announcementLinkUrl: null,
+            announcementStartsOn: null,
+            announcementEndsOn: null,
         );
     }
 
@@ -139,9 +154,15 @@ class SiteSettingsFormData extends Data
             mapUrl: $settings->map_url,
             openingHours: self::openingHours(OpeningHoursDayData::week($settings->opening_hours)),
             googleSiteVerification: $settings->google_site_verification,
+            plausibleDomain: $settings->plausible_domain,
             contactRecipients: $settings->contact_recipients
                 ?? ($settings->contact_recipient_email === null ? [] : [$settings->contact_recipient_email]),
             contactAutoReply: $settings->contact_auto_reply,
+            announcementEnabled: $settings->announcement_enabled,
+            announcementTone: $settings->announcement_tone,
+            announcementLinkUrl: $settings->announcement_link_url,
+            announcementStartsOn: $settings->announcement_starts_at?->toDateString(),
+            announcementEndsOn: $settings->announcement_ends_at?->toDateString(),
         );
     }
 

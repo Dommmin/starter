@@ -2,6 +2,7 @@
 
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\Consent\CookieConsent;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -69,6 +70,33 @@ test('categories without a configured service are not offered', function () {
             ->where('consent.granted', [])
             ->where('consent.plausible', null)
         );
+});
+
+test('the plausible domain from the panel wins over the environment', function () {
+    SiteSetting::factory()->create(['plausible_domain' => 'panel.example']);
+
+    $this->get('/')->assertInertia(fn (Assert $inertia) => $inertia
+        ->where('consent.categories', ['analytics'])
+        ->where('consent.plausible', ['domain' => 'panel.example', 'scriptUrl' => 'https://plausible.io/js/script.js'])
+    );
+});
+
+test('an empty plausible domain in the panel falls back to the environment', function () {
+    SiteSetting::factory()->create(['plausible_domain' => null]);
+
+    $this->get('/')->assertInertia(fn (Assert $inertia) => $inertia
+        ->where('consent.plausible.domain', 'example.com')
+    );
+});
+
+test('without a domain in the panel and the environment no analytics is loaded', function () {
+    config(['services.plausible.domain' => null]);
+    SiteSetting::factory()->create(['plausible_domain' => null]);
+
+    $this->get('/')->assertInertia(fn (Assert $inertia) => $inertia
+        ->where('consent.categories', [])
+        ->where('consent.plausible', null)
+    );
 });
 
 test('a script URL without https loads no analytics', function () {

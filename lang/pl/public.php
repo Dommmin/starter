@@ -107,6 +107,24 @@ return [
         'description' => 'Nasza nowa strona jest prawie gotowa. Zajrzyj do nas za kilka dni.',
         'contact' => 'Masz pytania? Napisz na :email.',
     ],
+    'maintenance' => [
+        'title' => 'Prace techniczne',
+        'heading' => 'Trwają prace techniczne',
+        'description' => 'Ulepszamy naszą stronę. Wróć do nas za chwilę.',
+        'returnsInMinutes' => [
+            'one' => 'Planujemy wrócić za około :count minutę.',
+            'few' => 'Planujemy wrócić za około :count minuty.',
+            'many' => 'Planujemy wrócić za około :count minut.',
+            'other' => 'Planujemy wrócić za około :count minuty.',
+        ],
+        'returnsInHours' => [
+            'one' => 'Planujemy wrócić za około :count godzinę.',
+            'few' => 'Planujemy wrócić za około :count godziny.',
+            'many' => 'Planujemy wrócić za około :count godzin.',
+            'other' => 'Planujemy wrócić za około :count godziny.',
+        ],
+        'contact' => 'Pilna sprawa? Napisz na :email.',
+    ],
     'contactAutoReply' => [
         'subject' => 'Dziękujemy za wiadomość — :site',
         'automatic' => 'To automatyczna odpowiedź; odezwiemy się do Ciebie osobiście.',

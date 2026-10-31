@@ -10,6 +10,7 @@ import {
     LayoutGrid,
     LayoutTemplate,
     ListTree,
+    Waypoints,
     Mail,
     Settings,
     ServerCog,
@@ -39,6 +40,7 @@ import { index as homeSectionsIndex } from '@/routes/admin/home-sections';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as navigationIndex } from '@/routes/admin/navigation';
 import { index as pagesIndex } from '@/routes/admin/pages';
+import { index as redirectsIndex } from '@/routes/admin/redirects';
 import { edit as siteSettingsEdit } from '@/routes/admin/site-settings';
 import { index as systemIndex } from '@/routes/admin/system';
 import { index as tagsIndex } from '@/routes/admin/tags';
@@ -193,6 +195,16 @@ export default function AdminLayout({
                     : []),
                 ...(auth.can.manageSiteSettings
                     ? [
+                          ...(auth.can.manageRedirects
+                              ? [
+                                    section(
+                                        'redirects',
+                                        t('admin.redirects.navLabel'),
+                                        redirectsIndex(),
+                                        Waypoints,
+                                    ),
+                                ]
+                              : []),
                           section(
                               'site-settings',
                               t('admin.nav.siteSettings'),

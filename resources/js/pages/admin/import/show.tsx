@@ -18,12 +18,17 @@ import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index as faqsIndex } from '@/routes/admin/faqs';
 import { preview, store } from '@/routes/admin/import';
+import { index as redirectsIndex } from '@/routes/admin/redirects';
 import { index as tagsIndex } from '@/routes/admin/tags';
 
 type ScreenProps = App.Data.Admin.Import.ImportScreenData;
 type Row = App.Data.Admin.Import.ImportRowData;
 
-const listUrls = { faqs: faqsIndex, tags: tagsIndex } as const;
+const listUrls = {
+    faqs: faqsIndex,
+    redirects: redirectsIndex,
+    tags: tagsIndex,
+} as const;
 
 /**
  * CSV import of a module: describe the expected columns, check an uploaded

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Vite;
 
@@ -92,6 +93,18 @@ test('plausible without a domain or over plain http does not widen the policy', 
     'no domain' => [null, 'https://plausible.example/js/script.js'],
     'plain http' => ['starter.example', 'http://plausible.example/js/script.js'],
 ]);
+
+test('a plausible domain saved in the panel allows the environment script origin', function () {
+    config([
+        'services.plausible.domain' => null,
+        'services.plausible.script_url' => 'https://plausible.example/js/script.js',
+    ]);
+    SiteSetting::factory()->create(['plausible_domain' => 'starter.example']);
+
+    $policy = (string) $this->get(route('home'))->assertOk()->headers->get(CSP_REPORT_ONLY_HEADER);
+
+    expect($policy)->toContain("connect-src 'self' https://plausible.example");
+});
 
 test('the policy is enforced once report-only mode is disabled', function () {
     config(['csp.report_only' => false]);

@@ -67,6 +67,8 @@ describe('SiteLaunchPanel', () => {
         const container = await render({
             comingSoon: true,
             noindex: false,
+            maintenance: false,
+            maintenanceUntil: null,
             testMailRecipient: 'owner@acme.test',
             checklist: [
                 { key: 'admin_two_factor', done: true },
@@ -80,13 +82,15 @@ describe('SiteLaunchPanel', () => {
 
         expect(text.match(/admin\.launch\.done/g)).toHaveLength(2);
         expect(text.match(/admin\.launch\.todo/g)).toHaveLength(2);
-        expect(container.querySelectorAll('[role="switch"]')).toHaveLength(2);
+        expect(container.querySelectorAll('[role="switch"]')).toHaveLength(3);
     });
 
     it('sends the test e-mail with a POST to the system route', async () => {
         const container = await render({
             comingSoon: false,
             noindex: false,
+            maintenance: false,
+            maintenanceUntil: null,
             testMailRecipient: 'owner@acme.test',
             checklist: [],
         });
@@ -102,5 +106,30 @@ describe('SiteLaunchPanel', () => {
             {},
             expect.objectContaining({ preserveScroll: true }),
         );
+    });
+
+    it('shows the planned end only while maintenance is on', async () => {
+        const on = await render({
+            comingSoon: false,
+            noindex: false,
+            maintenance: true,
+            maintenanceUntil: '2026-10-28T15:00:00+00:00',
+            testMailRecipient: 'owner@acme.test',
+            checklist: [],
+        });
+
+        expect(on.textContent).toContain('admin.launch.maintenanceUntil');
+        expect(on.querySelector('select, [role="combobox"]')).not.toBeNull();
+
+        const off = await render({
+            comingSoon: false,
+            noindex: false,
+            maintenance: false,
+            maintenanceUntil: null,
+            testMailRecipient: 'owner@acme.test',
+            checklist: [],
+        });
+
+        expect(off.textContent).not.toContain('admin.launch.maintenanceUntil');
     });
 });

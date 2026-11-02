@@ -14,7 +14,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * `footerText` fall back to the public fallback locale and are null when no
  * locale provides them. `isCustomized` is true once an administrator saved
  * the settings; until then `name` is the configuration fallback and the UI
- * keeps its catalog brand.
+ * keeps its catalog brand. `announcement` is the bar above the public
+ * header while it is on and within its time window, otherwise null.
  */
 #[TypeScript]
 class SiteSettingsData extends Data
@@ -30,5 +31,6 @@ class SiteSettingsData extends Data
         public ?string $footerText,
         public SiteContactData $contact,
         public array $social,
+        public ?SiteAnnouncementData $announcement = null,
     ) {}
 }

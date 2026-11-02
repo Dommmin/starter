@@ -14,6 +14,7 @@ final class ImportDefinitions
      */
     public const array DEFINITIONS = [
         FaqImport::class,
+        RedirectImport::class,
         TagImport::class,
     ];
 

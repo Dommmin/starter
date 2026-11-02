@@ -13,6 +13,7 @@ import {
     Text,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { update as updateMaintenance } from '@/routes/admin/system/maintenance';
 import { update as updatePublication } from '@/routes/admin/system/publication';
 import { store as sendTestMail } from '@/routes/admin/system/test-mail';
 
@@ -21,22 +22,50 @@ type PublicationValues = {
     noindex: boolean;
 };
 
+type MaintenanceValues = {
+    maintenance: boolean;
+    duration: App.Enums.MaintenanceDuration;
+};
+
+const MAINTENANCE_DURATIONS: App.Enums.MaintenanceDuration[] = [
+    'unknown',
+    '15',
+    '30',
+    '60',
+    '120',
+    '240',
+    '1440',
+];
+
 export type SiteLaunchPanelProps = {
     launch: App.Data.Admin.System.SiteLaunchData;
 };
 
 /**
  * Launch tools of the System page: the coming soon and site-wide noindex
- * switches, the launch checklist (each item done or to do, never colour
+ * switches, the maintenance switch with its expected duration, the launch checklist (each item done or to do, never colour
  * alone) and the test e-mail to the signed-in administrator.
  */
 export function SiteLaunchPanel({ launch }: SiteLaunchPanelProps) {
-    const { t } = useTranslation();
+    const { t, formatDate } = useTranslation();
     const [isSendingMail, setIsSendingMail] = useState(false);
     const form = useForm<PublicationValues>({
         coming_soon: launch.comingSoon,
         noindex: launch.noindex,
     });
+    const maintenanceForm = useForm<MaintenanceValues>({
+        maintenance: launch.maintenance,
+        duration: 'unknown',
+    });
+    const maintenanceUntil =
+        launch.maintenance && launch.maintenanceUntil
+            ? t('admin.launch.maintenanceUntil', {
+                  time: formatDate(launch.maintenanceUntil, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                  }),
+              })
+            : null;
 
     function sendMail() {
         router.post(
@@ -100,6 +129,64 @@ export function SiteLaunchPanel({ launch }: SiteLaunchPanelProps) {
                         submit: t('admin.launch.savePublication'),
                         errorSummaryTitle: t('admin.launch.errorSummaryTitle'),
                         saved: t('admin.launch.publicationSaved'),
+                    }}
+                />
+
+                <ResourceForm<MaintenanceValues>
+                    sections={[
+                        {
+                            id: 'maintenance',
+                            title: t('admin.launch.maintenanceTitle'),
+                            description: maintenanceUntil ?? undefined,
+                            fields: [
+                                {
+                                    type: 'switch',
+                                    name: 'maintenance',
+                                    label: t('admin.launch.maintenance'),
+                                    hint: t('admin.launch.maintenanceHelp'),
+                                },
+                                {
+                                    type: 'select',
+                                    name: 'duration',
+                                    label: t(
+                                        'admin.launch.maintenanceDuration',
+                                    ),
+                                    hint: t(
+                                        'admin.launch.maintenanceDurationHelp',
+                                    ),
+                                    options: MAINTENANCE_DURATIONS.map(
+                                        (value) => ({
+                                            value,
+                                            label: t(
+                                                `admin.launch.durations.${value}`,
+                                            ),
+                                        }),
+                                    ),
+                                    disabled: !maintenanceForm.data.maintenance,
+                                },
+                            ],
+                        },
+                    ]}
+                    values={maintenanceForm.data}
+                    errors={maintenanceForm.errors}
+                    onChange={(name, value) =>
+                        maintenanceForm.setData((data) => ({
+                            ...data,
+                            [name]: value,
+                        }))
+                    }
+                    onSubmit={() =>
+                        maintenanceForm.submit(updateMaintenance(), {
+                            preserveScroll: true,
+                            onSuccess: () => maintenanceForm.setDefaults(),
+                        })
+                    }
+                    isPending={maintenanceForm.processing}
+                    recentlySuccessful={maintenanceForm.recentlySuccessful}
+                    labels={{
+                        submit: t('admin.launch.saveMaintenance'),
+                        errorSummaryTitle: t('admin.launch.errorSummaryTitle'),
+                        saved: t('admin.launch.maintenanceSaved'),
                     }}
                 />
 

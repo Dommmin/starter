@@ -107,6 +107,20 @@ return [
         'description' => 'Unsere neue Website ist fast fertig. Schauen Sie in ein paar Tagen wieder vorbei.',
         'contact' => 'Fragen? Schreiben Sie an :email.',
     ],
+    'maintenance' => [
+        'title' => 'Wartungsarbeiten',
+        'heading' => 'Wir führen Wartungsarbeiten durch',
+        'description' => 'Wir verbessern unsere Website. Bitte schauen Sie in Kürze wieder vorbei.',
+        'returnsInMinutes' => [
+            'one' => 'Wir sind voraussichtlich in etwa :count Minute zurück.',
+            'other' => 'Wir sind voraussichtlich in etwa :count Minuten zurück.',
+        ],
+        'returnsInHours' => [
+            'one' => 'Wir sind voraussichtlich in etwa :count Stunde zurück.',
+            'other' => 'Wir sind voraussichtlich in etwa :count Stunden zurück.',
+        ],
+        'contact' => 'Etwas Dringendes? Schreiben Sie an :email.',
+    ],
     'contactAutoReply' => [
         'subject' => 'Vielen Dank für Ihre Nachricht — :site',
         'automatic' => 'Dies ist eine automatische Antwort; wir melden uns persönlich bei Ihnen.',

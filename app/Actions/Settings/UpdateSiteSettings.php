@@ -14,6 +14,7 @@ use App\Models\SiteSettingTranslation;
 use App\Models\User;
 use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
+use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,8 @@ use Illuminate\Validation\ValidationException;
  *   version check (console / init-project; `$actor` = null).
  * - updatePublication(): the coming soon and noindex switches of the
  *   System page, without a version check.
+ * - updateMaintenance(): the maintenance switch and its planned end, also
+ *   without a version check.
  */
 class UpdateSiteSettings
 {
@@ -60,12 +63,28 @@ class UpdateSiteSettings
         'map_url',
         'opening_hours',
         'google_site_verification',
+        'plausible_domain',
         'coming_soon',
         'noindex',
+        'maintenance',
+        'maintenance_until',
         'contact_auto_reply',
+        'announcement_enabled',
+        'announcement_tone',
+        'announcement_link_url',
+        'announcement_starts_at',
+        'announcement_ends_at',
     ];
 
-    private const array TRANSLATION_FIELDS = ['tagline', 'footer_text', 'seo_title', 'seo_description', 'auto_reply_text'];
+    private const array TRANSLATION_FIELDS = [
+        'tagline',
+        'footer_text',
+        'seo_title',
+        'seo_description',
+        'auto_reply_text',
+        'announcement_text',
+        'announcement_link_label',
+    ];
 
     public function __construct(
         private readonly RecordAuditEvent $audit,
@@ -115,6 +134,12 @@ class UpdateSiteSettings
                     ? null
                     : array_map(fn (OpeningHoursDayData $day): array => $day->toRow(), $input->openingHours),
                 'google_site_verification' => $input->googleSiteVerification,
+                'plausible_domain' => $input->plausibleDomain,
+                'announcement_enabled' => $input->announcementEnabled,
+                'announcement_tone' => $input->announcementTone,
+                'announcement_link_url' => $input->announcementLinkUrl,
+                'announcement_starts_at' => $input->announcementStartsAt,
+                'announcement_ends_at' => $input->announcementEndsAt,
             ]);
 
             return [
@@ -155,6 +180,22 @@ class UpdateSiteSettings
     {
         return $this->persist($actor, function (SiteSetting $settings) use ($comingSoon, $noindex): array {
             $settings->forceFill(['coming_soon' => $comingSoon, 'noindex' => $noindex]);
+
+            return $this->settingChanges($settings);
+        });
+    }
+
+    /**
+     * Turn the maintenance page on (with the planned end, null = not given)
+     * or off; turning it off clears the planned end.
+     */
+    public function updateMaintenance(bool $maintenance, ?CarbonInterface $until, User $actor): SiteSetting
+    {
+        return $this->persist($actor, function (SiteSetting $settings) use ($maintenance, $until): array {
+            $settings->forceFill([
+                'maintenance' => $maintenance,
+                'maintenance_until' => $maintenance ? $until : null,
+            ]);
 
             return $this->settingChanges($settings);
         });
@@ -271,6 +312,8 @@ class UpdateSiteSettings
                 'seo_title' => $input->seoTitle,
                 'seo_description' => $input->seoDescription,
                 'auto_reply_text' => $input->autoReplyText,
+                'announcement_text' => $input->announcementText,
+                'announcement_link_label' => $input->announcementLinkLabel,
             ]);
 
             foreach (self::TRANSLATION_FIELDS as $field) {

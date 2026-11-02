@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\JsonArray;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
 use Carbon\CarbonImmutable;
@@ -18,7 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Site-wide settings managed by administrators: brand name, logo, public
  * contact details, social profiles, default SEO image, the recipient of
  * contact form messages, appearance (accent, typography, default theme,
- * favicon), company details and publication switches (coming soon, noindex). Singleton: the only row has id
+ * favicon), company details and publication switches (coming soon,
+ * noindex, maintenance) and the announcement bar. Singleton: the only row has id
  * {@see self::SINGLETON_ID}; the application never inserts another one.
  * Attributes are written by UpdateSiteSettings only (no mass assignment).
  *
@@ -44,8 +46,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $map_url
  * @property list<array{day: string, opens: string|null, closes: string|null}>|null $opening_hours One row per Weekday; both times null = closed.
  * @property string|null $google_site_verification
+ * @property string|null $plausible_domain Null: `PLAUSIBLE_DOMAIN` applies.
  * @property bool $coming_soon
  * @property bool $noindex
+ * @property bool $maintenance
+ * @property CarbonImmutable|null $maintenance_until Planned end of the works; null = not given.
+ * @property bool $announcement_enabled
+ * @property AnnouncementTone $announcement_tone
+ * @property string|null $announcement_link_url Relative path or http(s) URL.
+ * @property CarbonImmutable|null $announcement_starts_at Null = shown right away.
+ * @property CarbonImmutable|null $announcement_ends_at Last moment shown; null = no end.
  * @property int|null $updated_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -95,8 +105,16 @@ class SiteSetting extends Model
             'map_url' => 'string',
             'opening_hours' => JsonArray::class,
             'google_site_verification' => 'string',
+            'plausible_domain' => 'string',
             'coming_soon' => 'boolean',
             'noindex' => 'boolean',
+            'maintenance' => 'boolean',
+            'maintenance_until' => 'datetime',
+            'announcement_enabled' => 'boolean',
+            'announcement_tone' => AnnouncementTone::class,
+            'announcement_link_url' => 'string',
+            'announcement_starts_at' => 'datetime',
+            'announcement_ends_at' => 'datetime',
             'updated_by' => 'integer',
         ];
     }

@@ -21,11 +21,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $seo_title
  * @property string|null $seo_description
  * @property string|null $auto_reply_text
+ * @property string|null $announcement_text Plain text of the announcement bar.
+ * @property string|null $announcement_link_label
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read SiteSetting $siteSetting
  */
-#[Fillable(['locale', 'tagline', 'footer_text', 'seo_title', 'seo_description', 'auto_reply_text'])]
+#[Fillable(['locale', 'tagline', 'footer_text', 'seo_title', 'seo_description', 'auto_reply_text', 'announcement_text', 'announcement_link_label'])]
 class SiteSettingTranslation extends Model
 {
     /** @use HasFactory<SiteSettingTranslationFactory> */
@@ -46,6 +48,8 @@ class SiteSettingTranslation extends Model
             'seo_title' => 'string',
             'seo_description' => 'string',
             'auto_reply_text' => 'string',
+            'announcement_text' => 'string',
+            'announcement_link_label' => 'string',
         ];
     }
 

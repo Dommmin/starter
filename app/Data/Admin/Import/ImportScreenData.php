@@ -17,7 +17,7 @@ class ImportScreenData extends Data
      * @param  list<string>  $requiredColumns
      */
     public function __construct(
-        #[LiteralTypeScriptType("'faqs' | 'tags'")]
+        #[LiteralTypeScriptType("'faqs' | 'redirects' | 'tags'")]
         public string $module,
         public array $columns,
         public array $requiredColumns,

@@ -35,6 +35,9 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => 'Podmenu: :label',
     ],
+    'announcement' => [
+        'label' => 'Ogłoszenie',
+    ],
     'cookies' => [
         'title' => 'Szanujemy Twoją prywatność',
         'description' => 'Niezbędne pliki cookie pozwalają stronie działać. Za Twoją zgodą użyjemy też narzędzi, które pomagają nam ulepszać serwis. Decyzję zmienisz w każdej chwili w stopce strony.',

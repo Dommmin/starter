@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\Import\ImportController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
+use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
 use App\Http\Controllers\Admin\Search\AdminSearchController;
 use App\Http\Controllers\Admin\Settings\SitePublicationController;
@@ -31,6 +32,7 @@ use App\Models\HomeSection;
 use App\Models\MediaAsset;
 use App\Models\MenuItem;
 use App\Models\Page;
+use App\Models\Redirect;
 use App\Models\SiteSetting;
 use App\Models\Tag;
 use App\Models\User;
@@ -49,6 +51,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('view', SiteSetting::class);
         Route::put('/system/publication', [SitePublicationController::class, 'update'])
             ->name('system.publication.update')
+            ->can('update', SiteSetting::class);
+        Route::put('/system/maintenance', [SitePublicationController::class, 'updateMaintenance'])
+            ->name('system.maintenance.update')
             ->can('update', SiteSetting::class);
         Route::post('/system/test-mail', [SitePublicationController::class, 'sendTestMail'])
             ->name('system.test-mail.store')
@@ -134,14 +139,14 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->name('saved-views.destroy');
 
         Route::get('/import/{module}', [ImportController::class, 'show'])
-            ->whereIn('module', ['faqs', 'tags'])
+            ->whereIn('module', ['faqs', 'redirects', 'tags'])
             ->name('import.show');
         Route::post('/import/{module}/preview', [ImportController::class, 'preview'])
-            ->whereIn('module', ['faqs', 'tags'])
+            ->whereIn('module', ['faqs', 'redirects', 'tags'])
             ->name('import.preview')
             ->middleware('throttle:20,1');
         Route::post('/import/{module}', [ImportController::class, 'store'])
-            ->whereIn('module', ['faqs', 'tags'])
+            ->whereIn('module', ['faqs', 'redirects', 'tags'])
             ->name('import.store');
 
         Route::get('/trash', [TrashController::class, 'index'])
@@ -302,4 +307,26 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->whereNumber('homeSection')
             ->name('home-sections.visibility')
             ->can('update', 'homeSection');
+
+        Route::get('/redirects', [RedirectController::class, 'index'])
+            ->name('redirects.index')
+            ->can('viewAny', Redirect::class);
+        Route::delete('/redirects', [RedirectController::class, 'destroyMany'])
+            ->name('redirects.destroy-many')
+            ->can('viewAny', Redirect::class);
+        Route::get('/redirects/create', [RedirectController::class, 'create'])
+            ->name('redirects.create')
+            ->can('create', Redirect::class);
+        Route::post('/redirects', [RedirectController::class, 'store'])
+            ->name('redirects.store')
+            ->can('create', Redirect::class);
+        Route::get('/redirects/{redirect}/edit', [RedirectController::class, 'edit'])
+            ->name('redirects.edit')
+            ->can('update', 'redirect');
+        Route::put('/redirects/{redirect}', [RedirectController::class, 'update'])
+            ->name('redirects.update')
+            ->can('update', 'redirect');
+        Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy'])
+            ->name('redirects.destroy')
+            ->can('delete', 'redirect');
     });

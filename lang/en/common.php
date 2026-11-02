@@ -35,6 +35,9 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => ':label submenu',
     ],
+    'announcement' => [
+        'label' => 'Announcement',
+    ],
     'cookies' => [
         'title' => 'We respect your privacy',
         'description' => 'Necessary cookies keep the site working. With your consent we also use tools that help us improve it. You can change your choice at any time in the page footer.',

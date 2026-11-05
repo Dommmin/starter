@@ -84,7 +84,8 @@ test('the usage is audited without the text', function () {
         ->and($entry->actor_id)->toBe($editor->id)
         ->and($entry->subject_type)->toBe((new Page)->getMorphClass())
         ->and($entry->subject_id)->toBeNull()
-        ->and($entry->changes)->toBe([
+        // toEqual: MySQL JSON does not keep the key order.
+        ->and($entry->changes)->toEqual([
             'feature' => ['old' => null, 'new' => 'text_rewrite'],
             'model' => ['old' => null, 'new' => 'claude-haiku-5-5'],
             'tokens' => ['old' => null, 'new' => 100],

@@ -23,6 +23,7 @@ return [
     */
     'features' => [
         'seo_meta' => (bool) env('AI_FEATURE_SEO_META', true),
+        'faq_generator' => (bool) env('AI_FEATURE_FAQ_GENERATOR', true),
     ],
 
     /*

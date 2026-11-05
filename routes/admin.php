@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Articles\ArticleController;
+use App\Http\Controllers\Admin\Assistant\FaqSuggestionController;
 use App\Http\Controllers\Admin\Assistant\SeoMetaSuggestionController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
@@ -49,6 +50,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->middleware('throttle:60,1');
         Route::post('/assistant/seo-meta', SeoMetaSuggestionController::class)
             ->name('assistant.seo-meta')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/faqs', FaqSuggestionController::class)
+            ->name('assistant.faqs')
             ->middleware('throttle:assistant');
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')
@@ -192,6 +196,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('create', Faq::class);
         Route::post('/faqs', [FaqController::class, 'store'])
             ->name('faqs.store')
+            ->can('create', Faq::class);
+        Route::post('/faqs/many', [FaqController::class, 'storeMany'])
+            ->name('faqs.store-many')
             ->can('create', Faq::class);
         Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
             ->name('faqs.edit')

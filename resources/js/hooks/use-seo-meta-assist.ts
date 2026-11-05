@@ -1,4 +1,3 @@
-import { HttpResponseError } from '@inertiajs/core';
 import { useHttp } from '@inertiajs/react';
 import { useRef } from 'react';
 import type {
@@ -8,6 +7,7 @@ import type {
     RichTextNode,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { assistantErrorMessage } from '@/lib/assistant-error';
 import { seoMeta } from '@/routes/admin/assistant';
 
 type Suggestion = App.Data.Admin.Assistant.SeoMetaSuggestionData;
@@ -84,24 +84,6 @@ export function useSeoMetaAssist({
         return undefined;
     }
 
-    function errorMessage(error: unknown): string {
-        if (!(error instanceof HttpResponseError)) {
-            return t('admin.assistant.errors.generic');
-        }
-
-        if (error.response.status === 503) {
-            return t('admin.assistant.errors.unavailable');
-        }
-
-        if (error.response.status === 429) {
-            return error.response.data.includes('"reason":"budget"')
-                ? t('admin.assistant.errors.budget')
-                : t('admin.assistant.errors.rateLimited');
-        }
-
-        return t('admin.assistant.errors.generic');
-    }
-
     function suggestion({
         locale,
         title,
@@ -144,7 +126,7 @@ export function useSeoMetaAssist({
             try {
                 return { suggestion: pick(await suggestion(source)) };
             } catch (error) {
-                return { error: errorMessage(error) };
+                return { error: assistantErrorMessage(error, t) };
             }
         };
     }

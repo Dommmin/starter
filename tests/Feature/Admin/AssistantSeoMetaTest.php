@@ -75,7 +75,8 @@ test('an editor gets a normalized suggestion and the usage is audited without th
         ->and($entry->actor_id)->toBe($editor->id)
         ->and($entry->subject_type)->toBe((new Article)->getMorphClass())
         ->and($entry->subject_id)->toBeNull()
-        ->and($entry->changes)->toBe([
+        // toEqual: MySQL JSON does not keep the key order.
+        ->and($entry->changes)->toEqual([
             'feature' => ['old' => null, 'new' => 'seo_meta'],
             'model' => ['old' => null, 'new' => 'claude-haiku-5-5'],
             'tokens' => ['old' => null, 'new' => 150],

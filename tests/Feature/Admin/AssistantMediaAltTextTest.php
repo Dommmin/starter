@@ -82,7 +82,8 @@ test('an editor gets a normalized alt text suggestion and the usage is audited w
     expect($entry->action)->toBe(AuditAction::AssistantSuggested)
         ->and($entry->actor_id)->toBe($editor->id)
         ->and($entry->subject_id)->toBe($asset->id)
-        ->and($entry->changes)->toBe([
+        // toEqual: MySQL JSON does not keep the key order.
+        ->and($entry->changes)->toEqual([
             'feature' => ['old' => null, 'new' => 'media_alt_text'],
             'model' => ['old' => null, 'new' => 'claude-haiku-5-5'],
             'tokens' => ['old' => null, 'new' => 920],

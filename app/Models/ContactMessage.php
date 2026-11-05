@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContactFieldType;
+use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
 use App\Enums\ContactWebhookStatus;
 use Carbon\CarbonImmutable;
@@ -32,6 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $contact_form_id Null for messages from before configurable forms.
  * @property array<string, string|bool>|null $fields Extra field values keyed by field key.
  * @property-read ContactForm|null $form
+ * @property ContactMessageCategory|null $category AI category; null until classified (stage 6).
+ * @property CarbonImmutable|null $classified_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -66,6 +69,8 @@ class ContactMessage extends Model
             'webhook_delivered_at' => 'datetime',
             'contact_form_id' => 'integer',
             'fields' => 'array',
+            'category' => ContactMessageCategory::class,
+            'classified_at' => 'datetime',
         ];
     }
 

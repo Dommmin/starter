@@ -33,6 +33,7 @@ class RunAssistantPrompt
 
     /**
      * @param  Model  $subject  Record the suggestion is made for; an unsaved instance while creating.
+     * @param  User|null  $actor  Null for queued system processes (message classification).
      * @return array<string, mixed> Structured output of the agent.
      *
      * @throws AssistantBudgetExceeded
@@ -43,7 +44,7 @@ class RunAssistantPrompt
         Agent&HasStructuredOutput $agent,
         string $prompt,
         Model $subject,
-        User $actor,
+        ?User $actor,
     ): array {
         $budgetKey = 'assistant:tokens:'.now()->format('Y-m');
 

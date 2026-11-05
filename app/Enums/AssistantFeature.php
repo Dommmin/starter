@@ -9,6 +9,7 @@ namespace App\Enums;
 enum AssistantFeature: string
 {
     case SeoMeta = 'seo_meta';
+    case MessageClassification = 'message_classification';
 
     /**
      * Whether the feature may be used: the assistant and the feature are

@@ -20,9 +20,13 @@ return [
 
     /*
     | Per-feature switches, keyed by App\Enums\AssistantFeature values.
+    | `message_classification` sends the subject and body of contact messages
+    | (personal data, sender details redacted) to the AI provider, so it is
+    | off unless explicitly enabled (owner approval 2026-11-05).
     */
     'features' => [
         'seo_meta' => (bool) env('AI_FEATURE_SEO_META', true),
+        'message_classification' => (bool) env('AI_FEATURE_MESSAGE_CLASSIFICATION', false),
     ],
 
     /*

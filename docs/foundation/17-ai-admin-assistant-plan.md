@@ -106,17 +106,19 @@ AC: nic nie zapisuje się bez kliknięcia. Liczba pozycji jest ograniczona.
 
 ## Etap 6 — klasyfikacja wiadomości (HIGH-RISK)
 
-Decyzje przed startem:
+Decyzje właściciela (2026-11-05, zakres zamknięty):
 
-1. Czy treść wiadomości (PII) może trafiać do dostawcy AI? Przy którym dostawcy i z jaką retencją?
-2. Migracja: kolumny `category` (`lead`/`question`/`spam`/`other`), `summary`, `classified_at`.
+1. Do dostawcy AI trafia **wyłącznie temat i treść** wiadomości. Imię, e-mail, telefon i pozostałe pola kontaktowe/meta nigdy nie trafiają do promptu. Adresy e-mail i numery telefonów w treści są przed wysłaniem zamieniane na `[email]` / `[phone]` (`ContactDetailsRedactor`). Formularz nie ma stałej kolumny tematu: tematem jest dodatkowe pole o kluczu `subject`, jeśli formularz je ma.
+2. Migracja `contact_messages` dodaje **tylko** `category` (nullable, enum `ContactMessageCategory`: `lead`/`question`/`spam`/`other`) i `classified_at` (nullable). **Bez kolumny `summary`.**
+3. Funkcja `message_classification` jest domyślnie wyłączona (`AI_FEATURE_MESSAGE_CLASSIFICATION=false`), bo przetwarza PII.
 
-Zakres:
+Wdrożenie:
 
-- Job po zapisie wiadomości. Klasyfikacja nie blokuje maila ani webhooka i niczego nie usuwa, spam jest tylko oznaczany.
-- Filtr i badge kategorii na liście wiadomości.
+- Job `ClassifyContactMessage` kolejkowany po zapisie wiadomości (after commit, tylko gdy funkcja dostępna). Unikalny per wiadomość, timeout, retry z backoff, idempotentny (pomija sklasyfikowane, zapis warunkowy `classified_at IS NULL`). Nie blokuje maila ani webhooka i niczego nie usuwa; spam jest tylko oznaczany. Błąd dostawcy, przekroczony limit lub odpowiedź spoza enumu zostawiają wiadomość bez kategorii; logi bez treści.
+- Audyt jak w etapie 0 (funkcja, model, tokeny), aktor `null` (proces systemowy).
+- Lista wiadomości: badge kategorii i filtr `category` z allowlisty (nieznana wartość = błąd walidacji jak przy `status`).
 
-Testy: błąd klasyfikacji nie wpływa na wysyłkę, oznaczenie spamu nie kasuje rekordu, retry jest idempotentny.
+Testy: zakres promptu i redakcja, wyłączona funkcja, błąd klasyfikacji nie wpływa na wysyłkę, spam nie kasuje rekordu, ponowne uruchomienie bez drugiego promptu, limit budżetu, filtr i odmowa dostępu, migracja up/down.
 
 ## Wymagane zgody
 

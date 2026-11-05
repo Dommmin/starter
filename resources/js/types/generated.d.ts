@@ -137,6 +137,7 @@ declare namespace App {
                     sort: 'created_at';
                     direction: 'asc' | 'desc';
                     status: 'all' | App.Enums.ContactMessageStatus;
+                    category: 'all' | App.Enums.ContactMessageCategory;
                 };
                 export type ContactMessageListItemData = {
                     id: number;
@@ -145,6 +146,7 @@ declare namespace App {
                     locale: string;
                     status: App.Enums.ContactMessageStatus;
                     attempts: number;
+                    category: App.Enums.ContactMessageCategory | null;
                     createdAt: string | null;
                 };
                 export type ContactMessageShowData = {
@@ -1228,7 +1230,7 @@ declare namespace App {
             | 'rose'
             | 'green';
         export type AnnouncementTone = 'info' | 'warning';
-        export type AssistantFeature = 'seo_meta';
+        export type AssistantFeature = 'seo_meta' | 'message_classification';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'
@@ -1279,6 +1281,11 @@ declare namespace App {
             | 'textarea'
             | 'select'
             | 'checkbox';
+        export type ContactMessageCategory =
+            | 'lead'
+            | 'question'
+            | 'spam'
+            | 'other';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type ContactWebhookStatus = 'pending' | 'delivered' | 'failed';
         export type ContentPreviewState = 'draft' | 'scheduled' | 'published';

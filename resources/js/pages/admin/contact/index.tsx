@@ -11,13 +11,15 @@ import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
 import { destroyMany, exportMethod, index, show } from '@/routes/admin/contact';
+import { ContactCategoryBadge, contactCategoryLabels } from './category-badge';
 import { ContactStatusBadge } from './status-badge';
 
 type Row = App.Data.Admin.Contact.ContactMessageListItemData;
 type IndexProps = App.Data.Admin.Contact.ContactMessageIndexData;
 
 /**
- * Admin list of contact form messages with their delivery status.
+ * Admin list of contact form messages with their delivery status and AI
+ * category.
  */
 export default function AdminContactIndex() {
     const { items, pagination, filters, can, exportMaxRows } =
@@ -117,6 +119,20 @@ export default function AdminContactIndex() {
                             },
                         ],
                     },
+                    {
+                        name: 'category',
+                        label: t('admin.contact.fields.category'),
+                        defaultValue: 'all',
+                        options: [
+                            {
+                                value: 'all',
+                                label: t('admin.contact.filterAllCategories'),
+                            },
+                            ...Object.entries(contactCategoryLabels(t)).map(
+                                ([value, label]) => ({ value, label }),
+                            ),
+                        ],
+                    },
                 ]}
                 columns={[
                     {
@@ -141,6 +157,14 @@ export default function AdminContactIndex() {
                         label: t('admin.contact.fields.status'),
                         render: (row) => (
                             <ContactStatusBadge status={row.status} />
+                        ),
+                    },
+                    {
+                        key: 'category',
+                        priority: 'status',
+                        label: t('admin.contact.fields.category'),
+                        render: (row) => (
+                            <ContactCategoryBadge category={row.category} />
                         ),
                     },
                     {

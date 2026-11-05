@@ -114,7 +114,8 @@ test('an editor gets a translated draft that keeps the body structure, marks and
         ->and($entry->actor_id)->toBe($editor->id)
         ->and($entry->subject_type)->toBe((new Article)->getMorphClass())
         ->and($entry->subject_id)->toBeNull()
-        ->and($entry->changes)->toBe([
+        // toEqual: MySQL JSON does not keep the key order.
+        ->and($entry->changes)->toEqual([
             'feature' => ['old' => null, 'new' => 'translation'],
             'model' => ['old' => null, 'new' => 'claude-haiku-5-5'],
             'tokens' => ['old' => null, 'new' => 700],

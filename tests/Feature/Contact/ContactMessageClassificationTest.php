@@ -204,6 +204,19 @@ test('a used up monthly budget leaves the message unclassified without a prompt'
         ->and(AuditLog::query()->count())->toBe(0);
 });
 
+test('beyond the daily limit messages stay unclassified without a prompt', function () {
+    config(['assistant.message_classification_daily_limit' => 1]);
+    MessageClassificationAgent::fake([classificationResponse('lead')]);
+    [$first, $second] = ContactMessage::factory()->count(2)->create()->all();
+
+    classify($first);
+    classify($second);
+
+    MessageClassificationAgent::assertPromptedTimes(1);
+    expect($first->refresh()->category)->toBe(ContactMessageCategory::Lead)
+        ->and($second->refresh()->classified_at)->toBeNull();
+});
+
 test('an answer outside the categories is not stored', function () {
     MessageClassificationAgent::fake([classificationResponse('urgent')]);
     $message = ContactMessage::factory()->create();

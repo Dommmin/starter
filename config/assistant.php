@@ -42,6 +42,14 @@ return [
     'rate_limit_per_minute' => (int) env('AI_RATE_LIMIT_PER_MINUTE', 20),
 
     /*
+    | Contact message classifications per day across the site. The public
+    | form triggers them, so a flood of (spam) messages from many addresses
+    | must not use up the monthly budget of the admin features; beyond the
+    | limit messages stay unclassified. 0 stops classification.
+    */
+    'message_classification_daily_limit' => (int) env('AI_MESSAGE_CLASSIFICATION_DAILY_LIMIT', 200),
+
+    /*
     | Request timeout in seconds; stays below the PHP-FPM request timeout.
     */
     'timeout' => (int) env('AI_TIMEOUT', 30),

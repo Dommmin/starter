@@ -13,6 +13,7 @@ use App\Support\Privacy\ContactDetailsRedactor;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -41,6 +42,8 @@ class ClassifyContactMessage implements ShouldBeUnique, ShouldQueue
     public const int BODY_MAX_LENGTH = 5000;
 
     public const int SUBJECT_MAX_LENGTH = 200;
+
+    private const int DAILY_COUNTER_TTL_SECONDS = 2 * 24 * 3600;
 
     public int $tries = 3;
 
@@ -76,6 +79,12 @@ class ClassifyContactMessage implements ShouldBeUnique, ShouldQueue
         if ($contactMessage === null
             || $contactMessage->classified_at !== null
             || ! AssistantFeature::MessageClassification->isAvailable()) {
+            return;
+        }
+
+        if (! $this->takeDailySlot()) {
+            $this->logUnclassified('daily_limit');
+
             return;
         }
 
@@ -140,6 +149,21 @@ class ClassifyContactMessage implements ShouldBeUnique, ShouldQueue
         $subject = mb_substr($redactor->redact(trim($subject)), 0, self::SUBJECT_MAX_LENGTH);
 
         return "Subject: {$subject}\n\nMessage:\n{$body}";
+    }
+
+    /**
+     * Count this classification against `assistant.message_classification_daily_limit`.
+     * Messages from the public form can flood in from many addresses; the cap
+     * keeps them from using up the shared monthly budget of the admin
+     * features. A retried attempt counts again, which only errs on the safe side.
+     */
+    private function takeDailySlot(): bool
+    {
+        $key = 'assistant:classifications:'.now()->format('Y-m-d');
+
+        Cache::add($key, 0, self::DAILY_COUNTER_TTL_SECONDS);
+
+        return Cache::increment($key) <= (int) config('assistant.message_classification_daily_limit');
     }
 
     private function logUnclassified(string $reason, ?Throwable $exception = null): void

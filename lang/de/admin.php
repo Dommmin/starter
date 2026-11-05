@@ -1627,5 +1627,20 @@ return [
             'unavailable' => 'Der KI-Assistent antwortet nicht. Versuchen Sie es gleich noch einmal.',
             'budget' => 'Das monatliche Limit des KI-Assistenten ist aufgebraucht.',
         ],
+        'rewrite' => [
+            'request' => 'Text verbessern',
+            'preview' => 'Überarbeiteter Text',
+            'apply' => 'Ersetzen',
+            'discard' => 'Abbrechen',
+            'modes' => [
+                'shorten' => 'Kürzen',
+                'simplify' => 'Vereinfachen',
+                'fix' => 'Fehler korrigieren',
+                'tone_formal' => 'Formeller Ton',
+                'tone_casual' => 'Lockerer Ton',
+            ],
+            'missingText' => 'Geben Sie zuerst den Text ein, den der Assistent verbessern soll.',
+            'tooLong' => 'Der Text ist für den Assistenten zu lang (max. :max Zeichen).',
+        ],
     ],
 ];

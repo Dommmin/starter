@@ -23,6 +23,7 @@ return [
     */
     'features' => [
         'seo_meta' => (bool) env('AI_FEATURE_SEO_META', true),
+        'text_rewrite' => (bool) env('AI_FEATURE_TEXT_REWRITE', true),
     ],
 
     /*

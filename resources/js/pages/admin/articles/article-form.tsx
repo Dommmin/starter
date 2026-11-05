@@ -17,6 +17,8 @@ import {
 } from '@/design-system/primitives';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useSeoMetaAssist } from '@/hooks/use-seo-meta-assist';
+import { useTextRewriteAssist } from '@/hooks/use-text-rewrite-assist';
+import { fieldAssists } from '@/lib/field-assists';
 import { useTranslation } from '@/i18n';
 import { multiSelectLabels } from '@/lib/multi-select-labels';
 import { slugify } from '@/lib/slug';
@@ -60,6 +62,12 @@ type ArticleFormState = {
     tag_ids: string[];
     translations: Record<string, TranslationState>;
 };
+
+/** Mirrors the `meta_description` rule of the request (`max:320`). */
+const META_DESCRIPTION_MAX = 320;
+
+/** Mirrors the `excerpt` rule of the request (`max:500`). */
+const EXCERPT_MAX = 500;
 
 const TRANSLATION_FIELDS = [
     'title',
@@ -332,6 +340,10 @@ export function ArticleForm({ editor }: ArticleFormProps) {
         enabled: can.suggestSeo && can.update,
         subject: 'article',
     });
+    const textRewriteAssist = useTextRewriteAssist({
+        enabled: can.rewriteText && can.update,
+        subject: 'article',
+    });
     const coverPicker = {
         ...imagePicker,
         labels: {
@@ -559,6 +571,10 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                     'admin.articles.fields.excerptHelp',
                                                 ),
                                                 rows: 3,
+                                                assist: textRewriteAssist?.({
+                                                    text: values.excerpt,
+                                                    maxLength: EXCERPT_MAX,
+                                                }),
                                             },
                                             {
                                                 type: 'textarea',
@@ -575,7 +591,14 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                     },
                                                 )}`,
                                                 rows: 3,
-                                                assist: assist?.metaDescription,
+                                                assist: fieldAssists(
+                                                    assist?.metaDescription,
+                                                    textRewriteAssist?.({
+                                                        text: values.meta_description,
+                                                        maxLength:
+                                                            META_DESCRIPTION_MAX,
+                                                    }),
+                                                ),
                                             },
                                             {
                                                 type: 'richText',

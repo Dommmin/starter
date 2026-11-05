@@ -1,9 +1,14 @@
 import { useId, useRef, type Ref } from 'react';
 import { cn } from '@/lib/utils';
-import { useFieldAssist, type FieldAssist } from './field-assist';
+import { useFieldAssist, type FieldAssistProp } from './field-assist';
 import type { FieldValueProps } from './field-value';
 
-export type { FieldAssist, FieldAssistResult } from './field-assist';
+export type {
+    FieldAssist,
+    FieldAssistMode,
+    FieldAssistProp,
+    FieldAssistResult,
+} from './field-assist';
 
 type TextFieldType = 'text' | 'email' | 'url' | 'tel' | 'search';
 
@@ -28,8 +33,8 @@ export type TextFieldProps = FieldValueProps & {
      */
     id?: string;
     ref?: Ref<HTMLInputElement>;
-    /** Optional "suggest" helper; the suggestion is applied only on "use". */
-    assist?: FieldAssist;
+    /** Optional "suggest" helper(s); a suggestion is applied only on "use". */
+    assist?: FieldAssistProp;
     className?: never;
     style?: never;
 };

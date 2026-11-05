@@ -1,5 +1,5 @@
 import { useHttp } from '@inertiajs/react';
-import type { FieldAssistResult } from '@/design-system/primitives';
+import type { FieldAssist } from '@/design-system/primitives';
 import { assistantErrorMessage } from '@/lib/assistant-error';
 import { useTranslation } from '@/i18n';
 import { textRewrite } from '@/routes/admin/assistant';
@@ -29,22 +29,6 @@ const TEXT_REWRITE_MODES: readonly Mode[] = [
     'tone_casual',
 ];
 
-/**
- * "Improve text" helper of one plain text field: translated labels, the
- * fixed modes and a request per mode. The result is only a proposal; the
- * field changes after the user picks "replace".
- */
-export type TextRewriteAssist = {
-    labels: {
-        request: string;
-        preview: string;
-        apply: string;
-        discard: string;
-    };
-    modes: { value: Mode; label: string }[];
-    request: (mode: Mode) => Promise<FieldAssistResult>;
-};
-
 export type TextRewriteSource = {
     /** Current value of the field. */
     text: string;
@@ -53,9 +37,10 @@ export type TextRewriteSource = {
 };
 
 /**
- * Builds the "improve text" helper of plain text fields of a page or
- * article. Returns `undefined` when the assistant is not available to the
- * user (`can.rewriteText`).
+ * Builds the "improve text" helper (a `FieldAssist` with the fixed modes)
+ * of plain text fields of a page or article. The result is only a proposal;
+ * the field changes after the user picks "replace". Returns `undefined`
+ * when the assistant is not available to the user (`can.rewriteText`).
  */
 export function useTextRewriteAssist({
     enabled,
@@ -63,7 +48,7 @@ export function useTextRewriteAssist({
 }: {
     enabled: boolean;
     subject: TextRewriteInput['subject'];
-}): ((source: TextRewriteSource) => TextRewriteAssist) | undefined {
+}): ((source: TextRewriteSource) => FieldAssist) | undefined {
     const { t } = useTranslation();
     const http = useHttp<TextRewriteInput, Suggestion>({
         subject,
@@ -90,7 +75,10 @@ export function useTextRewriteAssist({
     return ({ text, maxLength }) => ({
         labels,
         modes,
-        request: async (mode) => {
+        request: async (requestedMode) => {
+            const mode =
+                TEXT_REWRITE_MODES.find((value) => value === requestedMode) ??
+                'fix';
             const trimmed = text.trim();
 
             if (trimmed === '') {

@@ -23,6 +23,7 @@ return [
     */
     'features' => [
         'seo_meta' => (bool) env('AI_FEATURE_SEO_META', true),
+        'translation' => (bool) env('AI_FEATURE_TRANSLATION', true),
     ],
 
     /*

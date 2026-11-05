@@ -13,6 +13,7 @@ class PageAbilitiesData extends Data
 {
     /**
      * @param  bool  $suggestSeo  The AI assistant may propose the meta description and slug.
+     * @param  bool  $suggestTranslation  The AI assistant may translate the default language version into another language.
      */
     public function __construct(
         public bool $create,
@@ -20,5 +21,6 @@ class PageAbilitiesData extends Data
         public bool $publish,
         public bool $delete,
         public bool $suggestSeo = false,
+        public bool $suggestTranslation = false,
     ) {}
 }

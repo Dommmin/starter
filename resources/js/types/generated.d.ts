@@ -8,6 +8,7 @@ declare namespace App {
                     publish: boolean;
                     delete: boolean;
                     suggestSeo: boolean;
+                    suggestTranslation: boolean;
                 };
                 export type ArticleEditorData = {
                     article: App.Data.Admin.Articles.ArticleFormData;
@@ -67,6 +68,12 @@ declare namespace App {
                 export type SeoMetaSuggestionData = {
                     metaDescription: string;
                     slug: string;
+                };
+                export type TranslationSuggestionData = {
+                    title: string;
+                    excerpt: string | null;
+                    metaDescription: string;
+                    body: Record<string, any> | null;
                 };
             }
             namespace Audit {
@@ -530,6 +537,7 @@ declare namespace App {
                     publish: boolean;
                     delete: boolean;
                     suggestSeo: boolean;
+                    suggestTranslation: boolean;
                 };
                 export type PageEditorData = {
                     page: App.Data.Admin.Pages.PageFormData;
@@ -1228,7 +1236,7 @@ declare namespace App {
             | 'rose'
             | 'green';
         export type AnnouncementTone = 'info' | 'warning';
-        export type AssistantFeature = 'seo_meta';
+        export type AssistantFeature = 'seo_meta' | 'translation';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

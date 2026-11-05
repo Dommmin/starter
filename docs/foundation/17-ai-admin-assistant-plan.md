@@ -1,0 +1,132 @@
+# Plan asystenta AI w panelu admina — 2026-11-04
+
+Status: **plan do realizacji etapami, po akceptacji właściciela**. Nic nie jest jeszcze wdrożone. Cel: tanie funkcje AI, które oszczędzają adminowi czas przy budowie i utrzymaniu stron, zgodne z celem startera (małe aplikacje w tydzień). Przy okazji ma to być nauka wdrażania `laravel/ai` (oficjalny Laravel AI SDK, Laravel 13).
+
+## Zasady
+
+- **AI podpowiada, człowiek zatwierdza.** Każdy wynik trafia do formularza jako propozycja („Użyj” / „Odrzuć”). AI nic nie publikuje ani nie usuwa samodzielnie.
+- **Domyślnie tani model** dostawcy (Anthropic, `Lab::Anthropic`), mocniejszy tylko tam, gdzie test pokaże taką potrzebę.
+- **Structured output** (`HasStructuredOutput` + `schema()`) zamiast wolnego tekstu. Wynik walidujemy jak każde wejście.
+- **Kolejka** (Horizon) dla operacji dłuższych lub automatycznych. Joby mają timeout, retry i idempotencję jak `ScanMediaAsset`.
+- **Flaga i limit kosztów.** Bez klucza API lub z wyłączoną flagą panel działa jak dziś, a przyciski AI są ukryte.
+- **Bez PII w promptach** poza etapem 6, który wymaga osobnej decyzji. Audyt zapisuje metadane (funkcja, model, tokeny), nie treść promptu.
+- **Testy bez sieci:** `Agent::fake()` i `preventStrayPrompts`, zero prawdziwych wywołań w CI.
+
+## Stan zastany (fakty)
+
+- Brak jakiejkolwiek integracji AI w `composer.json` i `config/`.
+- `article_translations` i `page_translations` mają `title` (200) i `meta_description` (320). Brak osobnego `meta_title`.
+- `media_assets.alt` (500) istnieje. Upload przechodzi kwarantannę i `ScanMediaAsset` przed statusem clean.
+- `contact_messages.status` opisuje dostarczenie wiadomości, nie jej kategorię.
+- Audyt: `App\Actions\Audit\RecordAuditEvent` z enumem `AuditAction`.
+- Inertia v3 udostępnia `useHttp` do wywołań, które nie są nawigacją.
+
+## Kolejność etapów
+
+| Etap | Funkcja | Czego uczy | Migracja |
+|---|---|---|---|
+| 0 | Fundament | instalacja, config, flagi, limity, audyt, fake'i | nie |
+| 1 | SEO meta | agent ze structured output, wywołanie synchroniczne | nie |
+| 2 | Alt-text obrazów | vision, job w kolejce, idempotencja | nie |
+| 3 | Tłumaczenia | długie wejście, wiele pól, języki | nie |
+| 4 | „Popraw tekst” | jeden agent z trybem z allowlisty | nie |
+| 5 | Generator FAQ | lista rekordów jako szkic do zatwierdzenia | nie |
+| 6 | Klasyfikacja wiadomości | wysyłanie PII do dostawcy, nowe kolumny | **tak** |
+
+Każdy etap to osobny, mały PR. Etap 0 wchodzi razem z etapem 1, żeby fundament od razu miał prawdziwe użycie.
+
+## Etap 0 — fundament
+
+Zakres:
+
+- `composer require laravel/ai` i publikacja `config/ai.php`. **Bez publikowania migracji** `agent_conversations`, bo pamięć rozmów nie jest potrzebna.
+- `ANTHROPIC_API_KEY` pusty w `.env.example`, wartość tylko w lokalnym `.env` i sekretach serwera.
+- Config funkcji: globalny `AI_FEATURES_ENABLED`, przełącznik dla każdej funkcji i miesięczny limit tokenów.
+- `app/Ai/Agents/*` (z `make:agent --structured`) i akcja `RunAiSuggestion`:
+  - sprawdza flagę i limit,
+  - wywołuje agenta z timeoutem,
+  - zapisuje audyt przez `RecordAuditEvent` z nowym `AuditAction::AiSuggested` (funkcja, model, `usage->inputTokens`, `usage->outputTokens`, bez treści),
+  - zamienia błąd dostawcy na czytelny komunikat w UI.
+- Named rate limiter `ai` per użytkownik, np. 20 żądań na minutę.
+- Autoryzacja bez nowych ról: prośba o podpowiedź wymaga istniejącej policy `update` danego zasobu.
+- UI: wspólny wzorzec „Zaproponuj” (przycisk przy polu, loading, podgląd, „Użyj” / „Odrzuć”). To **rozszerzenie DS**, więc przed implementacją powstaje propozycja API prymitywu do akceptacji właściciela DS (ADR-019).
+
+AC:
+
+- Wyłączona flaga lub brak klucza: brak przycisków, endpointy zwracają 404/403.
+- Przekroczony limit: 429 i komunikat w UI.
+- Każde wywołanie zostawia wpis w audycie z liczbą tokenów.
+
+Testy: flaga wyłączona, brak uprawnień, rate limit, limit miesięczny, błąd dostawcy, wpis w audycie.
+
+## Etap 1 — SEO meta
+
+- `SeoMetaAgent` ze schematem `{meta_description ≤160, slug_suggestion}`. Wejście to tytuł i treść tłumaczenia, wyjście w języku tego tłumaczenia.
+- Endpoint w adminie dla `ArticleTranslation` i `PageTranslation`, wywołanie synchroniczne.
+- Propozycja wypełnia pole formularza. Zapis zostaje zwykłym zapisem formularza.
+
+AC: wynik mieści się w limicie kolumny. Pusta treść daje komunikat zamiast wywołania.
+
+Testy: sukces z fake'iem, walidacja długości, brak uprawnień do zasobu.
+
+## Etap 2 — alt-text obrazów
+
+- `MediaAltTextAgent` z vision (`Files\Image::fromStorage`) i schematem `{alt, caption?}` w domyślnym języku serwisu.
+- Job `GenerateMediaAltText` (`ShouldQueue`, `ShouldBeUnique`, timeout, retry):
+  - uruchamia się dopiero po statusie clean, plik z kwarantanny nigdy nie trafia do dostawcy,
+  - jest idempotentny i nie nadpisuje alt-tekstu wpisanego przez człowieka.
+- Ręczny przycisk „Wygeneruj alt” w edycji medium.
+
+AC: obraz w kwarantannie lub plik niebędący obrazem oznacza brak wywołania. Istniejący alt zostaje nietknięty.
+
+Testy: job z fake'iem, pominięcie kwarantanny i ręcznego altu, ponowne uruchomienie bez duplikatu.
+
+## Etap 3 — tłumaczenia
+
+- `TranslationAgent` ze schematem pól tłumaczenia (`title`, `excerpt`, `body`, `meta_description`) oraz parametrami języka źródłowego i docelowego. Instrukcja: zachowaj formatowanie i linki, nie tłumacz nazw własnych.
+- Przycisk „Przetłumacz z PL” w zakładce języka formularza artykułu lub strony. Wynik wypełnia formularz jako szkic do przeczytania i zapisania.
+- Długie treści przez kolejkę ze stanem „w trakcie”, krótkie synchronicznie. Próg ustalany podczas implementacji.
+- Później ten sam wzorzec dla FAQ i ustawień per język.
+
+AC: formatowanie treści przetrwa bez zmian (test na fixture). Brak treści źródłowej daje komunikat. Istniejące tłumaczenie nie jest nadpisywane bez potwierdzenia.
+
+## Etap 4 — „Popraw tekst”
+
+- Jeden `TextRewriteAgent` z trybem z enuma: `shorten`, `simplify`, `fix`, `tone_formal`, `tone_casual`. Brak dowolnego promptu od użytkownika zmniejsza powierzchnię prompt injection.
+- Wejście to zaznaczony fragment albo całe pole. Wynik jest pokazywany obok oryginału, z akcjami „Zastąp” / „Anuluj”.
+
+Testy: każdy tryb przechodzi przez allowlistę, nieznany tryb daje 422.
+
+## Etap 5 — generator FAQ
+
+- `FaqGeneratorAgent` ze schematem `{items: [{question, answer}]}`, maksymalnie 8 pozycji, generowany z treści strony lub artykułu.
+- Wynik to lista do odznaczenia. Zaznaczone pozycje tworzą rekordy przez istniejące akcje z `app/Actions/Faqs`.
+
+AC: nic nie zapisuje się bez kliknięcia. Liczba pozycji jest ograniczona.
+
+## Etap 6 — klasyfikacja wiadomości (HIGH-RISK)
+
+Decyzje przed startem:
+
+1. Czy treść wiadomości (PII) może trafiać do dostawcy AI? Przy którym dostawcy i z jaką retencją?
+2. Migracja: kolumny `category` (`lead`/`question`/`spam`/`other`), `summary`, `classified_at`.
+
+Zakres:
+
+- Job po zapisie wiadomości. Klasyfikacja nie blokuje maila ani webhooka i niczego nie usuwa, spam jest tylko oznaczany.
+- Filtr i badge kategorii na liście wiadomości.
+
+Testy: błąd klasyfikacji nie wpływa na wysyłkę, oznaczenie spamu nie kasuje rekordu, retry jest idempotentny.
+
+## Wymagane zgody
+
+| Etap | Co wymaga zgody |
+|---|---|
+| 0 | zależność `laravel/ai` (wpis w [rejestrze](07-package-decision-record.md)), sekret `ANTHROPIC_API_KEY`, rozszerzenie DS „Zaproponuj”, nowy `AuditAction` |
+| 6 | migracja i decyzja o wysyłaniu PII do dostawcy |
+
+Etapy 1–5 nie wymagają migracji ani zmian ról.
+
+## Poza zakresem
+
+Szkic całej strony z briefu, wyszukiwanie semantyczne (embeddingi), czat z asystentem i pamięć rozmów. Wracamy do nich po etapach 0–5, jeśli koszt i jakość się sprawdzą.

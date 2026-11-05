@@ -130,6 +130,7 @@ describe('AdminPagesIndex', () => {
             update: true,
             publish: true,
             delete: true,
+            suggestSeo: false,
         });
         const container = await render();
 
@@ -150,6 +151,7 @@ describe('AdminPagesIndex', () => {
             update: true,
             publish: true,
             delete: true,
+            suggestSeo: false,
         });
         let container = await render();
 
@@ -173,6 +175,7 @@ describe('AdminPagesIndex', () => {
             update: false,
             publish: true,
             delete: false,
+            suggestSeo: false,
         });
         container = await render();
 
@@ -185,6 +188,7 @@ describe('AdminPagesIndex', () => {
             update: true,
             publish: true,
             delete: true,
+            suggestSeo: false,
         });
         pageProps.filters = {
             ...pageProps.filters,

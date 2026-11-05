@@ -16,6 +16,7 @@ import {
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
+import { useSeoMetaAssist } from '@/hooks/use-seo-meta-assist';
 import { useTranslation } from '@/i18n';
 import { slugify } from '@/lib/slug';
 import {
@@ -289,6 +290,10 @@ export function PageForm({ editor }: PageFormProps) {
     }
 
     const imagePicker = useMediaImagePicker();
+    const seoMetaAssist = useSeoMetaAssist({
+        enabled: can.suggestSeo && can.update,
+        subject: 'page',
+    });
     const richTextLabels: RichTextFieldLabels = {
         toolbar: t('admin.richText.toolbar'),
         heading2: t('admin.richText.heading2'),
@@ -418,6 +423,11 @@ export function PageForm({ editor }: PageFormProps) {
                     };
                     const isDefault = code === locales.default;
                     const prefix = errorPrefix(code);
+                    const assist = seoMetaAssist?.({
+                        locale: code,
+                        title: values.title,
+                        body: values.body,
+                    });
 
                     return {
                         value: code,
@@ -479,6 +489,7 @@ export function PageForm({ editor }: PageFormProps) {
                                                     'admin.pages.fields.slugHelp',
                                                 ),
                                                 required: isDefault,
+                                                assist: assist?.slug,
                                             },
                                             {
                                                 type: 'textarea',
@@ -495,6 +506,7 @@ export function PageForm({ editor }: PageFormProps) {
                                                     },
                                                 )}`,
                                                 rows: 3,
+                                                assist: assist?.metaDescription,
                                             },
                                             {
                                                 type: 'richText',

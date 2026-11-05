@@ -16,6 +16,7 @@ import {
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
+import { useSeoMetaAssist } from '@/hooks/use-seo-meta-assist';
 import { useTranslation } from '@/i18n';
 import { multiSelectLabels } from '@/lib/multi-select-labels';
 import { slugify } from '@/lib/slug';
@@ -327,6 +328,10 @@ export function ArticleForm({ editor }: ArticleFormProps) {
     }
 
     const imagePicker = useMediaImagePicker();
+    const seoMetaAssist = useSeoMetaAssist({
+        enabled: can.suggestSeo && can.update,
+        subject: 'article',
+    });
     const coverPicker = {
         ...imagePicker,
         labels: {
@@ -466,6 +471,11 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                     };
                     const isDefault = code === locales.default;
                     const prefix = errorPrefix(code);
+                    const assist = seoMetaAssist?.({
+                        locale: code,
+                        title: values.title,
+                        body: values.body,
+                    });
 
                     return {
                         value: code,
@@ -537,6 +547,7 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                     'admin.articles.fields.slugHelp',
                                                 ),
                                                 required: isDefault,
+                                                assist: assist?.slug,
                                             },
                                             {
                                                 type: 'textarea',
@@ -564,6 +575,7 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                                     },
                                                 )}`,
                                                 rows: 3,
+                                                assist: assist?.metaDescription,
                                             },
                                             {
                                                 type: 'richText',

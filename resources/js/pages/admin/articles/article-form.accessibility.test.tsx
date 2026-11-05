@@ -16,6 +16,7 @@ import AdminArticlesEdit from './edit';
 type Errors = Record<string, string>;
 
 const submitMock = vi.fn();
+const httpPostMock = vi.fn();
 const visitMock = vi.fn();
 let nextErrors: Errors | null = null;
 let editorProps: App.Data.Admin.Articles.ArticleEditorData;
@@ -60,8 +61,20 @@ vi.mock('@inertiajs/react', async () => {
         };
     }
 
+    function useHttp() {
+        const transformRef = React.useRef<() => unknown>(() => ({}));
+
+        return {
+            transform: (callback: () => unknown) => {
+                transformRef.current = callback;
+            },
+            post: (url: string) => httpPostMock(url, transformRef.current()),
+        };
+    }
+
     return {
         useForm,
+        useHttp,
         usePage: () => ({ props: editorProps }),
         router: {
             visit: (...args: unknown[]) => visitMock(...args),
@@ -128,6 +141,7 @@ function makeEditor(
             update: true,
             publish: true,
             delete: false,
+            suggestSeo: false,
             ...can,
         },
         previewUrls: {},

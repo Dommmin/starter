@@ -108,7 +108,8 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Public contact form limits, counted per hour in the cache only (the
      * limiter hashes its keys; no IP address or email is persisted), and the
-     * per-IP limit of the stateless readiness probe.
+     * per-IP limit of the stateless readiness probe and the per-user limit of
+     * admin assistant suggestions.
      */
     protected function configureRateLimiting(): void
     {
@@ -127,6 +128,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('health', fn (Request $request): Limit => Limit::perMinute(
             max(1, (int) config('ops.health.rate_limit_per_minute')),
         )->by('health|'.$request->ip()));
+
+        RateLimiter::for('assistant', fn (Request $request): Limit => Limit::perMinute(
+            max(1, (int) config('assistant.rate_limit_per_minute')),
+        )->by('assistant|'.$request->user()?->getAuthIdentifier()));
     }
 
     /**

@@ -66,6 +66,13 @@ declare namespace App {
                 };
             }
             namespace Assistant {
+                export type FaqSuggestionData = {
+                    items: App.Data.Admin.Assistant.FaqSuggestionItemData[];
+                };
+                export type FaqSuggestionItemData = {
+                    question: string;
+                    answer: string;
+                };
                 export type MediaAltTextSuggestionData = {
                     alt: string;
                 };
@@ -260,6 +267,7 @@ declare namespace App {
                     update: boolean;
                     delete: boolean;
                     import: boolean;
+                    suggestFaqs: boolean;
                 };
                 export type FaqEditorData = {
                     faq: App.Data.Admin.Faqs.FaqFormData;
@@ -280,6 +288,7 @@ declare namespace App {
                     pagination: App.Data.Listing.ListPaginationData;
                     filters: App.Data.Admin.Faqs.FaqListFiltersData;
                     can: App.Data.Admin.Faqs.FaqAbilitiesData;
+                    locales: App.Data.Content.ContentLocalesData;
                 };
                 export type FaqListFiltersData = {
                     search: string;
@@ -1252,6 +1261,7 @@ declare namespace App {
             | 'media_alt_text'
             | 'translation'
             | 'text_rewrite'
+            | 'faq_generator'
             | 'message_classification';
         export type AuditAction =
             | 'page.created'

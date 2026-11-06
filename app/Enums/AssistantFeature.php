@@ -14,6 +14,8 @@ enum AssistantFeature: string
     case TextRewrite = 'text_rewrite';
     case MessageClassification = 'message_classification';
 
+    case FaqGenerator = 'faq_generator';
+
     /**
      * Whether the feature may be used: the assistant and the feature are
      * enabled and the default AI provider has an API key.

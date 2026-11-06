@@ -1617,6 +1617,7 @@ return [
     ],
     'assistant' => [
         'suggest' => 'Suggest',
+        'suggestAlt' => 'Suggest description',
         'suggestion' => 'AI assistant suggestion',
         'apply' => 'Use',
         'discard' => 'Discard',
@@ -1626,6 +1627,7 @@ return [
             'rateLimited' => 'Too many requests. Please wait a moment and try again.',
             'unavailable' => 'The AI assistant is not responding. Try again in a moment.',
             'budget' => 'The monthly AI assistant limit has been used up.',
+            'notDescribable' => 'The assistant cannot describe this file. It only describes scanned images in a supported format.',
         ],
         'rewrite' => [
             'request' => 'Improve text',

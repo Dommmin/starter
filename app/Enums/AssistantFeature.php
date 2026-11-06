@@ -9,6 +9,7 @@ namespace App\Enums;
 enum AssistantFeature: string
 {
     case SeoMeta = 'seo_meta';
+    case MediaAltText = 'media_alt_text';
     case TextRewrite = 'text_rewrite';
 
     /**

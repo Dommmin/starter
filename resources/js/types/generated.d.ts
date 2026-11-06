@@ -71,6 +71,9 @@ declare namespace App {
                     question: string;
                     answer: string;
                 };
+                export type MediaAltTextSuggestionData = {
+                    alt: string;
+                };
                 export type SeoMetaSuggestionData = {
                     metaDescription: string;
                     slug: string;
@@ -389,6 +392,7 @@ declare namespace App {
                     create: boolean;
                     update: boolean;
                     delete: boolean;
+                    suggestAlt: boolean;
                 };
                 export type MediaAssetDetailData = {
                     id: number;
@@ -1237,7 +1241,10 @@ declare namespace App {
             | 'rose'
             | 'green';
         export type AnnouncementTone = 'info' | 'warning';
-        export type AssistantFeature = 'seo_meta' | 'faq_generator';
+        export type AssistantFeature =
+            | 'seo_meta'
+            | 'media_alt_text'
+            | 'faq_generator';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

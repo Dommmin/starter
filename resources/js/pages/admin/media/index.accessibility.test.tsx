@@ -163,7 +163,12 @@ afterEach(async () => {
 
 describe('AdminMediaIndex', () => {
     it('lists files with thumbnails, status badges and editor links', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: true,
+            suggestAlt: false,
+        });
         const container = await render();
 
         expect(container.querySelector('table caption')?.textContent).toBe(
@@ -190,7 +195,12 @@ describe('AdminMediaIndex', () => {
     });
 
     it('polls the list while a file waits for its virus scan', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: true,
+            suggestAlt: false,
+        });
         await render();
 
         expect(usePollMock).toHaveBeenCalledWith(
@@ -202,7 +212,12 @@ describe('AdminMediaIndex', () => {
     });
 
     it('does not poll once every file has a scan result', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: true });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: true,
+            suggestAlt: false,
+        });
         pageProps.items = pageProps.items.map((item) => ({
             ...item,
             status: 'clean',
@@ -214,14 +229,24 @@ describe('AdminMediaIndex', () => {
     });
 
     it('hides the upload area without the create ability', async () => {
-        pageProps = makeProps({ create: false, update: false, delete: false });
+        pageProps = makeProps({
+            create: false,
+            update: false,
+            delete: false,
+            suggestAlt: false,
+        });
         const container = await render();
 
         expect(container.querySelector('input[type="file"]')).toBeNull();
     });
 
     it('rejects disallowed or oversized files per file and uploads the rest with progress', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: false });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: false,
+            suggestAlt: false,
+        });
         const container = await render();
 
         await chooseFiles(container, [
@@ -263,7 +288,12 @@ describe('AdminMediaIndex', () => {
     });
 
     it('uploads queued files one after another', async () => {
-        pageProps = makeProps({ create: true, update: true, delete: false });
+        pageProps = makeProps({
+            create: true,
+            update: true,
+            delete: false,
+            suggestAlt: false,
+        });
         const container = await render();
 
         await chooseFiles(container, [

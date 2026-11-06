@@ -64,6 +64,9 @@ declare namespace App {
                 };
             }
             namespace Assistant {
+                export type MediaAltTextSuggestionData = {
+                    alt: string;
+                };
                 export type SeoMetaSuggestionData = {
                     metaDescription: string;
                     slug: string;
@@ -382,6 +385,7 @@ declare namespace App {
                     create: boolean;
                     update: boolean;
                     delete: boolean;
+                    suggestAlt: boolean;
                 };
                 export type MediaAssetDetailData = {
                     id: number;
@@ -1230,7 +1234,10 @@ declare namespace App {
             | 'rose'
             | 'green';
         export type AnnouncementTone = 'info' | 'warning';
-        export type AssistantFeature = 'seo_meta' | 'message_classification';
+        export type AssistantFeature =
+            | 'seo_meta'
+            | 'media_alt_text'
+            | 'message_classification';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

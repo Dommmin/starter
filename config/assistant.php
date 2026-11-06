@@ -26,6 +26,9 @@ return [
     */
     'features' => [
         'seo_meta' => (bool) env('AI_FEATURE_SEO_META', true),
+        // Manual alt-text suggestion and the automatic one for clean images
+        // without alt text (queued, never overwrites a human alt text).
+        'media_alt_text' => (bool) env('AI_FEATURE_MEDIA_ALT_TEXT', true),
         'message_classification' => (bool) env('AI_FEATURE_MESSAGE_CLASSIFICATION', false),
     ],
 

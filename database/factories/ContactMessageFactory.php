@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
 use App\Models\ContactMessage;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -45,6 +46,14 @@ class ContactMessageFactory extends Factory
             'status' => ContactMessageStatus::Failed,
             'attempts' => 4,
             'last_error' => 'TransportException',
+        ]);
+    }
+
+    public function classified(ContactMessageCategory $category = ContactMessageCategory::Lead): static
+    {
+        return $this->state(fn (): array => [
+            'category' => $category,
+            'classified_at' => now(),
         ]);
     }
 }

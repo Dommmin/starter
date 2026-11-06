@@ -31,7 +31,7 @@ import {
 import { SelectField, type SelectFieldOption } from './select-field';
 import { Stack } from './stack';
 import { SwitchField } from './switch-field';
-import type { FieldAssist } from './field-assist';
+import type { FieldAssistProp } from './field-assist';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
 import { useSubmitErrorFocus } from './use-submit-error-focus';
@@ -92,16 +92,16 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   inputType?: 'text' | 'email' | 'url' | 'tel';
                   autoComplete?: string;
                   placeholder?: string;
-                  /** Optional "suggest" helper (see `FieldAssist`). */
-                  assist?: FieldAssist;
+                  /** Optional "suggest" helper(s) (see `FieldAssist`). */
+                  assist?: FieldAssistProp;
               }
             | {
                   type: 'textarea';
                   name: KeysOfType<Values, string>;
                   rows?: number;
                   placeholder?: string;
-                  /** Optional "suggest" helper (see `FieldAssist`). */
-                  assist?: FieldAssist;
+                  /** Optional "suggest" helper(s) (see `FieldAssist`). */
+                  assist?: FieldAssistProp;
               }
             | {
                   /** Native number input; the value stays a string (`''` = empty). */

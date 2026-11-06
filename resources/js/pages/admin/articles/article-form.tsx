@@ -15,9 +15,16 @@ import {
     type RichTextDocument,
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
+import { TranslationAssist } from '@/components/admin/translation-assist';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useSeoMetaAssist } from '@/hooks/use-seo-meta-assist';
+import { useTextRewriteAssist } from '@/hooks/use-text-rewrite-assist';
+import {
+    useTranslationAssist,
+    type TranslationDraft,
+} from '@/hooks/use-translation-assist';
 import { useTranslation } from '@/i18n';
+import { fieldAssists } from '@/lib/field-assists';
 import { multiSelectLabels } from '@/lib/multi-select-labels';
 import { slugify } from '@/lib/slug';
 import {
@@ -60,6 +67,12 @@ type ArticleFormState = {
     tag_ids: string[];
     translations: Record<string, TranslationState>;
 };
+
+/** Mirrors the `meta_description` rule of the request (`max:320`). */
+const META_DESCRIPTION_MAX = 320;
+
+/** Mirrors the `excerpt` rule of the request (`max:500`). */
+const EXCERPT_MAX = 500;
 
 const TRANSLATION_FIELDS = [
     'title',
@@ -332,6 +345,10 @@ export function ArticleForm({ editor }: ArticleFormProps) {
         enabled: can.suggestSeo && can.update,
         subject: 'article',
     });
+    const textRewriteAssist = useTextRewriteAssist({
+        enabled: can.rewriteText && can.update,
+        subject: 'article',
+    });
     const coverPicker = {
         ...imagePicker,
         labels: {
@@ -340,6 +357,56 @@ export function ArticleForm({ editor }: ArticleFormProps) {
             submit: t('admin.articles.cover.choose'),
         },
     };
+    const translationAssist = useTranslationAssist({
+        enabled: can.suggestTranslation && can.update,
+        subject: 'article',
+        sourceLocale: locales.default,
+    });
+    const sourceTranslation = form.data.translations[locales.default];
+    const sourceLanguage =
+        locales.available.find((locale) => locale.code === locales.default)
+            ?.native ?? locales.default;
+
+    /** Copies a translation draft into a tab, after the request resolved. */
+    function applyDraft(code: string, draft: TranslationDraft) {
+        const changes: Partial<TranslationState> = {
+            title: draft.title,
+            excerpt: draft.excerpt,
+            meta_description: draft.metaDescription,
+            body: JSON.stringify(draft.body),
+            ...(manualSlugs[code] ? {} : { slug: slugify(draft.title) }),
+        };
+
+        form.setData((data) => ({
+            ...data,
+            translations: {
+                ...data.translations,
+                [code]: { ...data.translations[code], ...changes },
+            },
+        }));
+    }
+
+    async function translateInto(code: string): Promise<string | null> {
+        if (!translationAssist) {
+            return null;
+        }
+
+        const result = await translationAssist(code, {
+            title: sourceTranslation.title,
+            excerpt: sourceTranslation.excerpt,
+            metaDescription: sourceTranslation.meta_description,
+            body: parseDocument(sourceTranslation.body),
+        });
+
+        if ('error' in result) {
+            return result.error;
+        }
+
+        applyDraft(code, result.draft);
+
+        return null;
+    }
+
     const richTextLabels: RichTextFieldLabels = {
         toolbar: t('admin.richText.toolbar'),
         heading2: t('admin.richText.heading2'),
@@ -484,214 +551,256 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                             state: localeState(code),
                         }),
                         content: (
-                            <ResourceForm<TabValues>
-                                values={values}
-                                errors={{
-                                    ...Object.fromEntries(
-                                        TRANSLATION_FIELDS.map((field) => [
-                                            field,
-                                            errors[`${prefix}${field}`],
-                                        ]),
-                                    ),
-                                    cover_media_id: errors.cover_media_id,
-                                    tag_ids:
-                                        errors.tag_ids ??
-                                        errors[
-                                            errorKeys.find((key) =>
-                                                key.startsWith('tag_ids.'),
-                                            ) ?? ''
-                                        ],
-                                }}
-                                onChange={(name, value) =>
-                                    handleChange(code, name, value)
-                                }
-                                onSubmit={submit}
-                                readOnly={!can.update}
-                                isPending={form.processing}
-                                cancelHref={articlesIndex()}
-                                labels={{
-                                    submit: form.processing
-                                        ? t('admin.articles.saving')
-                                        : t('admin.articles.save'),
-                                    cancel: t('admin.articles.cancel'),
-                                    errorSummaryTitle: t(
-                                        'admin.articles.errorSummaryTitle',
-                                    ),
-                                }}
-                                sections={[
-                                    {
-                                        id: `translation-${code}`,
-                                        title: locale.native,
-                                        description: localeState(code),
-                                        fields: [
-                                            {
-                                                type: 'text',
-                                                name: 'title',
-                                                label: t(
-                                                    'admin.articles.fields.title',
-                                                ),
-                                                hint: isDefault
-                                                    ? undefined
-                                                    : t(
-                                                          'admin.articles.fields.titleHelp',
-                                                      ),
-                                                required: isDefault,
-                                            },
-                                            {
-                                                type: 'text',
-                                                name: 'slug',
-                                                label: t(
-                                                    'admin.articles.fields.slug',
-                                                ),
-                                                hint: t(
-                                                    'admin.articles.fields.slugHelp',
-                                                ),
-                                                required: isDefault,
-                                                assist: assist?.slug,
-                                            },
-                                            {
-                                                type: 'textarea',
-                                                name: 'excerpt',
-                                                label: t(
-                                                    'admin.articles.fields.excerpt',
-                                                ),
-                                                hint: t(
-                                                    'admin.articles.fields.excerptHelp',
-                                                ),
-                                                rows: 3,
-                                            },
-                                            {
-                                                type: 'textarea',
-                                                name: 'meta_description',
-                                                label: t(
-                                                    'admin.articles.fields.metaDescription',
-                                                ),
-                                                hint: `${t('admin.articles.fields.metaDescriptionHelp')} ${t(
-                                                    'admin.articles.fields.metaDescriptionCounter',
-                                                    {
-                                                        length: values
-                                                            .meta_description
-                                                            .length,
-                                                    },
-                                                )}`,
-                                                rows: 3,
-                                                assist: assist?.metaDescription,
-                                            },
-                                            {
-                                                type: 'richText',
-                                                name: 'body',
-                                                label: t(
-                                                    'admin.articles.fields.body',
-                                                ),
-                                                labels: richTextLabels,
-                                                imagePicker,
-                                            },
-                                            {
-                                                type: 'select',
-                                                name: 'status',
-                                                label: t(
-                                                    'admin.articles.fields.status',
-                                                ),
-                                                options: [
-                                                    {
-                                                        value: 'draft',
-                                                        label: t(
-                                                            'admin.articles.status.draft',
-                                                        ),
-                                                    },
-                                                    {
-                                                        value: 'published',
-                                                        label: t(
-                                                            'admin.articles.status.published',
-                                                        ),
-                                                        disabled: !can.publish,
-                                                    },
-                                                ],
-                                            },
-                                            {
-                                                type: 'date',
-                                                name: 'published_on',
-                                                label: t(
-                                                    'admin.articles.fields.publishedOn',
-                                                ),
-                                                hint: t(
-                                                    'admin.articles.fields.publishedOnHelp',
-                                                ),
-                                            },
-                                        ],
-                                    },
-                                    {
-                                        id: `cover-${code}`,
-                                        title: t('admin.articles.coverSection'),
-                                        description: t(
-                                            'admin.articles.coverSectionDescription',
+                            <Stack gap="default">
+                                {translationAssist && !isDefault && (
+                                    <TranslationAssist
+                                        sourceLanguage={sourceLanguage}
+                                        targetLanguage={locale.native}
+                                        hasSource={
+                                            sourceTranslation.title.trim() !==
+                                            ''
+                                        }
+                                        hasTargetContent={
+                                            values.title.trim() !== '' ||
+                                            values.excerpt.trim() !== '' ||
+                                            values.meta_description.trim() !==
+                                                '' ||
+                                            !isEmptyDocument(values.body)
+                                        }
+                                        onTranslate={() => translateInto(code)}
+                                    />
+                                )}
+                                <ResourceForm<TabValues>
+                                    values={values}
+                                    errors={{
+                                        ...Object.fromEntries(
+                                            TRANSLATION_FIELDS.map((field) => [
+                                                field,
+                                                errors[`${prefix}${field}`],
+                                            ]),
                                         ),
-                                        fields: [
-                                            {
-                                                type: 'image',
-                                                name: 'cover_media_id',
-                                                label: t(
-                                                    'admin.articles.fields.cover',
-                                                ),
-                                                hint: t(
-                                                    'admin.articles.fields.coverHelp',
-                                                ),
-                                                picker: coverPicker,
-                                                labels: {
-                                                    choose: t(
-                                                        'admin.articles.cover.choose',
+                                        cover_media_id: errors.cover_media_id,
+                                        tag_ids:
+                                            errors.tag_ids ??
+                                            errors[
+                                                errorKeys.find((key) =>
+                                                    key.startsWith('tag_ids.'),
+                                                ) ?? ''
+                                            ],
+                                    }}
+                                    onChange={(name, value) =>
+                                        handleChange(code, name, value)
+                                    }
+                                    onSubmit={submit}
+                                    readOnly={!can.update}
+                                    isPending={form.processing}
+                                    cancelHref={articlesIndex()}
+                                    labels={{
+                                        submit: form.processing
+                                            ? t('admin.articles.saving')
+                                            : t('admin.articles.save'),
+                                        cancel: t('admin.articles.cancel'),
+                                        errorSummaryTitle: t(
+                                            'admin.articles.errorSummaryTitle',
+                                        ),
+                                    }}
+                                    sections={[
+                                        {
+                                            id: `translation-${code}`,
+                                            title: locale.native,
+                                            description: localeState(code),
+                                            fields: [
+                                                {
+                                                    type: 'text',
+                                                    name: 'title',
+                                                    label: t(
+                                                        'admin.articles.fields.title',
                                                     ),
-                                                    change: t(
-                                                        'admin.articles.cover.change',
+                                                    hint: isDefault
+                                                        ? undefined
+                                                        : t(
+                                                              'admin.articles.fields.titleHelp',
+                                                          ),
+                                                    required: isDefault,
+                                                },
+                                                {
+                                                    type: 'text',
+                                                    name: 'slug',
+                                                    label: t(
+                                                        'admin.articles.fields.slug',
                                                     ),
-                                                    remove: t(
-                                                        'admin.articles.cover.remove',
+                                                    hint: t(
+                                                        'admin.articles.fields.slugHelp',
                                                     ),
-                                                    empty: t(
-                                                        'admin.articles.cover.empty',
+                                                    required: isDefault,
+                                                    assist: assist?.slug,
+                                                },
+                                                {
+                                                    type: 'textarea',
+                                                    name: 'excerpt',
+                                                    label: t(
+                                                        'admin.articles.fields.excerpt',
                                                     ),
-                                                    preview: t(
-                                                        'admin.articles.cover.preview',
+                                                    hint: t(
+                                                        'admin.articles.fields.excerptHelp',
+                                                    ),
+                                                    rows: 3,
+                                                    assist: textRewriteAssist?.(
+                                                        {
+                                                            text: values.excerpt,
+                                                            maxLength:
+                                                                EXCERPT_MAX,
+                                                        },
                                                     ),
                                                 },
-                                            },
-                                        ],
-                                    },
-                                    {
-                                        id: `tags-${code}`,
-                                        title: t('admin.articles.tagsSection'),
-                                        description: t(
-                                            'admin.articles.tagsSectionDescription',
-                                        ),
-                                        fields: [
-                                            {
-                                                type: 'multiSelect',
-                                                name: 'tag_ids',
-                                                label: t(
-                                                    'admin.articles.fields.tags',
-                                                ),
-                                                hint:
-                                                    editor.tagOptions.length ===
-                                                    0
-                                                        ? t(
-                                                              'admin.articles.fields.tagsEmpty',
-                                                          )
-                                                        : undefined,
-                                                options: editor.tagOptions.map(
-                                                    (option) => ({
-                                                        value: String(
-                                                            option.id,
+                                                {
+                                                    type: 'textarea',
+                                                    name: 'meta_description',
+                                                    label: t(
+                                                        'admin.articles.fields.metaDescription',
+                                                    ),
+                                                    hint: `${t('admin.articles.fields.metaDescriptionHelp')} ${t(
+                                                        'admin.articles.fields.metaDescriptionCounter',
+                                                        {
+                                                            length: values
+                                                                .meta_description
+                                                                .length,
+                                                        },
+                                                    )}`,
+                                                    rows: 3,
+                                                    assist: fieldAssists(
+                                                        assist?.metaDescription,
+                                                        textRewriteAssist?.({
+                                                            text: values.meta_description,
+                                                            maxLength:
+                                                                META_DESCRIPTION_MAX,
+                                                        }),
+                                                    ),
+                                                },
+                                                {
+                                                    type: 'richText',
+                                                    name: 'body',
+                                                    label: t(
+                                                        'admin.articles.fields.body',
+                                                    ),
+                                                    labels: richTextLabels,
+                                                    imagePicker,
+                                                },
+                                                {
+                                                    type: 'select',
+                                                    name: 'status',
+                                                    label: t(
+                                                        'admin.articles.fields.status',
+                                                    ),
+                                                    options: [
+                                                        {
+                                                            value: 'draft',
+                                                            label: t(
+                                                                'admin.articles.status.draft',
+                                                            ),
+                                                        },
+                                                        {
+                                                            value: 'published',
+                                                            label: t(
+                                                                'admin.articles.status.published',
+                                                            ),
+                                                            disabled:
+                                                                !can.publish,
+                                                        },
+                                                    ],
+                                                },
+                                                {
+                                                    type: 'date',
+                                                    name: 'published_on',
+                                                    label: t(
+                                                        'admin.articles.fields.publishedOn',
+                                                    ),
+                                                    hint: t(
+                                                        'admin.articles.fields.publishedOnHelp',
+                                                    ),
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            id: `cover-${code}`,
+                                            title: t(
+                                                'admin.articles.coverSection',
+                                            ),
+                                            description: t(
+                                                'admin.articles.coverSectionDescription',
+                                            ),
+                                            fields: [
+                                                {
+                                                    type: 'image',
+                                                    name: 'cover_media_id',
+                                                    label: t(
+                                                        'admin.articles.fields.cover',
+                                                    ),
+                                                    hint: t(
+                                                        'admin.articles.fields.coverHelp',
+                                                    ),
+                                                    picker: coverPicker,
+                                                    labels: {
+                                                        choose: t(
+                                                            'admin.articles.cover.choose',
                                                         ),
-                                                        label: option.label,
-                                                    }),
-                                                ),
-                                                labels: multiSelectLabels(t),
-                                                max: editor.maxTags,
-                                            },
-                                        ],
-                                    },
-                                ]}
-                            />
+                                                        change: t(
+                                                            'admin.articles.cover.change',
+                                                        ),
+                                                        remove: t(
+                                                            'admin.articles.cover.remove',
+                                                        ),
+                                                        empty: t(
+                                                            'admin.articles.cover.empty',
+                                                        ),
+                                                        preview: t(
+                                                            'admin.articles.cover.preview',
+                                                        ),
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            id: `tags-${code}`,
+                                            title: t(
+                                                'admin.articles.tagsSection',
+                                            ),
+                                            description: t(
+                                                'admin.articles.tagsSectionDescription',
+                                            ),
+                                            fields: [
+                                                {
+                                                    type: 'multiSelect',
+                                                    name: 'tag_ids',
+                                                    label: t(
+                                                        'admin.articles.fields.tags',
+                                                    ),
+                                                    hint:
+                                                        editor.tagOptions
+                                                            .length === 0
+                                                            ? t(
+                                                                  'admin.articles.fields.tagsEmpty',
+                                                              )
+                                                            : undefined,
+                                                    options:
+                                                        editor.tagOptions.map(
+                                                            (option) => ({
+                                                                value: String(
+                                                                    option.id,
+                                                                ),
+                                                                label: option.label,
+                                                            }),
+                                                        ),
+                                                    labels: multiSelectLabels(
+                                                        t,
+                                                    ),
+                                                    max: editor.maxTags,
+                                                },
+                                            ],
+                                        },
+                                    ]}
+                                />
+                            </Stack>
                         ),
                     };
                 })}

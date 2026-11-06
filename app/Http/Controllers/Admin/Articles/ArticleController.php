@@ -188,6 +188,10 @@ class ArticleController extends Controller
                 : ($user?->isAdmin() ?? false),
             suggestSeo: AssistantFeature::SeoMeta->isAvailable()
                 && ($user?->can('create', Article::class) ?? false),
+            suggestTranslation: AssistantFeature::Translation->isAvailable()
+                && ($user?->can('create', Article::class) ?? false),
+            rewriteText: AssistantFeature::TextRewrite->isAvailable()
+                && ($user?->can('create', Article::class) ?? false),
         );
     }
 }

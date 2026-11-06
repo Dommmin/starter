@@ -203,7 +203,8 @@ test('the job fills in a missing alt text as the system actor', function () {
     $updated = AuditLog::query()->where('action', AuditAction::MediaUpdated)->sole();
     expect($suggested->actor_id)->toBeNull()
         ->and($updated->actor_id)->toBeNull()
-        ->and($updated->changes)->toBe(['alt' => ['old' => null, 'new' => 'A loaf of bread.']]);
+        // toEqual: MySQL JSON does not keep the key order.
+        ->and($updated->changes)->toEqual(['alt' => ['old' => null, 'new' => 'A loaf of bread.']]);
 });
 
 test('running the job again has no further effect', function () {

@@ -92,7 +92,8 @@ test('an editor gets normalized proposals, nothing is saved and the usage is aud
         ->and($entry->actor_id)->toBe($editor->id)
         ->and($entry->subject_type)->toBe((new Faq)->getMorphClass())
         ->and($entry->subject_id)->toBeNull()
-        ->and($entry->changes['feature'])->toBe(['old' => null, 'new' => 'faq_generator'])
+        // toEqual: MySQL JSON does not keep the key order.
+        ->and($entry->changes['feature'])->toEqual(['old' => null, 'new' => 'faq_generator'])
         ->and(json_encode($entry->changes))->not->toContain('sourdough');
 });
 

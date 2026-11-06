@@ -1261,8 +1261,8 @@ declare namespace App {
             | 'media_alt_text'
             | 'translation'
             | 'text_rewrite'
-            | 'faq_generator'
-            | 'message_classification';
+            | 'message_classification'
+            | 'faq_generator';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'

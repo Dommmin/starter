@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\Articles\ArticleController;
 use App\Http\Controllers\Admin\Assistant\FaqSuggestionController;
 use App\Http\Controllers\Admin\Assistant\MediaAltTextSuggestionController;
 use App\Http\Controllers\Admin\Assistant\SeoMetaSuggestionController;
+use App\Http\Controllers\Admin\Assistant\TextRewriteController;
 use App\Http\Controllers\Admin\Assistant\TranslationSuggestionController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
@@ -55,6 +56,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->middleware('throttle:assistant');
         Route::post('/assistant/media/{mediaAsset}/alt-text', MediaAltTextSuggestionController::class)
             ->name('assistant.media-alt-text')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/text-rewrite', TextRewriteController::class)
+            ->name('assistant.text-rewrite')
             ->middleware('throttle:assistant');
         Route::post('/assistant/translation', TranslationSuggestionController::class)
             ->name('assistant.translation')

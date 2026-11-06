@@ -34,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', CookieConsent::COOKIE]);
 
+        // Rich text documents keep the spaces at the edges of text nodes:
+        // "Visit " next to a link or bold word must not lose its space.
+        $middleware->trimStrings(except: ['body.*', 'translations.*.body.*']);
+
         // Global and before routing: former-site addresses match no route.
         // Appended after the framework stack, so trusted hosts and proxies
         // are resolved before a relative target becomes an absolute URL.

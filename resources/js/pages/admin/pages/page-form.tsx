@@ -15,8 +15,13 @@ import {
     type RichTextDocument,
     type RichTextFieldLabels,
 } from '@/design-system/primitives';
+import { TranslationAssist } from '@/components/admin/translation-assist';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useSeoMetaAssist } from '@/hooks/use-seo-meta-assist';
+import {
+    useTranslationAssist,
+    type TranslationDraft,
+} from '@/hooks/use-translation-assist';
 import { useTranslation } from '@/i18n';
 import { slugify } from '@/lib/slug';
 import {
@@ -294,6 +299,54 @@ export function PageForm({ editor }: PageFormProps) {
         enabled: can.suggestSeo && can.update,
         subject: 'page',
     });
+    const translationAssist = useTranslationAssist({
+        enabled: can.suggestTranslation && can.update,
+        subject: 'page',
+        sourceLocale: locales.default,
+    });
+    const sourceTranslation = form.data.translations[locales.default];
+    const sourceLanguage =
+        locales.available.find((locale) => locale.code === locales.default)
+            ?.native ?? locales.default;
+
+    /** Copies a translation draft into a tab, after the request resolved. */
+    function applyDraft(code: string, draft: TranslationDraft) {
+        const changes: Partial<TranslationState> = {
+            title: draft.title,
+            meta_description: draft.metaDescription,
+            body: JSON.stringify(draft.body),
+            ...(manualSlugs[code] ? {} : { slug: slugify(draft.title) }),
+        };
+
+        form.setData((data) => ({
+            ...data,
+            translations: {
+                ...data.translations,
+                [code]: { ...data.translations[code], ...changes },
+            },
+        }));
+    }
+
+    async function translateInto(code: string): Promise<string | null> {
+        if (!translationAssist) {
+            return null;
+        }
+
+        const result = await translationAssist(code, {
+            title: sourceTranslation.title,
+            metaDescription: sourceTranslation.meta_description,
+            body: parseDocument(sourceTranslation.body),
+        });
+
+        if ('error' in result) {
+            return result.error;
+        }
+
+        applyDraft(code, result.draft);
+
+        return null;
+    }
+
     const richTextLabels: RichTextFieldLabels = {
         toolbar: t('admin.richText.toolbar'),
         heading2: t('admin.richText.heading2'),
@@ -436,113 +489,133 @@ export function PageForm({ editor }: PageFormProps) {
                             state: localeState(code),
                         }),
                         content: (
-                            <ResourceForm<TranslationValues>
-                                values={values}
-                                errors={Object.fromEntries(
-                                    TRANSLATION_FIELDS.map((field) => [
-                                        field,
-                                        errors[`${prefix}${field}`],
-                                    ]),
+                            <Stack gap="default">
+                                {translationAssist && !isDefault && (
+                                    <TranslationAssist
+                                        sourceLanguage={sourceLanguage}
+                                        targetLanguage={locale.native}
+                                        hasSource={
+                                            sourceTranslation.title.trim() !==
+                                            ''
+                                        }
+                                        hasTargetContent={
+                                            values.title.trim() !== '' ||
+                                            values.meta_description.trim() !==
+                                                '' ||
+                                            !isEmptyDocument(values.body)
+                                        }
+                                        onTranslate={() => translateInto(code)}
+                                    />
                                 )}
-                                onChange={(name, value) =>
-                                    handleChange(code, name, value)
-                                }
-                                onSubmit={submit}
-                                readOnly={!can.update}
-                                isPending={form.processing}
-                                cancelHref={pagesIndex()}
-                                labels={{
-                                    submit: form.processing
-                                        ? t('admin.pages.saving')
-                                        : t('admin.pages.save'),
-                                    cancel: t('admin.pages.cancel'),
-                                    errorSummaryTitle: t(
-                                        'admin.pages.errorSummaryTitle',
-                                    ),
-                                }}
-                                sections={[
-                                    {
-                                        id: `translation-${code}`,
-                                        title: locale.native,
-                                        description: localeState(code),
-                                        fields: [
-                                            {
-                                                type: 'text',
-                                                name: 'title',
-                                                label: t(
-                                                    'admin.pages.fields.title',
-                                                ),
-                                                hint: isDefault
-                                                    ? undefined
-                                                    : t(
-                                                          'admin.pages.fields.titleHelp',
-                                                      ),
-                                                required: isDefault,
-                                            },
-                                            {
-                                                type: 'text',
-                                                name: 'slug',
-                                                label: t(
-                                                    'admin.pages.fields.slug',
-                                                ),
-                                                hint: t(
-                                                    'admin.pages.fields.slugHelp',
-                                                ),
-                                                required: isDefault,
-                                                assist: assist?.slug,
-                                            },
-                                            {
-                                                type: 'textarea',
-                                                name: 'meta_description',
-                                                label: t(
-                                                    'admin.pages.fields.metaDescription',
-                                                ),
-                                                hint: `${t('admin.pages.fields.metaDescriptionHelp')} ${t(
-                                                    'admin.pages.fields.metaDescriptionCounter',
-                                                    {
-                                                        length: values
-                                                            .meta_description
-                                                            .length,
-                                                    },
-                                                )}`,
-                                                rows: 3,
-                                                assist: assist?.metaDescription,
-                                            },
-                                            {
-                                                type: 'richText',
-                                                name: 'body',
-                                                label: t(
-                                                    'admin.pages.fields.body',
-                                                ),
-                                                labels: richTextLabels,
-                                                imagePicker,
-                                            },
-                                            {
-                                                type: 'select',
-                                                name: 'status',
-                                                label: t(
-                                                    'admin.pages.fields.status',
-                                                ),
-                                                options: [
-                                                    {
-                                                        value: 'draft',
-                                                        label: t(
-                                                            'admin.pages.status.draft',
-                                                        ),
-                                                    },
-                                                    {
-                                                        value: 'published',
-                                                        label: t(
-                                                            'admin.pages.status.published',
-                                                        ),
-                                                        disabled: !can.publish,
-                                                    },
-                                                ],
-                                            },
-                                        ],
-                                    },
-                                ]}
-                            />
+                                <ResourceForm<TranslationValues>
+                                    values={values}
+                                    errors={Object.fromEntries(
+                                        TRANSLATION_FIELDS.map((field) => [
+                                            field,
+                                            errors[`${prefix}${field}`],
+                                        ]),
+                                    )}
+                                    onChange={(name, value) =>
+                                        handleChange(code, name, value)
+                                    }
+                                    onSubmit={submit}
+                                    readOnly={!can.update}
+                                    isPending={form.processing}
+                                    cancelHref={pagesIndex()}
+                                    labels={{
+                                        submit: form.processing
+                                            ? t('admin.pages.saving')
+                                            : t('admin.pages.save'),
+                                        cancel: t('admin.pages.cancel'),
+                                        errorSummaryTitle: t(
+                                            'admin.pages.errorSummaryTitle',
+                                        ),
+                                    }}
+                                    sections={[
+                                        {
+                                            id: `translation-${code}`,
+                                            title: locale.native,
+                                            description: localeState(code),
+                                            fields: [
+                                                {
+                                                    type: 'text',
+                                                    name: 'title',
+                                                    label: t(
+                                                        'admin.pages.fields.title',
+                                                    ),
+                                                    hint: isDefault
+                                                        ? undefined
+                                                        : t(
+                                                              'admin.pages.fields.titleHelp',
+                                                          ),
+                                                    required: isDefault,
+                                                },
+                                                {
+                                                    type: 'text',
+                                                    name: 'slug',
+                                                    label: t(
+                                                        'admin.pages.fields.slug',
+                                                    ),
+                                                    hint: t(
+                                                        'admin.pages.fields.slugHelp',
+                                                    ),
+                                                    required: isDefault,
+                                                    assist: assist?.slug,
+                                                },
+                                                {
+                                                    type: 'textarea',
+                                                    name: 'meta_description',
+                                                    label: t(
+                                                        'admin.pages.fields.metaDescription',
+                                                    ),
+                                                    hint: `${t('admin.pages.fields.metaDescriptionHelp')} ${t(
+                                                        'admin.pages.fields.metaDescriptionCounter',
+                                                        {
+                                                            length: values
+                                                                .meta_description
+                                                                .length,
+                                                        },
+                                                    )}`,
+                                                    rows: 3,
+                                                    assist: assist?.metaDescription,
+                                                },
+                                                {
+                                                    type: 'richText',
+                                                    name: 'body',
+                                                    label: t(
+                                                        'admin.pages.fields.body',
+                                                    ),
+                                                    labels: richTextLabels,
+                                                    imagePicker,
+                                                },
+                                                {
+                                                    type: 'select',
+                                                    name: 'status',
+                                                    label: t(
+                                                        'admin.pages.fields.status',
+                                                    ),
+                                                    options: [
+                                                        {
+                                                            value: 'draft',
+                                                            label: t(
+                                                                'admin.pages.status.draft',
+                                                            ),
+                                                        },
+                                                        {
+                                                            value: 'published',
+                                                            label: t(
+                                                                'admin.pages.status.published',
+                                                            ),
+                                                            disabled:
+                                                                !can.publish,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ]}
+                                />
+                            </Stack>
                         ),
                     };
                 })}

@@ -29,6 +29,7 @@ return [
         // Manual alt-text suggestion and the automatic one for clean images
         // without alt text (queued, never overwrites a human alt text).
         'media_alt_text' => (bool) env('AI_FEATURE_MEDIA_ALT_TEXT', true),
+        'translation' => (bool) env('AI_FEATURE_TRANSLATION', true),
         'message_classification' => (bool) env('AI_FEATURE_MESSAGE_CLASSIFICATION', false),
     ],
 

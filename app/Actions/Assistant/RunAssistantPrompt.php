@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Exceptions\AiException;
+use Laravel\Ai\Files\File;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 
 /**
@@ -33,6 +34,8 @@ class RunAssistantPrompt
 
     /**
      * @param  Model  $subject  Record the suggestion is made for; an unsaved instance while creating.
+     * @param  User|null  $actor  Null for queued system runs (audited without an actor).
+     * @param  list<File>  $attachments  Files sent with the prompt, e.g. the image to describe.
      * @return array<string, mixed> Structured output of the agent.
      *
      * @throws AssistantBudgetExceeded
@@ -43,7 +46,8 @@ class RunAssistantPrompt
         Agent&HasStructuredOutput $agent,
         string $prompt,
         Model $subject,
-        User $actor,
+        ?User $actor,
+        array $attachments = [],
     ): array {
         $budgetKey = 'assistant:tokens:'.now()->format('Y-m');
 
@@ -52,7 +56,7 @@ class RunAssistantPrompt
         }
 
         try {
-            $response = $agent->prompt($prompt, timeout: (int) config('assistant.timeout'));
+            $response = $agent->prompt($prompt, $attachments, timeout: (int) config('assistant.timeout'));
         } catch (AiException $exception) {
             Log::warning('Assistant provider request failed.', [
                 'feature' => $feature->value,

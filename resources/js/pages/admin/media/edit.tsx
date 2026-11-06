@@ -23,6 +23,7 @@ import {
     TextField,
 } from '@/design-system/primitives';
 import { RecordHistory } from '@/components/admin/record-history';
+import { useMediaAltAssist } from '@/hooks/use-media-alt-assist';
 import { useMediaScanPoll } from '@/hooks/use-media-scan-poll';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
@@ -52,7 +53,12 @@ export default function AdminMediaEdit() {
     const [isDeleting, setIsDeleting] = useState(false);
     const errors = form.errors as Partial<Record<string, string>>;
 
-    useMediaScanPoll(asset.status === 'quarantine', ['asset']);
+    // `can` follows the status: the alt suggestion is offered once the image is clean.
+    useMediaScanPoll(asset.status === 'quarantine', ['asset', 'can']);
+    const altAssist = useMediaAltAssist({
+        enabled: can.suggestAlt && can.update,
+        mediaAssetId: asset.id,
+    });
 
     // The scan result bumps `updated_at`; adopt it so saving the alt text
     // afterwards is not rejected as a conflicting edit.
@@ -238,6 +244,7 @@ export default function AdminMediaEdit() {
                                         }
                                         error={errors.alt}
                                         rows={3}
+                                        assist={altAssist}
                                     />
                                     <FormActions align="between">
                                         {can.delete ? (

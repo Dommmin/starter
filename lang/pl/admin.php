@@ -1621,6 +1621,7 @@ return [
     ],
     'assistant' => [
         'suggest' => 'Zaproponuj',
+        'suggestAlt' => 'Zaproponuj opis',
         'suggestion' => 'Propozycja asystenta AI',
         'apply' => 'Użyj',
         'discard' => 'Odrzuć',
@@ -1643,6 +1644,7 @@ return [
             'rateLimited' => 'Zbyt wiele próśb. Odczekaj chwilę i spróbuj ponownie.',
             'unavailable' => 'Asystent AI nie odpowiada. Spróbuj ponownie za chwilę.',
             'budget' => 'Miesięczny limit asystenta AI został wykorzystany.',
+            'notDescribable' => 'Asystent nie może opisać tego pliku. Opisuje tylko sprawdzone obrazy w obsługiwanym formacie.',
         ],
     ],
 ];

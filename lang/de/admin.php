@@ -1648,5 +1648,20 @@ return [
             'budget' => 'Das monatliche Limit des KI-Assistenten ist aufgebraucht.',
             'notDescribable' => 'Der Assistent kann diese Datei nicht beschreiben. Er beschreibt nur geprüfte Bilder in einem unterstützten Format.',
         ],
+        'rewrite' => [
+            'request' => 'Text verbessern',
+            'preview' => 'Überarbeiteter Text',
+            'apply' => 'Ersetzen',
+            'discard' => 'Abbrechen',
+            'modes' => [
+                'shorten' => 'Kürzen',
+                'simplify' => 'Vereinfachen',
+                'fix' => 'Fehler korrigieren',
+                'tone_formal' => 'Formeller Ton',
+                'tone_casual' => 'Lockerer Ton',
+            ],
+            'missingText' => 'Geben Sie zuerst den Text ein, den der Assistent verbessern soll.',
+            'tooLong' => 'Der Text ist für den Assistenten zu lang (max. :max Zeichen).',
+        ],
     ],
 ];

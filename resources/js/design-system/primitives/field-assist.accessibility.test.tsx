@@ -194,3 +194,116 @@ describe.each(fields)('$name assist', ({ render: field, control }) => {
         expect(helper.request).not.toHaveBeenCalled();
     });
 });
+
+function rewriteAssist(): FieldAssist & { request: ReturnType<typeof vi.fn> } {
+    return {
+        labels: {
+            request: 'Improve text',
+            preview: 'Improved text',
+            apply: 'Replace',
+            discard: 'Cancel',
+        },
+        modes: [
+            { value: 'fix', label: 'Fix mistakes' },
+            { value: 'shorten', label: 'Shorten' },
+        ],
+        request: vi.fn(async (mode?: string) => ({
+            suggestion: `Text (${mode})`,
+        })),
+    };
+}
+
+async function openMenu(trigger: HTMLButtonElement) {
+    await act(async () => {
+        trigger.dispatchEvent(
+            new MouseEvent('pointerdown', { bubbles: true, button: 0 }),
+        );
+    });
+    await act(async () => {
+        await import('./field-assist-menu');
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+}
+
+describe('assist with modes', () => {
+    it('picks a mode from a menu and previews the result before replacing', async () => {
+        const onChange = vi.fn();
+        const helper = rewriteAssist();
+        const container = await render(
+            <TextareaField
+                name="excerpt"
+                label="Excerpt"
+                value="old"
+                onChange={onChange}
+                assist={helper}
+            />,
+        );
+        const trigger = button(container, 'Improve text');
+
+        expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+        expect(helper.request).not.toHaveBeenCalled();
+
+        await openMenu(trigger);
+        const items = Array.from(
+            document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+        );
+
+        expect(items.map((item) => item.textContent)).toEqual([
+            'Fix mistakes',
+            'Shorten',
+        ]);
+
+        await click(items[1]);
+
+        expect(helper.request).toHaveBeenCalledWith('shorten');
+        expect(container.textContent).toContain('Improved text');
+        expect(container.textContent).toContain('Text (shorten)');
+        expect(onChange).not.toHaveBeenCalled();
+
+        await click(button(container, 'Replace'));
+
+        expect(onChange).toHaveBeenCalledWith('Text (shorten)');
+    });
+
+    it('offers several helpers on one field with one shared preview', async () => {
+        const onChange = vi.fn();
+        const suggest = assist({ suggestion: 'Suggested value' });
+        const rewrite = rewriteAssist();
+        const container = await render(
+            <TextField
+                name="meta"
+                label="Meta"
+                value="old"
+                onChange={onChange}
+                assist={[suggest, rewrite]}
+            />,
+        );
+
+        expect(button(container, 'Improve text')).toBeTruthy();
+
+        await click(button(container, 'Suggest'));
+
+        expect(suggest.request).toHaveBeenCalledTimes(1);
+        expect(container.textContent).toContain('Suggestion');
+        expect(container.textContent).toContain('Suggested value');
+
+        await click(button(container, 'Use'));
+
+        expect(onChange).toHaveBeenCalledWith('Suggested value');
+        expect(rewrite.request).not.toHaveBeenCalled();
+    });
+
+    it('offers no helper on a read-only field', async () => {
+        const container = await render(
+            <TextField
+                name="meta"
+                label="Meta"
+                value="old"
+                readOnly
+                assist={[assist({ suggestion: 'x' }), rewriteAssist()]}
+            />,
+        );
+
+        expect(container.querySelector('button')).toBeNull();
+    });
+});

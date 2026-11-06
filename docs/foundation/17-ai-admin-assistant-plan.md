@@ -97,6 +97,8 @@ AC: formatowanie treści przetrwa bez zmian (test na fixture). Brak treści źr�
 
 Testy: każdy tryb przechodzi przez allowlistę, nieznany tryb daje 422.
 
+Wdrożenie (2026-11-05): wejściem jest całe pole (excerpt artykułu oraz meta description artykułu i strony). Rozszerzenie DS zaakceptowane przez właściciela: `FieldAssist.modes` otwiera menu trybów (Radix ładowany leniwie), a `assist` przyjmuje też listę helperów, więc „Zaproponuj” i „Popraw tekst” działają przy jednym polu ze wspólnym podglądem. Zaznaczony fragment i pola rich text pozostają poza zakresem.
+
 ## Etap 5 — generator FAQ
 
 - `FaqGeneratorAgent` ze schematem `{items: [{question, answer}]}`, maksymalnie 8 pozycji, generowany z treści strony lub artykułu.

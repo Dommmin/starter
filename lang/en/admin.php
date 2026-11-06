@@ -1648,5 +1648,20 @@ return [
             'budget' => 'The monthly AI assistant limit has been used up.',
             'notDescribable' => 'The assistant cannot describe this file. It only describes scanned images in a supported format.',
         ],
+        'rewrite' => [
+            'request' => 'Improve text',
+            'preview' => 'Rewritten text',
+            'apply' => 'Replace',
+            'discard' => 'Cancel',
+            'modes' => [
+                'shorten' => 'Shorten',
+                'simplify' => 'Simplify',
+                'fix' => 'Fix mistakes',
+                'tone_formal' => 'Formal tone',
+                'tone_casual' => 'Casual tone',
+            ],
+            'missingText' => 'Enter the text you want the assistant to improve first.',
+            'tooLong' => 'The text is too long for the assistant (max :max characters).',
+        ],
     ],
 ];

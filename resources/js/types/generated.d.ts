@@ -9,6 +9,7 @@ declare namespace App {
                     delete: boolean;
                     suggestSeo: boolean;
                     suggestTranslation: boolean;
+                    rewriteText: boolean;
                 };
                 export type ArticleEditorData = {
                     article: App.Data.Admin.Articles.ArticleFormData;
@@ -71,6 +72,9 @@ declare namespace App {
                 export type SeoMetaSuggestionData = {
                     metaDescription: string;
                     slug: string;
+                };
+                export type TextRewriteSuggestionData = {
+                    text: string;
                 };
                 export type TranslationSuggestionData = {
                     title: string;
@@ -544,6 +548,7 @@ declare namespace App {
                     delete: boolean;
                     suggestSeo: boolean;
                     suggestTranslation: boolean;
+                    rewriteText: boolean;
                 };
                 export type PageEditorData = {
                     page: App.Data.Admin.Pages.PageFormData;
@@ -1246,6 +1251,7 @@ declare namespace App {
             | 'seo_meta'
             | 'media_alt_text'
             | 'translation'
+            | 'text_rewrite'
             | 'message_classification';
         export type AuditAction =
             | 'page.created'
@@ -1378,6 +1384,12 @@ declare namespace App {
             | 'youtube'
             | 'tiktok'
             | 'github';
+        export type TextRewriteMode =
+            | 'shorten'
+            | 'simplify'
+            | 'fix'
+            | 'tone_formal'
+            | 'tone_casual';
         export type ThemePreference = 'light' | 'dark' | 'system';
         export type TrashedContentType = 'pages' | 'articles';
         export type TypographyPreset = 'default' | 'classic';

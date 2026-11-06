@@ -18,11 +18,13 @@ import {
 import { TranslationAssist } from '@/components/admin/translation-assist';
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useSeoMetaAssist } from '@/hooks/use-seo-meta-assist';
+import { useTextRewriteAssist } from '@/hooks/use-text-rewrite-assist';
 import {
     useTranslationAssist,
     type TranslationDraft,
 } from '@/hooks/use-translation-assist';
 import { useTranslation } from '@/i18n';
+import { fieldAssists } from '@/lib/field-assists';
 import { slugify } from '@/lib/slug';
 import {
     destroy as pagesDestroy,
@@ -54,6 +56,9 @@ type TranslationState = Omit<TranslationValues, 'body'> & { body: string };
 type PageFormState = {
     translations: Record<string, TranslationState>;
 };
+
+/** Mirrors the `meta_description` rule of the request (`max:320`). */
+const META_DESCRIPTION_MAX = 320;
 
 const TRANSLATION_FIELDS = [
     'title',
@@ -297,6 +302,10 @@ export function PageForm({ editor }: PageFormProps) {
     const imagePicker = useMediaImagePicker();
     const seoMetaAssist = useSeoMetaAssist({
         enabled: can.suggestSeo && can.update,
+        subject: 'page',
+    });
+    const textRewriteAssist = useTextRewriteAssist({
+        enabled: can.rewriteText && can.update,
         subject: 'page',
     });
     const translationAssist = useTranslationAssist({
@@ -577,7 +586,14 @@ export function PageForm({ editor }: PageFormProps) {
                                                         },
                                                     )}`,
                                                     rows: 3,
-                                                    assist: assist?.metaDescription,
+                                                    assist: fieldAssists(
+                                                        assist?.metaDescription,
+                                                        textRewriteAssist?.({
+                                                            text: values.meta_description,
+                                                            maxLength:
+                                                                META_DESCRIPTION_MAX,
+                                                        }),
+                                                    ),
                                                 },
                                                 {
                                                     type: 'richText',

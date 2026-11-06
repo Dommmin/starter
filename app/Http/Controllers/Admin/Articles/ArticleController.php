@@ -190,6 +190,8 @@ class ArticleController extends Controller
                 && ($user?->can('create', Article::class) ?? false),
             suggestTranslation: AssistantFeature::Translation->isAvailable()
                 && ($user?->can('create', Article::class) ?? false),
+            rewriteText: AssistantFeature::TextRewrite->isAvailable()
+                && ($user?->can('create', Article::class) ?? false),
         );
     }
 }

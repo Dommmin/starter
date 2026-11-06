@@ -148,6 +148,7 @@ function makeEditor(
             delete: false,
             suggestSeo: false,
             suggestTranslation: false,
+            rewriteText: false,
             ...can,
         },
         previewUrls,

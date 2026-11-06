@@ -1646,5 +1646,20 @@ return [
             'budget' => 'Miesięczny limit asystenta AI został wykorzystany.',
             'notDescribable' => 'Asystent nie może opisać tego pliku. Opisuje tylko sprawdzone obrazy w obsługiwanym formacie.',
         ],
+        'rewrite' => [
+            'request' => 'Popraw tekst',
+            'preview' => 'Poprawiony tekst',
+            'apply' => 'Zastąp',
+            'discard' => 'Anuluj',
+            'modes' => [
+                'shorten' => 'Skróć',
+                'simplify' => 'Uprość',
+                'fix' => 'Popraw błędy',
+                'tone_formal' => 'Ton formalny',
+                'tone_casual' => 'Ton swobodny',
+            ],
+            'missingText' => 'Najpierw wpisz tekst, który asystent ma poprawić.',
+            'tooLong' => 'Tekst jest za długi dla asystenta (maks. :max znaków).',
+        ],
     ],
 ];

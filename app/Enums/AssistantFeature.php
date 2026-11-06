@@ -11,6 +11,7 @@ enum AssistantFeature: string
     case SeoMeta = 'seo_meta';
     case MediaAltText = 'media_alt_text';
     case Translation = 'translation';
+    case TextRewrite = 'text_rewrite';
 
     /**
      * Whether the feature may be used: the assistant and the feature are

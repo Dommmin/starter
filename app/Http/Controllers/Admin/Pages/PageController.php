@@ -164,6 +164,8 @@ class PageController extends Controller
                 : ($user?->isAdmin() ?? false),
             suggestSeo: AssistantFeature::SeoMeta->isAvailable()
                 && ($user?->can('create', Page::class) ?? false),
+            suggestTranslation: AssistantFeature::Translation->isAvailable()
+                && ($user?->can('create', Page::class) ?? false),
             rewriteText: AssistantFeature::TextRewrite->isAvailable()
                 && ($user?->can('create', Page::class) ?? false),
         );

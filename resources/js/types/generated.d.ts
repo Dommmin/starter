@@ -8,6 +8,7 @@ declare namespace App {
                     publish: boolean;
                     delete: boolean;
                     suggestSeo: boolean;
+                    suggestTranslation: boolean;
                     rewriteText: boolean;
                 };
                 export type ArticleEditorData = {
@@ -74,6 +75,12 @@ declare namespace App {
                 };
                 export type TextRewriteSuggestionData = {
                     text: string;
+                };
+                export type TranslationSuggestionData = {
+                    title: string;
+                    excerpt: string | null;
+                    metaDescription: string;
+                    body: Record<string, any> | null;
                 };
             }
             namespace Audit {
@@ -538,6 +545,7 @@ declare namespace App {
                     publish: boolean;
                     delete: boolean;
                     suggestSeo: boolean;
+                    suggestTranslation: boolean;
                     rewriteText: boolean;
                 };
                 export type PageEditorData = {
@@ -1240,6 +1248,7 @@ declare namespace App {
         export type AssistantFeature =
             | 'seo_meta'
             | 'media_alt_text'
+            | 'translation'
             | 'text_rewrite';
         export type AuditAction =
             | 'page.created'

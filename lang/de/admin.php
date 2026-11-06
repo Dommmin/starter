@@ -1617,6 +1617,7 @@ return [
     ],
     'assistant' => [
         'suggest' => 'Vorschlagen',
+        'suggestAlt' => 'Beschreibung vorschlagen',
         'suggestion' => 'Vorschlag des KI-Assistenten',
         'apply' => 'Übernehmen',
         'discard' => 'Verwerfen',
@@ -1626,6 +1627,7 @@ return [
             'rateLimited' => 'Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.',
             'unavailable' => 'Der KI-Assistent antwortet nicht. Versuchen Sie es gleich noch einmal.',
             'budget' => 'Das monatliche Limit des KI-Assistenten ist aufgebraucht.',
+            'notDescribable' => 'Der Assistent kann diese Datei nicht beschreiben. Er beschreibt nur geprüfte Bilder in einem unterstützten Format.',
         ],
     ],
 ];

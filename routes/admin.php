@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Articles\ArticleController;
+use App\Http\Controllers\Admin\Assistant\MediaAltTextSuggestionController;
 use App\Http\Controllers\Admin\Assistant\SeoMetaSuggestionController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
@@ -49,6 +50,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->middleware('throttle:60,1');
         Route::post('/assistant/seo-meta', SeoMetaSuggestionController::class)
             ->name('assistant.seo-meta')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/media/{mediaAsset}/alt-text', MediaAltTextSuggestionController::class)
+            ->name('assistant.media-alt-text')
             ->middleware('throttle:assistant');
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')

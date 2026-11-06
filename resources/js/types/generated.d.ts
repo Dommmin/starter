@@ -7,6 +7,7 @@ declare namespace App {
                     update: boolean;
                     publish: boolean;
                     delete: boolean;
+                    suggestSeo: boolean;
                 };
                 export type ArticleEditorData = {
                     article: App.Data.Admin.Articles.ArticleFormData;
@@ -60,6 +61,12 @@ declare namespace App {
                     body: { [key: string]: unknown } | null;
                     status: App.Enums.PublicationStatus;
                     publishedOn: string | null;
+                };
+            }
+            namespace Assistant {
+                export type SeoMetaSuggestionData = {
+                    metaDescription: string;
+                    slug: string;
                 };
             }
             namespace Audit {
@@ -522,6 +529,7 @@ declare namespace App {
                     update: boolean;
                     publish: boolean;
                     delete: boolean;
+                    suggestSeo: boolean;
                 };
                 export type PageEditorData = {
                     page: App.Data.Admin.Pages.PageFormData;
@@ -1220,6 +1228,7 @@ declare namespace App {
             | 'rose'
             | 'green';
         export type AnnouncementTone = 'info' | 'warning';
+        export type AssistantFeature = 'seo_meta';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'
@@ -1262,7 +1271,8 @@ declare namespace App {
             | 'tag.deleted'
             | 'redirect.created'
             | 'redirect.updated'
-            | 'redirect.deleted';
+            | 'redirect.deleted'
+            | 'assistant.suggested';
         export type ConsentCategory = 'analytics' | 'marketing';
         export type ContactFieldType =
             | 'text'

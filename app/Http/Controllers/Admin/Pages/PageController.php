@@ -14,6 +14,7 @@ use App\Data\Admin\Pages\PageListFiltersData;
 use App\Data\Admin\Pages\PageListItemData;
 use App\Data\Content\ContentLocalesData;
 use App\Data\Listing\ListPaginationData;
+use App\Enums\AssistantFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Pages\ListPagesRequest;
 use App\Http\Requests\Admin\Pages\StorePageRequest;
@@ -161,6 +162,8 @@ class PageController extends Controller
             delete: $page !== null
                 ? ($user?->can('delete', $page) ?? false)
                 : ($user?->isAdmin() ?? false),
+            suggestSeo: AssistantFeature::SeoMeta->isAvailable()
+                && ($user?->can('create', Page::class) ?? false),
         );
     }
 }

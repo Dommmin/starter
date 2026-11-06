@@ -749,6 +749,9 @@ return [
                 'updated' => 'Tag geändert',
                 'deleted' => 'Tag gelöscht',
             ],
+            'assistant' => [
+                'suggested' => 'KI-Vorschlag erstellt',
+            ],
             'redirect' => [
                 'created' => 'Weiterleitung erstellt',
                 'updated' => 'Weiterleitung geändert',
@@ -1610,6 +1613,19 @@ return [
             'sourceIsTarget' => 'Eine andere Weiterleitung führt auf diese Adresse. Ändern Sie stattdessen jene auf das neue Ziel, damit Besucher nur einmal weitergeleitet werden.',
             'sourceHome' => 'Die Startseite kann nicht weitergeleitet werden.',
             'sourceReserved' => 'Adressen des Panels, des Kontos und der Anmeldung können nicht weitergeleitet werden.',
+        ],
+    ],
+    'assistant' => [
+        'suggest' => 'Vorschlagen',
+        'suggestion' => 'Vorschlag des KI-Assistenten',
+        'apply' => 'Übernehmen',
+        'discard' => 'Verwerfen',
+        'errors' => [
+            'generic' => 'Der Vorschlag konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
+            'missingTitle' => 'Geben Sie zuerst einen Titel ein, damit der Assistent damit arbeiten kann.',
+            'rateLimited' => 'Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.',
+            'unavailable' => 'Der KI-Assistent antwortet nicht. Versuchen Sie es gleich noch einmal.',
+            'budget' => 'Das monatliche Limit des KI-Assistenten ist aufgebraucht.',
         ],
     ],
 ];

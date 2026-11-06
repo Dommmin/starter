@@ -16,6 +16,7 @@ import AdminPagesEdit from './edit';
 type Errors = Record<string, string>;
 
 const submitMock = vi.fn();
+const httpPostMock = vi.fn();
 const visitMock = vi.fn();
 let nextErrors: Errors | null = null;
 let editorProps: App.Data.Admin.Pages.PageEditorData;
@@ -60,8 +61,20 @@ vi.mock('@inertiajs/react', async () => {
         };
     }
 
+    function useHttp() {
+        const transformRef = React.useRef<() => unknown>(() => ({}));
+
+        return {
+            transform: (callback: () => unknown) => {
+                transformRef.current = callback;
+            },
+            post: (url: string) => httpPostMock(url, transformRef.current()),
+        };
+    }
+
     return {
         useForm,
+        useHttp,
         usePage: () => ({ props: editorProps }),
         router: {
             visit: (...args: unknown[]) => visitMock(...args),
@@ -126,6 +139,7 @@ function makeEditor(
             update: true,
             publish: true,
             delete: false,
+            suggestSeo: false,
             ...can,
         },
         previewUrls,
@@ -197,12 +211,43 @@ function activeTab(container: HTMLElement): string | undefined {
         ?.id.split('-trigger-')[1];
 }
 
+function textarea(container: HTMLElement, name: string): HTMLTextAreaElement {
+    return container.querySelector<HTMLTextAreaElement>(
+        `[role="tabpanel"] textarea[name="${name}"]`,
+    )!;
+}
+
+function buttonByText(container: HTMLElement, text: string): HTMLButtonElement {
+    return Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+            '[role="tabpanel"] button',
+        ),
+    ).find((button) => button.textContent?.trim() === text)!;
+}
+
+function assistButtons(container: HTMLElement): HTMLButtonElement[] {
+    return Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+            '[role="tabpanel"] button',
+        ),
+    ).filter(
+        (button) => button.textContent?.trim() === 'admin.assistant.suggest',
+    );
+}
+
+async function clickButton(button: HTMLButtonElement) {
+    await act(async () => {
+        button.click();
+    });
+}
+
 beforeEach(() => {
     nextErrors = null;
 });
 
 afterEach(async () => {
     submitMock.mockClear();
+    httpPostMock.mockReset();
     visitMock.mockClear();
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
@@ -463,5 +508,56 @@ describe('PageForm', () => {
         expect(visitMock).toHaveBeenCalledWith('/admin/pages/5/edit', {
             preserveState: false,
         });
+    });
+    it('hides the AI suggestions without the ability', async () => {
+        editorProps = makeEditor();
+        const container = await render(<AdminPagesCreate />);
+
+        expect(assistButtons(container)).toHaveLength(0);
+    });
+
+    it('fills the meta description and slug from one AI suggestion only after "Use"', async () => {
+        httpPostMock.mockResolvedValue({
+            metaDescription: 'Who we are and what we do.',
+            slug: 'about-our-team',
+        });
+        editorProps = makeEditor({ suggestSeo: true });
+        const container = await render(<AdminPagesCreate />);
+        await type(input(container, 'title'), 'About us');
+
+        const [slugAssist, metaAssist] = assistButtons(container);
+        await clickButton(metaAssist);
+
+        expect(httpPostMock).toHaveBeenCalledWith('/admin/assistant/seo-meta', {
+            subject: 'page',
+            locale: 'en',
+            title: 'About us',
+            text: '',
+        });
+        expect(textarea(container, 'meta_description').value).toBe('');
+
+        await clickButton(buttonByText(container, 'admin.assistant.apply'));
+        expect(textarea(container, 'meta_description').value).toBe(
+            'Who we are and what we do.',
+        );
+
+        await clickButton(slugAssist);
+        await clickButton(buttonByText(container, 'admin.assistant.apply'));
+
+        expect(input(container, 'slug').value).toBe('about-our-team');
+        expect(httpPostMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('asks for a title before requesting an AI suggestion', async () => {
+        editorProps = makeEditor({ suggestSeo: true });
+        const container = await render(<AdminPagesCreate />);
+
+        await clickButton(assistButtons(container)[1]);
+
+        expect(httpPostMock).not.toHaveBeenCalled();
+        expect(
+            container.querySelector('[role="tabpanel"] [role="alert"]')
+                ?.textContent,
+        ).toBe('admin.assistant.errors.missingTitle');
     });
 });

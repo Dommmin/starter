@@ -749,6 +749,9 @@ return [
                 'updated' => 'Tag zmieniony',
                 'deleted' => 'Tag usunięty',
             ],
+            'assistant' => [
+                'suggested' => 'Wygenerowano podpowiedź AI',
+            ],
             'redirect' => [
                 'created' => 'Przekierowanie utworzone',
                 'updated' => 'Przekierowanie zmienione',
@@ -1614,6 +1617,19 @@ return [
             'sourceIsTarget' => 'Inne przekierowanie prowadzi na ten adres. Zmień tamto przekierowanie na nowy cel, aby odwiedzający był przekierowany raz.',
             'sourceHome' => 'Nie można przekierować strony głównej.',
             'sourceReserved' => 'Nie można przekierować adresów panelu, konta ani logowania.',
+        ],
+    ],
+    'assistant' => [
+        'suggest' => 'Zaproponuj',
+        'suggestion' => 'Propozycja asystenta AI',
+        'apply' => 'Użyj',
+        'discard' => 'Odrzuć',
+        'errors' => [
+            'generic' => 'Nie udało się pobrać propozycji. Spróbuj ponownie.',
+            'missingTitle' => 'Najpierw wpisz tytuł, aby asystent miał z czego skorzystać.',
+            'rateLimited' => 'Zbyt wiele próśb. Odczekaj chwilę i spróbuj ponownie.',
+            'unavailable' => 'Asystent AI nie odpowiada. Spróbuj ponownie za chwilę.',
+            'budget' => 'Miesięczny limit asystenta AI został wykorzystany.',
         ],
     ],
 ];

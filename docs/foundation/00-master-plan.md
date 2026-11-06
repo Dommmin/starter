@@ -159,4 +159,5 @@ Zależność krytyczna: dostawca/plan GitHub → realny approval → tożsamośc
 - [14 — routing i lokalizacja: przewodnik](14-routing-and-localization.md)
 - [15 — plan po przeglądzie 2026-10-12](15-review-plan-2026-10-12.md)
 - [16 — nowy klient w 5 dni: runbook](16-new-client-runbook.md)
+- [17 — plan asystenta AI w panelu admina](17-ai-admin-assistant-plan.md)
 - [Instrukcja Claude Code](../../CLAUDE.md)

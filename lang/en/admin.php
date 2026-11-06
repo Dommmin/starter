@@ -749,6 +749,9 @@ return [
                 'updated' => 'Tag updated',
                 'deleted' => 'Tag deleted',
             ],
+            'assistant' => [
+                'suggested' => 'AI suggestion generated',
+            ],
             'redirect' => [
                 'created' => 'Redirect created',
                 'updated' => 'Redirect updated',
@@ -1610,6 +1613,19 @@ return [
             'sourceIsTarget' => 'Another redirect leads to this address. Change that redirect to the new target instead, so visitors are redirected once.',
             'sourceHome' => 'The home page cannot be redirected.',
             'sourceReserved' => 'The panel, account and sign-in addresses cannot be redirected.',
+        ],
+    ],
+    'assistant' => [
+        'suggest' => 'Suggest',
+        'suggestion' => 'AI assistant suggestion',
+        'apply' => 'Use',
+        'discard' => 'Discard',
+        'errors' => [
+            'generic' => 'The suggestion could not be loaded. Please try again.',
+            'missingTitle' => 'Enter a title first so the assistant has something to work with.',
+            'rateLimited' => 'Too many requests. Please wait a moment and try again.',
+            'unavailable' => 'The AI assistant is not responding. Try again in a moment.',
+            'budget' => 'The monthly AI assistant limit has been used up.',
         ],
     ],
 ];

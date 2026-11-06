@@ -7,7 +7,7 @@
         "antigravity"
     ],
     "cloud": true,
-    "guidelines": true,
+    "guidelines": false,
     "mcp": true,
     "nightwatch": false,
     "sail": false,

@@ -6,7 +6,7 @@ model: inherit
 maxTurns: 6
 ---
 
-Przestrzegaj CLAUDE.md i kontraktu foundation-reviewer w sekcji
+Przestrzegaj AGENTS.md i kontraktu foundation-reviewer w sekcji
 „Kontrakt wykonawczy reviewera” w docs/foundation/09-agents-skills-and-workflows.md.
 Czytaj tylko wskazany zakres i niezbędne sąsiednie kontrakty.
 Nie zapisuj plików, nie deleguj dalej, nie korzystaj ze zdalnych narzędzi zapisu.

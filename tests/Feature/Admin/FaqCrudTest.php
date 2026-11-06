@@ -47,7 +47,8 @@ test('the list exposes the typed list payload with defaults', function () {
                 'direction' => 'desc',
                 'published' => 'all',
             ])
-            ->where('can', ['create' => true, 'update' => true, 'delete' => false, 'import' => false])
+            ->where('can', ['create' => true, 'update' => true, 'delete' => false, 'import' => false, 'suggestFaqs' => false])
+            ->has('locales.available')
         );
 });
 

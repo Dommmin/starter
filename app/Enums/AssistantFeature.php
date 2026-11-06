@@ -12,6 +12,7 @@ enum AssistantFeature: string
     case MediaAltText = 'media_alt_text';
     case Translation = 'translation';
     case TextRewrite = 'text_rewrite';
+    case MessageClassification = 'message_classification';
 
     case FaqGenerator = 'faq_generator';
 

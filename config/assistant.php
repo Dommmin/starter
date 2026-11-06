@@ -20,6 +20,9 @@ return [
 
     /*
     | Per-feature switches, keyed by App\Enums\AssistantFeature values.
+    | `message_classification` sends the subject and body of contact messages
+    | (personal data, sender details redacted) to the AI provider, so it is
+    | off unless explicitly enabled (owner approval 2026-11-05).
     */
     'features' => [
         'seo_meta' => (bool) env('AI_FEATURE_SEO_META', true),
@@ -29,6 +32,7 @@ return [
         'translation' => (bool) env('AI_FEATURE_TRANSLATION', true),
         'text_rewrite' => (bool) env('AI_FEATURE_TEXT_REWRITE', true),
         'faq_generator' => (bool) env('AI_FEATURE_FAQ_GENERATOR', true),
+        'message_classification' => (bool) env('AI_FEATURE_MESSAGE_CLASSIFICATION', false),
     ],
 
     /*
@@ -42,6 +46,14 @@ return [
     | Suggestions per user and minute (named rate limiter `assistant`).
     */
     'rate_limit_per_minute' => (int) env('AI_RATE_LIMIT_PER_MINUTE', 20),
+
+    /*
+    | Contact message classifications per day across the site. The public
+    | form triggers them, so a flood of (spam) messages from many addresses
+    | must not use up the monthly budget of the admin features; beyond the
+    | limit messages stay unclassified. 0 stops classification.
+    */
+    'message_classification_daily_limit' => (int) env('AI_MESSAGE_CLASSIFICATION_DAILY_LIMIT', 200),
 
     /*
     | Request timeout in seconds; stays below the PHP-FPM request timeout.

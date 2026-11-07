@@ -1,6 +1,62 @@
 # Plan asystenta AI w panelu admina — 2026-11-04
 
-Status: **plan do realizacji etapami, po akceptacji właściciela**. Nic nie jest jeszcze wdrożone. Cel: tanie funkcje AI, które oszczędzają adminowi czas przy budowie i utrzymaniu stron, zgodne z celem startera (małe aplikacje w tydzień). Przy okazji ma to być nauka wdrażania `laravel/ai` (oficjalny Laravel AI SDK, Laravel 13).
+Status: **wdrożone (etapy 0–6 na `develop`, PR #120–#127, 2026-11-06)**. Cel: tanie funkcje AI, które oszczędzają adminowi czas przy budowie i utrzymaniu stron, zgodne z celem startera (małe aplikacje w tydzień). Przy okazji ma to być nauka wdrażania `laravel/ai` (oficjalny Laravel AI SDK, Laravel 13). Poniższe sekcje etapów opisują pierwotny plan; aktualny sposób użycia jest w sekcji „Jak używać”.
+
+## Jak używać
+
+Stan na 2026-11-07. Funkcje nie były jeszcze sprawdzone w przeglądarce ani z prawdziwym kluczem API: przed włączeniem na produkcji przejdź poniższe kroki lokalnie.
+
+### Włączenie
+
+W lokalnym `.env` (na serwerze w jego `.env`/sekretach):
+
+```dotenv
+AI_FEATURES_ENABLED=true
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Potem `make restart`. Klucz API to sekret: nigdy w Git, logach ani zgłoszeniach. Bez klucza albo z `AI_FEATURES_ENABLED=false` panel działa jak wcześniej, przyciski są ukryte, a endpointy zwracają 404.
+
+| Zmienna | Domyślnie | Funkcja |
+|---|---|---|
+| `AI_PROVIDER` | `anthropic` | dostawca: `anthropic`, `openai`, `gemini` lub inny z `config/ai.php` |
+| `AI_FEATURE_SEO_META` | `true` | propozycja meta description i sluga |
+| `AI_FEATURE_MEDIA_ALT_TEXT` | `true` | alt-text obrazów (ręcznie i automatycznie) |
+| `AI_FEATURE_TRANSLATION` | `true` | tłumaczenie artykułów i stron |
+| `AI_FEATURE_TEXT_REWRITE` | `true` | „Popraw tekst” |
+| `AI_FEATURE_FAQ_GENERATOR` | `true` | generator FAQ |
+| `AI_FEATURE_MESSAGE_CLASSIFICATION` | `false` | klasyfikacja wiadomości kontaktowych (PII) |
+| `AI_MONTHLY_TOKEN_BUDGET` | `2000000` | wspólny miesięczny limit tokenów, `0` wyłącza asystenta |
+| `AI_RATE_LIMIT_PER_MINUTE` | `20` | prośby na użytkownika na minutę |
+| `AI_MESSAGE_CLASSIFICATION_DAILY_LIMIT` | `200` | klasyfikacje na dobę, `0` zatrzymuje |
+| `AI_TIMEOUT` | `30` | timeout żądania do dostawcy w sekundach |
+
+Pełna lista z komentarzami: `config/assistant.php`, dostawcy: `config/ai.php`.
+
+**Inny dostawca.** Agenci nie są związani z Anthropic: używają domyślnego dostawcy (`AI_PROVIDER`) i jego najtańszego modelu (`#[UseCheapestModel]`), a flaga dostępności sprawdza klucz właśnie tego dostawcy. Dla OpenAI ustaw `AI_PROVIDER=openai` i `OPENAI_API_KEY`, dla Google `AI_PROVIDER=gemini` i `GEMINI_API_KEY`. Testy działają na fake'ach, więc każdego dostawcę sprawdź ręcznie, zwłaszcza alt-text (wymaga modelu z vision), tłumaczenie długich treści i limit długości meta description. Przy klasyfikacji wiadomości zmiana dostawcy zmienia też to, komu przekazujesz treść wiadomości (zgoda właściciela z 2026-11-05 dotyczyła Anthropic). Przyciski widzi tylko użytkownik z prawem edycji danego zasobu (admin, edytor); nowych ról nie ma.
+
+### Funkcje
+
+AI tylko proponuje: wynik trafia do podglądu z akcjami „Użyj” / „Odrzuć”, a zapis to zwykłe „Zapisz” formularza.
+
+- **SEO meta.** Formularz artykułu lub strony, przyciski **„Zaproponuj”** przy *Slug* i *Meta description*. Propozycja z tytułu i treści, w języku zakładki.
+- **„Popraw tekst”.** Artykuł: *Zajawka* i *Meta description*; strona: *Meta description*. Menu trybów: Skróć, Uprość, Popraw błędy, Ton formalny, Ton swobodny. Przy meta description „Zaproponuj” i „Popraw tekst” dzielą jeden podgląd.
+- **Tłumaczenia.** Zakładka języka innego niż domyślny, przycisk **„Przetłumacz z …”**. Wypełnia tytuł, treść i meta description jako szkic, z zachowaniem formatowania i linków. Wymaga tytułu w języku źródłowym; istniejąca treść zakładki jest nadpisywana dopiero po potwierdzeniu.
+- **Alt-text.** Edycja medium, przycisk **„Zaproponuj opis”**. Dodatkowo job w kolejce uzupełnia brakujący alt obrazu po statusie *clean* (plik z kwarantanny nie trafia do dostawcy) i nigdy nie nadpisuje altu wpisanego przez człowieka. Kolejkę obsługuje Horizon (lokalnie startuje z `make up`).
+- **Generator FAQ.** Lista FAQ, przycisk **„Generuj FAQ z AI”**: wklej treść strony, oferty lub notatki, dostaniesz do 8 pytań. Rekordy powstają dopiero z zaznaczonych pozycji.
+- **Klasyfikacja wiadomości (domyślnie wyłączona).** Nowa wiadomość z formularza kontaktowego dostaje w tle kategorię lead / pytanie / spam / inne; lista wiadomości ma kolumnę **„Kategoria (AI)”** i filtr. Do dostawcy trafiają tylko temat i treść z wyciętymi e-mailami i numerami telefonów; imię, e-mail i pozostałe pola nie są wysyłane. Spam jest tylko oznaczany, błąd AI nie blokuje maila ani webhooka. Włączaj świadomie i uwzględnij to w polityce prywatności.
+
+### Koszty i audyt
+
+- Każde wywołanie zostawia wpis w **Audycie** (akcja *assistant suggested*): funkcja, model i liczba tokenów, bez treści promptu.
+- Po wyczerpaniu limitu miesięcznego UI pokazuje komunikat o limicie, po przekroczeniu limitu na minutę prośbę o odczekanie.
+- Licznik tokenów w cache to miękki bezpiecznik, nie źródło rozliczeń; koszty sprawdzaj w konsoli dostawcy.
+
+### Produkcja
+
+1. Deploy z `develop` uruchamia migrację `contact_messages` (`category`, `classified_at`): wcześniej świeży backup, zgodnie z procedurą releasu.
+2. Klucz i `AI_FEATURES_ENABLED=true` ustawia człowiek w konfiguracji serwera.
+3. Po włączeniu sprawdź jedną funkcję i wpis w Audycie, zanim udostępnisz ją klientowi.
 
 ## Zasady
 

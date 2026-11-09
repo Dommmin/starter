@@ -16,5 +16,6 @@ class FaqAbilitiesData extends Data
         public bool $update,
         public bool $delete,
         public bool $import = false,
+        public bool $suggestFaqs = false,
     ) {}
 }

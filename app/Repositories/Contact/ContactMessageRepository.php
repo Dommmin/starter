@@ -26,7 +26,7 @@ class ContactMessageRepository
     public function adminListQuery(): Builder
     {
         return ContactMessage::query()
-            ->select(['id', 'name', 'email', 'locale', 'status', 'attempts', 'sent_at', 'created_at', 'updated_at']);
+            ->select(['id', 'name', 'email', 'locale', 'status', 'attempts', 'sent_at', 'category', 'created_at', 'updated_at']);
     }
 
     /**

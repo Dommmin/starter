@@ -83,7 +83,7 @@ maxTurns: 6
 ---
 
 Sprawdź AC, wskazany diff i sąsiednie kontrakty.
-Przed pracą przeczytaj ograniczenia projektu w CLAUDE.md.
+Przed pracą przeczytaj ograniczenia projektu w AGENTS.md.
 Nie zmieniaj plików, nie deleguj i nie inicjuj releasu.
 Zwróć do 300 słów: finding, plik/symbol, skutek, reprodukcja.
 Jeśli brak findings, napisz to wraz z zakresem i ograniczeniami.

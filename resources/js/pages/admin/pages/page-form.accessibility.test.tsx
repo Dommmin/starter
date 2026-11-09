@@ -16,6 +16,7 @@ import AdminPagesEdit from './edit';
 type Errors = Record<string, string>;
 
 const submitMock = vi.fn();
+const httpPostMock = vi.fn();
 const visitMock = vi.fn();
 let nextErrors: Errors | null = null;
 let editorProps: App.Data.Admin.Pages.PageEditorData;
@@ -35,8 +36,15 @@ vi.mock('@inertiajs/react', async () => {
             errors,
             processing: false,
             isDirty: false,
-            setData: (key: keyof Data, value: unknown) =>
-                setDataState((current) => ({ ...current, [key]: value })),
+            setData: (
+                key: keyof Data | ((current: Data) => Data),
+                value?: unknown,
+            ) =>
+                setDataState((current) =>
+                    typeof key === 'function'
+                        ? key(current)
+                        : { ...current, [key]: value },
+                ),
             transform: (callback: (value: Data) => unknown) => {
                 transformRef.current = callback;
             },
@@ -60,8 +68,20 @@ vi.mock('@inertiajs/react', async () => {
         };
     }
 
+    function useHttp() {
+        const transformRef = React.useRef<() => unknown>(() => ({}));
+
+        return {
+            transform: (callback: () => unknown) => {
+                transformRef.current = callback;
+            },
+            post: (url: string) => httpPostMock(url, transformRef.current()),
+        };
+    }
+
     return {
         useForm,
+        useHttp,
         usePage: () => ({ props: editorProps }),
         router: {
             visit: (...args: unknown[]) => visitMock(...args),
@@ -126,6 +146,9 @@ function makeEditor(
             update: true,
             publish: true,
             delete: false,
+            suggestSeo: false,
+            suggestTranslation: false,
+            rewriteText: false,
             ...can,
         },
         previewUrls,
@@ -197,12 +220,80 @@ function activeTab(container: HTMLElement): string | undefined {
         ?.id.split('-trigger-')[1];
 }
 
+function textarea(container: HTMLElement, name: string): HTMLTextAreaElement {
+    return container.querySelector<HTMLTextAreaElement>(
+        `[role="tabpanel"] textarea[name="${name}"]`,
+    )!;
+}
+
+function buttonByText(container: HTMLElement, text: string): HTMLButtonElement {
+    return Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+            '[role="tabpanel"] button',
+        ),
+    ).find((button) => button.textContent?.trim() === text)!;
+}
+
+function assistButtons(container: HTMLElement): HTMLButtonElement[] {
+    return Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+            '[role="tabpanel"] button',
+        ),
+    ).filter(
+        (button) => button.textContent?.trim() === 'admin.assistant.suggest',
+    );
+}
+
+async function clickButton(button: HTMLButtonElement) {
+    await act(async () => {
+        button.click();
+    });
+}
+
+function translateButton(
+    container: HTMLElement,
+): HTMLButtonElement | undefined {
+    return Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+            '[role="tabpanel"] button',
+        ),
+    ).find(
+        (button) =>
+            button.textContent?.trim() === 'admin.assistant.translation.action',
+    );
+}
+
+async function selectTab(container: HTMLElement, code: string) {
+    const tab = container.querySelector<HTMLButtonElement>(
+        `[role="tab"][id$="-trigger-${code}"]`,
+    );
+    await act(async () => {
+        tab?.focus();
+    });
+}
+
+const GERMAN_DRAFT: App.Data.Admin.Assistant.TranslationSuggestionData = {
+    title: 'Über uns',
+    excerpt: null,
+    metaDescription: 'Wer wir sind.',
+    body: {
+        type: 'doc',
+        content: [
+            {
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Hallo Welt' }],
+            },
+        ],
+    },
+};
+
 beforeEach(() => {
     nextErrors = null;
 });
 
 afterEach(async () => {
     submitMock.mockClear();
+    httpPostMock.mockReset();
     visitMock.mockClear();
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
@@ -463,5 +554,174 @@ describe('PageForm', () => {
         expect(visitMock).toHaveBeenCalledWith('/admin/pages/5/edit', {
             preserveState: false,
         });
+    });
+    it('hides the AI suggestions without the ability', async () => {
+        editorProps = makeEditor();
+        const container = await render(<AdminPagesCreate />);
+
+        expect(assistButtons(container)).toHaveLength(0);
+    });
+
+    it('fills the meta description and slug from one AI suggestion only after "Use"', async () => {
+        httpPostMock.mockResolvedValue({
+            metaDescription: 'Who we are and what we do.',
+            slug: 'about-our-team',
+        });
+        editorProps = makeEditor({ suggestSeo: true });
+        const container = await render(<AdminPagesCreate />);
+        await type(input(container, 'title'), 'About us');
+
+        const [slugAssist, metaAssist] = assistButtons(container);
+        await clickButton(metaAssist);
+
+        expect(httpPostMock).toHaveBeenCalledWith('/admin/assistant/seo-meta', {
+            subject: 'page',
+            locale: 'en',
+            title: 'About us',
+            text: '',
+        });
+        expect(textarea(container, 'meta_description').value).toBe('');
+
+        await clickButton(buttonByText(container, 'admin.assistant.apply'));
+        expect(textarea(container, 'meta_description').value).toBe(
+            'Who we are and what we do.',
+        );
+
+        await clickButton(slugAssist);
+        await clickButton(buttonByText(container, 'admin.assistant.apply'));
+
+        expect(input(container, 'slug').value).toBe('about-our-team');
+        expect(httpPostMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('asks for a title before requesting an AI suggestion', async () => {
+        editorProps = makeEditor({ suggestSeo: true });
+        const container = await render(<AdminPagesCreate />);
+
+        await clickButton(assistButtons(container)[1]);
+
+        expect(httpPostMock).not.toHaveBeenCalled();
+        expect(
+            container.querySelector('[role="tabpanel"] [role="alert"]')
+                ?.textContent,
+        ).toBe('admin.assistant.errors.missingTitle');
+    });
+    it('offers the AI translation only in other language tabs and only with the ability', async () => {
+        editorProps = makeEditor();
+        const container = await render(<AdminPagesCreate />);
+        await selectTab(container, 'de');
+
+        expect(translateButton(container)).toBeUndefined();
+
+        await act(async () => {
+            mountedRoots.splice(0).forEach((root) => root.unmount());
+        });
+        editorProps = makeEditor({ suggestTranslation: true });
+        const withAbility = await render(<AdminPagesCreate />);
+
+        expect(translateButton(withAbility)).toBeUndefined();
+        await selectTab(withAbility, 'de');
+        expect(translateButton(withAbility)).toBeDefined();
+    });
+
+    it('fills an empty language tab with the AI translation of the default language', async () => {
+        httpPostMock.mockResolvedValue(GERMAN_DRAFT);
+        editorProps = makeEditor({ suggestTranslation: true });
+        const container = await render(<AdminPagesCreate />);
+        await type(input(container, 'title'), 'About us');
+        await selectTab(container, 'de');
+
+        await clickButton(translateButton(container)!);
+
+        expect(httpPostMock).toHaveBeenCalledWith(
+            '/admin/assistant/translation',
+            {
+                subject: 'page',
+                source_locale: 'en',
+                target_locale: 'de',
+                title: 'About us',
+                meta_description: '',
+                body: { type: 'doc', content: [] },
+            },
+        );
+        expect(input(container, 'title').value).toBe('Über uns');
+        expect(input(container, 'slug').value).not.toBe('');
+        expect(textarea(container, 'meta_description').value).toBe(
+            'Wer wir sind.',
+        );
+        expect(
+            container.querySelector('[role="tabpanel"] [role="status"]')
+                ?.textContent,
+        ).toContain('admin.assistant.translation.done');
+        expect(submitMock).not.toHaveBeenCalled();
+
+        await submit(container);
+        expect(submitMock.mock.calls[0][1].translations.de).toMatchObject({
+            title: 'Über uns',
+            meta_description: 'Wer wir sind.',
+            body: GERMAN_DRAFT.body,
+        });
+    });
+
+    it('asks before replacing an existing translation', async () => {
+        httpPostMock.mockResolvedValue(GERMAN_DRAFT);
+        editorProps = makeEditor(
+            { suggestTranslation: true },
+            {
+                translations: {
+                    en: { ...blankTranslation(), title: 'About us' },
+                    de: { ...blankTranslation(), title: 'Alter Titel' },
+                },
+            },
+        );
+        const container = await render(<AdminPagesCreate />);
+        await selectTab(container, 'de');
+
+        await clickButton(translateButton(container)!);
+
+        expect(httpPostMock).not.toHaveBeenCalled();
+        const dialog = document.body.querySelector('[role="dialog"]');
+        expect(dialog?.textContent).toContain(
+            'admin.assistant.translation.overwriteDescription',
+        );
+
+        const cancel = Array.from(
+            dialog?.querySelectorAll('button') ?? [],
+        ).find(
+            (button) =>
+                button.textContent === 'admin.assistant.translation.cancel',
+        )!;
+        await clickButton(cancel);
+        expect(httpPostMock).not.toHaveBeenCalled();
+        expect(input(container, 'title').value).toBe('Alter Titel');
+
+        await clickButton(translateButton(container)!);
+        const confirm = Array.from(
+            document.body.querySelectorAll<HTMLButtonElement>(
+                '[role="dialog"] button',
+            ),
+        ).find(
+            (button) =>
+                button.textContent ===
+                'admin.assistant.translation.overwriteConfirm',
+        )!;
+        await clickButton(confirm);
+
+        expect(httpPostMock).toHaveBeenCalledTimes(1);
+        expect(input(container, 'title').value).toBe('Über uns');
+    });
+
+    it('explains a missing source without requesting a translation', async () => {
+        editorProps = makeEditor({ suggestTranslation: true });
+        const container = await render(<AdminPagesCreate />);
+        await selectTab(container, 'de');
+
+        await clickButton(translateButton(container)!);
+
+        expect(httpPostMock).not.toHaveBeenCalled();
+        expect(
+            container.querySelector('[role="tabpanel"] [role="alert"]')
+                ?.textContent,
+        ).toContain('admin.assistant.translation.missingSource');
     });
 });

@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\Articles\ArticleController;
+use App\Http\Controllers\Admin\Assistant\FaqSuggestionController;
+use App\Http\Controllers\Admin\Assistant\MediaAltTextSuggestionController;
+use App\Http\Controllers\Admin\Assistant\SeoMetaSuggestionController;
+use App\Http\Controllers\Admin\Assistant\TextRewriteController;
+use App\Http\Controllers\Admin\Assistant\TranslationSuggestionController;
 use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\ContactForms\ContactFormController;
@@ -15,6 +20,7 @@ use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
 use App\Http\Controllers\Admin\Search\AdminSearchController;
+use App\Http\Controllers\Admin\Settings\AiSettingsController;
 use App\Http\Controllers\Admin\Settings\SitePublicationController;
 use App\Http\Controllers\Admin\Settings\SiteSettingsController;
 use App\Http\Controllers\Admin\SystemStatusController;
@@ -46,6 +52,21 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/search', AdminSearchController::class)
             ->name('search')
             ->middleware('throttle:60,1');
+        Route::post('/assistant/seo-meta', SeoMetaSuggestionController::class)
+            ->name('assistant.seo-meta')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/media/{mediaAsset}/alt-text', MediaAltTextSuggestionController::class)
+            ->name('assistant.media-alt-text')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/text-rewrite', TextRewriteController::class)
+            ->name('assistant.text-rewrite')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/translation', TranslationSuggestionController::class)
+            ->name('assistant.translation')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/faqs', FaqSuggestionController::class)
+            ->name('assistant.faqs')
+            ->middleware('throttle:assistant');
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')
             ->can('view', SiteSetting::class);
@@ -55,6 +76,14 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::put('/system/maintenance', [SitePublicationController::class, 'updateMaintenance'])
             ->name('system.maintenance.update')
             ->can('update', SiteSetting::class);
+        Route::put('/system/ai', [AiSettingsController::class, 'update'])
+            ->name('system.ai.update')
+            ->can('update', SiteSetting::class)
+            ->middleware('password.confirm');
+        Route::delete('/system/ai', [AiSettingsController::class, 'destroy'])
+            ->name('system.ai.destroy')
+            ->can('update', SiteSetting::class)
+            ->middleware('password.confirm');
         Route::post('/system/test-mail', [SitePublicationController::class, 'sendTestMail'])
             ->name('system.test-mail.store')
             ->can('update', SiteSetting::class)
@@ -188,6 +217,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('create', Faq::class);
         Route::post('/faqs', [FaqController::class, 'store'])
             ->name('faqs.store')
+            ->can('create', Faq::class);
+        Route::post('/faqs/many', [FaqController::class, 'storeMany'])
+            ->name('faqs.store-many')
             ->can('create', Faq::class);
         Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
             ->name('faqs.edit')

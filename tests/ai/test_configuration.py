@@ -293,6 +293,19 @@ class AiConfigurationTest(unittest.TestCase):
                 self.assertRegex((codex / "agents/openai.yaml").read_text().strip(),
                                  r"\Apolicy:\n +allow_implicit_invocation: false\Z")
 
+    def test_agents_md_is_the_single_instruction_source(self):
+        """CLAUDE.md only imports AGENTS.md; Boost cannot re-inject its guideline block."""
+        self.assertEqual((ROOT / "CLAUDE.md").read_text(), "@AGENTS.md\n")
+        self.assertFalse(json.loads((ROOT / "boost.json").read_text())["guidelines"])
+        agents = (ROOT / "AGENTS.md").read_text()
+        self.assertNotIn("laravel-boost-guidelines", agents)
+        self.assertLessEqual(len(agents.splitlines()), 200)
+        for rule in ("make artisan ARGS=", "--no-verify", ".ai/rules/index.md", "maks. 2 minuty",
+                     "pint -- --dirty", "nigdy na `main` ani `develop`", "Push pozostaje ręczną operacją"):
+            self.assertIn(rule, agents)
+        for name in ("architecture", "security", "testing", "frontend", "release"):
+            self.assertIn(f".claude/rules/{name}.md", agents)
+
     def test_gemini_adapter_and_fast_workflow_limit_unnecessary_analysis(self):
         gemini = (ROOT / "GEMINI.md").read_text()
         fast = (ROOT / ".agents/skills/foundation-fast/references/workflow.md").read_text()
@@ -324,7 +337,7 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(set(fields["tools"].split(", ")), {"Read", "Glob", "Grep"})
         self.assertEqual(fields["model"], "inherit")
         self.assertEqual(int(fields["maxTurns"]), 6)
-        self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+        self.assertEqual(body.strip(), agent["developer_instructions"].strip())
 
     def test_designer_is_read_only_and_follows_the_craft_standard(self):
         agent = tomllib.loads((ROOT / ".codex/agents/foundation-designer.toml").read_text())
@@ -339,7 +352,7 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(set(fields["tools"].split(", ")), {"Read", "Glob", "Grep", "WebSearch", "WebFetch"})
         self.assertEqual(fields["model"], "inherit")
         self.assertLessEqual(int(fields["maxTurns"]), 10)
-        self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+        self.assertEqual(body.strip(), agent["developer_instructions"].strip())
         craft = ".agents/skills/foundation-ui/references/design-craft.md"
         self.assertIn(craft, body)
         self.assertIn(craft, (ROOT / ".agents/skills/foundation-ui/references/workflow.md").read_text())

@@ -2,6 +2,7 @@
 
 namespace App\Data\Admin\Contact;
 
+use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
 use App\Models\ContactMessage;
 use Spatie\LaravelData\Data;
@@ -20,6 +21,8 @@ class ContactMessageListItemData extends Data
         public string $locale,
         public ContactMessageStatus $status,
         public int $attempts,
+        /** AI category; null until classified. */
+        public ?ContactMessageCategory $category,
         public ?string $createdAt,
     ) {}
 
@@ -32,6 +35,7 @@ class ContactMessageListItemData extends Data
             locale: $contactMessage->locale,
             status: $contactMessage->status,
             attempts: $contactMessage->attempts,
+            category: $contactMessage->category,
             createdAt: $contactMessage->created_at?->toIso8601String(),
         );
     }

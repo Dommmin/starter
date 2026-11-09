@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Support\Assistant\AiCredentials;
+
 /**
  * Closed set of admin assistant features; values are the keys of
  * `assistant.features`.
@@ -17,15 +19,20 @@ enum AssistantFeature: string
 
     /**
      * Whether the feature may be used: the assistant and the feature are
-     * enabled and the default AI provider has an API key.
+     * enabled and the default AI provider has an API key. The provider and
+     * key set in the panel take precedence over the environment
+     * ({@see AiCredentials}).
      */
     public function isAvailable(): bool
     {
+        if (config('assistant.enabled') !== true || config("assistant.features.{$this->value}") !== true) {
+            return false;
+        }
+
+        app(AiCredentials::class)->apply();
+
         $provider = config('ai.default');
 
-        return config('assistant.enabled') === true
-            && config("assistant.features.{$this->value}") === true
-            && is_string($provider)
-            && filled(config("ai.providers.{$provider}.key"));
+        return is_string($provider) && filled(config("ai.providers.{$provider}.key"));
     }
 }

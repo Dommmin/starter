@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
 use App\Http\Controllers\Admin\Search\AdminSearchController;
+use App\Http\Controllers\Admin\Settings\AiSettingsController;
 use App\Http\Controllers\Admin\Settings\SitePublicationController;
 use App\Http\Controllers\Admin\Settings\SiteSettingsController;
 use App\Http\Controllers\Admin\SystemStatusController;
@@ -75,6 +76,14 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::put('/system/maintenance', [SitePublicationController::class, 'updateMaintenance'])
             ->name('system.maintenance.update')
             ->can('update', SiteSetting::class);
+        Route::put('/system/ai', [AiSettingsController::class, 'update'])
+            ->name('system.ai.update')
+            ->can('update', SiteSetting::class)
+            ->middleware('password.confirm');
+        Route::delete('/system/ai', [AiSettingsController::class, 'destroy'])
+            ->name('system.ai.destroy')
+            ->can('update', SiteSetting::class)
+            ->middleware('password.confirm');
         Route::post('/system/test-mail', [SitePublicationController::class, 'sendTestMail'])
             ->name('system.test-mail.store')
             ->can('update', SiteSetting::class)

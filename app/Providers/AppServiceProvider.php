@@ -14,6 +14,7 @@ use App\Repositories\Settings\SiteSettingsRepository;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
+use App\Support\Assistant\AiCredentials;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(AiCredentials::class);
+
         $this->app->singleton(LocalizationConfig::class, function () {
             $config = new LocalizationConfig;
             $config->validate();

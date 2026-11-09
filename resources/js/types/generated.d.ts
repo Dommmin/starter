@@ -740,6 +740,12 @@ declare namespace App {
                 };
             }
             namespace System {
+                export type AiSettingsData = {
+                    provider: App.Enums.AiProvider | null;
+                    hasPanelKey: boolean;
+                    environmentConfigured: boolean;
+                    assistantEnabled: boolean;
+                };
                 export type LaunchCheckData = {
                     key: App.Enums.LaunchCheck;
                     done: boolean;
@@ -1255,6 +1261,7 @@ declare namespace App {
             | 'violet'
             | 'rose'
             | 'green';
+        export type AiProvider = 'anthropic' | 'openai' | 'gemini';
         export type AnnouncementTone = 'info' | 'warning';
         export type AssistantFeature =
             | 'seo_meta'
@@ -1306,7 +1313,8 @@ declare namespace App {
             | 'redirect.created'
             | 'redirect.updated'
             | 'redirect.deleted'
-            | 'assistant.suggested';
+            | 'assistant.suggested'
+            | 'ai_settings.updated';
         export type ConsentCategory = 'analytics' | 'marketing';
         export type ContactFieldType =
             | 'text'

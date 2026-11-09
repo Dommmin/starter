@@ -21,6 +21,7 @@ import {
     Surface,
     Text,
 } from '@/design-system/primitives';
+import { AiSettingsPanel } from '@/components/admin/ai-settings-panel';
 import { SiteLaunchPanel } from '@/components/admin/site-launch-panel';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
@@ -55,6 +56,7 @@ type AdminSettingsProps = {
 
 type SystemPageProps = {
     launch: App.Data.Admin.System.SiteLaunchData;
+    ai: App.Data.Admin.System.AiSettingsData;
     system: SystemProps;
     security: SecurityProps;
     modules: ModuleItem[];
@@ -78,7 +80,7 @@ function RiskBadge({ safe, label }: { safe: boolean; label: string }) {
  * platform modules, kept off the dashboard so editors see their work first.
  */
 export default function AdminSystem() {
-    const { launch, system, security, modules, adminSettings } =
+    const { launch, ai, system, security, modules, adminSettings } =
         usePage<SystemPageProps>().props;
     const { t } = useTranslation();
 
@@ -106,6 +108,8 @@ export default function AdminSystem() {
                 </Stack>
 
                 <SiteLaunchPanel launch={launch} />
+
+                <AiSettingsPanel ai={ai} />
 
                 <Surface
                     tone="default"

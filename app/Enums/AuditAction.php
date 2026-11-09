@@ -50,6 +50,7 @@ enum AuditAction: string
     case RedirectUpdated = 'redirect.updated';
     case RedirectDeleted = 'redirect.deleted';
     case AssistantSuggested = 'assistant.suggested';
+    case AiSettingsUpdated = 'ai_settings.updated';
 
     /**
      * @return list<string>

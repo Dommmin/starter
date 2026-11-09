@@ -15,7 +15,9 @@ AI_FEATURES_ENABLED=true
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Potem `make restart`. Klucz API to sekret: nigdy w Git, logach ani zgłoszeniach. Bez klucza albo z `AI_FEATURES_ENABLED=false` panel działa jak wcześniej, przyciski są ukryte, a endpointy zwracają 404.
+Potem `make restart`. Klucz API to sekret: nigdy w Git, logach ani zgłoszeniach.
+
+**Klucz w panelu.** Zamiast w `.env` dostawcę (Anthropic, OpenAI, Gemini) i klucz może ustawić administrator w *Status techniczny → Asystent AI* (zgoda właściciela 2026-11-09). Zapis i usunięcie wymagają ponownego podania hasła. Klucz trafia do tabeli `ai_settings` zaszyfrowany `APP_KEY`, nie wraca do przeglądarki (panel pokazuje tylko, skąd pochodzi klucz), a audyt `ai_settings.updated` zapisuje dostawcę i sam fakt zmiany klucza. Panel ma pierwszeństwo przed `.env`; po usunięciu klucza z panelu znów obowiązuje `AI_PROVIDER` z kluczem z `.env`. `AI_FEATURES_ENABLED` i flagi funkcji zostają w `.env`. Po rotacji `APP_KEY` zachowaj stary klucz w `APP_PREVIOUS_KEYS` albo wpisz klucz API w panelu ponownie. Bez klucza albo z `AI_FEATURES_ENABLED=false` panel działa jak wcześniej, przyciski są ukryte, a endpointy zwracają 404.
 
 | Zmienna | Domyślnie | Funkcja |
 |---|---|---|

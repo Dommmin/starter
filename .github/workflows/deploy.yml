@@ -111,6 +111,10 @@ jobs:
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       DEPLOY_ARTIFACT: .release/starter.tar.gz
       DEPLOY_ALLOW_MIGRATIONS: ${{ inputs.allow_migrations }}
+      # off (default) | check | apply: shared/.env rendered from
+      # deploy/env/production.env.example and this environment's variables
+      # and secrets (doc 10). Set as a GitHub Environment variable.
+      DEPLOY_MANAGED_ENV: ${{ vars.DEPLOY_MANAGED_ENV }}
       # Public host of APP_URL; the post-switch readiness smoke pins it to the
       # local Nginx (curl --resolve). Set as a GitHub Environment variable.
       DEPLOY_SMOKE_HOST: ${{ vars.DEPLOY_SMOKE_HOST }}
@@ -138,6 +142,16 @@ jobs:
           tools: composer:v2
       - name: Install Deployer
         run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      # Secrets reach only this step; the script prints no value.
+      - name: Render managed .env
+        if: vars.DEPLOY_MANAGED_ENV == 'check' || vars.DEPLOY_MANAGED_ENV == 'apply'
+        env:
+          MANAGED_ENV_VARS: ${{ toJSON(vars) }}
+          MANAGED_ENV_SECRETS: ${{ toJSON(secrets) }}
+        run: |
+          umask 077
+          php scripts/deploy/managed-env.php render deploy/env/production.env.example deploy/env/optional.keys > "$RUNNER_TEMP/managed.env"
+          echo "DEPLOY_ENV_FILE=$RUNNER_TEMP/managed.env" >> "$GITHUB_ENV"
       - name: Configure SSH
         run: |
           test -n "$DEPLOY_HOST"

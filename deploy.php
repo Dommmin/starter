@@ -207,6 +207,48 @@ task('deploy:smoke:live', function (): void {
 });
 
 /*
+ * Managed shared/.env (doc 10). DEPLOY_MANAGED_ENV=off keeps the file as it
+ * is on the server; check uploads the file rendered from the GitHub
+ * Environment and reports only the key names that would change; apply
+ * replaces shared/.env (previous copy in shared/.env.previous, mode 0600)
+ * before config:cache. Writing in place keeps the owner, group and mode.
+ * The active release keeps its cached config until the switch.
+ */
+task('deploy:managed_env', function (): void {
+    $mode = optionalEnvironment('DEPLOY_MANAGED_ENV', 'off');
+
+    if ($mode === 'off') {
+        writeln('<comment>shared/.env bez zmian: DEPLOY_MANAGED_ENV=off.</comment>');
+
+        return;
+    }
+
+    if (! in_array($mode, ['check', 'apply'], true)) {
+        throw new \RuntimeException('DEPLOY_MANAGED_ENV musi mieć wartość off, check albo apply.');
+    }
+
+    $renderedFile = deploymentEnvironment('DEPLOY_ENV_FILE');
+
+    if (! is_file($renderedFile)) {
+        throw new \RuntimeException('Brak wygenerowanego pliku .env: '.$renderedFile.'.');
+    }
+
+    upload($renderedFile, '{{deploy_path}}/shared/.env.next');
+    run('chmod 600 {{deploy_path}}/shared/.env.next');
+    writeln(run('php {{release_path}}/scripts/deploy/managed-env.php compare {{deploy_path}}/shared/.env {{deploy_path}}/shared/.env.next'));
+
+    if ($mode === 'check' || test('cmp -s {{deploy_path}}/shared/.env {{deploy_path}}/shared/.env.next')) {
+        run('rm {{deploy_path}}/shared/.env.next');
+        writeln('<comment>shared/.env bez zmian (tryb '.$mode.').</comment>');
+
+        return;
+    }
+
+    run('cd {{deploy_path}}/shared && (umask 077 && cat .env > .env.previous) && cat .env.next > .env && rm .env.next');
+    writeln('<info>shared/.env zastąpiony konfiguracją z GitHub Environment (kopia: shared/.env.previous).</info>');
+});
+
+/*
  * Explicit flow instead of the recipe default: the default runs
  * artisan:migrate unconditionally and artisan:optimize, bypassing the
  * DEPLOY_ALLOW_MIGRATIONS gate above.
@@ -215,6 +257,7 @@ task('deploy', [
     'deploy:check_blocked',
     'deploy:prepare',
     'deploy:vendors',
+    'deploy:managed_env',
     'artisan:storage:link',
     'artisan:config:cache',
     'artisan:route:cache',

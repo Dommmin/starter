@@ -109,15 +109,32 @@ Stan na 2026-09-27. „Gotowe w repo” oznacza kod, konfigurację i testy lokal
 ### Deploy (Deployer) i szablony hosta
 
 - `deploy.php` definiuje jawny przepływ zamiast domyślnego z `recipe/laravel.php`. Poprawka: domyślny przepływ uruchamiał `artisan:migrate` bez względu na `DEPLOY_ALLOW_MIGRATIONS`; teraz migracje wykonuje wyłącznie `deploy:migrate` przy `DEPLOY_ALLOW_MIGRATIONS=true` (polityka bez zmian, tylko egzekwowana).
-- Kolejność: `deploy:check_blocked` → prepare (weryfikacja SHA-256 artefaktu, zapis `RELEASE`) → `storage:link` → `config/route/view/event:cache` → `deploy:migrate` → `deploy:smoke` (manifest Vite, `about`, `ops:readiness` kandydata przed przełączeniem) → `deploy:remember_healthy` (`.dep/healthy_release`) → atomowy symlink → `deploy:restart_workers` (`horizon:terminate`, `schedule:interrupt`, `inertia:stop-ssr`; systemd uruchamia procesy z nowego `current`) → `deploy:smoke:live` → cleanup.
+- Kolejność: `deploy:check_blocked` → prepare (weryfikacja SHA-256 artefaktu, zapis `RELEASE`) → `deploy:managed_env` → `storage:link` → `config/route/view/event:cache` → `deploy:migrate` → `deploy:smoke` (manifest Vite, `about`, `ops:readiness` kandydata przed przełączeniem) → `deploy:remember_healthy` (`.dep/healthy_release`) → atomowy symlink → `deploy:restart_workers` (`horizon:terminate`, `schedule:interrupt`, `inertia:stop-ssr`; systemd uruchamia procesy z nowego `current`) → `deploy:smoke:live` → cleanup.
 - `deploy:smoke:live`: `/health/ready` 3 próby × 5 s timeoutu co 5 s (przez `curl --resolve DEPLOY_SMOKE_HOST:443:127.0.0.1`, więc TrustHosts i TLS działają jak dla ruchu). Porażka → alert, jednokrotny powrót symlinka do zapamiętanego zdrowego release'u, oznaczenie `BAD_RELEASE`, restart workerów, ponowna readiness, alert z wynikiem i nieudany deploy. Jeśli poprzednia wersja też nie przechodzi — `.dep/deploy_blocked` blokuje kolejne deploye do decyzji operatora. Pierwszy deploy nie ma celu rollbacku. Schemat nigdy nie jest cofany.
 - Szablony w `deploy/`: `nginx/starter.conf` + `nginx/security-headers.conf` (HTTP→HTTPS, ACME, TLS 1.2/1.3, HSTS bez `includeSubDomains`, nosniff/frame/referrer/permissions policy, `client_max_body_size 52m`, immutable cache `/build/assets` i `/storage/media`, gzip, brotli zakomentowany, większe bufory FastCGI, `$realpath_root`, blokada plików ukrytych, JSON access log; `nginx -t` przechodzi w `nginx:1.28-alpine` z testowym certyfikatem), `php-fpm/starter.conf`, `systemd/starter-{horizon,ssr,scheduler,backup}.service`, timery schedulera (co minutę) i backupu, `starter-alert@.service`, `logrotate/starter`.
+
+### Konfiguracja produkcji w GitHub Environment
+
+Decyzja właściciela 2026-11-10: `shared/.env` powstaje przy deployu z GitHub Environment (`staging`/`production`), a nie z ręcznych zmian na serwerze. Tryb wybiera zmienna Environment `DEPLOY_MANAGED_ENV`:
+
+- `off` (domyślnie, także gdy zmiennej brak): `shared/.env` zostaje bez zmian, jak dotąd.
+- `check`: workflow składa plik, Deployer wysyła go jako `shared/.env.next` i wypisuje wyłącznie nazwy kluczy dodanych, usuniętych i zmienionych względem obecnego `shared/.env`, po czym usuwa kopię. Służy do migracji: ustaw wartości w GitHubie, aż raport pokaże tylko zamierzone zmiany.
+- `apply`: jak `check`, a następnie zastępuje `shared/.env` przed `config:cache` (zapis w miejscu zachowuje właściciela, grupę i tryb 0640; poprzednia wersja w `shared/.env.previous`, tryb 0600). Aktywny release działa na swoim cache konfiguracji do przełączenia, a automatyczny rollback wraca do release'u z jego cache.
+
+Źródła (`scripts/deploy/managed-env.php render`):
+
+- Baza: `deploy/env/production.env.example` (ten sam szablon co `provision.sh`). Wartość z placeholderem `__NAZWA__` jest wymagana z GitHuba; pozostałe są domyślne i można je nadpisać zmienną lub sekretem o tej samej nazwie.
+- Dodatkowe klucze tylko z listy `deploy/env/optional.keys`; inne zmienne i sekrety Environment (np. `DEPLOY_*`) są pomijane. Nowy klucz na liście przechodzi przez PR.
+- Nazwy kończące się na `_KEY`, `_PASSWORD`, `_SECRET`, `_TOKEN` muszą być **secrets**; ten sam klucz jako zmienna i sekret blokuje deploy. Wartość z apostrofem lub znakiem nowej linii jest odrzucana; plik jest sprawdzany przez parser `phpdotenv` (round trip), zanim opuści runner.
+- Sekrety trafiają wyłącznie do kroku renderowania; skrypt nie wypisuje wartości, a raport na serwerze zawiera tylko nazwy kluczy.
+
+Migracja istniejącego serwera (operator): przenieś `APP_KEY` dokładnie w obecnej wartości (szyfruje sesje i klucz AI z panelu), `DB_PASSWORD` (ta sama wartość zostaje w `/etc/starter/backup.env`), `HEALTH_TOKEN` i pozostałe sekrety do secrets; `APP_NAME`, `APP_URL`, `MAIL_EHLO_DOMAIN`, `MAIL_FROM_ADDRESS`, `OPS_ALERT_EMAIL` i każdą wartość różną od szablonu do variables. Deploy z `check`, poprawki do pustego raportu (poza zamierzonymi zmianami), potem `apply`. Zmiana konfiguracji wymaga deployu i zatwierdzenia Environment. Klucz dostawcy AI można zamiast tego ustawić w panelu (System → AI).
 
 ### Wymaga operatora (poza repo)
 
 - Hosting/VM w UE, DNS, certyfikat TLS i jego odnowienie (certbot lub dostawca), decyzja o HSTS `includeSubDomains`/preload, CSP (wymaga nonce dla Inertia/SSR — osobna decyzja).
 - Instalacja i dopasowanie szablonów (ścieżki, użytkownicy, rozmiar puli FPM, `HORIZON_MAX_PROCESSES`), `systemctl enable --now` dla unitów i timerów; `systemd-analyze verify` na docelowym hoście (nie wykonano lokalnie).
-- `shared/.env` produkcji: `LOG_CHANNEL`/`LOG_STACK`, `OPS_ALERT_EMAIL`, `HEALTH_TOKEN`, `BACKUP_STATUS_FILE`, `HEALTH_CHECK_SCANNER`; zmienna GitHub Environment `DEPLOY_SMOKE_HOST`.
+- `shared/.env` produkcji (ręcznie albo przez GitHub Environment, sekcja wyżej): `LOG_CHANNEL`/`LOG_STACK`, `OPS_ALERT_EMAIL`, `HEALTH_TOKEN`, `BACKUP_STATUS_FILE`, `HEALTH_CHECK_SCANNER`; zmienna GitHub Environment `DEPLOY_SMOKE_HOST`.
 - ClamAV na hoście: `clamd` + `freshclam` (aktualizacja sygnatur), limity 52 MB jak w Compose, monitoring świeżości sygnatur.
 - Backup poza hostem: szyfrowany storage w UE z osobnymi poświadczeniami (np. rclone/restic/replikacja obiektowa katalogu `BACKUP_DIR`), klucz prywatny `age` przechowywany poza VM, retencja 30 dni, miesięczny restore drill na kopii poza hostem, pomiar RTO/RPO na danych docelowego rozmiaru.
 - Kanał alertów (Q7): zewnętrzny uptime `/health/ready` i `/up`, monitor journal/`logger` z deduplikacją, dead-man heartbeat monitora, test dostarczenia alertu; skrypt `/etc/starter/alert-hook` po wyborze kanału.

@@ -159,6 +159,30 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertNotIn("migrate:rollback", deployer)
         self.assertNotIn("invoke('rollback')", deployer)
 
+    def test_managed_env_is_opt_in_rendered_before_config_cache_and_keeps_secrets_out_of_logs(self):
+        deployer = (ROOT / "deploy.php").read_text()
+        steps = re.findall(r"'([a-z:_]+)'", re.search(r"task\('deploy', \[(.*?)\]\);", deployer, re.S).group(1))
+        self.assertLess(steps.index("deploy:managed_env"), steps.index("artisan:config:cache"))
+        # Deployer's own deploy:env (inside deploy:prepare) must not be overridden.
+        self.assertNotIn("task('deploy:env'", deployer)
+        env_task = deployer.split("task('deploy:managed_env', function", 1)[1].split("\n});", 1)[0]
+        self.assertIn("optionalEnvironment('DEPLOY_MANAGED_ENV', 'off')", env_task)
+        self.assertIn("$mode === 'check'", env_task)
+        self.assertIn(".env.previous", env_task)
+        self.assertIn("cat .env.next > .env", env_task)
+
+        deploy = (ROOT / ".github/workflows/deploy.yml").read_text()
+        render = deploy.split("- name: Render managed .env", 1)[1].split("- name:", 1)[0]
+        self.assertIn("vars.DEPLOY_MANAGED_ENV == 'check' || vars.DEPLOY_MANAGED_ENV == 'apply'", render)
+        self.assertIn("MANAGED_ENV_SECRETS: ${{ toJSON(secrets) }}", render)
+        self.assertIn("umask 077", render)
+        # Secrets are exposed to the render step only, never job-wide.
+        self.assertEqual(deploy.count("toJSON(secrets)"), 1)
+
+        script = (ROOT / "scripts/deploy/managed-env.php").read_text()
+        self.assertIn("(_KEY|_PASSWORD|_SECRET|_TOKEN)", script)
+        self.assertIn("Dotenv::parse", script)
+
     def test_production_templates_keep_limits_headers_and_timeout_chain(self):
         nginx = (ROOT / "deploy/nginx/starter.conf").read_text()
         headers = (ROOT / "deploy/nginx/security-headers.conf").read_text()

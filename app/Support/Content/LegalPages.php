@@ -17,4 +17,14 @@ final class LegalPages
         'cookies' => ['pl' => 'polityka-cookies', 'en' => 'cookie-policy', 'de' => 'cookie-richtlinie'],
         'terms' => ['pl' => 'regulamin', 'en' => 'terms-of-service', 'de' => 'agb'],
     ];
+
+    /**
+     * Slugs of the accessibility statement per locale. Seeded with the
+     * legal pages but not required by the launch checklist: whether a site
+     * falls under the European Accessibility Act (or the public sector
+     * rules) is the client's decision (docs 05).
+     *
+     * @var array<string, string>
+     */
+    public const array ACCESSIBILITY_SLUGS = ['pl' => 'deklaracja-dostepnosci', 'en' => 'accessibility-statement', 'de' => 'barrierefreiheit'];
 }

@@ -22,6 +22,13 @@ Glob: `tests/**`
 - Test odmowy (403/404) sprawdza również brak zmiany w DB/queue/mail.
 - Testy kontraktu Inertia props: jawne pola, enum/null/data, paginacja.
 
+## Bramki w tests/Feature/Architecture
+
+- `RoutesAuthTest`: każda trasa wymaga uwierzytelnienia poza listą publicznych z powodem. Nowa trasa publiczna to decyzja: wpis w `$routesAuthPublic` (albo `$routesAuthPublicOptional`, gdy zależy od konfiguracji) w tym samym PR. Dzięki temu testy funkcji nie powtarzają 401 na każdej trasie.
+- `EnvUsageTest`: `env()` tylko w `config/`; w `app/` zawsze `config()`.
+- `TestDatabaseGuardTest` i `tests/TestDatabaseGuard.php`: testy odmawiają bazy innej niż sqlite `:memory:` albo `testing`/`*_test`/`*_testing` na hoście lokalnym lub usłudze `mysql`/`postgres`. Nie omijaj strażnika i nie dodawaj własnego `refreshApplication()` w `TestCase`; inną bazę ustawiaj zmiennymi środowiskowymi.
+- Źródło: klocek `testing/laravel-pest` z ai-playbook-templates 3.62.2. Wyjątek w bramce zawsze z powodem; wpis bez naruszenia jest błędem.
+
 ## Czego nie testować nadmiernie
 
 - Nie pisz testu samego gettera, skopiowanego vendora ani deklaracji implementacji.

@@ -41,7 +41,7 @@ Glob: `.agents/**`, `.claude/**`, `.codex/**`, `AGENTS.md`, `CLAUDE.md`, `tests/
 
 ## Skille projektowe
 
-- `foundation-fast` i `foundation-ui` w `.agents/skills/` (Codex) i `.claude/skills/` (Claude). Wspólne procedury w `.agents/skills/foundation-*/references/workflow.md`.
+- `foundation-fast`, `foundation-ui`, `foundation-debug`, `foundation-verify` i `foundation-review-response` w `.agents/skills/` (Codex) i `.claude/skills/` (Claude); wszystkie ręczne (`disable-model-invocation`, `allow_implicit_invocation: false`). Wspólne procedury w `.agents/skills/foundation-*/references/workflow.md`.
 - FAST jest domyślnym routingiem — nie wymaga wywołania skillu.
 - Nie ładuj wszystkich skilli/dokumentów przy każdym tasku. Czytaj tylko to, co potrzebne.
 

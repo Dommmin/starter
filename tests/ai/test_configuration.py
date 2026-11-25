@@ -296,7 +296,8 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('if [[ ! -f $SHARED_ENV ]]', script)
 
     def test_manual_skills_resolve_shared_workflows(self):
-        for name in ("foundation-fast", "foundation-ui"):
+        for name in ("foundation-fast", "foundation-ui", "foundation-debug", "foundation-verify",
+                     "foundation-review-response"):
             with self.subTest(skill=name):
                 codex = ROOT / ".agents/skills" / name
                 claude = ROOT / ".claude/skills" / name

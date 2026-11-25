@@ -42,6 +42,7 @@ REASONS = {
     "volumes": "usuwa wolumeny Dockera razem z danymi bazy. Zatrzymaj kontenery bez -v (docker compose down) albo poproś człowieka.",
     "protected": "ścieżka z .ai/protected-paths (klucz odpowiedzi: zbiór eval albo holdout). Agent jej nie czyta; wynik oceny poda człowiek albo skrypt ewaluacji.",
     "make": "make fresh usuwa lokalną bazę (migrate:fresh). Reset bazy tylko przez człowieka.",
+    "make_args": "make artisan bez ARGS= w tej samej komendzie (wartość mogła przyjść ze środowiska). Podaj ARGS=... jawnie.",
     "limit": "komenda zbyt zagnieżdżona, żeby ją sprawdzić. Uprość ją albo rozbij na kroki.",
     "input": "nieczytelne wejście hooka (oczekiwany JSON z tool_input.command). Komenda nie została sprawdzona, więc jest zablokowana.",
 }
@@ -743,9 +744,14 @@ def check_make(args: list[str], ctx: dict) -> str | None:
     if "fresh" in targets:
         return REASONS["make"]
     if "artisan" in targets:
-        for a in args:
-            if a.startswith("ARGS="):
-                return check(f"php artisan {a[len('ARGS='):]}", {**ctx, "contained": True})
+        values = [a[len("ARGS="):] for a in args if a.startswith("ARGS=")]
+        if not values:
+            # ARGS mogło przyjść ze środowiska (export w poprzednim kroku): wartość nieznana.
+            return REASONS["make_args"]
+        for value in values:
+            reason = check(f"php artisan {value}", {**ctx, "contained": True})
+            if reason:
+                return reason
     return None
 
 

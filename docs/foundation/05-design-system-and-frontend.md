@@ -165,6 +165,20 @@ Cel jakości: WCAG 2.2 AA. To cel weryfikacji, nie deklaracja zgodności prawnej
 
 Automat axe na publicznej stronie, loginie i formularzu panelu; ręcznie tab order, dialog, błędy, czytnik ekranu w jednym krytycznym procesie. Nie uznawać wyniku Lighthouse za pełny audyt dostępności.
 
+### Wymagania prawne UE i preferencje użytkownika — ustalenia 2026-11-25
+
+Europejski Akt o Dostępności (dyrektywa 2019/882, w PL ustawa z 26.04.2024, stosowana od 28.06.2025) obejmuje m.in. e-commerce, bankowość, transport i e-booki; usługodawca-mikroprzedsiębiorca (<10 osób i ≤2 mln EUR) jest zwolniony. Sektor publiczny podlega ustawie o dostępności cyfrowej z 2019 r. i musi publikować deklarację dostępności. Normą odniesienia jest EN 301 549 (WCAG 2.1 AA), więc nasz cel 2.2 AA ją pokrywa. Kwalifikację konkretnego klienta rozstrzyga człowiek w runbooku nowego klienta, nie agent.
+
+Prawo nie wymaga widgetu ani przycisku „kontrast / większa czcionka”. Wymaga, aby strona działała z ustawieniami przeglądarki i systemu. Nie instalujemy nakładek typu overlay (skrypty firm trzecich). Nie zapewniają zgodności, kolidują z czytnikami ekranu i dokładają JS. Kontrakt fundamentu:
+
+- **Rozmiar tekstu:** zoom 200%/400% oraz zmiana domyślnej czcionki przeglądarki. Publiczne typografie w `rem`. Skala panelu w `px` (`--admin-text-base`) do przeglądu. Breakpointy Tailwind nie przesuwają się przy powiększeniu tekstu (w przeciwieństwie do zoomu), więc ekrany sprawdzać także z „Bardzo dużym” tekstem.
+- **Kontrast:** tokeny spełniają AA w light i dark. `forced-colors: active` (tryb wysokiego kontrastu Windows) zachowuje focus, obramowania pól i ikony stanu. `prefers-contrast: more` wzmacnia obramowania i `--text-subtle` na poziomie tokenów.
+- **Ruch:** `prefers-reduced-motion` lub preferencja użytkownika skraca globalnie animacje i przejścia w `app.css`. Animacje sterowane z JS sprawdzają `prefersReducedMotion()` z `resources/js/lib/reduced-motion.ts`.
+- **Motyw:** istniejący `ThemeSwitcher` (jasny/ciemny/systemowy).
+- **Informacja o dostępności:** strona „Dostępność” w stopce z szablonem deklaracji: stan zgodności, znane ograniczenia, data przeglądu, kontakt i procedura zgłoszeń. Treść i dane kontaktowe uzupełnia klient. Szablon nie jest deklaracją zgodności prawnej.
+- **Panel preferencji** (zaakceptowany przez właściciela 2026-11-25): `AccessibilitySwitcher` w `HeaderUtility` i menu mobilnym otwiera leniwie ładowany dialog. Opcje: rozmiar tekstu (standardowy/duży/bardzo duży), podwyższony kontrast, ograniczenie animacji, podkreślenie linków. Działają od razu i zapisują się w `localStorage` (`a11y-preferences`). Na `<html>` trafiają atrybuty `data-text-size`, `data-contrast`, `data-motion`, `data-links`. Skrypt inline w `app.blade.php` ustawia je przed pierwszym renderem. Bez cookies i bez danych na serwerze, więc zgoda nie jest potrzebna. Panel obejmuje powierzchnię publiczną; panel admina zachowuje swoją skalę `px`.
+- **Szablon deklaracji:** `LegalPageSeeder` tworzy szkic strony PL/EN/DE (`LegalPages::ACCESSIBILITY_SLUGS`). Checklista uruchomienia go nie wymaga, bo o objęciu EAA decyduje klient.
+
 ## Proces Figmy i ponownego użycia
 
 1. Ustalić właściwy plik, wersję, ekrany, warianty, fonty i prawa do assetów; brak projektu oznacza pytania, nie wymyślanie brandu.

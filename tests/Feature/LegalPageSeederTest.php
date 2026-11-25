@@ -8,7 +8,7 @@ use Database\Seeders\LegalPageSeeder;
 test('legal page templates are seeded as drafts in every language outside the local demo', function () {
     $this->seed(LegalPageSeeder::class);
 
-    expect(Page::query()->count())->toBe(3);
+    expect(Page::query()->count())->toBe(4);
 
     foreach (LegalPageSeeder::SLUGS as $slugs) {
         foreach ($slugs as $locale => $slug) {
@@ -27,7 +27,7 @@ test('seeding legal pages again adds nothing and keeps an existing page', functi
 
     $this->seed(LegalPageSeeder::class);
 
-    expect(Page::query()->count())->toBe(3)
+    expect(Page::query()->count())->toBe(4)
         ->and(PageTranslation::query()->where('slug', 'regulamin')->value('title'))->toBe('Nasz regulamin');
 });
 

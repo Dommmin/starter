@@ -9,8 +9,9 @@ use App\Support\Content\LegalPages;
 use Illuminate\Database\Seeder;
 
 /**
- * Legal pages every client site needs: privacy policy, cookie policy and
- * terms of service in Polish, English and German. They are templates, not
+ * Legal pages every client site needs: privacy policy, cookie policy,
+ * terms of service and the accessibility statement in Polish, English and
+ * German. They are templates, not
  * legal advice: every `[[PLACEHOLDER]]` must be replaced and the text
  * reviewed before launch. Drafts outside the local environment (the System
  * page launch checklist asks to publish them); published in the local demo.
@@ -26,7 +27,7 @@ class LegalPageSeeder extends Seeder
      *
      * @var array<string, array<string, string>>
      */
-    public const array SLUGS = LegalPages::SLUGS;
+    public const array SLUGS = LegalPages::SLUGS + ['accessibility' => LegalPages::ACCESSIBILITY_SLUGS];
 
     /**
      * Title, meta description and sections (`heading => paragraphs`) per
@@ -102,6 +103,32 @@ class LegalPageSeeder extends Seeder
                 'Haftung' => ['Die Inhalte dieser Website dienen der Information und sind kein verbindliches Angebot, sofern nicht anders angegeben.'],
                 'Beschwerden und Kontakt' => ['Hinweise zur Website senden Sie bitte an [[E-MAIL]].'],
                 'Änderungen' => ['Diese Bedingungen gelten ab [[DATUM]]. Änderungen kündigen wir auf dieser Seite an.'],
+            ]],
+        ],
+        'accessibility' => [
+            'pl' => ['Deklaracja dostępności', 'Jak strona [[NAZWA FIRMY]] spełnia wymagania dostępności i jak zgłosić problem.', [
+                'Zgodność' => ['[[NAZWA FIRMY]] dba o to, aby strona była dostępna dla wszystkich, zgodnie z normą EN 301 549 i wytycznymi WCAG 2.1 na poziomie AA. Status: [[zgodna / częściowo zgodna]].'],
+                'Jak korzystać ze strony' => ['Strona działa z klawiatury, z czytnikami ekranu oraz z ustawieniami przeglądarki i systemu: powiększeniem, trybem wysokiego kontrastu i ograniczeniem animacji. Przycisk „Ustawienia dostępności” w nagłówku pozwala powiększyć tekst, podwyższyć kontrast, ograniczyć animacje i podkreślić linki.'],
+                'Znane ograniczenia' => ['[[Lista treści niedostępnych i termin ich poprawy albo „Nie znamy ograniczeń”.]]'],
+                'Przygotowanie deklaracji' => ['Deklarację sporządzono [[DATA]] na podstawie [[samooceny / audytu firmy zewnętrznej]]. Ostatni przegląd: [[DATA]].'],
+                'Informacje zwrotne i kontakt' => ['Problemy z dostępnością i prośby o udostępnienie treści w innej formie zgłaszaj na adres [[E-MAIL]] lub telefonicznie: [[TELEFON]]. Odpowiadamy w ciągu [[CZAS, np. 7 dni]].'],
+                'Skarga' => ['Jeśli odpowiedź Cię nie satysfakcjonuje, możesz złożyć skargę do organu nadzoru: [[ORGAN, np. Prezes Zarządu PFRON dla usług objętych ustawą z 26 kwietnia 2024 r.]].'],
+            ]],
+            'en' => ['Accessibility statement', 'How the [[COMPANY NAME]] website meets accessibility requirements and how to report a problem.', [
+                'Compliance' => ['[[COMPANY NAME]] wants this website to be accessible to everyone, in line with standard EN 301 549 and WCAG 2.1 level AA. Status: [[fully / partially compliant]].'],
+                'Using the website' => ['The website works with a keyboard, screen readers and your browser and system settings: zoom, high contrast mode and reduced motion. The “Accessibility settings” button in the header enlarges text, raises contrast, reduces motion and underlines links.'],
+                'Known limitations' => ['[[List of inaccessible content and when it will be fixed, or “We are not aware of any limitations.”]]'],
+                'Preparation of this statement' => ['This statement was prepared on [[DATE]] based on [[a self-assessment / an external audit]]. Last reviewed: [[DATE]].'],
+                'Feedback and contact' => ['Report accessibility problems or request content in another format at [[E-MAIL]] or by phone: [[PHONE]]. We reply within [[TIME, e.g. 7 days]].'],
+                'Complaints' => ['If you are not satisfied with our reply, you may complain to the supervisory authority: [[AUTHORITY]].'],
+            ]],
+            'de' => ['Erklärung zur Barrierefreiheit', 'Wie die Website von [[FIRMENNAME]] die Anforderungen an Barrierefreiheit erfüllt und wie Sie ein Problem melden.', [
+                'Vereinbarkeit' => ['[[FIRMENNAME]] möchte diese Website für alle zugänglich machen, gemäß der Norm EN 301 549 und den WCAG 2.1 auf Stufe AA. Status: [[vollständig / teilweise vereinbar]].'],
+                'Nutzung der Website' => ['Die Website ist mit Tastatur, Screenreadern und den Einstellungen von Browser und System nutzbar: Zoom, Modus mit hohem Kontrast und reduzierte Bewegung. Die Schaltfläche „Einstellungen zur Barrierefreiheit“ im Kopfbereich vergrößert den Text, erhöht den Kontrast, reduziert Bewegung und unterstreicht Links.'],
+                'Bekannte Einschränkungen' => ['[[Liste nicht barrierefreier Inhalte und Termin der Behebung oder „Uns sind keine Einschränkungen bekannt.“]]'],
+                'Erstellung der Erklärung' => ['Diese Erklärung wurde am [[DATUM]] auf Grundlage [[einer Selbstbewertung / eines externen Audits]] erstellt. Letzte Überprüfung: [[DATUM]].'],
+                'Feedback und Kontakt' => ['Melden Sie Barrieren oder fordern Sie Inhalte in anderer Form an: [[E-MAIL]] oder telefonisch [[TELEFON]]. Wir antworten innerhalb von [[ZEIT, z. B. 7 Tagen]].'],
+                'Beschwerde' => ['Sind Sie mit unserer Antwort nicht zufrieden, können Sie sich an die Aufsichtsbehörde wenden: [[BEHÖRDE, z. B. Marktüberwachungsstelle der Länder für die Barrierefreiheit von Produkten und Dienstleistungen (MLBF)]].'],
             ]],
         ],
     ];

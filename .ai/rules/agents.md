@@ -51,6 +51,13 @@ Glob: `.agents/**`, `.claude/**`, `.codex/**`, `AGENTS.md`, `CLAUDE.md`, `tests/
 - Nie rozszerzaj zadania bez potrzeby. Zakończ po spełnieniu AC i wymaganych kontrolach.
 - Wrażliwa zmiana w trakcie FAST → przejdź do bramki ryzyka i uzyskaj zgodę.
 
+## Hook guard-bash i reguły odmowy (Claude Code)
+
+- `.claude/settings.json`: `permissions.deny` (odczyt `.env*` poza `.env.example`, kluczy, force push, `git reset --hard`, reset bazy, `make fresh`, `docker compose run`, `down -v`) i hook PreToolUse `.claude/hooks/guard-bash.py` z `onFailure: block`.
+- Hook to kopia wariantu python z ai-playbook-templates 3.62.2 z dodatkami startera: `--exec` blokuje PHP, composer, artisan, pint, phpstan i pest na hoście (dozwolone przez `make …` i `docker compose exec`), zdejmuje prefiks `rtk`, sprawdza `make fresh` i `make artisan ARGS=…`. Wymaga `python3` na hoście.
+- Blokada hooka lub deny to sygnał, nie przeszkoda: użyj podanej alternatywy albo poproś człowieka; nie obchodź jej innym zapisem komendy. Oba mechanizmy dopasowują tekst komendy, więc nie są granicą bezpieczeństwa.
+- Zmiany hooka i deny: `python3 -m unittest tests.ai.test_guard_bash` (lista przypadków upstream + startera). Przy aktualizacji z playbooka przenieś dodatki startera i podbij wersję w docstringu.
+
 ## Zmiana reguł i konfiguracji agentów
 
 - Zmiana plików agentów, hooków, CI, zabezpieczeń i reguł wymaga autoryzowanego zakresu i niezależnego review człowieka.

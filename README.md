@@ -1,6 +1,6 @@
 # Starter — lokalny development
 
-Całe środowisko uruchamia **Makefile + Docker Compose**. Na hoście potrzebujesz Git, Make oraz uruchomionego Docker Engine z Compose v2.20+ (lub Docker Desktop). macOS: Docker Desktop; Linux: Engine i plugin Compose; Windows: checkout i komendy w WSL2. PHP, Composer, Node, baza danych (MySQL 8.4 domyślnie albo PostgreSQL 18, wybór przez `DB_CONNECTION=mysql|pgsql` w `.env`) i Redis są w kontenerach.
+Całe środowisko uruchamia **Makefile + Docker Compose**. Na hoście potrzebujesz Git, Make oraz uruchomionego Docker Engine z Compose v2.20+ (lub Docker Desktop). macOS: Docker Desktop; Linux: Engine i plugin Compose; Windows: checkout i komendy w WSL2. PHP, Composer, Node, baza danych (MySQL 8.4 domyślnie albo PostgreSQL 18, wybór przez `DB_CONNECTION=mysql|pgsql` w `.env`) i Redis są w kontenerach. Praca z Claude Code wymaga dodatkowo `python3` na hoście: hook `.claude/hooks/guard-bash.py` blokuje komendy destrukcyjne i narzędzia PHP poza kontenerem, a bez interpretera blokuje każdą komendę shell.
 
 Instrukcja panelu administracyjnego dla administratora i redaktora (role, moduły krok po kroku, czego nie da się zrobić w panelu): [docs/panel](docs/panel/README.md).
 

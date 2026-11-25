@@ -79,6 +79,32 @@ return [
         'moveDown' => ':label nach unten verschieben',
         'moved' => ':label auf Position :position von :total verschoben',
     ],
+    'accessibility' => [
+        'open' => 'Einstellungen zur Barrierefreiheit',
+        'title' => 'Einstellungen zur Barrierefreiheit',
+        'description' => 'Passen Sie die Darstellung der Website an. Änderungen gelten sofort und werden in diesem Browser gespeichert.',
+        'close' => 'Schließen',
+        'reset' => 'Standard wiederherstellen',
+        'done' => 'Fertig',
+        'textSize' => [
+            'label' => 'Textgröße',
+            'default' => 'Standard',
+            'large' => 'Groß',
+            'larger' => 'Sehr groß',
+        ],
+        'contrast' => [
+            'label' => 'Erhöhter Kontrast',
+            'description' => 'Dunklerer Hilfstext und deutlichere Rahmen.',
+        ],
+        'motion' => [
+            'label' => 'Bewegung reduzieren',
+            'description' => 'Schaltet Animationen und weiches Scrollen aus.',
+        ],
+        'links' => [
+            'label' => 'Links unterstreichen',
+            'description' => 'Links im Text sind immer unterstrichen.',
+        ],
+    ],
     'theme' => [
         'label' => 'Design',
         'light' => 'Hell',

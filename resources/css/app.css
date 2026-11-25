@@ -418,6 +418,91 @@
     }
 }
 
+/*
+ * Accessibility preferences (use-accessibility-preferences.tsx, docs 05
+ * "Wymagania prawne UE i preferencje użytkownika"). Attributes on <html>
+ * are set only for a non-default choice; the operating system settings
+ * apply through the media queries.
+ *
+ * Text size: public typography and spacing are in rem, so the root scales
+ * them; the admin surface keeps its own px density.
+ */
+html[data-text-size='large']:not([data-surface='admin']) {
+    font-size: 112.5%;
+}
+
+html[data-text-size='larger']:not([data-surface='admin']) {
+    font-size: 125%;
+}
+
+/* More contrast: secondary text and borders move towards the foreground of
+   the active theme and surface, so one rule serves light, dark and admin.
+   `:root:root` outranks `.dark[data-surface='admin']`. */
+:root:root[data-contrast='more'] {
+    --muted-foreground: color-mix(
+        in oklch,
+        var(--foreground) 85%,
+        var(--background)
+    );
+    --text-subtle: var(--muted-foreground);
+    --border: color-mix(in oklch, var(--foreground) 60%, var(--background));
+    --border-subtle: var(--border);
+    --input: var(--border);
+    --sidebar-border: var(--border);
+}
+
+@media (prefers-contrast: more) {
+    :root:root {
+        --muted-foreground: color-mix(
+            in oklch,
+            var(--foreground) 85%,
+            var(--background)
+        );
+        --text-subtle: var(--muted-foreground);
+        --border: color-mix(in oklch, var(--foreground) 60%, var(--background));
+        --border-subtle: var(--border);
+        --input: var(--border);
+        --sidebar-border: var(--border);
+    }
+}
+
+/* Reduced motion: near-zero durations (not `none`) so animationend still
+   fires and Radix closes its dialogs. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+html[data-motion='reduce'] *,
+html[data-motion='reduce'] *::before,
+html[data-motion='reduce'] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+/* Underlined links, except links styled as buttons. */
+html[data-links='underline'] a:not([data-slot='button']) {
+    text-decoration-line: underline;
+    text-underline-offset: 0.2em;
+}
+
+/* Windows high contrast: box-shadow focus rings are dropped there, so focus
+   gets a system-colour outline. */
+@media (forced-colors: active) {
+    :focus-visible {
+        outline: 2px solid CanvasText !important;
+        outline-offset: 2px;
+    }
+}
+
 @layer base {
     * {
         @apply border-border;

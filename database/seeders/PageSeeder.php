@@ -41,10 +41,6 @@ class PageSeeder extends Seeder
             'en' => ['Careers', 'Join our team.', 'scheduled', 5],
             'pl' => ['Kariera', 'Dołącz do zespołu.', 'scheduled', 5],
         ]],
-        'accessibility' => ['translations' => [
-            'en' => ['Accessibility statement', null, 'draft', 0],
-            'pl' => ['Deklaracja dostępności', 'Informacje o dostępności serwisu.', 'published', -5],
-        ]],
         'short' => ['translations' => [
             'en' => ['Opening hours', null, 'published', -1],
             'pl' => ['Godziny otwarcia', null, 'published', -1],

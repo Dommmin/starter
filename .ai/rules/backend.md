@@ -44,3 +44,7 @@ Glob: `app/**`, `routes/**`, `database/**`, `config/**`
 - Używaj `php artisan make:*` z `--no-interaction` do tworzenia nowych plików.
 - Przy nowym modelu utwórz factory i seeder.
 - Komendy uruchamiaj przez Docker: `docker compose exec app php artisan ...` lub `make artisan ARGS='...'`.
+
+## Pułapki
+
+- Kod z SQL zależnym od silnika (`lockForUpdate()` z agregatem, JSON, `GROUP BY`, kolacje) przechodzi `make test` na SQLite, a pada na PostgreSQL lub MySQL (FOR UPDATE z `max()` odrzuca Postgres). Taką zmianę sprawdź `make test-pgsql` i `make test-mysql` przed PR; joby CI na obu silnikach to ostatnia siatka, nie pierwsza.

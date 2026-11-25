@@ -13,7 +13,11 @@ Glob: `tests/**`
 ## Co testować
 
 - Każda zmiana auth, policies, walidacji, migracji, logiki i integracji wymaga testu adekwatnego do ryzyka.
-- Bugfix: najpierw reprodukcja (test red), potem poprawka (test green).
+- Bugfix: najpierw reprodukcja (test red), potem poprawka (test green); raport pokazuje oba wyniki.
+- Test chroni decyzję w kodzie projektu i pada, gdy jest zła. Nie piszesz testu, który przejdzie przy każdej poprawnej konfiguracji frameworka (pojedyncza reguła walidacji, relacja ORM, routing, renderowanie bez warunku).
+- Jeden test na zachowanie z AC i na gałąź własnej logiki; przypadek brzegowy tylko, gdy kod ma dla niego gałąź albo kontrakt wejścia dopuszcza tę wartość.
+- Mockujesz tylko granice systemu (`Http::fake`, `Queue::fake`, `Mail::fake`, czas); własnej logiki nie mockujesz. Bez `sleep`, prawdziwej sieci i zależności od kolejności testów.
+- Asercji w istniejących testach nie zmieniasz bez powodu w PR; wymaganie sprzeczne z testem: zatrzymaj się i zgłoś.
 - Feature/integration dla przepływów i autoryzacji; unit dla reguł biznesowych.
 - Test odmowy (403/404) sprawdza również brak zmiany w DB/queue/mail.
 - Testy kontraktu Inertia props: jawne pola, enum/null/data, paginacja.

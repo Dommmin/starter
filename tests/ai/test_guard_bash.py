@@ -269,6 +269,8 @@ STARTER_CASES = [
     ("make fresh CONFIRM=1", True),
     ("make artisan ARGS='migrate:fresh --seed'", True),
     ("make artisan ARGS='db:wipe'", True),
+    ("ARGS='migrate:fresh --seed' make artisan", True),
+    ("ARGS='migrate:status' make artisan", False),
     ("rtk git status", False),
     ("rtk git reset --hard", True),
     ("rtk proxy git push --force origin feat/x", True),
@@ -323,6 +325,11 @@ class GuardBashTest(unittest.TestCase):
         payload = {"tool_name": "Bash", "cwd": str(self.project), "tool_input": {"command": "php artisan test"}}
         result = run(payload, self.project, settings_exec_hint())
         self.assertIn("make artisan|composer|npm", result.stderr)
+
+    def test_too_deep_nesting_blocks(self):
+        deep = "sudo " * 30 + "ls"
+        nested = "bash -c " * 25 + "ls"
+        self.assert_cases([(deep, True), (nested, True), ("sudo sudo ls", False)], None)
 
     def test_unreadable_input_blocks(self):
         for payload in ("", "not json", "[]"):

@@ -11,7 +11,8 @@ ten sam zestaw przypadków testowych. Tylko biblioteka standardowa.
 Starter: kopia wariantu python z ai-playbook-templates 3.62.2 z dodatkami (testy: tests/ai/test_guard_bash.py):
 --exec=<podpowiedź> blokuje PHP i narzędzia PHP poza kontenerem (jak guard-bash.mjs), prefiks rtk
 (globalny hook RTK przepisuje komendy) jest zdejmowany, a targety Makefile `fresh` i `artisan ARGS=...`
-podlegają tym samym regułom co artisan.
+podlegają tym samym regułom co artisan (także ARGS=... przed make). Przekroczony limit zagnieżdżenia
+albo nieoczekiwany wyjątek blokuje komendę.
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ REASONS = {
     "volumes": "usuwa wolumeny Dockera razem z danymi bazy. Zatrzymaj kontenery bez -v (docker compose down) albo poproś człowieka.",
     "protected": "ścieżka z .ai/protected-paths (klucz odpowiedzi: zbiór eval albo holdout). Agent jej nie czyta; wynik oceny poda człowiek albo skrypt ewaluacji.",
     "make": "make fresh usuwa lokalną bazę (migrate:fresh). Reset bazy tylko przez człowieka.",
+    "limit": "komenda zbyt zagnieżdżona, żeby ją sprawdzić. Uprość ją albo rozbij na kroki.",
     "input": "nieczytelne wejście hooka (oczekiwany JSON z tool_input.command). Komenda nie została sprawdzona, więc jest zablokowana.",
 }
 ARTISAN = {
@@ -319,7 +321,7 @@ def unwrap(words: list[str]) -> dict:
     contained: komenda działa w kontenerze (docker exec, docker compose exec, sail).
     """
     contained = False
-    for _ in range(20):
+    for _ in range(21):
         if not words:
             break
         first = name(words[0])
@@ -435,6 +437,8 @@ def unwrap(words: list[str]) -> dict:
             contained = True
             continue
         break
+    else:
+        return {"reason": REASONS["limit"]}
     return {"words": words, "contained": contained}
 
 
@@ -590,6 +594,13 @@ def check_words(raw: list[str], ctx: dict) -> str | None:
             continue
         words.append(w)
         i += 1
+    # ARGS=... przed make trafia do Makefile jak argument (starter: make artisan ARGS=...).
+    leading_args = []
+    for w in words:
+        if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w):
+            break
+        if w.startswith("ARGS="):
+            leading_args.append(w)
     unwrapped = unwrap(words)
     if "reason" in unwrapped:
         return unwrapped["reason"]
@@ -607,7 +618,7 @@ def check_words(raw: list[str], ctx: dict) -> str | None:
         )
     args = words[1:]
     if program == "make":
-        return check_make(args, ctx)
+        return check_make(leading_args + args, ctx)
     if re.fullmatch(INTERPRETERS, program) and any(mentions_env_file(a) for a in args):
         return REASONS["env"]
 
@@ -739,6 +750,10 @@ def check_make(args: list[str], ctx: dict) -> str | None:
 
 
 def check(command: str, ctx: dict) -> str | None:
+    depth = ctx.get("depth", 0) + 1
+    if depth > 20:
+        return REASONS["limit"]
+    ctx = {**ctx, "depth": depth}
     nested: list[str] = []
     segments = parse(command, nested)
     for inner in nested:
@@ -848,5 +863,14 @@ def main() -> int:
     return 2
 
 
+def guarded_main() -> int:
+    """Nieoczekiwany wyjątek blokuje komendę (kod 2), zamiast przepuszczać ją bez sprawdzenia."""
+    try:
+        return main()
+    except Exception as error:  # noqa: BLE001
+        sys.stderr.write(f"{PREFIX}: błąd strażnika ({type(error).__name__}); komenda nie została sprawdzona.\n")
+        return 2
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(guarded_main())

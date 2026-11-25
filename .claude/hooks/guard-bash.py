@@ -42,7 +42,7 @@ REASONS = {
     "volumes": "usuwa wolumeny Dockera razem z danymi bazy. Zatrzymaj kontenery bez -v (docker compose down) albo poproś człowieka.",
     "protected": "ścieżka z .ai/protected-paths (klucz odpowiedzi: zbiór eval albo holdout). Agent jej nie czyta; wynik oceny poda człowiek albo skrypt ewaluacji.",
     "make": "make fresh usuwa lokalną bazę (migrate:fresh). Reset bazy tylko przez człowieka.",
-    "make_args": "make artisan bez ARGS= w tej samej komendzie (wartość mogła przyjść ze środowiska). Podaj ARGS=... jawnie.",
+    "make_args": "make artisan sprawdzam tylko z jednym zwykłym ARGS=... w tej samej komendzie, bez MAKEFLAGS, -e, -f i --eval. Podaj ARGS=... jawnie jeden raz.",
     "limit": "komenda zbyt zagnieżdżona, żeby ją sprawdzić. Uprość ją albo rozbij na kroki.",
     "input": "nieczytelne wejście hooka (oczekiwany JSON z tool_input.command). Komenda nie została sprawdzona, więc jest zablokowana.",
 }
@@ -600,8 +600,7 @@ def check_words(raw: list[str], ctx: dict) -> str | None:
     for w in words:
         if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w):
             break
-        if w.startswith("ARGS="):
-            leading_args.append(w)
+        leading_args.append(w)
     unwrapped = unwrap(words)
     if "reason" in unwrapped:
         return unwrapped["reason"]
@@ -744,7 +743,16 @@ def check_make(args: list[str], ctx: dict) -> str | None:
     if "fresh" in targets:
         return REASONS["make"]
     if "artisan" in targets:
-        values = [a[len("ARGS="):] for a in args if a.startswith("ARGS=")]
+        # Tylko jedno zwykłe ARGS=...: inne formy (+=, :=, ?=, !=), MAKEFLAGS i opcje zmieniające
+        # zmienne albo Makefile (-e, -f, --eval) mogą dać inną wartość niż ta, którą sprawdzamy.
+        assignments = [a for a in args if re.match(r"^ARGS\s*(:::|::|[+:!?])?=", a)]
+        if any(re.match(r"^(MAKEFLAGS|MFLAGS|GNUMAKEFLAGS)=", a) for a in args) or any(
+            a in ("-e", "--environment-overrides", "-f", "--file", "--makefile", "-E", "--eval")
+            or a.startswith(("--eval=", "--file=", "--makefile=")) or re.fullmatch(r"-[A-Za-z]*[efE][A-Za-z]*", a)
+            for a in args
+        ) or len(assignments) > 1 or any(not a.startswith("ARGS=") for a in assignments):
+            return REASONS["make_args"]
+        values = [a[len("ARGS="):] for a in assignments]
         if not values:
             # ARGS mogło przyjść ze środowiska (export w poprzednim kroku): wartość nieznana.
             return REASONS["make_args"]

@@ -49,9 +49,10 @@ pętla krytyki ze screenshotami); read-only `foundation-designer` przygotowuje b
 implementuje ani nie zastępuje akceptacji wizualnej człowieka. Delegatowi przekaż cel, pliki, AC,
 patch, dowody testów, budżet i warunek zakończenia, nie całą historię.
 
-Skille ręczne `foundation-fast` i `foundation-ui` są w `.agents/skills` (Codex) i `.claude/skills`
-(Claude), wspólne procedury w `.agents/skills/foundation-*/references/workflow.md`. FAST nie wymaga
-wywołania skillu.
+Skille ręczne `foundation-fast`, `foundation-ui`, `foundation-debug` (błąd → przyczyna `plik:linia` →
+test czerwony), `foundation-verify` (dowody i opis PR) i `foundation-review-response` (uwagi z review)
+są w `.agents/skills` (Codex) i `.claude/skills` (Claude), wspólne procedury w
+`.agents/skills/foundation-*/references/workflow.md`. FAST nie wymaga wywołania skillu.
 
 ## Reguły szczegółowe
 

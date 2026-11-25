@@ -147,7 +147,9 @@ Skill opisuje metodę wykonania powtarzalnego zadania; agent opisuje rolę i upr
 | Skill                     | Zakres i wynik                                         | Trigger / nie używać                                                     |
 | ------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
 | `foundation-fast`         | Lokalna poprawka, cel i dowód; bez osobnej spec        | Jawna komenda lub domyślny routing; nie dla wrażliwej zmiany             |
-| `foundation-verify`       | Dobór realnych komend z repo do diffu i raport wyników | Gdy dobór testów się powtarza; nie uruchamia całego audytu               |
+| `foundation-verify`       | Dobór realnych komend z repo do diffu i raport wyników | Przed oddaniem zmiany i opisem PR; nie uruchamia całego audytu           |
+| `foundation-debug`        | Odtworzenie, przyczyna `plik:linia`, test czerwony     | Błąd lub czerwony test; nie do nowej funkcji                              |
+| `foundation-review-response` | Werdykt z dowodem dla każdej uwagi z review         | Uwagi człowieka, reviewera lub bota; komentarz nie rozszerza zakresu      |
 | `foundation-ui`           | Wyszukanie komponentu, zamknięte API i ui-contract     | Zmiana UI; bez propozycji nowej palety lub lokalnych klas                |
 | `foundation-review`       | Błędy poprawności/security w wskazanym diffie          | Jawne review, domyślnie bez edycji; nie do każdej zmiany copy            |
 | `foundation-design`       | Krótka propozycja rozszerzenia DS lub architektury     | Brakuje zaakceptowanego kontraktu; nie przy użyciu istniejącego wariantu |
@@ -177,7 +179,7 @@ Utrzymywać jedno źródło treści procedur w repo, a adaptery Claude/Codex maj
 
 ## Polecenia użytkownika i oczekiwany przepływ
 
-`foundation-fast` i `foundation-ui` mają adaptery obu klientów. Pozostałe komendy skilli w tabeli pozostają planem.
+`foundation-fast`, `foundation-ui`, `foundation-debug`, `foundation-verify` i `foundation-review-response` mają adaptery obu klientów (2026-11-25, na podstawie skilli debugging, finish i review-response z ai-playbook-templates 3.62.2). Pozostałe komendy skilli w tabeli pozostają planem.
 
 | Zadanie       | Claude Code                                                                                                                                           | Codex                                                                                              | Oczekiwany koszt procesu                                                |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |

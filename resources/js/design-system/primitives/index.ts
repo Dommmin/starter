@@ -1,3 +1,4 @@
+export * from './accessibility-switcher';
 export * from './accordion';
 export * from './action-menu';
 export * from './admin-locale-select';

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
+import { prefersReducedMotion } from '@/lib/reduced-motion';
 import { cn } from '@/lib/utils';
 
 export type StatListItem = {
@@ -51,7 +52,7 @@ function useCountProgress(
             !enabled ||
             !element ||
             typeof IntersectionObserver === 'undefined' ||
-            window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+            prefersReducedMotion()
         ) {
             return;
         }

@@ -85,6 +85,7 @@ class DemoNavigationSeeder extends Seeder
                         ['type' => MenuItemType::Page, 'label' => $label('Terms of service', 'Regulamin'), 'page' => 'terms'],
                         ['type' => MenuItemType::Article, 'label' => $label('Our history', 'Nasza historia'), 'article' => 'history'],
                         ['type' => MenuItemType::Page, 'label' => $label('How we work', 'Jak pracujemy'), 'page' => 'how-we-work'],
+                        ['type' => MenuItemType::Page, 'label' => $label('Accessibility statement', 'Deklaracja dostępności'), 'page' => 'accessibility'],
                     ],
                 ],
             ],

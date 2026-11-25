@@ -84,6 +84,16 @@ wywołania skillu.
   testów/review/approval, nie deployuje i nie rollbackuje produkcji. Review AI nie zastępuje
   człowieka. Automatyczny rollback w oknie zatwierdzonego deployu wykonuje deterministyczna recepta
   Deployer (ADR-022 w dokumencie 10), nie decyzja agenta.
+- Najpierw to, co już jest: framework, zainstalowana zależność, istniejący komponent lub Action. Plik z
+  listy wyjątków bramki (wyjątki ADR-019, baseline, listy dozwolonych) to legacy, nie wzorzec.
+- Budujesz tylko to, o co prosi zadanie; wiedza o następnym zadaniu nie jest powodem do kodu. Błąd w
+  istniejącym kodzie, przez który wynik zadania jest zły, należy do zadania (opisz go w PR); martwy
+  kod spoza zadania zgłaszasz w PR, usuwasz tylko ten, który sam zostawiłeś.
+- Błąd albo czerwony test: przed poprawką podaj przyczynę jako `plik:linia` i „dlaczego”. Po dwóch
+  nieudanych próbach tej samej hipotezy dopiero wtedy sięgasz po wzorzec (inny moduł, upstream,
+  `git show <ref>:<plik>`) i piszesz człowiekowi, że zajrzałeś.
+- Reviewer najwyżej 2 rundy na zadanie; uwagi otwarte po drugiej idą do opisu PR dla człowieka.
+- Przy kompaktowaniu kontekstu zachowaj: zmienione pliki, komendy testów, decyzje i otwarte kwestie.
 
 ## Git, commity i hooki
 

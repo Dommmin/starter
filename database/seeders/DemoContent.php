@@ -42,7 +42,6 @@ final class DemoContent
         'about' => ['de' => 'ueber-uns', 'en' => 'about-us', 'pl' => 'o-nas'],
         'contact-details' => ['en' => 'contact-details', 'pl' => 'dane-kontaktowe'],
         'careers' => ['en' => 'careers', 'pl' => 'kariera'],
-        'accessibility' => ['en' => 'accessibility-statement', 'pl' => 'deklaracja-dostepnosci'],
         'short' => ['en' => 'opening-hours', 'pl' => 'godziny-otwarcia'],
         'services' => ['de' => 'leistungen', 'en' => 'services', 'pl' => 'uslugi'],
         'pricing' => ['en' => 'pricing', 'pl' => 'cennik'],

@@ -79,6 +79,32 @@ return [
         'moveDown' => 'Przesuń :label w dół',
         'moved' => ':label przesunięto na pozycję :position z :total',
     ],
+    'accessibility' => [
+        'open' => 'Ustawienia dostępności',
+        'title' => 'Ustawienia dostępności',
+        'description' => 'Dopasuj wygląd strony. Zmiany działają od razu i zostają zapamiętane w tej przeglądarce.',
+        'close' => 'Zamknij',
+        'reset' => 'Przywróć domyślne',
+        'done' => 'Gotowe',
+        'textSize' => [
+            'label' => 'Wielkość tekstu',
+            'default' => 'Standardowa',
+            'large' => 'Duża',
+            'larger' => 'Bardzo duża',
+        ],
+        'contrast' => [
+            'label' => 'Podwyższony kontrast',
+            'description' => 'Ciemniejszy tekst pomocniczy i wyraźniejsze obramowania.',
+        ],
+        'motion' => [
+            'label' => 'Ogranicz animacje',
+            'description' => 'Wyłącza animacje i płynne przewijanie.',
+        ],
+        'links' => [
+            'label' => 'Podkreśl linki',
+            'description' => 'Linki w tekście są zawsze podkreślone.',
+        ],
+    ],
     'theme' => [
         'label' => 'Motyw',
         'light' => 'Jasny',

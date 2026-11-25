@@ -2,6 +2,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import PasswordConfirmationModal from '@/components/password-confirmation-modal';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { initializeAccessibilityPreferences } from '@/hooks/use-accessibility-preferences';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 import { I18nProvider } from '@/i18n';
@@ -40,6 +41,7 @@ void createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+initializeAccessibilityPreferences();
 
 router.on('navigate', (event) => {
     syncSurface(event.detail.page.component);

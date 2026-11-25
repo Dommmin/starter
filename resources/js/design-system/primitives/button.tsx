@@ -134,6 +134,7 @@ export function Button({
                     rel="noopener noreferrer"
                     aria-label={ariaLabel}
                     className={baseClasses}
+                    data-slot="button"
                     onClick={onClick}
                 >
                     {content}
@@ -156,6 +157,7 @@ export function Button({
                     }
                     aria-label={ariaLabel}
                     className={baseClasses}
+                    data-slot="button"
                     onClick={onClick}
                 >
                     {content}
@@ -169,6 +171,7 @@ export function Button({
                 prefetch={prefetch}
                 aria-label={ariaLabel}
                 className={baseClasses}
+                data-slot="button"
                 onClick={onClick}
             >
                 {content}

@@ -42,7 +42,7 @@ REASONS = {
     "volumes": "usuwa wolumeny Dockera razem z danymi bazy. Zatrzymaj kontenery bez -v (docker compose down) albo poproś człowieka.",
     "protected": "ścieżka z .ai/protected-paths (klucz odpowiedzi: zbiór eval albo holdout). Agent jej nie czyta; wynik oceny poda człowiek albo skrypt ewaluacji.",
     "make": "make fresh usuwa lokalną bazę (migrate:fresh). Reset bazy tylko przez człowieka.",
-    "make_args": "make artisan sprawdzam tylko z jednym zwykłym ARGS=... w tej samej komendzie, bez MAKEFLAGS, -e, -f i --eval. Podaj ARGS=... jawnie jeden raz.",
+    "make_args": "make artisan przechodzi tylko jako `make [-s] artisan ARGS=...` z jednym zwykłym ARGS=, bez innych opcji, przypisań i zmiennych przed make.",
     "limit": "komenda zbyt zagnieżdżona, żeby ją sprawdzić. Uprość ją albo rozbij na kroki.",
     "input": "nieczytelne wejście hooka (oczekiwany JSON z tool_input.command). Komenda nie została sprawdzona, więc jest zablokowana.",
 }
@@ -595,12 +595,9 @@ def check_words(raw: list[str], ctx: dict) -> str | None:
             continue
         words.append(w)
         i += 1
-    # ARGS=... przed make trafia do Makefile jak argument (starter: make artisan ARGS=...).
-    leading_args = []
-    for w in words:
-        if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w):
-            break
-        leading_args.append(w)
+    # Przypisania przed make (także po env, sudo, nice) trafiają do Makefile: make artisan je sprawdza.
+    make_at = next((k for k, w in enumerate(words) if name(w) == "make"), None)
+    make_prefix = [w for w in words[:make_at] if "=" in w] if make_at is not None else []
     unwrapped = unwrap(words)
     if "reason" in unwrapped:
         return unwrapped["reason"]
@@ -618,7 +615,7 @@ def check_words(raw: list[str], ctx: dict) -> str | None:
         )
     args = words[1:]
     if program == "make":
-        return check_make(leading_args + args, ctx)
+        return check_make(args, ctx, make_prefix)
     if re.fullmatch(INTERPRETERS, program) and any(mentions_env_file(a) for a in args):
         return REASONS["env"]
 
@@ -737,30 +734,34 @@ def uploads_env_file(word: str) -> bool:
     return any(is_env_file(p) for p in parts)
 
 
-def check_make(args: list[str], ctx: dict) -> str | None:
-    """Targety Makefile startera: fresh kasuje bazę, artisan ARGS='...' to artisan w kontenerze."""
+# Opcje make, które nie zmieniają zmiennych ani Makefile (lista dozwolonych dla make artisan).
+MAKE_SAFE_OPTIONS = {"-s", "--silent", "--quiet", "--no-print-directory"}
+
+
+def check_make(args: list[str], ctx: dict, prefix: list[str]) -> str | None:
+    """Targety Makefile startera: fresh kasuje bazę, artisan ARGS='...' to artisan w kontenerze.
+
+    make artisan przechodzi tylko w formie `make [-s] artisan ARGS=<wartość>` z jednym zwykłym ARGS=
+    (w argumentach albo przed make). Każda inna opcja, przypisanie albo zmienna środowiska przed make
+    (MAKEFLAGS, MAKEFILES, ARGS+=...) mogłaby dać inną wartość niż sprawdzana, więc blokuje.
+    """
     targets = [a for a in args if not a.startswith("-") and "=" not in a]
     if "fresh" in targets:
         return REASONS["make"]
-    if "artisan" in targets:
-        # Tylko jedno zwykłe ARGS=...: inne formy (+=, :=, ?=, !=), MAKEFLAGS i opcje zmieniające
-        # zmienne albo Makefile (-e, -f, --eval) mogą dać inną wartość niż ta, którą sprawdzamy.
-        assignments = [a for a in args if re.match(r"^ARGS\s*(:::|::|[+:!?])?=", a)]
-        if any(re.match(r"^(MAKEFLAGS|MFLAGS|GNUMAKEFLAGS)=", a) for a in args) or any(
-            a in ("-e", "--environment-overrides", "-f", "--file", "--makefile", "-E", "--eval")
-            or a.startswith(("--eval=", "--file=", "--makefile=")) or re.fullmatch(r"-[A-Za-z]*[efE][A-Za-z]*", a)
-            for a in args
-        ) or len(assignments) > 1 or any(not a.startswith("ARGS=") for a in assignments):
-            return REASONS["make_args"]
-        values = [a[len("ARGS="):] for a in assignments]
-        if not values:
-            # ARGS mogło przyjść ze środowiska (export w poprzednim kroku): wartość nieznana.
-            return REASONS["make_args"]
-        for value in values:
-            reason = check(f"php artisan {value}", {**ctx, "contained": True})
-            if reason:
-                return reason
-    return None
+    if "artisan" not in targets:
+        return None
+    values = []
+    for word in [*prefix, *args]:
+        if word == "artisan" or word in MAKE_SAFE_OPTIONS:
+            continue
+        if word.startswith("ARGS="):
+            values.append(word[len("ARGS="):])
+            continue
+        return REASONS["make_args"]
+    if len(values) != 1:
+        # Brak ARGS= (wartość mogła przyjść ze środowiska) albo kilka przypisań.
+        return REASONS["make_args"]
+    return check(f"php artisan {values[0]}", {**ctx, "contained": True})
 
 
 def check(command: str, ctx: dict) -> str | None:

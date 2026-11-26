@@ -570,6 +570,17 @@ return [
         'conflict' => 'Ktoś inny zmienił ten rekord po jego otwarciu. Wczytaj go ponownie i wprowadź zmiany jeszcze raz.',
         'createdMany' => 'Zapisano nieopublikowane pytania: :count.',
         'duplicated' => 'Utworzono nieopublikowaną kopię pytania.',
+        'order' => 'Zmień kolejność',
+        'orderTitle' => 'Kolejność pytań',
+        'orderDescription' => 'Jedna kolejność dla wszystkich języków. Na stronie każdego języka widać jego pytania i pytania dla wszystkich języków, w tej kolejności.',
+        'orderLabel' => 'Kolejność pytań FAQ',
+        'orderEmptyTitle' => 'Brak pytań',
+        'orderEmptyDescription' => 'Dodaj pytanie, aby ustalić kolejność.',
+        'orderReadOnly' => 'Masz dostęp tylko do podglądu kolejności.',
+        'orderPublished' => 'Opublikowane',
+        'orderHidden' => 'Nieopublikowane',
+        'orderConflict' => 'Lista pytań zmieniła się w międzyczasie. Wczytaj stronę ponownie i ustaw kolejność jeszcze raz.',
+        'reordered' => 'Zapisano kolejność pytań.',
         'generator' => [
             'open' => 'Generuj z AI',
             'title' => 'Generuj FAQ z AI',
@@ -789,6 +800,7 @@ return [
             ],
             'faq' => [
                 'duplicated' => 'Utworzono kopię pytania FAQ',
+                'reordered' => 'Zmieniono kolejność pytań FAQ',
             ],
             'home_section' => [
                 'updated' => 'Zmieniono sekcję strony głównej',

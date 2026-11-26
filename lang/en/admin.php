@@ -570,6 +570,17 @@ return [
         'conflict' => 'This question was changed by someone else after you opened it. Reload it and apply your changes again.',
         'createdMany' => 'Questions saved as unpublished: :count.',
         'duplicated' => 'Unpublished copy of the question created.',
+        'order' => 'Change order',
+        'orderTitle' => 'Question order',
+        'orderDescription' => 'One order for every language. The page of each language shows its questions and the questions for all languages, in this order.',
+        'orderLabel' => 'FAQ question order',
+        'orderEmptyTitle' => 'No questions',
+        'orderEmptyDescription' => 'Add a question to set the order.',
+        'orderReadOnly' => 'You can only view the order.',
+        'orderPublished' => 'Published',
+        'orderHidden' => 'Unpublished',
+        'orderConflict' => 'The list of questions changed in the meantime. Reload the page and set the order again.',
+        'reordered' => 'Question order saved.',
         'generator' => [
             'open' => 'Generate with AI',
             'title' => 'Generate FAQ with AI',
@@ -789,6 +800,7 @@ return [
             ],
             'faq' => [
                 'duplicated' => 'FAQ question duplicated',
+                'reordered' => 'FAQ questions reordered',
             ],
             'home_section' => [
                 'updated' => 'Home page section updated',

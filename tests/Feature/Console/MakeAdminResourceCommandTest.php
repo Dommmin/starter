@@ -882,7 +882,8 @@ test('the clone operation copies many-to-many links but not hasMany records and 
         ->toContain("duplicate: \$product !== null\n                ? (\$user?->can('duplicate', \$product) ?? false)");
 
     expect($read('app/Data/Admin/Products/ProductAbilitiesData.php'))->toContain('public bool $duplicate,')
-        ->and($read('resources/js/pages/admin/products/index.tsx'))->toContain('router.post(duplicate.url(row.id))')
+        ->and($read('resources/js/pages/admin/products/index.tsx'))->toContain('disabled: isDuplicating,')
+        ->toContain('router.post(duplicate.url(row.id), undefined, { onFinish: () => setIsDuplicating(false) });')
         ->and($read('resources/js/pages/admin/products/form.tsx'))->toContain('router.post(duplicate.url(recordId), undefined, {');
 
     foreach (ResourceGenerator::LOCALES as $locale) {

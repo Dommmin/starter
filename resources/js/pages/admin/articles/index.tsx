@@ -39,6 +39,7 @@ export default function AdminArticlesIndex() {
         null,
     );
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const localeName = (code: string) =>
         locales.available.find((locale) => locale.code === code)?.native ??
@@ -232,10 +233,18 @@ export default function AdminArticlesIndex() {
                                           'admin.articles.actionDuplicate',
                                       ),
                                       icon: Copy,
-                                      onSelect: () =>
+                                      disabled: isDuplicating,
+                                      onSelect: () => {
+                                          setIsDuplicating(true);
                                           router.post(
                                               articlesDuplicate.url(row.id),
-                                          ),
+                                              undefined,
+                                              {
+                                                  onFinish: () =>
+                                                      setIsDuplicating(false),
+                                              },
+                                          );
+                                      },
                                   },
                               ]
                             : []),

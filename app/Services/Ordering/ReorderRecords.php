@@ -17,8 +17,9 @@ use Illuminate\Validation\ValidationException;
  * caller, which writes positions and audits in the same transaction. A
  * stale or forged set raises a `conflict` error and nothing is written.
  *
- * The lock is a plain `SELECT ... FOR UPDATE` of the rows, without
- * aggregates, so it works on SQLite, MySQL and PostgreSQL alike.
+ * The model's order column is `position`; records are read in that order
+ * (then by id). The lock is a plain `SELECT ... FOR UPDATE` of the rows,
+ * without aggregates, so it works on SQLite, MySQL and PostgreSQL alike.
  */
 class ReorderRecords
 {
@@ -30,7 +31,6 @@ class ReorderRecords
      * @param  list<int>  $ids  Submitted new order, first shown first.
      * @param  string  $conflictMessage  Translated message of the `conflict` error.
      * @param  Closure(Collection<int, TModel>, list<int>): void  $apply  Receives the locked records keyed by id and their current order of ids.
-     * @param  string  $positionColumn  Column that holds the current order.
      *
      * @throws ValidationException When `ids` is not exactly the group's current set (`conflict`).
      */
@@ -40,9 +40,8 @@ class ReorderRecords
         array $ids,
         string $conflictMessage,
         Closure $apply,
-        string $positionColumn = 'position',
     ): void {
-        DB::transaction(function () use ($model, $scope, $ids, $conflictMessage, $apply, $positionColumn): void {
+        DB::transaction(function () use ($model, $scope, $ids, $conflictMessage, $apply): void {
             $query = $model::query();
 
             foreach ($scope as $column => $value) {
@@ -51,7 +50,7 @@ class ReorderRecords
 
             /** @var Collection<int, TModel> $records */
             $records = $query
-                ->orderBy($positionColumn)
+                ->orderBy('position')
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get()

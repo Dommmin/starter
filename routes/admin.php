@@ -230,6 +230,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
             ->name('faqs.destroy')
             ->can('delete', 'faq');
+        Route::post('/faqs/{faq}/duplicate', [FaqController::class, 'duplicate'])
+            ->name('faqs.duplicate')
+            ->can('duplicate', 'faq');
 
         Route::get('/media', [MediaAssetController::class, 'index'])
             ->name('media.index')

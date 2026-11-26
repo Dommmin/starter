@@ -537,6 +537,7 @@ return [
         'rowActionsLabel' => 'Akcje dla: :title',
         'actionEdit' => 'Edytuj',
         'actionDelete' => 'Usuń',
+        'actionDuplicate' => 'Duplikuj',
         'columnId' => 'ID',
         'columnCreatedAt' => 'Utworzono',
         'columnUpdatedAt' => 'Zaktualizowano',
@@ -548,6 +549,7 @@ return [
         'saving' => 'Zapisywanie…',
         'cancel' => 'Anuluj',
         'delete' => 'Usuń',
+        'duplicate' => 'Duplikuj',
         'deleteTitle' => 'Usunąć ten rekord?',
         'deleteDescription' => 'Rekord zostanie trwale usunięty. Tej operacji nie można cofnąć.',
         'deleteConfirm' => 'Usuń trwale',
@@ -561,6 +563,7 @@ return [
         'deleted' => 'Rekord został usunięty.',
         'conflict' => 'Ktoś inny zmienił ten rekord po jego otwarciu. Wczytaj go ponownie i wprowadź zmiany jeszcze raz.',
         'createdMany' => 'Zapisano nieopublikowane pytania: :count.',
+        'duplicated' => 'Utworzono nieopublikowaną kopię pytania.',
         'generator' => [
             'open' => 'Generuj z AI',
             'title' => 'Generuj FAQ z AI',
@@ -774,6 +777,9 @@ return [
                 'created' => 'Przekierowanie utworzone',
                 'updated' => 'Przekierowanie zmienione',
                 'deleted' => 'Przekierowanie usunięte',
+            ],
+            'faq' => [
+                'duplicated' => 'Utworzono kopię pytania FAQ',
             ],
             'home_section' => [
                 'updated' => 'Zmieniono sekcję strony głównej',

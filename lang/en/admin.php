@@ -537,6 +537,7 @@ return [
         'rowActionsLabel' => 'Actions for :title',
         'actionEdit' => 'Edit',
         'actionDelete' => 'Delete',
+        'actionDuplicate' => 'Duplicate',
         'columnId' => 'ID',
         'columnCreatedAt' => 'Created',
         'columnUpdatedAt' => 'Updated',
@@ -548,6 +549,7 @@ return [
         'saving' => 'Saving…',
         'cancel' => 'Cancel',
         'delete' => 'Delete',
+        'duplicate' => 'Duplicate',
         'deleteTitle' => 'Delete this question?',
         'deleteDescription' => 'The question will be permanently deleted. This cannot be undone.',
         'deleteConfirm' => 'Delete permanently',
@@ -561,6 +563,7 @@ return [
         'deleted' => 'Question deleted.',
         'conflict' => 'This question was changed by someone else after you opened it. Reload it and apply your changes again.',
         'createdMany' => 'Questions saved as unpublished: :count.',
+        'duplicated' => 'Unpublished copy of the question created.',
         'generator' => [
             'open' => 'Generate with AI',
             'title' => 'Generate FAQ with AI',
@@ -774,6 +777,9 @@ return [
                 'created' => 'Redirect created',
                 'updated' => 'Redirect updated',
                 'deleted' => 'Redirect deleted',
+            ],
+            'faq' => [
+                'duplicated' => 'FAQ question duplicated',
             ],
             'home_section' => [
                 'updated' => 'Home page section updated',

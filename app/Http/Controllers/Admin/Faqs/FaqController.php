@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Faqs;
 
 use App\Actions\Faqs\CreateFaq;
+use App\Actions\Faqs\DuplicateFaq;
 use App\Actions\Faqs\UpdateFaq;
 use App\Data\Admin\Faqs\FaqAbilitiesData;
 use App\Data\Admin\Faqs\FaqEditorData;
@@ -19,6 +20,7 @@ use App\Http\Requests\Admin\Faqs\StoreFaqRequest;
 use App\Http\Requests\Admin\Faqs\StoreManyFaqsRequest;
 use App\Http\Requests\Admin\Faqs\UpdateFaqRequest;
 use App\Models\Faq;
+use App\Models\User;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -130,6 +132,20 @@ class FaqController extends Controller
     }
 
     /**
+     * Copy the faq as a new, unpublished faq and open the copy's editor.
+     */
+    public function duplicate(Request $request, Faq $faq, DuplicateFaq $duplicateFaq): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $copy = $duplicateFaq->handle($faq, $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.faqs.duplicated')]);
+
+        return to_route('admin.faqs.edit', $copy);
+    }
+
+    /**
      * Permanently delete the faq (administrators only).
      */
     public function destroy(Faq $faq): RedirectResponse
@@ -154,6 +170,9 @@ class FaqController extends Controller
                 ? ($user?->can('delete', $faq) ?? false)
                 : ($user?->isAdmin() ?? false),
             import: $user?->can('import', Faq::class) ?? false,
+            duplicate: $faq !== null
+                ? ($user?->can('duplicate', $faq) ?? false)
+                : ($user?->can('create', Faq::class) ?? false),
             suggestFaqs: AssistantFeature::FaqGenerator->isAvailable()
                 && ($user?->can('create', Faq::class) ?? false),
         );

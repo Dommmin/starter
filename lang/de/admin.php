@@ -537,6 +537,7 @@ return [
         'rowActionsLabel' => 'Aktionen für :title',
         'actionEdit' => 'Bearbeiten',
         'actionDelete' => 'Löschen',
+        'actionDuplicate' => 'Duplizieren',
         'columnId' => 'ID',
         'columnCreatedAt' => 'Erstellt',
         'columnUpdatedAt' => 'Aktualisiert',
@@ -548,6 +549,7 @@ return [
         'saving' => 'Wird gespeichert…',
         'cancel' => 'Abbrechen',
         'delete' => 'Löschen',
+        'duplicate' => 'Duplizieren',
         'deleteTitle' => 'Diesen Eintrag löschen?',
         'deleteDescription' => 'Der Eintrag wird dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.',
         'deleteConfirm' => 'Endgültig löschen',
@@ -561,6 +563,7 @@ return [
         'deleted' => 'Eintrag gelöscht.',
         'conflict' => 'Dieser Eintrag wurde nach dem Öffnen von jemand anderem geändert. Laden Sie ihn neu und übernehmen Sie Ihre Änderungen erneut.',
         'createdMany' => 'Als unveröffentlicht gespeicherte Fragen: :count.',
+        'duplicated' => 'Unveröffentlichte Kopie der Frage erstellt.',
         'generator' => [
             'open' => 'Mit KI erstellen',
             'title' => 'FAQ mit KI erstellen',
@@ -774,6 +777,9 @@ return [
                 'created' => 'Weiterleitung erstellt',
                 'updated' => 'Weiterleitung geändert',
                 'deleted' => 'Weiterleitung gelöscht',
+            ],
+            'faq' => [
+                'duplicated' => 'FAQ-Frage dupliziert',
             ],
             'home_section' => [
                 'updated' => 'Startseitenabschnitt geändert',

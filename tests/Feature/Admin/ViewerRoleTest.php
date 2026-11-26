@@ -95,6 +95,7 @@ test('a viewer cannot create, change, publish, reorder, upload or delete anythin
         ['post', route('admin.faqs.store')],
         ['put', route('admin.faqs.update', $faq)],
         ['delete', route('admin.faqs.destroy', $faq)],
+        ['post', route('admin.faqs.duplicate', $faq)],
         ['post', route('admin.media.store')],
         ['put', route('admin.media.update', $asset)],
         ['delete', route('admin.media.destroy', $asset)],

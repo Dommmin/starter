@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { {{ rowActionIcons }} } from 'lucide-react';
 import { useState } from 'react';
 import {
 {{ primitives }}
@@ -11,6 +11,7 @@ import {
     create,
     destroy,
     destroyMany,
+{{ duplicateImport }}
     edit,
 {{ exportImport }}
     index,
@@ -148,6 +149,7 @@ export default function Admin{{ Plural }}Index() {
                             icon: Pencil,
                             onSelect: () => router.visit(edit.url(row.id)),
                         },
+{{ duplicateRowAction }}
                         ...(can.delete
                             ? [
                                   {

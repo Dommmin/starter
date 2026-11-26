@@ -32,6 +32,7 @@ enum AuditAction: string
     case MediaDeleted = 'media.deleted';
     case ResourceExported = 'resource.exported';
     case ResourceImported = 'resource.imported';
+    case ResourceDuplicated = 'resource.duplicated';
     case SiteSettingsUpdated = 'site_settings.updated';
     case NavigationItemCreated = 'navigation.item_created';
     case NavigationItemUpdated = 'navigation.item_updated';

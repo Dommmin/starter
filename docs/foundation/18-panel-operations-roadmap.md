@@ -38,7 +38,7 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 - [x] **1. `feat/panel-faq-clone`** — Clone na FAQ, napisany jawnie. **HIGH-RISK (policy)**
   - Action `Faqs/DuplicateFaq` (`replicate()`, `published=false`, pozycja na końcu), trasa `POST admin/faqs/{faq}/duplicate`, ability `duplicate` w `FaqPolicy` (admin + editor), akcja wiersza w `ResourceTable` i przycisk w edycji, redirect do edycji kopii, toast, wpis audytu.
   - AC: kopia ma nowe ID, jest nieopublikowana, oryginał bez zmian; podgląd (viewer) dostaje 403; audit zawiera źródło kopii.
-- [ ] **2. `feat/generator-clone-operation`** — flaga `--operations=clone` w `app:make-resource`.
+- [x] **2. `feat/generator-clone-operation`** — flaga `--operations=clone` w `app:make-resource`.
   - Parsowanie i walidacja listy operacji w `ResourceBlueprint` (nieznana operacja = błąd), stuby: action, trasa, ability w policy, akcja UI, i18n, test feature. Relacje M:N kopiowane, `hasMany` nie; slug (przy `--public`) z sufiksem `-copy-N`, rekord jako szkic.
   - AC: smoke generuje moduł z clone bez ręcznych poprawek; `--dry-run` pokazuje nowe pliki.
 - [ ] **3. `feat/panel-content-clone`** — Clone stron i artykułów. **HIGH-RISK (policy)**

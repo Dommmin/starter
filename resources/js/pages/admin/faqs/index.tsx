@@ -36,6 +36,7 @@ export default function AdminFaqsIndex() {
     const { t, formatDate } = useTranslation();
     const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
 
     const rowTitle = (row: Row) =>
@@ -195,8 +196,18 @@ export default function AdminFaqsIndex() {
                                       id: 'duplicate',
                                       label: t('admin.faqs.actionDuplicate'),
                                       icon: Copy,
-                                      onSelect: () =>
-                                          router.post(duplicate.url(row.id)),
+                                      disabled: isDuplicating,
+                                      onSelect: () => {
+                                          setIsDuplicating(true);
+                                          router.post(
+                                              duplicate.url(row.id),
+                                              undefined,
+                                              {
+                                                  onFinish: () =>
+                                                      setIsDuplicating(false),
+                                              },
+                                          );
+                                      },
                                   },
                               ]
                             : []),

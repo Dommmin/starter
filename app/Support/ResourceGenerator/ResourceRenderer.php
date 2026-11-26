@@ -194,6 +194,7 @@ final class ResourceRenderer
                 'duplicateImport' => $resource->hasOperation('clone') ? '    duplicate,' : null,
                 'rowActionIcons' => $resource->hasOperation('clone') ? 'Copy, Pencil, Trash2' : 'Pencil, Trash2',
                 'duplicateRowAction' => $this->duplicateRowAction($resource),
+                'duplicateState' => $resource->hasOperation('clone') ? '    const [isDuplicating, setIsDuplicating] = useState(false);' : null,
                 'propNames' => $this->indexPropNames($resource),
                 'labelMaps' => $this->labelMaps($resource),
                 'rowTitle' => $this->rowTitle($resource),
@@ -1254,7 +1255,11 @@ final class ResourceRenderer
                                               id: 'duplicate',
                                               label: t('admin.{$resource->camelPlural()}.actionDuplicate'),
                                               icon: Copy,
-                                              onSelect: () => router.post(duplicate.url(row.id)),
+                                              disabled: isDuplicating,
+                                              onSelect: () => {
+                                                  setIsDuplicating(true);
+                                                  router.post(duplicate.url(row.id), undefined, { onFinish: () => setIsDuplicating(false) });
+                                              },
                                           },
                                       ]
                                     : []),

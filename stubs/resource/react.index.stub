@@ -28,6 +28,7 @@ export default function Admin{{ Plural }}Index() {
     const { t, formatDate } = useTranslation();
     const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+{{ duplicateState }}
 {{ labelMaps }}
     const rowTitle = (row: Row) =>
         {{ rowTitle }};

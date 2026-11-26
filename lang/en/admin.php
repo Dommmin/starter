@@ -750,6 +750,7 @@ return [
             'resource' => [
                 'exported' => 'Records exported to CSV',
                 'imported' => 'Records imported from CSV',
+                'duplicated' => 'Record duplicated',
             ],
             'site_settings' => [
                 'updated' => 'Site settings updated',

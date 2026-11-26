@@ -1,0 +1,74 @@
+<?php
+
+use App\Enums\AuditAction;
+use App\Models\{{ Model }};
+use App\Models\AuditLog;
+use App\Models\User;
+use Illuminate\Support\Arr;
+use Inertia\Testing\AssertableInertia as Assert;
+{{ imports }}
+
+beforeEach(function () {
+    config(['fortify.require_two_factor_for_admin' => false]);
+});
+
+test('{{ copyTitle }}', function (string $role) {
+    $user = User::factory()->{$role}()->create();
+    $source = {{ Model }}::factory(){{ ownedBy }}->create({{ sourceAttributes }});
+{{ relationSetup }}
+    $sourceBefore = $source->fresh()?->getAttributes();
+
+    $response = $this->actingAs($user)->post(route('admin.{{ kebabPlural }}.duplicate', $source));
+
+    $copy = {{ Model }}::query()->latest('id')->firstOrFail();
+
+    $response->assertRedirect(route('admin.{{ kebabPlural }}.edit', $copy))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => __('admin.{{ camelPlural }}.duplicated')]);
+
+    expect($copy->id)->not->toBe($source->id)
+        ->and({{ Model }}::query()->count())->toBe(2)
+        ->and(Arr::except($copy->fresh()?->getAttributes() ?? [], [{{ comparedExcept }}]))
+        ->toBe(Arr::except($sourceBefore ?? [], [{{ comparedExcept }}]))
+{{ copyExpectations }}
+        ->and($source->fresh()?->getAttributes())->toBe($sourceBefore);
+
+    $entry = AuditLog::query()->sole();
+
+    expect($entry->action)->toBe(AuditAction::ResourceDuplicated)
+        ->and($entry->actor_id)->toBe($user->id)
+        ->and($entry->subject_type)->toBe($copy->getMorphClass())
+        ->and($entry->subject_id)->toBe($copy->id)
+        ->and($entry->changes)->toBe(['duplicated_from' => ['old' => null, 'new' => $source->id]]);
+})->with(['admin', 'editor']);
+
+{{ slugTest }}
+test('a viewer cannot copy a {{ singularLower }} and nothing is stored', function () {
+    $source = {{ Model }}::factory(){{ ownerDenialSource }}->create();
+
+    $this->actingAs(User::factory()->viewer()->create())
+        ->post(route('admin.{{ kebabPlural }}.duplicate', $source))
+        ->assertForbidden();
+
+    expect({{ Model }}::query()->count())->toBe(1)
+        ->and(AuditLog::query()->count())->toBe(0);
+});
+
+{{ ownerDenialTest }}
+test('the copy action is offered only to roles that may copy', function () {
+    $editor = User::factory()->editor()->create();
+    ${{ variable }} = {{ Model }}::factory(){{ editorOwned }}->create();
+
+    $this->actingAs($editor)->get(route('admin.{{ kebabPlural }}.edit', ${{ variable }}))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/{{ kebabPlural }}/edit', false)
+            ->where('can.duplicate', true)
+        );
+
+    $this->actingAs(User::factory()->viewer()->create())->get(route('admin.{{ kebabPlural }}.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $inertia) => $inertia
+            ->component('admin/{{ kebabPlural }}/index', false)
+            ->where('can.duplicate', false)
+        );
+});

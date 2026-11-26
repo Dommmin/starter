@@ -1297,6 +1297,7 @@ declare namespace App {
             | 'media.deleted'
             | 'resource.exported'
             | 'resource.imported'
+            | 'resource.duplicated'
             | 'site_settings.updated'
             | 'navigation.item_created'
             | 'navigation.item_updated'

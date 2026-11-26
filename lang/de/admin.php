@@ -750,6 +750,7 @@ return [
             'resource' => [
                 'exported' => 'Datensätze als CSV exportiert',
                 'imported' => 'Einträge aus CSV importiert',
+                'duplicated' => 'Eintrag dupliziert',
             ],
             'site_settings' => [
                 'updated' => 'Website-Einstellungen geändert',

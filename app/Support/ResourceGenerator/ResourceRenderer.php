@@ -27,7 +27,8 @@ final class ResourceRenderer
 
     /**
      * Module texts added only for the features a resource uses, per locale.
-     * `{label}` is the field label, `{kebab}` the URL segment.
+     * `{label}` is the field label, `{kebab}` the URL segment, `{singular}`
+     * the lower-case singular label.
      *
      * @var array<string, array<string, array<string, string>>>
      */
@@ -40,6 +41,8 @@ final class ResourceRenderer
             'dateFilter' => ['dateFrom' => 'From', 'dateTo' => 'To'],
             'hasMany' => ['tabsLabel' => 'Sections', 'detailsTab' => 'Details', 'relatedEmpty' => 'No related records yet.', 'relatedShown' => 'Showing :shown of :total.', 'relatedShowAll' => 'Open the full list'],
             'hasManyTab' => ['label' => '{label} (:count)'],
+            'clone' => ['actionDuplicate' => 'Duplicate', 'duplicate' => 'Duplicate', 'duplicated' => 'Copy of the {singular} created.'],
+            'clonePublic' => ['duplicated' => 'Unpublished copy of the {singular} created.'],
         ],
         'pl' => [
             'export' => ['export' => 'Eksportuj CSV', 'exportTooLarge' => 'Eksport CSV obejmuje najwyżej :max wierszy. Najpierw zawęź listę wyszukiwaniem lub filtrami.', 'exportFilename' => '{kebab}-:date.csv'],
@@ -49,6 +52,8 @@ final class ResourceRenderer
             'dateFilter' => ['dateFrom' => 'Od', 'dateTo' => 'Do'],
             'hasMany' => ['tabsLabel' => 'Sekcje', 'detailsTab' => 'Szczegóły', 'relatedEmpty' => 'Brak powiązanych rekordów.', 'relatedShown' => 'Wyświetlono :shown z :total.', 'relatedShowAll' => 'Otwórz pełną listę'],
             'hasManyTab' => ['label' => '{label} (:count)'],
+            'clone' => ['actionDuplicate' => 'Duplikuj', 'duplicate' => 'Duplikuj', 'duplicated' => 'Utworzono kopię rekordu.'],
+            'clonePublic' => ['duplicated' => 'Utworzono nieopublikowaną kopię rekordu.'],
         ],
         'de' => [
             'export' => ['export' => 'CSV exportieren', 'exportTooLarge' => 'Der CSV-Export ist auf :max Zeilen begrenzt. Grenzen Sie die Liste zuerst mit Suche oder Filtern ein.', 'exportFilename' => '{kebab}-:date.csv'],
@@ -58,6 +63,8 @@ final class ResourceRenderer
             'dateFilter' => ['dateFrom' => 'Von', 'dateTo' => 'Bis'],
             'hasMany' => ['tabsLabel' => 'Bereiche', 'detailsTab' => 'Details', 'relatedEmpty' => 'Noch keine verknüpften Einträge.', 'relatedShown' => ':shown von :total angezeigt.', 'relatedShowAll' => 'Vollständige Liste öffnen'],
             'hasManyTab' => ['label' => '{label} (:count)'],
+            'clone' => ['actionDuplicate' => 'Duplizieren', 'duplicate' => 'Duplizieren', 'duplicated' => 'Kopie des Eintrags erstellt.'],
+            'clonePublic' => ['duplicated' => 'Unveröffentlichte Kopie des Eintrags erstellt.'],
         ],
     ];
 
@@ -108,6 +115,7 @@ final class ResourceRenderer
             ]),
             "database/seeders/{$model}Seeder.php" => $this->php('seeder', $resource),
             "app/Policies/{$model}Policy.php" => $this->php($resource->owned ? 'policy.owned' : 'policy', $resource, [
+                'duplicateMethod' => $resource->hasOperation('clone') ? $this->policyDuplicateMethod($resource) : null,
                 'exportMethod' => $resource->export ? $this->policyExportMethod($resource) : null,
             ]),
             "app/Actions/{$plural}/Update{$model}.php" => $this->php('action.update', $resource, $this->updateActionFragments($resource)),
@@ -178,10 +186,14 @@ final class ResourceRenderer
             "app/Data/Admin/{$plural}/{$model}EditorData.php" => $this->php('data.editor', $resource, $this->editorDataFragments($resource)),
             "app/Data/Admin/{$plural}/{$model}AbilitiesData.php" => $this->php('data.abilities', $resource, [
                 'exportAbility' => $resource->export ? '        public bool $export,' : null,
+                'duplicateAbility' => $resource->hasOperation('clone') ? '        public bool $duplicate,' : null,
             ]),
             "{$pages}/index.tsx" => $this->render('react.index', $resource, [
                 'primitives' => $this->indexPrimitives($resource),
                 'exportImport' => $resource->export ? '    exportMethod,' : null,
+                'duplicateImport' => $resource->hasOperation('clone') ? '    duplicate,' : null,
+                'rowActionIcons' => $resource->hasOperation('clone') ? 'Copy, Pencil, Trash2' : 'Pencil, Trash2',
+                'duplicateRowAction' => $this->duplicateRowAction($resource),
                 'propNames' => $this->indexPropNames($resource),
                 'labelMaps' => $this->labelMaps($resource),
                 'rowTitle' => $this->rowTitle($resource),
@@ -237,6 +249,10 @@ final class ResourceRenderer
 
         if ($resource->public) {
             $files = [...$files, ...$this->publicFiles($resource)];
+        }
+
+        if ($resource->hasOperation('clone')) {
+            $files = [...$files, ...$this->cloneFiles($resource)];
         }
 
         foreach ($resource->enumFields() as $field) {
@@ -345,6 +361,11 @@ final class ResourceRenderer
         $kebab = $resource->kebabPlural();
 
         return $this->render('routes', $resource, [
+            'duplicateRoute' => ! $resource->hasOperation('clone') ? null : implode(PHP_EOL, [
+                "        Route::post('/{$kebab}/{{$resource->variable()}}/duplicate', [{$resource->model}Controller::class, 'duplicate'])",
+                "            ->name('{$kebab}.duplicate')",
+                "            ->can('duplicate', '{$resource->variable()}');",
+            ]),
             'exportRoute' => ! $resource->export ? null : implode(PHP_EOL, [
                 "        Route::get('/{$kebab}/export', [{$resource->model}Controller::class, 'export'])",
                 "            ->name('{$kebab}.export')",
@@ -1083,6 +1104,293 @@ final class ResourceRenderer
     }
 
     /**
+     * Files of the clone operation (`--operations=clone`): the action that
+     * copies a record and its feature test.
+     *
+     * @return array<string, string>
+     */
+    private function cloneFiles(ResourceBlueprint $resource): array
+    {
+        $model = $resource->model;
+        $plural = $resource->plural();
+        $singular = Str::lower($resource->singularLabel());
+
+        $except = [
+            ...($resource->public ? ['slug', 'published'] : []),
+            ...($resource->owned ? ['user_id'] : []),
+        ];
+
+        $assignments = [
+            ...($resource->public ? ['$copy->slug = $this->copySlug($source->slug);', '$copy->published = false;'] : []),
+            ...($resource->owned ? ['$copy->user()->associate($actor);'] : []),
+        ];
+
+        $relations = array_map(
+            fn (ResourceField $field): string => "            \$copy->{$field->relation()}()->sync(\$source->{$field->relation()}()->allRelatedIds());",
+            $resource->manyRelations,
+        );
+
+        $summary = [
+            $resource->public
+                ? "Copy a {$singular} as a new, unpublished record with a free `-copy-N` slug."
+                : "Copy a {$singular} as a new record.",
+            ...($resource->owned ? ['The copy belongs to the user who made it.'] : []),
+            ...($resource->manyRelations === [] ? [] : ['Its many-to-many links are copied.']),
+            ...($resource->hasManyRelations === [] ? [] : ['Related hasMany records stay with the source.']),
+            'The source is not modified; the audit entry names it.',
+        ];
+
+        return [
+            "app/Actions/{$plural}/Duplicate{$model}.php" => $this->php('action.duplicate', $resource, [
+                'imports' => null,
+                'summary' => implode(PHP_EOL.' * ', $summary),
+                'replicateExcept' => $except === [] ? '' : '['.$this->quotedList($except).']',
+                'copyAssignments' => $assignments === [] ? null : implode(PHP_EOL, array_map(fn (string $line): string => "            {$line}", $assignments)),
+                'copyRelations' => $relations === [] ? null : implode(PHP_EOL, $relations),
+                'slugMethod' => $resource->public ? $this->copySlugMethod($resource) : null,
+            ]),
+            "tests/Feature/Admin/{$model}DuplicateTest.php" => $this->php('test.feature-duplicate', $resource, $this->duplicateTestFragments($resource)),
+        ];
+    }
+
+    /**
+     * `copySlug()` of a public resource: the first free `{slug}-copy-N`.
+     */
+    private function copySlugMethod(ResourceBlueprint $resource): string
+    {
+        return PHP_EOL.<<<PHP
+                /**
+                 * The first free `{slug}-copy-N` slug. A copy suffix of the source is
+                 * replaced, so copying a copy gives the next number instead of a
+                 * growing chain; the base is shortened to keep the slug within 255
+                 * characters.
+                 */
+                private function copySlug(string \$slug): string
+                {
+                    \$base = rtrim(substr((string) preg_replace('/-copy-\\d+\$/', '', \$slug), 0, 240), '-');
+                    \$taken = {$resource->model}::query()->where('slug', 'like', \$base.'-copy-%')->pluck('slug')->all();
+
+                    \$number = 1;
+                    while (in_array("{\$base}-copy-{\$number}", \$taken, true)) {
+                        \$number++;
+                    }
+
+                    return "{\$base}-copy-{\$number}";
+                }
+            PHP;
+    }
+
+    private function policyDuplicateMethod(ResourceBlueprint $resource): string
+    {
+        $singular = Str::lower($resource->singularLabel());
+        $variable = $resource->variable();
+
+        if ($resource->owned) {
+            return <<<PHP
+
+                /**
+                 * Determine whether the user can copy the {$singular} (owner only);
+                 * the copy belongs to the same user.
+                 */
+                public function duplicate(User \$user, {$resource->model} \${$variable}): bool
+                {
+                    return \$user->canEditContent() && \$user->id === \${$variable}->user_id;
+                }
+            PHP;
+        }
+
+        return <<<PHP
+
+            /**
+             * Determine whether the user can copy the {$singular} (admins and editors).
+             */
+            public function duplicate(User \$user, {$resource->model} \${$variable}): bool
+            {
+                return \$user->canEditContent();
+            }
+        PHP;
+    }
+
+    private function controllerDuplicateMethod(ResourceBlueprint $resource): ?string
+    {
+        if (! $resource->hasOperation('clone')) {
+            return null;
+        }
+
+        $model = $resource->model;
+        $variable = $resource->variable();
+        $copy = $resource->public ? 'an unpublished copy' : 'a copy';
+
+        return PHP_EOL.<<<PHP
+                /**
+                 * Create {$copy} of the {$this->lowerSingular($resource)} and open the copy's editor.
+                 */
+                public function duplicate(Request \$request, {$model} \${$variable}, Duplicate{$model} \$duplicate{$model}): RedirectResponse
+                {
+                    /** @var User \$user */
+                    \$user = \$request->user();
+                    \$copy = \$duplicate{$model}->handle(\${$variable}, \$user);
+
+                    Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.{$resource->camelPlural()}.duplicated')]);
+
+                    return to_route('admin.{$resource->kebabPlural()}.edit', \$copy);
+                }
+            PHP;
+    }
+
+    /**
+     * Row menu entry of the clone operation in the generated list.
+     */
+    private function duplicateRowAction(ResourceBlueprint $resource): ?string
+    {
+        if (! $resource->hasOperation('clone')) {
+            return null;
+        }
+
+        return <<<TSX
+                                ...(can.duplicate
+                                    ? [
+                                          {
+                                              id: 'duplicate',
+                                              label: t('admin.{$resource->camelPlural()}.actionDuplicate'),
+                                              icon: Copy,
+                                              onSelect: () => router.post(duplicate.url(row.id)),
+                                          },
+                                      ]
+                                    : []),
+        TSX;
+    }
+
+    /**
+     * Form fragments of the clone operation: the copy button beside delete in
+     * the editor header.
+     *
+     * @return array<string, string|null>
+     */
+    private function formDuplicateFragments(ResourceBlueprint $resource): array
+    {
+        $camel = $resource->camelPlural();
+        $deleteButton = <<<TSX
+            <Button
+                variant="destructive"
+                onClick={() => setIsDeleteOpen(true)}
+            >
+                {t('admin.{$camel}.delete')}
+            </Button>
+            TSX;
+
+        if (! $resource->hasOperation('clone')) {
+            return [
+                'inlineImport' => null,
+                'duplicateImport' => null,
+                'duplicateState' => null,
+                'duplicateFunction' => null,
+                'headerActions' => implode(PHP_EOL, [
+                    '                    recordId !== null && can.delete ? (',
+                    $this->indent($deleteButton, 24),
+                    '                    ) : undefined',
+                ]),
+            ];
+        }
+
+        return [
+            'inlineImport' => '    Inline,',
+            'duplicateImport' => '    duplicate,',
+            'duplicateState' => '    const [isDuplicating, setIsDuplicating] = useState(false);',
+            'duplicateFunction' => PHP_EOL.<<<TSX
+                    /** Copies the saved record; unsaved edits are not part of the copy. */
+                    function duplicateRecord() {
+                        if (recordId === null) {
+                            return;
+                        }
+
+                        if (form.isDirty && !window.confirm(t('admin.{$camel}.unsavedChanges'))) {
+                            return;
+                        }
+
+                        setIsDuplicating(true);
+                        router.post(duplicate.url(recordId), undefined, {
+                            onFinish: () => setIsDuplicating(false),
+                        });
+                    }
+                TSX,
+            'headerActions' => implode(PHP_EOL, [
+                '                    recordId !== null && (can.duplicate || can.delete) ? (',
+                '                        <Inline gap="tight">',
+                '                            {can.duplicate && (',
+                '                                <Button',
+                '                                    variant="outline"',
+                '                                    isPending={isDuplicating}',
+                '                                    onClick={duplicateRecord}',
+                '                                >',
+                "                                    {t('admin.{$camel}.duplicate')}",
+                '                                </Button>',
+                '                            )}',
+                '                            {can.delete && (',
+                $this->indent($deleteButton, 32),
+                '                            )}',
+                '                        </Inline>',
+                '                    ) : undefined',
+            ]),
+        ];
+    }
+
+    private function indent(string $code, int $spaces): string
+    {
+        $prefix = str_repeat(' ', $spaces);
+
+        return implode(PHP_EOL, array_map(fn (string $line): string => $line === '' ? '' : $prefix.$line, explode(PHP_EOL, $code)));
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function duplicateTestFragments(ResourceBlueprint $resource): array
+    {
+        $ownedBy = $resource->owned ? '->for($user)' : '';
+        $sourceAttributes = $resource->public ? "['slug' => 'source-record', 'published' => true]" : '';
+
+        $setup = [];
+        $expectations = [];
+        $relatedClasses = [];
+        foreach ($resource->manyRelations as $field) {
+            $relation = $field->relation();
+            $ids = Str::singular($relation).'Ids';
+            $relatedClasses[] = 'App\\Models\\'.$field->relatedClass();
+            $setup[] = "    \${$ids} = {$field->relatedClass()}::factory()->count(2)->create()->modelKeys();";
+            $setup[] = "    \$source->{$relation}()->attach(\${$ids});";
+            $expectations[] = "        ->and(\$copy->{$relation}()->allRelatedIds()->sort()->values()->all())->toBe(\${$ids})";
+        }
+
+        if ($resource->public) {
+            $expectations[] = "        ->and(\$copy->slug)->toBe('source-record-copy-1')";
+            $expectations[] = '        ->and($copy->published)->toBeFalse()';
+        }
+
+        if ($resource->owned) {
+            $expectations[] = '        ->and($copy->user_id)->toBe($user->id)';
+        }
+
+        $compared = ['id', 'created_at', 'updated_at', ...($resource->public ? ['slug', 'published'] : [])];
+
+        return [
+            'imports' => $this->imports($relatedClasses),
+            'ownedBy' => $ownedBy,
+            'sourceAttributes' => $sourceAttributes,
+            'relationSetup' => $setup === [] ? null : implode(PHP_EOL, $setup),
+            'copyExpectations' => $expectations === [] ? null : implode(PHP_EOL, $expectations),
+            'comparedExcept' => $this->quotedList($compared),
+            'copyTitle' => $resource->public
+                ? 'admins and editors copy a '.Str::lower($resource->singularLabel()).' as an unpublished draft with a copy slug'
+                : 'admins and editors copy a '.Str::lower($resource->singularLabel()).' as a new record',
+            'ownerDenialSource' => $resource->owned ? '->for(User::factory()->editor())' : '',
+            'ownerDenialTest' => $resource->owned ? $this->render('test.feature-duplicate-owned', $resource) : null,
+            'slugTest' => $resource->public ? $this->render('test.feature-duplicate-slug', $resource, ['ownedBy' => $ownedBy]) : null,
+            'editorOwned' => $resource->owned ? '->for($editor)' : '',
+        ];
+    }
+
+    /**
      * @return array<string, string|null>
      */
     private function controllerFragments(ResourceBlueprint $resource): array
@@ -1104,6 +1412,10 @@ final class ResourceRenderer
 
         if ($resource->hasManyRelations !== []) {
             $classes[] = 'App\Data\Listing\RelatedRecordsData';
+        }
+
+        if ($resource->hasOperation('clone')) {
+            array_push($classes, "App\\Actions\\{$resource->plural()}\\Duplicate{$resource->model}", 'App\Models\User');
         }
 
         if ($resource->export) {
@@ -1182,6 +1494,12 @@ final class ResourceRenderer
             'editorOptions' => $editorOptions === [] ? null : implode(PHP_EOL, $editorOptions).PHP_EOL,
             'editorArguments' => $editorArguments === [] ? null : implode(PHP_EOL, $editorArguments),
             'exportAbility' => $resource->export ? "            export: \$user?->can('export', {$resource->model}::class) ?? false," : null,
+            'duplicateAbility' => ! $resource->hasOperation('clone') ? null : implode(PHP_EOL, [
+                "            duplicate: {$variable} !== null",
+                "                ? (\$user?->can('duplicate', {$variable}) ?? false)",
+                "                : (\$user?->can('create', {$model}::class) ?? false),",
+            ]),
+            'duplicateMethod' => $this->controllerDuplicateMethod($resource),
             'optionMethods' => $this->optionMethods($resource),
         ];
     }
@@ -1992,6 +2310,7 @@ final class ResourceRenderer
             'formValues' => $richText === [] ? 'form.data' : 'toFormValues(form.data)',
             'changeValue' => $richText === [] ? 'value' : "typeof value === 'object' ? JSON.stringify(value) : value",
             'formFields' => $this->formFields($resource),
+            ...$this->formDuplicateFragments($resource),
         ];
     }
 
@@ -2276,13 +2595,17 @@ final class ResourceRenderer
             $entries[$field->relation().'Tab'] = strtr($labels['hasManyTab']['label'], ['{label}' => $field->label()]);
         }
 
+        if ($resource->hasOperation('clone')) {
+            $entries = [...$entries, ...$labels['clone'], ...($resource->public ? $labels['clonePublic'] : [])];
+        }
+
         if ($entries === []) {
             return null;
         }
 
         $lines = [];
         foreach ($entries as $key => $text) {
-            $text = strtr($text, ['{kebab}' => $resource->kebabPlural()]);
+            $text = strtr($text, ['{kebab}' => $resource->kebabPlural(), '{singular}' => Str::lower($resource->singularLabel())]);
             $lines[] = "        '{$key}' => '".str_replace("'", "\\'", $text)."',";
         }
 
@@ -2370,10 +2693,17 @@ final class ResourceRenderer
     private function abilitiesLiteral(ResourceBlueprint $resource, bool $value): string
     {
         $flag = $value ? 'true' : 'false';
+        $abilities = ["create: {$flag}", "delete: {$flag}"];
 
-        return $resource->export
-            ? "{ create: {$flag}, delete: {$flag}, export: {$flag} }"
-            : "{ create: {$flag}, delete: {$flag} }";
+        if ($resource->export) {
+            $abilities[] = "export: {$flag}";
+        }
+
+        if ($resource->hasOperation('clone')) {
+            $abilities[] = "duplicate: {$flag}";
+        }
+
+        return '{ '.implode(', ', $abilities).' }';
     }
 
     private function testFirstRowTitle(ResourceBlueprint $resource): string
@@ -2394,7 +2724,7 @@ final class ResourceRenderer
         $keys = 'admin.'.$resource->camelPlural();
         $kebab = $resource->kebabPlural();
         $canAll = $this->abilitiesLiteral($resource, true);
-        $withoutExport = '{ create: true, delete: true, export: false }';
+        $withoutExport = str_replace('export: true', 'export: false', $canAll);
 
         return <<<TS
 
@@ -2622,10 +2952,18 @@ final class ResourceRenderer
     {
         // Owners delete their own records, so an editor sees the delete action.
         $delete = $resource->owned ? 'true' : 'false';
+        $abilities = ["'create' => true", "'delete' => {$delete}"];
 
-        return $resource->export
-            ? "'create' => true, 'delete' => {$delete}, 'export' => false"
-            : "'create' => true, 'delete' => {$delete}";
+        if ($resource->export) {
+            $abilities[] = "'export' => false";
+        }
+
+        // Copying is offered to every role that may create records.
+        if ($resource->hasOperation('clone')) {
+            $abilities[] = "'duplicate' => true";
+        }
+
+        return implode(', ', $abilities);
     }
 
     /**

@@ -65,6 +65,11 @@ final readonly class ResourceBlueprint
     private const array BLOCKED_RELATED_MODELS = ['user'];
 
     /**
+     * Extra panel operations accepted by `--operations`.
+     */
+    public const array OPERATIONS = ['clone'];
+
+    /**
      * @param  list<ResourceField>  $fields
      * @param  list<string>  $searchable
      * @param  list<string>  $sortable
@@ -78,6 +83,7 @@ final readonly class ResourceBlueprint
      *                        page (adds the `slug` and `published` fields).
      * @param  list<ResourceField>  $hasManyRelations  hasMany fields: no column, the related
      *                                                 records are a tab of the edit screen.
+     * @param  list<string>  $operations  Extra operations from {@see self::OPERATIONS}.
      */
     private function __construct(
         public string $model,
@@ -90,6 +96,7 @@ final readonly class ResourceBlueprint
         public bool $owned = false,
         public bool $public = false,
         public array $hasManyRelations = [],
+        public array $operations = [],
     ) {}
 
     /**
@@ -97,9 +104,16 @@ final readonly class ResourceBlueprint
      *
      * @throws InvalidArgumentException With every problem found, one per line.
      */
-    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false, bool $owned = false, bool $public = false): self
+    public static function parse(string $name, string $fields, string $searchable = '', string $sortable = '', string $filters = '', bool $export = false, bool $owned = false, bool $public = false, string $operations = ''): self
     {
         $errors = self::validateName($name);
+
+        $operationList = self::splitList($operations);
+        foreach ($operationList as $operation) {
+            if (! in_array($operation, self::OPERATIONS, true)) {
+                $errors[] = "Operation [{$operation}] is not supported; available: ".implode(', ', self::OPERATIONS).'.';
+            }
+        }
 
         [$allFields, $fieldErrors] = self::parseFields($fields);
         $errors = [...$errors, ...$fieldErrors];
@@ -199,6 +213,7 @@ final readonly class ResourceBlueprint
             owned: $owned,
             public: $public,
             hasManyRelations: $hasManyRelations,
+            operations: $operationList,
         );
     }
 
@@ -430,6 +445,14 @@ final readonly class ResourceBlueprint
         }
 
         return $items;
+    }
+
+    /**
+     * Whether the resource gets the given extra operation (`--operations`).
+     */
+    public function hasOperation(string $operation): bool
+    {
+        return in_array($operation, $this->operations, true);
     }
 
     /**

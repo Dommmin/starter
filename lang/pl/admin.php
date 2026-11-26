@@ -750,6 +750,7 @@ return [
             'resource' => [
                 'exported' => 'Rekordy wyeksportowane do CSV',
                 'imported' => 'Zaimportowano rekordy z CSV',
+                'duplicated' => 'Utworzono kopię rekordu',
             ],
             'site_settings' => [
                 'updated' => 'Zmieniono ustawienia strony',

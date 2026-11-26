@@ -83,6 +83,23 @@ test('an editor creates a published page with an optional second translation', f
         ->and($page->translations()->where('locale', 'de')->exists())->toBeFalse();
 });
 
+test('the body keeps the spaces next to links and bold words while titles are trimmed', function () {
+    $body = ['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [
+        ['type' => 'text', 'text' => 'Visit '],
+        ['type' => 'text', 'text' => 'our bakery', 'marks' => [['type' => 'bold']]],
+        ['type' => 'text', 'text' => ' today.'],
+    ]]]];
+
+    $this->actingAs(User::factory()->editor()->create())->post(route('admin.pages.store'), [
+        'translations' => ['en' => translationInput('  About us  ', 'about-us', overrides: ['body' => $body])],
+    ])->assertSessionHasNoErrors();
+
+    $translation = PageTranslation::query()->sole();
+    expect($translation->title)->toBe('About us')
+        ->and($translation->body['content'][0]['content'][0]['text'])->toBe('Visit ')
+        ->and($translation->body['content'][0]['content'][2]['text'])->toBe(' today.');
+});
+
 test('the edit screen exposes the stored translations and the version for locking', function () {
     $admin = User::factory()->admin()->create();
     $page = Page::factory()->published()->create();

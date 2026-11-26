@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
 use App\Jobs\SendContactMessage;
 use App\Models\ContactMessage;
@@ -44,6 +45,7 @@ test('editors see the typed list without message bodies', function () {
                 'locale' => 'en',
                 'status' => 'pending',
                 'attempts' => 0,
+                'category' => null,
                 'createdAt' => $message->created_at?->toIso8601String(),
             ])
             ->where('filters', [
@@ -51,6 +53,7 @@ test('editors see the typed list without message bodies', function () {
                 'sort' => 'created_at',
                 'direction' => 'desc',
                 'status' => 'all',
+                'category' => 'all',
             ])
         );
 });
@@ -73,6 +76,38 @@ test('the list searches by name or email and filters by status', function () {
     $this->actingAs($admin)->get(route('admin.contact.index', ['status' => 'unknown']))
         ->assertSessionHasErrors('status');
 });
+
+test('the list shows the AI category and filters by allowlisted categories', function () {
+    $editor = User::factory()->editor()->create();
+    $spam = ContactMessage::factory()->classified(ContactMessageCategory::Spam)->create();
+    ContactMessage::factory()->classified(ContactMessageCategory::Lead)->create();
+    ContactMessage::factory()->create();
+
+    $this->actingAs($editor)->get(route('admin.contact.index', ['category' => 'spam']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('items', 1)
+            ->where('items.0.id', $spam->id)
+            ->where('items.0.category', 'spam')
+            ->where('filters.category', 'spam')
+        );
+
+    $this->actingAs($editor)->get(route('admin.contact.index', ['category' => 'unknown']))
+        ->assertSessionHasErrors('category');
+    $this->actingAs($editor)->get(route('admin.contact.index', ['category' => ['spam']]))
+        ->assertSessionHasErrors('category');
+});
+
+test('users without access to messages cannot filter them by category', function (User $user) {
+    ContactMessage::factory()->classified(ContactMessageCategory::Spam)->create();
+
+    $this->actingAs($user)
+        ->get(route('admin.contact.index', ['category' => 'spam']))
+        ->assertForbidden();
+})->with([
+    'viewer' => fn (): User => User::factory()->viewer()->create(),
+    'without a panel role' => fn (): User => User::factory()->create(),
+]);
 
 test('editors can view a message but cannot retry or delete it', function () {
     $editor = User::factory()->editor()->create();

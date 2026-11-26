@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { prefersReducedMotion } from '@/lib/reduced-motion';
 import { cn } from '@/lib/utils';
 
 type RevealState = 'static' | 'hidden' | 'shown';
@@ -30,7 +31,8 @@ const hidden =
  * visible in the server HTML and without JavaScript: only a block that is
  * below the fold after hydration is hidden until it is reached, so content
  * on the first screen never animates (no LCP or CLS cost). With
- * `prefers-reduced-motion: reduce` nothing animates.
+ * `prefers-reduced-motion: reduce` or the reduced-motion
+ * accessibility preference nothing animates.
  */
 export function Reveal({ children, id }: RevealProps) {
     const ref = useRef<HTMLDivElement>(null);
@@ -42,7 +44,7 @@ export function Reveal({ children, id }: RevealProps) {
         if (
             !element ||
             typeof IntersectionObserver === 'undefined' ||
-            window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
+            prefersReducedMotion() ||
             element.getBoundingClientRect().top < window.innerHeight
         ) {
             return;

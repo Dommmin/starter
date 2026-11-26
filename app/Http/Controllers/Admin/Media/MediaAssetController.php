@@ -17,6 +17,7 @@ use App\Data\Admin\Media\MediaPickerItemData;
 use App\Data\Admin\Media\MediaUploadRulesData;
 use App\Data\Listing\ListPaginationData;
 use App\Data\Media\MediaImageData;
+use App\Enums\AssistantFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Media\ListMediaAssetsRequest;
 use App\Http\Requests\Admin\Media\MediaPickerRequest;
@@ -195,6 +196,11 @@ class MediaAssetController extends Controller
             delete: $asset !== null
                 ? ($user?->can('delete', $asset) ?? false)
                 : ($user?->isAdmin() ?? false),
+            suggestAlt: $asset !== null
+                && $asset->hasPassedScan()
+                && $asset->isImage()
+                && AssistantFeature::MediaAltText->isAvailable()
+                && ($user?->can('update', $asset) ?? false),
         );
     }
 }

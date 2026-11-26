@@ -17,6 +17,7 @@ import {
     useLazyModule,
     type LazyPopupTriggerProps,
 } from './lazy-popup';
+import { AccessibilitySwitcher } from './accessibility-switcher';
 import { LocaleSwitcher } from './locale-switcher';
 import { MobileNav } from './mobile-nav';
 import { ThemeSwitcher } from './theme-switcher';
@@ -274,6 +275,7 @@ export function PublicHeader({
                         <>
                             <ThemeSwitcher variant="labelled" />
                             <LocaleSwitcher variant="labelled" />
+                            <AccessibilitySwitcher variant="labelled" />
                         </>
                     }
                     footer={

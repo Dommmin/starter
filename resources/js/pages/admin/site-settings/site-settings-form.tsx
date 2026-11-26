@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
     Alert,
     ConflictDialog,
+    Link,
     PageHeader,
     ResourceForm,
     Stack,
@@ -14,6 +15,7 @@ import {
 import { useMediaImagePicker } from '@/hooks/use-media-image-picker';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
+import { index as systemIndex } from '@/routes/admin/system';
 import {
     edit as siteSettingsEdit,
     update as siteSettingsUpdate,
@@ -43,6 +45,7 @@ const ACCENTS: App.Enums.AccentColor[] = [
 ];
 const TYPOGRAPHY_PRESETS: App.Enums.TypographyPreset[] = ['default', 'classic'];
 const THEMES: App.Enums.ThemePreference[] = ['system', 'light', 'dark'];
+const ANNOUNCEMENT_TONES: App.Enums.AnnouncementTone[] = ['info', 'warning'];
 
 /** Request keys of the settings shared by every language. */
 const SHARED_FIELDS = [
@@ -63,6 +66,11 @@ const SHARED_FIELDS = [
     'tax_id',
     'map_url',
     'google_site_verification',
+    'plausible_domain',
+    'announcement_tone',
+    'announcement_link_url',
+    'announcement_starts_on',
+    'announcement_ends_on',
 ] as const;
 
 /** Request keys of the texts of one language (`translations.{locale}.*`). */
@@ -72,6 +80,8 @@ const TRANSLATION_FIELDS = [
     'seo_title',
     'seo_description',
     'auto_reply_text',
+    'announcement_text',
+    'announcement_link_label',
 ] as const;
 
 type SharedField = (typeof SHARED_FIELDS)[number];
@@ -86,6 +96,7 @@ type SiteSettingsFormState = Record<SharedField, string> & {
     opening_hours: OpeningHoursState;
     contact_recipients: ResourceFormRepeaterItem[];
     contact_auto_reply: boolean;
+    announcement_enabled: boolean;
 };
 
 /** Contact form recipients the settings accept (UpdateSiteSettingsRequest). */
@@ -104,6 +115,7 @@ type TextKey =
 type TabValues = Record<TextKey, string> & {
     contact_recipients: ResourceFormRepeaterItem[];
     contact_auto_reply: boolean;
+    announcement_enabled: boolean;
 };
 
 function socialField(network: SocialNetwork): `social_links.${SocialNetwork}` {
@@ -116,6 +128,9 @@ function hoursField(
 ): `opening_hours.${Weekday}.${'opens' | 'closes'}` {
     return `opening_hours.${day}.${edge}`;
 }
+
+/** Value of the tab with the settings shared by every language. */
+const SHARED_TAB = 'shared';
 
 function translationPrefix(locale: string): string {
     return `translations.${locale}.`;
@@ -132,6 +147,8 @@ function toTranslationState(
         seo_title: translation?.seoTitle ?? '',
         seo_description: translation?.seoDescription ?? '',
         auto_reply_text: translation?.autoReplyText ?? '',
+        announcement_text: translation?.announcementText ?? '',
+        announcement_link_label: translation?.announcementLinkLabel ?? '',
     };
 }
 
@@ -144,11 +161,11 @@ export type SiteSettingsFormProps = {
 };
 
 /**
- * Site settings screen: one tab per active public locale, each a
- * `ResourceForm` with the shared settings (brand, contact, social links,
- * sharing image, contact form recipient) and the texts of that language.
- * Submitting any tab saves everything; a stale version opens the conflict
- * dialog.
+ * Site settings screen: a first tab with the settings shared by every
+ * language (brand, appearance, contact, social links, sharing image, contact
+ * form recipients), then one tab per active public locale with only the texts
+ * of that language. Each tab is a `ResourceForm`; submitting any tab saves
+ * everything. A stale version opens the conflict dialog.
  */
 export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
     const { settings, locales, socialNetworks } = editor;
@@ -179,11 +196,17 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         tax_id: settings.taxId ?? '',
         map_url: settings.mapUrl ?? '',
         google_site_verification: settings.googleSiteVerification ?? '',
+        plausible_domain: settings.plausibleDomain ?? '',
         opening_hours: { ...settings.openingHours },
         contact_recipients: settings.contactRecipients.map((email) => ({
             email,
         })),
         contact_auto_reply: settings.contactAutoReply,
+        announcement_enabled: settings.announcementEnabled,
+        announcement_tone: settings.announcementTone,
+        announcement_link_url: settings.announcementLinkUrl ?? '',
+        announcement_starts_on: settings.announcementStartsOn ?? '',
+        announcement_ends_on: settings.announcementEndsOn ?? '',
         social_links: { ...settings.socialLinks },
         translations: Object.fromEntries(
             locales.available.map((locale) => [
@@ -193,7 +216,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         ),
     });
 
-    const [activeLocale, setActiveLocale] = useState(locales.default);
+    const [activeTab, setActiveTab] = useState(SHARED_TAB);
     const [isConflictOpen, setIsConflictOpen] = useState(false);
 
     const errors = form.errors as Partial<Record<string, string>>;
@@ -213,6 +236,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         ),
         'contact_recipients',
         'contact_auto_reply',
+        'announcement_enabled',
         ...form.data.contact_recipients.map(
             (_, position) => `contact_recipients.${position}`,
         ),
@@ -225,6 +249,19 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
     const localeHasErrors = (code: string, keys: string[] = errorKeys) =>
         keys.some((key) => key.startsWith(translationPrefix(code)));
+
+    const sharedHasErrors = (keys: string[] = errorKeys) =>
+        keys.some(
+            (key) => inlineKeys.has(key) && !key.startsWith('translations.'),
+        );
+
+    const tabHasErrors = (tab: string, keys: string[] = errorKeys) =>
+        tab === SHARED_TAB ? sharedHasErrors(keys) : localeHasErrors(tab, keys);
+
+    const tabs = [
+        SHARED_TAB,
+        ...locales.available.map((locale) => locale.code),
+    ];
 
     useEffect(() => {
         if (!form.isDirty) {
@@ -260,6 +297,12 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
         if (name === 'contact_auto_reply' && typeof value === 'boolean') {
             form.setData('contact_auto_reply', value);
+
+            return;
+        }
+
+        if (name === 'announcement_enabled' && typeof value === 'boolean') {
+            form.setData('announcement_enabled', value);
 
             return;
         }
@@ -340,6 +383,12 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             tax_id: nullable(data.tax_id),
             map_url: nullable(data.map_url),
             google_site_verification: nullable(data.google_site_verification),
+            plausible_domain: nullable(data.plausible_domain),
+            announcement_enabled: data.announcement_enabled,
+            announcement_tone: data.announcement_tone,
+            announcement_link_url: nullable(data.announcement_link_url),
+            announcement_starts_on: nullable(data.announcement_starts_on),
+            announcement_ends_on: nullable(data.announcement_ends_on),
             opening_hours: data.opening_hours,
             social_links: data.social_links,
             translations: data.translations,
@@ -357,16 +406,14 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
 
                 const keys = Object.keys(received);
 
-                if (localeHasErrors(activeLocale, keys)) {
+                if (tabHasErrors(activeTab, keys)) {
                     return;
                 }
 
-                const target = locales.available.find((locale) =>
-                    localeHasErrors(locale.code, keys),
-                )?.code;
+                const target = tabs.find((tab) => tabHasErrors(tab, keys));
 
                 if (target) {
-                    setActiveLocale(target);
+                    setActiveTab(target);
                 }
             },
         });
@@ -406,17 +453,24 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             : t('admin.siteSettings.localeMissing');
     }
 
-    const otherLocalesWithErrors = locales.available
-        .filter(
-            (locale) =>
-                locale.code !== activeLocale && localeHasErrors(locale.code),
-        )
-        .map((locale) => locale.native);
+    function sharedState(): string {
+        return sharedHasErrors()
+            ? t('admin.siteSettings.localeHasErrors')
+            : t('admin.siteSettings.sharedTabState');
+    }
 
-    function sections(
-        locale: App.Data.Content.ContentLocaleData,
-        values: TabValues,
-    ): ResourceFormSection<TabValues>[] {
+    function tabName(tab: string): string {
+        return tab === SHARED_TAB
+            ? t('admin.siteSettings.sharedTab')
+            : (locales.available.find((locale) => locale.code === tab)
+                  ?.native ?? tab);
+    }
+
+    const otherTabsWithErrors = tabs
+        .filter((tab) => tab !== activeTab && tabHasErrors(tab))
+        .map(tabName);
+
+    function sharedSections(): ResourceFormSection<TabValues>[] {
         return [
             {
                 id: 'general',
@@ -625,8 +679,127 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                             'admin.siteSettings.fields.googleVerificationHelp',
                         ),
                     },
+                    {
+                        type: 'text',
+                        name: 'plausible_domain',
+                        label: t('admin.siteSettings.fields.plausibleDomain'),
+                        hint: t(
+                            'admin.siteSettings.fields.plausibleDomainHelp',
+                        ),
+                        placeholder: 'example.com',
+                    },
                 ],
             },
+            {
+                id: 'notifications',
+                title: t('admin.siteSettings.sections.notifications.title'),
+                description: t(
+                    'admin.siteSettings.sections.notifications.description',
+                ),
+                fields: [
+                    {
+                        type: 'repeater',
+                        name: 'contact_recipients',
+                        label: t('admin.siteSettings.fields.recipients'),
+                        hint: t('admin.siteSettings.fields.recipientsHelp'),
+                        maxItems: MAX_RECIPIENTS,
+                        newItem: () => ({ email: '' }),
+                        labels: {
+                            add: t('admin.siteSettings.fields.recipientAdd'),
+                            item: (position) =>
+                                t('admin.siteSettings.fields.recipientItem', {
+                                    position,
+                                }),
+                        },
+                        itemFields: [
+                            {
+                                type: 'text',
+                                name: 'email',
+                                label: t('admin.siteSettings.fields.recipient'),
+                                required: true,
+                            },
+                        ],
+                    },
+                    {
+                        type: 'switch',
+                        name: 'contact_auto_reply',
+                        label: t('admin.siteSettings.fields.autoReply'),
+                        hint: t('admin.siteSettings.fields.autoReplyHelp'),
+                    },
+                ],
+            },
+            {
+                id: 'announcement',
+                title: t('admin.siteSettings.sections.announcement.title'),
+                description: t(
+                    'admin.siteSettings.sections.announcement.description',
+                ),
+                fields: [
+                    {
+                        type: 'switch',
+                        name: 'announcement_enabled',
+                        label: t(
+                            'admin.siteSettings.fields.announcementEnabled',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementEnabledHelp',
+                        ),
+                    },
+                    {
+                        type: 'select',
+                        name: 'announcement_tone',
+                        label: t('admin.siteSettings.fields.announcementTone'),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementToneHelp',
+                        ),
+                        required: true,
+                        options: ANNOUNCEMENT_TONES.map((tone) => ({
+                            value: tone,
+                            label: t(
+                                `admin.siteSettings.announcementTones.${tone}`,
+                            ),
+                        })),
+                    },
+                    {
+                        type: 'text',
+                        name: 'announcement_link_url',
+                        label: t(
+                            'admin.siteSettings.fields.announcementLinkUrl',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementLinkUrlHelp',
+                        ),
+                    },
+                    {
+                        type: 'date',
+                        name: 'announcement_starts_on',
+                        label: t(
+                            'admin.siteSettings.fields.announcementStartsOn',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementStartsOnHelp',
+                        ),
+                    },
+                    {
+                        type: 'date',
+                        name: 'announcement_ends_on',
+                        label: t(
+                            'admin.siteSettings.fields.announcementEndsOn',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementEndsOnHelp',
+                        ),
+                    },
+                ],
+            },
+        ];
+    }
+
+    function textSections(
+        locale: App.Data.Content.ContentLocaleData,
+        values: TabValues,
+    ): ResourceFormSection<TabValues>[] {
+        return [
             {
                 id: `texts-${locale.code}`,
                 title: t('admin.siteSettings.sections.texts.title', {
@@ -672,43 +845,24 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         label: t('admin.siteSettings.fields.autoReplyText'),
                         hint: t('admin.siteSettings.fields.autoReplyTextHelp'),
                     },
-                ],
-            },
-            {
-                id: 'notifications',
-                title: t('admin.siteSettings.sections.notifications.title'),
-                description: t(
-                    'admin.siteSettings.sections.notifications.description',
-                ),
-                fields: [
                     {
-                        type: 'repeater',
-                        name: 'contact_recipients',
-                        label: t('admin.siteSettings.fields.recipients'),
-                        hint: t('admin.siteSettings.fields.recipientsHelp'),
-                        maxItems: MAX_RECIPIENTS,
-                        newItem: () => ({ email: '' }),
-                        labels: {
-                            add: t('admin.siteSettings.fields.recipientAdd'),
-                            item: (position) =>
-                                t('admin.siteSettings.fields.recipientItem', {
-                                    position,
-                                }),
-                        },
-                        itemFields: [
-                            {
-                                type: 'text',
-                                name: 'email',
-                                label: t('admin.siteSettings.fields.recipient'),
-                                required: true,
-                            },
-                        ],
+                        type: 'text',
+                        name: 'announcement_text',
+                        label: t('admin.siteSettings.fields.announcementText'),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementTextCounter',
+                            { length: String(values.announcement_text).length },
+                        ),
                     },
                     {
-                        type: 'switch',
-                        name: 'contact_auto_reply',
-                        label: t('admin.siteSettings.fields.autoReply'),
-                        hint: t('admin.siteSettings.fields.autoReplyHelp'),
+                        type: 'text',
+                        name: 'announcement_link_label',
+                        label: t(
+                            'admin.siteSettings.fields.announcementLinkLabel',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementLinkLabelHelp',
+                        ),
                     },
                 ],
             },
@@ -730,11 +884,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                 />
             )}
 
-            {otherLocalesWithErrors.length > 0 && (
+            {otherTabsWithErrors.length > 0 && (
                 <Alert
                     tone="danger"
-                    title={t('admin.siteSettings.errorsInOtherLanguages', {
-                        languages: otherLocalesWithErrors.join(', '),
+                    title={t('admin.siteSettings.errorsInOtherTabs', {
+                        tabs: otherTabsWithErrors.join(', '),
                     })}
                 />
             )}
@@ -742,6 +896,8 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             <SiteSkins
                 accent={form.data.accent}
                 typography={form.data.typography}
+                savedAccent={settings.accent ?? ''}
+                savedTypography={settings.typography ?? ''}
                 disabled={form.processing}
                 onApply={(skin) =>
                     form.setData((data) => ({
@@ -752,12 +908,27 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                 }
             />
 
+            <Alert
+                tone="neutral"
+                title={t('admin.siteSettings.searchVisibility.title')}
+                description={
+                    <>
+                        {t('admin.siteSettings.searchVisibility.description')}{' '}
+                        <Link href={systemIndex()}>
+                            {t('admin.siteSettings.searchVisibility.link')}
+                        </Link>
+                    </>
+                }
+            />
+
             <Tabs
                 ariaLabel={t('admin.siteSettings.languagesLabel')}
-                value={activeLocale}
-                onValueChange={setActiveLocale}
-                items={locales.available.map((locale) => {
-                    const code = locale.code;
+                value={activeTab}
+                onValueChange={setActiveTab}
+                items={tabs.map((code) => {
+                    const locale = locales.available.find(
+                        (available) => available.code === code,
+                    );
                     const prefix = translationPrefix(code);
                     const values: TabValues = {
                         ...Object.fromEntries(
@@ -784,16 +955,19 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                                 ],
                             ]),
                         ),
-                        ...form.data.translations[code],
+                        ...(locale
+                            ? form.data.translations[code]
+                            : toTranslationState(undefined)),
                         contact_recipients: form.data.contact_recipients,
                         contact_auto_reply: form.data.contact_auto_reply,
+                        announcement_enabled: form.data.announcement_enabled,
                     } as TabValues;
 
                     return {
                         value: code,
                         label: t('admin.siteSettings.localeTabLabel', {
-                            language: locale.native,
-                            state: localeState(code),
+                            language: tabName(code),
+                            state: locale ? localeState(code) : sharedState(),
                         }),
                         content: (
                             <ResourceForm<TabValues>
@@ -836,7 +1010,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                                     ),
                                     saved: t('admin.siteSettings.updated'),
                                 }}
-                                sections={sections(locale, values)}
+                                sections={
+                                    locale
+                                        ? textSections(locale, values)
+                                        : sharedSections()
+                                }
                             />
                         ),
                     };

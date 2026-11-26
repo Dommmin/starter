@@ -1,5 +1,6 @@
 import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { AccessibilitySwitcher } from './accessibility-switcher';
 import { BrandLogo, type BrandLogoImage } from './brand-logo';
 import { LocaleSwitcher } from './locale-switcher';
 import { useSiteBrand } from './site-brand';
@@ -17,9 +18,9 @@ export type HeaderUtilityProps = {
     /** One-tone text logo name; defaults to the saved site name. */
     brandName?: string;
     /**
-     * Hide the locale switcher below `sm`; the caller then renders it in its
-     * mobile menu (see `MobileNav` `utilities`), so a typical site name fits
-     * next to the remaining controls at 360 px.
+     * Hide the accessibility and locale switchers below `sm`; the caller
+     * then renders them in its mobile menu (see `MobileNav` `utilities`), so
+     * a typical site name fits next to the remaining controls at 360 px.
      */
     switchersInMobileMenu?: boolean;
     className?: never;
@@ -68,6 +69,7 @@ export function HeaderUtility({
                             switchersInMobileMenu ? 'hidden sm:flex' : 'flex',
                         )}
                     >
+                        <AccessibilitySwitcher />
                         <LocaleSwitcher />
                     </div>
                     {children}

@@ -159,6 +159,30 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertNotIn("migrate:rollback", deployer)
         self.assertNotIn("invoke('rollback')", deployer)
 
+    def test_managed_env_is_opt_in_rendered_before_config_cache_and_keeps_secrets_out_of_logs(self):
+        deployer = (ROOT / "deploy.php").read_text()
+        steps = re.findall(r"'([a-z:_]+)'", re.search(r"task\('deploy', \[(.*?)\]\);", deployer, re.S).group(1))
+        self.assertLess(steps.index("deploy:managed_env"), steps.index("artisan:config:cache"))
+        # Deployer's own deploy:env (inside deploy:prepare) must not be overridden.
+        self.assertNotIn("task('deploy:env'", deployer)
+        env_task = deployer.split("task('deploy:managed_env', function", 1)[1].split("\n});", 1)[0]
+        self.assertIn("optionalEnvironment('DEPLOY_MANAGED_ENV', 'off')", env_task)
+        self.assertIn("$mode === 'check'", env_task)
+        self.assertIn(".env.previous", env_task)
+        self.assertIn("cat .env.next > .env", env_task)
+
+        deploy = (ROOT / ".github/workflows/deploy.yml").read_text()
+        render = deploy.split("- name: Render managed .env", 1)[1].split("- name:", 1)[0]
+        self.assertIn("vars.DEPLOY_MANAGED_ENV == 'check' || vars.DEPLOY_MANAGED_ENV == 'apply'", render)
+        self.assertIn("MANAGED_ENV_SECRETS: ${{ toJSON(secrets) }}", render)
+        self.assertIn("umask 077", render)
+        # Secrets are exposed to the render step only, never job-wide.
+        self.assertEqual(deploy.count("toJSON(secrets)"), 1)
+
+        script = (ROOT / "scripts/deploy/managed-env.php").read_text()
+        self.assertIn("(_KEY|_PASSWORD|_SECRET|_TOKEN)", script)
+        self.assertIn("Dotenv::parse", script)
+
     def test_production_templates_keep_limits_headers_and_timeout_chain(self):
         nginx = (ROOT / "deploy/nginx/starter.conf").read_text()
         headers = (ROOT / "deploy/nginx/security-headers.conf").read_text()
@@ -245,6 +269,8 @@ class AiConfigurationTest(unittest.TestCase):
                      "LOG_STACK=json", "DB_CONNECTION=mysql"):
             self.assertRegex(template, rf"(?m)^{re.escape(line)}$")
         self.assertNotIn("clamav", script.lower().replace("clamav is intentionally not installed", ""))
+        # The ondrej libgd3 replaces the Ubuntu build without AVIF.
+        self.assertRegex(script, r'"php\$PHP_VERSION-gd" libgd3')
 
         # Every secret is a placeholder filled on the server, and the script
         # substitutes each placeholder of the template.
@@ -270,7 +296,8 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertIn('if [[ ! -f $SHARED_ENV ]]', script)
 
     def test_manual_skills_resolve_shared_workflows(self):
-        for name in ("foundation-fast", "foundation-ui"):
+        for name in ("foundation-fast", "foundation-ui", "foundation-debug", "foundation-verify",
+                     "foundation-review-response"):
             with self.subTest(skill=name):
                 codex = ROOT / ".agents/skills" / name
                 claude = ROOT / ".claude/skills" / name
@@ -290,6 +317,19 @@ class AiConfigurationTest(unittest.TestCase):
                 self.assertIn("disable-model-invocation: true", (claude / "SKILL.md").read_text())
                 self.assertRegex((codex / "agents/openai.yaml").read_text().strip(),
                                  r"\Apolicy:\n +allow_implicit_invocation: false\Z")
+
+    def test_agents_md_is_the_single_instruction_source(self):
+        """CLAUDE.md only imports AGENTS.md; Boost cannot re-inject its guideline block."""
+        self.assertEqual((ROOT / "CLAUDE.md").read_text(), "@AGENTS.md\n")
+        self.assertFalse(json.loads((ROOT / "boost.json").read_text())["guidelines"])
+        agents = (ROOT / "AGENTS.md").read_text()
+        self.assertNotIn("laravel-boost-guidelines", agents)
+        self.assertLessEqual(len(agents.splitlines()), 200)
+        for rule in ("make artisan ARGS=", "--no-verify", ".ai/rules/index.md", "maks. 2 minuty",
+                     "pint -- --dirty", "nigdy na `main` ani `develop`", "Push pozostaje ręczną operacją"):
+            self.assertIn(rule, agents)
+        for name in ("architecture", "security", "testing", "frontend", "release"):
+            self.assertIn(f".claude/rules/{name}.md", agents)
 
     def test_gemini_adapter_and_fast_workflow_limit_unnecessary_analysis(self):
         gemini = (ROOT / "GEMINI.md").read_text()
@@ -322,7 +362,7 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(set(fields["tools"].split(", ")), {"Read", "Glob", "Grep"})
         self.assertEqual(fields["model"], "inherit")
         self.assertEqual(int(fields["maxTurns"]), 6)
-        self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+        self.assertEqual(body.strip(), agent["developer_instructions"].strip())
 
     def test_designer_is_read_only_and_follows_the_craft_standard(self):
         agent = tomllib.loads((ROOT / ".codex/agents/foundation-designer.toml").read_text())
@@ -337,7 +377,7 @@ class AiConfigurationTest(unittest.TestCase):
         self.assertEqual(set(fields["tools"].split(", ")), {"Read", "Glob", "Grep", "WebSearch", "WebFetch"})
         self.assertEqual(fields["model"], "inherit")
         self.assertLessEqual(int(fields["maxTurns"]), 10)
-        self.assertEqual(body.strip(), agent["developer_instructions"].strip().replace("AGENTS.md", "CLAUDE.md"))
+        self.assertEqual(body.strip(), agent["developer_instructions"].strip())
         craft = ".agents/skills/foundation-ui/references/design-craft.md"
         self.assertIn(craft, body)
         self.assertIn(craft, (ROOT / ".agents/skills/foundation-ui/references/workflow.md").read_text())

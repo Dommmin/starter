@@ -19,11 +19,14 @@ use RuntimeException;
  * Produce the public responsive variants of a clean DAM image with GD:
  * auto-oriented, re-encoded (GD writes no EXIF/XMP/ICC metadata), never
  * upscaled, as AVIF, WebP and a fallback (PNG for PNG sources, JPEG
- * otherwise). File names carry a content hash, so URLs can be cached as
+ * otherwise). AVIF and WebP are skipped where GD cannot write them
+ * ({@see ImageFormatSupport}); the fallback is always written. File names carry a content hash, so URLs can be cached as
  * immutable: `media/{uuid}/{hash}-{width}.{ext}`.
  */
 final class ImageVariantGenerator
 {
+    public function __construct(private readonly ImageFormatSupport $formatSupport) {}
+
     /**
      * @return array{width: int, height: int, variants: list<array{format: string, width: int, height: int, path: string, size: int}>}
      *
@@ -117,9 +120,14 @@ final class ImageVariantGenerator
      */
     private function formats(MediaAsset $asset): array
     {
+        $modern = array_filter(
+            ['avif' => 'avif', 'webp' => 'webp'],
+            fn (string $format): bool => $this->formatSupport->encodes($format),
+            ARRAY_FILTER_USE_KEY,
+        );
+
         return [
-            'avif' => 'avif',
-            'webp' => 'webp',
+            ...$modern,
             ...($asset->mime === 'image/png' ? ['png' => 'png'] : ['jpeg' => 'jpg']),
         ];
     }

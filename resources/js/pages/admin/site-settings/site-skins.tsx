@@ -31,17 +31,23 @@ type SiteSkinsProps = {
     /** Current form values; '' means the configured fallback. */
     accent: string;
     typography: string;
+    /** Saved values, the skin the site uses now. */
+    savedAccent: string;
+    savedTypography: string;
     onApply: (skin: SiteSkin) => void;
     disabled?: boolean;
 };
 
 /**
  * Gallery of site skins with a sample of each one. Applying a skin only
- * fills the accent and typography fields; the form saves it.
+ * fills the accent and typography fields; the form saves it. "Selected"
+ * marks the saved skin, an applied one waits as "not saved yet".
  */
 export function SiteSkins({
     accent,
     typography,
+    savedAccent,
+    savedTypography,
     onApply,
     disabled = false,
 }: SiteSkinsProps) {
@@ -63,9 +69,14 @@ export function SiteSkins({
                         const name = t(
                             `admin.siteSettings.skins.${skin.key}.name`,
                         );
-                        const isCurrent =
-                            accent === skin.accent &&
-                            (typography || 'default') === skin.typography;
+                        const matches = (
+                            accentValue: string,
+                            typographyValue: string,
+                        ) =>
+                            accentValue === skin.accent &&
+                            (typographyValue || 'default') === skin.typography;
+                        const isSaved = matches(savedAccent, savedTypography);
+                        const isApplied = matches(accent, typography);
 
                         return (
                             <Stack key={skin.key} gap="tight">
@@ -103,13 +114,21 @@ export function SiteSkins({
                                     <Heading level={3} variant="group">
                                         {name}
                                     </Heading>
-                                    {isCurrent ? (
+                                    {isApplied && isSaved && (
                                         <Badge tone="success">
                                             {t(
                                                 'admin.siteSettings.skins.current',
                                             )}
                                         </Badge>
-                                    ) : (
+                                    )}
+                                    {isApplied && !isSaved && (
+                                        <Badge tone="primary">
+                                            {t(
+                                                'admin.siteSettings.skins.unsaved',
+                                            )}
+                                        </Badge>
+                                    )}
+                                    {!isApplied && (
                                         <Button
                                             variant="outline"
                                             size="sm"

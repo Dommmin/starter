@@ -12,3 +12,6 @@ paths:
 
 ## Boost `record-rule` przepisuje indeks
 Narzędzie `record-rule` nadpisuje `.ai/rules/index.md` własnym, niepełnym formatem i usuwa istniejące mapowania. Po jego użyciu przywróć indeks (`git checkout -- .ai/rules/index.md`) i dopisz wiersz ręcznie; `tests/ai` wykrywa uszkodzony indeks.
+
+## Boost nie zarządza AGENTS.md
+`boost.json` ma `"guidelines": false`: `boost:update` (także w `post-update-cmd`) nie dopisuje bloku `<laravel-boost-guidelines>` do `AGENTS.md` ani `CLAUDE.md`. Potrzebne zasady Boost (wrappery Docker, Pint, Pest, Inertia v3, MCP) są ręcznie w sekcji „Laravel, Inertia i narzędzia” w `AGENTS.md`. Po aktualizacji Boosta przejrzyj jego nowe wytyczne i przenieś tylko to, co dotyczy projektu; `tests/ai` blokuje powrót bloku i rozjazd `CLAUDE.md`.

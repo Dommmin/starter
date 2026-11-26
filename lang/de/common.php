@@ -35,6 +35,9 @@ return [
         'menuTitle' => 'Menü',
         'submenu' => 'Untermenü: :label',
     ],
+    'announcement' => [
+        'label' => 'Ankündigung',
+    ],
     'cookies' => [
         'title' => 'Wir respektieren Ihre Privatsphäre',
         'description' => 'Notwendige Cookies sorgen dafür, dass die Website funktioniert. Mit Ihrer Einwilligung nutzen wir zusätzlich Tools, die uns helfen, sie zu verbessern. Ihre Auswahl können Sie jederzeit im Seitenfuß ändern.',
@@ -75,6 +78,32 @@ return [
         'moveUp' => ':label nach oben verschieben',
         'moveDown' => ':label nach unten verschieben',
         'moved' => ':label auf Position :position von :total verschoben',
+    ],
+    'accessibility' => [
+        'open' => 'Einstellungen zur Barrierefreiheit',
+        'title' => 'Einstellungen zur Barrierefreiheit',
+        'description' => 'Passen Sie die Darstellung der Website an. Änderungen gelten sofort und werden in diesem Browser gespeichert.',
+        'close' => 'Schließen',
+        'reset' => 'Standard wiederherstellen',
+        'done' => 'Fertig',
+        'textSize' => [
+            'label' => 'Textgröße',
+            'default' => 'Standard',
+            'large' => 'Groß',
+            'larger' => 'Sehr groß',
+        ],
+        'contrast' => [
+            'label' => 'Erhöhter Kontrast',
+            'description' => 'Dunklerer Hilfstext und deutlichere Rahmen.',
+        ],
+        'motion' => [
+            'label' => 'Bewegung reduzieren',
+            'description' => 'Schaltet Animationen und weiches Scrollen aus.',
+        ],
+        'links' => [
+            'label' => 'Links unterstreichen',
+            'description' => 'Links im Text sind immer unterstrichen.',
+        ],
     ],
     'theme' => [
         'label' => 'Design',

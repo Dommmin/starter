@@ -2,13 +2,16 @@
 
 namespace App\Repositories\Settings;
 
+use App\Data\Consent\PlausibleData;
 use App\Data\Media\MediaImageData;
 use App\Data\Settings\OpeningHoursDayData;
+use App\Data\Settings\SiteAnnouncementData;
 use App\Data\Settings\SiteAppearanceData;
 use App\Data\Settings\SiteContactData;
 use App\Data\Settings\SiteSettingsData;
 use App\Data\Settings\SiteSocialLinkData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementTone;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -16,6 +19,7 @@ use App\Models\MediaAsset;
 use App\Models\SiteSetting;
 use App\Services\Localization\LocalizationConfig;
 use App\Services\Media\ImageVariantGenerator;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 
@@ -28,12 +32,13 @@ use Throwable;
  * forget the key after commit.
  *
  * Fallbacks: without a row the site name and default og:image come from
- * `config/seo.php`, the contact form recipient from `config/contact.php`;
+ * `config/seo.php`, the contact form recipient from `config/contact.php`,
+ * the Plausible domain and script from `config/services.php`;
  * translated texts use the current locale, then the public fallback
  * locale, then the defaults in `lang/{locale}/public.php` (`site.*`) or the
  * site name.
  *
- * @phpstan-type TranslationRow array{tagline: string|null, footer_text: string|null, seo_title: string|null, seo_description: string|null, auto_reply_text: string|null}
+ * @phpstan-type TranslationRow array{tagline: string|null, footer_text: string|null, seo_title: string|null, seo_description: string|null, auto_reply_text: string|null, announcement_text: string|null, announcement_link_label: string|null}
  * @phpstan-type Snapshot array{
  *     exists: bool,
  *     site_name: string|null,
@@ -58,13 +63,17 @@ use Throwable;
  *     map_url: string|null,
  *     opening_hours: list<array{day: string, opens: string|null, closes: string|null}>|null,
  *     google_site_verification: string|null,
+ *     plausible_domain: string|null,
  *     coming_soon: bool,
  *     noindex: bool,
+ *     maintenance: bool,
+ *     maintenance_until: string|null,
+ *     announcement: array{enabled: bool, tone: string, link_url: string|null, starts_at: string|null, ends_at: string|null},
  * }
  */
 class SiteSettingsRepository
 {
-    public const string CACHE_KEY = 'site_settings:v3';
+    public const string CACHE_KEY = 'site_settings:v6';
 
     /**
      * Snapshot memoized for the current process (one cache read per request).
@@ -107,6 +116,7 @@ class SiteSettingsRepository
                 openingHours: OpeningHoursDayData::week($snapshot['opening_hours']),
             ),
             social: $social,
+            announcement: $this->announcement($locale),
         );
     }
 
@@ -233,6 +243,23 @@ class SiteSettingsRepository
     }
 
     /**
+     * Plausible analytics of the public pages: the domain saved in the
+     * panel, then `services.plausible.domain`, with the script URL from
+     * `services.plausible.script_url` (environment only, it decides the CSP
+     * origin). Null without a domain or when the script is not served over
+     * https.
+     */
+    public function plausible(): ?PlausibleData
+    {
+        $domain = $this->snapshot()['plausible_domain'] ?? config('services.plausible.domain');
+        $scriptUrl = config('services.plausible.script_url');
+
+        return is_string($domain) && $domain !== '' && is_string($scriptUrl) && str_starts_with($scriptUrl, 'https://')
+            ? new PlausibleData($domain, $scriptUrl)
+            : null;
+    }
+
+    /**
      * Whether guests see the coming soon page instead of the public site.
      */
     public function isComingSoon(): bool
@@ -255,6 +282,66 @@ class SiteSettingsRepository
     public function isNoindexSwitchOn(): bool
     {
         return $this->snapshot()['noindex'];
+    }
+
+    /**
+     * Whether visitors without panel access get the maintenance page (503)
+     * instead of the public site.
+     */
+    public function isMaintenance(): bool
+    {
+        return $this->snapshot()['maintenance'];
+    }
+
+    /**
+     * Planned end of the maintenance works; null when not given or when
+     * maintenance is off.
+     */
+    public function maintenanceUntil(): ?CarbonImmutable
+    {
+        $until = $this->snapshot()['maintenance_until'];
+
+        return $this->isMaintenance() && $until !== null ? CarbonImmutable::parse($until) : null;
+    }
+
+    /**
+     * Announcement bar in the given locale while it is on and the current
+     * time is within its window; null otherwise. The message and the link
+     * label come from the same locale: the given one, then the public
+     * fallback locale.
+     */
+    public function announcement(?string $locale = null): ?SiteAnnouncementData
+    {
+        $bar = $this->snapshot()['announcement'];
+        $now = CarbonImmutable::now();
+
+        if (! $bar['enabled']
+            || ($bar['starts_at'] !== null && $now->lt(CarbonImmutable::parse($bar['starts_at'])))
+            || ($bar['ends_at'] !== null && $now->gt(CarbonImmutable::parse($bar['ends_at'])))) {
+            return null;
+        }
+
+        $translations = $this->snapshot()['translations'];
+
+        foreach ([$locale ?? app()->getLocale(), $this->localization->getPublicFallback()] as $candidate) {
+            $message = $translations[$candidate]['announcement_text'] ?? null;
+
+            if (! is_string($message) || $message === '') {
+                continue;
+            }
+
+            $label = $translations[$candidate]['announcement_link_label'] ?? null;
+            $hasLink = $bar['link_url'] !== null && is_string($label) && $label !== '';
+
+            return new SiteAnnouncementData(
+                message: $message,
+                tone: AnnouncementTone::tryFrom($bar['tone']) ?? AnnouncementTone::Info,
+                linkUrl: $hasLink ? $bar['link_url'] : null,
+                linkLabel: $hasLink ? $label : null,
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -369,6 +456,8 @@ class SiteSettingsRepository
                 'seo_title' => $translation->seo_title,
                 'seo_description' => $translation->seo_description,
                 'auto_reply_text' => $translation->auto_reply_text,
+                'announcement_text' => $translation->announcement_text,
+                'announcement_link_label' => $translation->announcement_link_label,
             ];
         }
 
@@ -396,8 +485,18 @@ class SiteSettingsRepository
             'map_url' => $settings->map_url,
             'opening_hours' => $settings->opening_hours,
             'google_site_verification' => $settings->google_site_verification,
+            'plausible_domain' => $settings->plausible_domain,
             'coming_soon' => $settings->coming_soon,
             'noindex' => $settings->noindex,
+            'maintenance' => $settings->maintenance,
+            'maintenance_until' => $settings->maintenance_until?->toIso8601String(),
+            'announcement' => [
+                'enabled' => $settings->announcement_enabled,
+                'tone' => $settings->announcement_tone->value,
+                'link_url' => $settings->announcement_link_url,
+                'starts_at' => $settings->announcement_starts_at?->toIso8601String(),
+                'ends_at' => $settings->announcement_ends_at?->toIso8601String(),
+            ],
         ];
     }
 
@@ -432,8 +531,12 @@ class SiteSettingsRepository
             'map_url' => null,
             'opening_hours' => null,
             'google_site_verification' => null,
+            'plausible_domain' => null,
             'coming_soon' => false,
             'noindex' => false,
+            'maintenance' => false,
+            'maintenance_until' => null,
+            'announcement' => ['enabled' => false, 'tone' => AnnouncementTone::Info->value, 'link_url' => null, 'starts_at' => null, 'ends_at' => null],
         ];
     }
 

@@ -35,6 +35,9 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => ':label submenu',
     ],
+    'announcement' => [
+        'label' => 'Announcement',
+    ],
     'cookies' => [
         'title' => 'We respect your privacy',
         'description' => 'Necessary cookies keep the site working. With your consent we also use tools that help us improve it. You can change your choice at any time in the page footer.',
@@ -75,6 +78,32 @@ return [
         'moveUp' => 'Move :label up',
         'moveDown' => 'Move :label down',
         'moved' => ':label moved to position :position of :total',
+    ],
+    'accessibility' => [
+        'open' => 'Accessibility settings',
+        'title' => 'Accessibility settings',
+        'description' => 'Adjust how the site looks. Changes apply at once and are remembered in this browser.',
+        'close' => 'Close',
+        'reset' => 'Restore defaults',
+        'done' => 'Done',
+        'textSize' => [
+            'label' => 'Text size',
+            'default' => 'Standard',
+            'large' => 'Large',
+            'larger' => 'Extra large',
+        ],
+        'contrast' => [
+            'label' => 'Higher contrast',
+            'description' => 'Darker secondary text and clearer borders.',
+        ],
+        'motion' => [
+            'label' => 'Reduce motion',
+            'description' => 'Turns off animations and smooth scrolling.',
+        ],
+        'links' => [
+            'label' => 'Underline links',
+            'description' => 'Links in text are always underlined.',
+        ],
     ],
     'theme' => [
         'label' => 'Theme',

@@ -1,6 +1,7 @@
 import { ArrowUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from '@/i18n';
+import { prefersReducedMotion } from '@/lib/reduced-motion';
 import { cn } from '@/lib/utils';
 import { IconButton } from './icon-button';
 
@@ -75,12 +76,9 @@ export function BackToTop({ targetId = 'main-content' }: BackToTopProps) {
     }, []);
 
     function scrollToTop() {
-        const reducedMotion = window.matchMedia?.(
-            '(prefers-reduced-motion: reduce)',
-        ).matches;
         window.scrollTo({
             top: 0,
-            behavior: reducedMotion ? 'auto' : 'smooth',
+            behavior: prefersReducedMotion() ? 'auto' : 'smooth',
         });
 
         const target = document.getElementById(targetId);

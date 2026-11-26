@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Repositories\Settings\SiteSettingsRepository;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SetContentSecurityPolicy
 {
+    public function __construct(private readonly SiteSettingsRepository $settings) {}
+
     /**
      * @param  Closure(Request): (Response)  $next
      */
@@ -79,16 +82,17 @@ class SetContentSecurityPolicy
     /**
      * Origin of the configured Plausible script (services.plausible), which
      * also receives its events; the script loads only after the analytics
-     * consent, but the policy allows it whenever it is configured.
+     * consent, but the policy allows it whenever it is configured. The
+     * domain may come from the panel; the origin always comes from the
+     * environment script URL.
      *
      * @return list<string>
      */
     protected function plausibleOrigins(): array
     {
-        $domain = config('services.plausible.domain');
-        $scriptUrl = config('services.plausible.script_url');
+        $scriptUrl = $this->settings->plausible()?->scriptUrl;
 
-        if (! is_string($domain) || $domain === '' || ! is_string($scriptUrl) || ! str_starts_with($scriptUrl, 'https://')) {
+        if ($scriptUrl === null) {
             return [];
         }
 

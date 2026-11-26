@@ -3,17 +3,22 @@
 namespace App\Actions\Media;
 
 use App\Actions\Audit\RecordAuditEvent;
+use App\Enums\AssistantFeature;
 use App\Enums\AuditAction;
 use App\Enums\MediaStatus;
 use App\Jobs\GenerateImageVariants;
+use App\Jobs\GenerateMediaAltText;
 use App\Models\MediaAsset;
 use App\Services\Media\ScanResult;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
  * Move a quarantined asset to `clean` (and queue image variants) or to
  * `rejected` (the infected bytes are deleted; the record stays for audit).
+ * A clean image without alt text also gets an assistant alt text suggestion
+ * queued after its variants while that feature is available.
  * Recorded as `media.cleaned` / `media.rejected` by the system actor; a
  * release without a scan (scanner disabled) is audited as `scan: skipped`.
  */
@@ -58,7 +63,25 @@ class RecordMediaScanResult
         }
 
         if ($status === MediaStatus::Clean && $asset->isImage()) {
-            GenerateImageVariants::dispatch($asset->id);
+            $this->dispatchImageJobs($asset);
         }
+    }
+
+    /**
+     * Variants first; the alt text suggestion (when available) runs after
+     * them, so it can send a downscaled variant instead of the original.
+     */
+    private function dispatchImageJobs(MediaAsset $asset): void
+    {
+        if (! AssistantFeature::MediaAltText->isAvailable()) {
+            GenerateImageVariants::dispatch($asset->id);
+
+            return;
+        }
+
+        Bus::chain([
+            new GenerateImageVariants($asset->id),
+            new GenerateMediaAltText($asset->id),
+        ])->dispatch();
     }
 }

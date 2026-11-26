@@ -31,6 +31,7 @@ import {
 import { SelectField, type SelectFieldOption } from './select-field';
 import { Stack } from './stack';
 import { SwitchField } from './switch-field';
+import type { FieldAssistProp } from './field-assist';
 import { TextField } from './text-field';
 import { TextareaField } from './textarea-field';
 import { useSubmitErrorFocus } from './use-submit-error-focus';
@@ -91,12 +92,16 @@ export type ResourceFormField<Values extends ResourceFormValues> =
                   inputType?: 'text' | 'email' | 'url' | 'tel';
                   autoComplete?: string;
                   placeholder?: string;
+                  /** Optional "suggest" helper(s) (see `FieldAssist`). */
+                  assist?: FieldAssistProp;
               }
             | {
                   type: 'textarea';
                   name: KeysOfType<Values, string>;
                   rows?: number;
                   placeholder?: string;
+                  /** Optional "suggest" helper(s) (see `FieldAssist`). */
+                  assist?: FieldAssistProp;
               }
             | {
                   /** Native number input; the value stays a string (`''` = empty). */
@@ -308,6 +313,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         autoComplete={field.autoComplete}
                         placeholder={field.placeholder}
                         required={field.required}
+                        assist={field.assist}
                         value={stringValue(values[field.name])}
                         onChange={(value) =>
                             onChange(
@@ -325,6 +331,7 @@ export function ResourceForm<Values extends ResourceFormValues>({
                         rows={field.rows}
                         placeholder={field.placeholder}
                         required={field.required}
+                        assist={field.assist}
                         value={stringValue(values[field.name])}
                         onChange={(value) =>
                             onChange(

@@ -1,0 +1,56 @@
+# Keys the deploy workflow may add to shared/.env on top of
+# production.env.example (doc 10). A GitHub Environment variable or secret
+# with another name is ignored. Names ending in _KEY, _PASSWORD, _SECRET or
+# _TOKEN must be Environment secrets. Adding a key here goes through review.
+
+# Mail providers (config/services.php)
+POSTMARK_API_KEY
+RESEND_API_KEY
+
+# Contact form (config/contact.php)
+CONTACT_RECIPIENT
+CONTACT_RETENTION_DAYS
+CONTACT_WEBHOOK_URL
+CONTACT_WEBHOOK_SECRET
+
+# Content Security Policy (config/csp.php)
+CSP_REPORT_URI
+CSP_SCRIPT_SRC
+CSP_CONNECT_SRC
+
+# SEO defaults (config/seo.php)
+SEO_SITE_NAME
+SEO_DEFAULT_IMAGE
+SEO_ORGANIZATION_NAME
+SEO_ORGANIZATION_URL
+SEO_ORGANIZATION_LOGO
+SEO_CACHE_MAX_AGE
+
+# Plausible analytics
+PLAUSIBLE_DOMAIN
+PLAUSIBLE_SCRIPT_URL
+
+# DAM (config/media.php)
+CLAMAV_HOST
+CLAMAV_PORT
+CLAMAV_TIMEOUT
+MEDIA_MAX_UPLOAD_KB
+MEDIA_MAX_PIXELS
+
+# Admin assistant (config/assistant.php, config/ai.php). The provider key
+# can also be set in the panel (System -> AI), which takes precedence.
+AI_FEATURES_ENABLED
+AI_PROVIDER
+ANTHROPIC_API_KEY
+OPENAI_API_KEY
+GEMINI_API_KEY
+AI_MONTHLY_TOKEN_BUDGET
+AI_RATE_LIMIT_PER_MINUTE
+AI_FEATURE_SEO_META
+AI_FEATURE_MEDIA_ALT_TEXT
+AI_FEATURE_TRANSLATION
+AI_FEATURE_TEXT_REWRITE
+AI_FEATURE_FAQ_GENERATOR
+AI_TIMEOUT
+AI_MESSAGE_CLASSIFICATION_DAILY_LIMIT
+AI_FEATURE_MESSAGE_CLASSIFICATION

@@ -137,7 +137,7 @@ test('the list exposes the typed payload with thumbnails only for clean images',
             ->component('admin/media/index', false)
             ->has('items', 2)
             ->where('filters', ['search' => '', 'sort' => 'created_at', 'direction' => 'desc', 'status' => 'all', 'type' => 'all'])
-            ->where('can', ['create' => true, 'update' => true, 'delete' => false])
+            ->where('can', ['create' => true, 'update' => true, 'delete' => false, 'suggestAlt' => false])
             ->where('upload.maxBytes', 51_200 * 1024)
             ->where('items', fn ($items): bool => collect($items)->firstWhere('id', $clean->id)['thumbnailUrl'] === Storage::disk('public')->url("media/{$clean->uuid}/abc123-320.jpg")
                 && collect($items)->firstWhere('id', $quarantined->id)['thumbnailUrl'] === null

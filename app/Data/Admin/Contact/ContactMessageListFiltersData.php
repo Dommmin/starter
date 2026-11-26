@@ -20,5 +20,7 @@ class ContactMessageListFiltersData extends Data
         public string $direction,
         #[LiteralTypeScriptType("'all' | App.Enums.ContactMessageStatus")]
         public string $status,
+        #[LiteralTypeScriptType("'all' | App.Enums.ContactMessageCategory")]
+        public string $category,
     ) {}
 }

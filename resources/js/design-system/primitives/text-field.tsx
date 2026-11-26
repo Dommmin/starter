@@ -1,6 +1,14 @@
-import { useId, type Ref } from 'react';
+import { useId, useRef, type Ref } from 'react';
 import { cn } from '@/lib/utils';
+import { useFieldAssist, type FieldAssistProp } from './field-assist';
 import type { FieldValueProps } from './field-value';
+
+export type {
+    FieldAssist,
+    FieldAssistMode,
+    FieldAssistProp,
+    FieldAssistResult,
+} from './field-assist';
 
 type TextFieldType = 'text' | 'email' | 'url' | 'tel' | 'search';
 
@@ -25,6 +33,8 @@ export type TextFieldProps = FieldValueProps & {
      */
     id?: string;
     ref?: Ref<HTMLInputElement>;
+    /** Optional "suggest" helper(s); a suggestion is applied only on "use". */
+    assist?: FieldAssistProp;
     className?: never;
     style?: never;
 };
@@ -46,6 +56,7 @@ export function TextField({
     autoFocus,
     id,
     ref,
+    assist,
 }: TextFieldProps) {
     const reactId = useId();
     const isRequired = required && !readOnly;
@@ -54,25 +65,48 @@ export function TextField({
     const errorId = error ? `${reactId}-error` : undefined;
     const describedBy =
         [descriptionId, errorId].filter(Boolean).join(' ') || undefined;
+    const controlRef = useRef<HTMLInputElement | null>(null);
+    const assistControls = useFieldAssist({
+        assist: readOnly ? undefined : assist,
+        disabled,
+        onApply: (suggestion) => onChange?.(suggestion),
+        focusControl: () => controlRef.current?.focus(),
+        panelId: `${reactId}-assist`,
+    });
+
+    function setRefs(node: HTMLInputElement | null) {
+        controlRef.current = node;
+
+        if (typeof ref === 'function') {
+            ref(node);
+        } else if (ref) {
+            ref.current = node;
+        }
+    }
+
+    const labelElement = (
+        <label htmlFor={inputId} className="text-sm leading-snug font-medium">
+            {label}
+            {isRequired && (
+                <span className="text-status-danger ml-0.5" aria-hidden="true">
+                    *
+                </span>
+            )}
+        </label>
+    );
 
     return (
         <div className="flex flex-col gap-1.5">
-            <label
-                htmlFor={inputId}
-                className="text-sm leading-snug font-medium"
-            >
-                {label}
-                {isRequired && (
-                    <span
-                        className="text-status-danger ml-0.5"
-                        aria-hidden="true"
-                    >
-                        *
-                    </span>
-                )}
-            </label>
+            {assistControls.trigger ? (
+                <div className="flex flex-wrap items-center justify-between gap-x-2">
+                    {labelElement}
+                    {assistControls.trigger}
+                </div>
+            ) : (
+                labelElement
+            )}
             <input
-                ref={ref}
+                ref={setRefs}
                 id={inputId}
                 name={name}
                 type={type}
@@ -96,6 +130,7 @@ export function TextField({
                         'border-destructive focus-visible:ring-destructive/20',
                 )}
             />
+            {assistControls.panel}
             {description && (
                 <p id={descriptionId} className="text-muted-foreground text-xs">
                     {description}

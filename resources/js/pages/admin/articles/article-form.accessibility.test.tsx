@@ -16,6 +16,7 @@ import AdminArticlesEdit from './edit';
 type Errors = Record<string, string>;
 
 const submitMock = vi.fn();
+const httpPostMock = vi.fn();
 const visitMock = vi.fn();
 let nextErrors: Errors | null = null;
 let editorProps: App.Data.Admin.Articles.ArticleEditorData;
@@ -35,8 +36,15 @@ vi.mock('@inertiajs/react', async () => {
             errors,
             processing: false,
             isDirty: false,
-            setData: (key: keyof Data, value: unknown) =>
-                setDataState((current) => ({ ...current, [key]: value })),
+            setData: (
+                key: keyof Data | ((current: Data) => Data),
+                value?: unknown,
+            ) =>
+                setDataState((current) =>
+                    typeof key === 'function'
+                        ? key(current)
+                        : { ...current, [key]: value },
+                ),
             transform: (callback: (value: Data) => unknown) => {
                 transformRef.current = callback;
             },
@@ -60,8 +68,20 @@ vi.mock('@inertiajs/react', async () => {
         };
     }
 
+    function useHttp() {
+        const transformRef = React.useRef<() => unknown>(() => ({}));
+
+        return {
+            transform: (callback: () => unknown) => {
+                transformRef.current = callback;
+            },
+            post: (url: string) => httpPostMock(url, transformRef.current()),
+        };
+    }
+
     return {
         useForm,
+        useHttp,
         usePage: () => ({ props: editorProps }),
         router: {
             visit: (...args: unknown[]) => visitMock(...args),
@@ -128,6 +148,9 @@ function makeEditor(
             update: true,
             publish: true,
             delete: false,
+            suggestSeo: false,
+            suggestTranslation: false,
+            rewriteText: false,
             ...can,
         },
         previewUrls: {},
@@ -200,6 +223,7 @@ beforeEach(() => {
 
 afterEach(async () => {
     submitMock.mockClear();
+    httpPostMock.mockReset();
     visitMock.mockClear();
     await act(async () => {
         mountedRoots.splice(0).forEach((root) => root.unmount());
@@ -304,5 +328,63 @@ describe('ArticleForm', () => {
                     !group.contains(alert),
             ),
         ).toHaveLength(0);
+    });
+    it('sends the default excerpt for translation and fills the excerpt of the tab', async () => {
+        httpPostMock.mockResolvedValue({
+            title: 'Firmennachrichten',
+            excerpt: 'Monatliche Zusammenfassung',
+            metaDescription: '',
+            body: null,
+        });
+        editorProps = makeEditor(
+            { suggestTranslation: true },
+            {
+                translations: {
+                    en: {
+                        ...blankTranslation(),
+                        title: 'Company news',
+                        excerpt: 'Monthly summary',
+                    },
+                    de: blankTranslation(),
+                },
+            },
+        );
+        const container = await render(<AdminArticlesCreate />);
+        await act(async () => {
+            container
+                .querySelector<HTMLButtonElement>(
+                    '[role="tab"][id$="-trigger-de"]',
+                )
+                ?.focus();
+        });
+        const translate = Array.from(
+            container.querySelectorAll<HTMLButtonElement>(
+                '[role="tabpanel"] button',
+            ),
+        ).find(
+            (button) =>
+                button.textContent?.trim() ===
+                'admin.assistant.translation.action',
+        )!;
+
+        await act(async () => {
+            translate.click();
+        });
+
+        expect(httpPostMock).toHaveBeenCalledWith(
+            '/admin/assistant/translation',
+            expect.objectContaining({
+                subject: 'article',
+                target_locale: 'de',
+                title: 'Company news',
+                excerpt: 'Monthly summary',
+            }),
+        );
+        expect(input(container, 'title').value).toBe('Firmennachrichten');
+        expect(
+            container.querySelector<HTMLTextAreaElement>(
+                '[role="tabpanel"] textarea[name="excerpt"]',
+            )?.value,
+        ).toBe('Monatliche Zusammenfassung');
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Contact;
 
+use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
 use App\Support\Listing\ListQuery;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,8 +20,8 @@ class ListContactMessagesRequest extends FormRequest
     }
 
     /**
-     * Single source of the list contract: search by sender, status filter,
-     * newest first.
+     * Single source of the list contract: search by sender, status and AI
+     * category filters (allowlisted values), newest first.
      */
     public function listQuery(): ListQuery
     {
@@ -30,6 +31,11 @@ class ListContactMessagesRequest extends FormRequest
             ->filter('status', ['all', ...ContactMessageStatus::values()], default: 'all', apply: function (Builder $query, string $value): void {
                 if ($value !== 'all') {
                     $query->where('status', $value);
+                }
+            })
+            ->filter('category', ['all', ...ContactMessageCategory::values()], default: 'all', apply: function (Builder $query, string $value): void {
+                if ($value !== 'all') {
+                    $query->where('category', $value);
                 }
             })
             ->perPage(15);

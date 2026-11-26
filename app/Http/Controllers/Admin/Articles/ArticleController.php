@@ -15,6 +15,7 @@ use App\Data\Admin\Articles\ArticleListItemData;
 use App\Data\Content\ContentLocalesData;
 use App\Data\Listing\ListPaginationData;
 use App\Data\Listing\RecordOptionData;
+use App\Enums\AssistantFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Articles\ArticleInputRules;
 use App\Http\Requests\Admin\Articles\ListArticlesRequest;
@@ -185,6 +186,12 @@ class ArticleController extends Controller
             delete: $article !== null
                 ? ($user?->can('delete', $article) ?? false)
                 : ($user?->isAdmin() ?? false),
+            suggestSeo: AssistantFeature::SeoMeta->isAvailable()
+                && ($user?->can('create', Article::class) ?? false),
+            suggestTranslation: AssistantFeature::Translation->isAvailable()
+                && ($user?->can('create', Article::class) ?? false),
+            rewriteText: AssistantFeature::TextRewrite->isAvailable()
+                && ($user?->can('create', Article::class) ?? false),
         );
     }
 }

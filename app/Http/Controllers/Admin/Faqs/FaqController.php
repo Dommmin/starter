@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Faqs;
 
+use App\Actions\Faqs\CreateFaq;
 use App\Actions\Faqs\UpdateFaq;
 use App\Data\Admin\Faqs\FaqAbilitiesData;
 use App\Data\Admin\Faqs\FaqEditorData;
@@ -11,14 +12,17 @@ use App\Data\Admin\Faqs\FaqListFiltersData;
 use App\Data\Admin\Faqs\FaqListItemData;
 use App\Data\Content\ContentLocalesData;
 use App\Data\Listing\ListPaginationData;
+use App\Enums\AssistantFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Faqs\ListFaqsRequest;
 use App\Http\Requests\Admin\Faqs\StoreFaqRequest;
+use App\Http\Requests\Admin\Faqs\StoreManyFaqsRequest;
 use App\Http\Requests\Admin\Faqs\UpdateFaqRequest;
 use App\Models\Faq;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,6 +56,7 @@ class FaqController extends Controller
             pagination: ListPaginationData::from($listQuery->paginationPayload($paginator)),
             filters: FaqListFiltersData::from($listQuery->filtersPayload($validated)),
             can: $this->abilities($request, null),
+            locales: ContentLocalesData::fromConfig($this->localization),
         ));
     }
 
@@ -70,13 +75,34 @@ class FaqController extends Controller
     /**
      * Store a new faq.
      */
-    public function store(StoreFaqRequest $request): RedirectResponse
+    public function store(StoreFaqRequest $request, CreateFaq $createFaq): RedirectResponse
     {
-        $faq = Faq::query()->create($request->validated());
+        /** @var array{question: string, answer: string, locale?: string|null, position?: int|null, published: bool} $attributes */
+        $attributes = $request->validated();
+        $faq = $createFaq->handle($attributes);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.faqs.created')]);
 
         return to_route('admin.faqs.edit', $faq);
+    }
+
+    /**
+     * Store the FAQ entries the admin ticked among the assistant's proposals,
+     * all or none, unpublished.
+     */
+    public function storeMany(StoreManyFaqsRequest $request, CreateFaq $createFaq): RedirectResponse
+    {
+        $faqs = $request->faqs();
+
+        DB::transaction(function () use ($faqs, $createFaq): void {
+            foreach ($faqs as $attributes) {
+                $createFaq->handle($attributes);
+            }
+        });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.faqs.createdMany', ['count' => count($faqs)])]);
+
+        return to_route('admin.faqs.index');
     }
 
     /**
@@ -128,6 +154,8 @@ class FaqController extends Controller
                 ? ($user?->can('delete', $faq) ?? false)
                 : ($user?->isAdmin() ?? false),
             import: $user?->can('import', Faq::class) ?? false,
+            suggestFaqs: AssistantFeature::FaqGenerator->isAvailable()
+                && ($user?->can('create', Faq::class) ?? false),
         );
     }
 }

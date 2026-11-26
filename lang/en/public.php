@@ -107,6 +107,20 @@ return [
         'description' => 'Our new website is almost ready. Please come back in a few days.',
         'contact' => 'Questions? Write to :email.',
     ],
+    'maintenance' => [
+        'title' => 'Maintenance',
+        'heading' => 'We are doing some maintenance',
+        'description' => 'We are improving our website. Please check back shortly.',
+        'returnsInMinutes' => [
+            'one' => 'We expect to be back in about :count minute.',
+            'other' => 'We expect to be back in about :count minutes.',
+        ],
+        'returnsInHours' => [
+            'one' => 'We expect to be back in about :count hour.',
+            'other' => 'We expect to be back in about :count hours.',
+        ],
+        'contact' => 'Something urgent? Write to :email.',
+    ],
     'contactAutoReply' => [
         'subject' => 'Thank you for your message — :site',
         'automatic' => 'This is an automatic reply; we will get back to you personally.',

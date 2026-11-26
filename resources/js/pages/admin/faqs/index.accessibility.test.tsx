@@ -8,6 +8,8 @@ import AdminFaqsIndex from './index';
 type IndexProps = App.Data.Admin.Faqs.FaqIndexData;
 
 const getMock = vi.fn();
+const postMock = vi.fn();
+const httpPostMock = vi.fn();
 
 let pageProps: IndexProps;
 
@@ -39,34 +41,83 @@ function makeProps(can: IndexProps['can']): IndexProps {
             published: 'all',
         },
         can,
+        locales: {
+            available: [
+                { code: 'pl', name: 'Polish', native: 'Polski', dir: 'ltr' },
+                { code: 'en', name: 'English', native: 'English', dir: 'ltr' },
+            ],
+            default: 'pl',
+        },
     };
 }
 
-vi.mock('@inertiajs/react', () => ({
-    usePage: () => ({ props: pageProps }),
-    router: {
-        get: (...args: unknown[]) => getMock(...args),
-        delete: vi.fn(),
-        visit: vi.fn(),
-        on: () => () => {},
-    },
-    Head: ({ children }: { children?: ReactNode }) => <>{children}</>,
-    Link: ({
-        href,
-        children,
-        prefetch: _prefetch,
-        ...props
-    }: {
-        href: string | { url: string };
-        children: ReactNode;
-        prefetch?: boolean;
-        [key: string]: unknown;
-    }) => (
-        <a href={typeof href === 'string' ? href : href.url} {...props}>
-            {children}
-        </a>
-    ),
-}));
+function abilities(
+    overrides: Partial<IndexProps['can']> = {},
+): IndexProps['can'] {
+    return {
+        create: true,
+        update: true,
+        delete: true,
+        import: true,
+        suggestFaqs: false,
+        ...overrides,
+    };
+}
+
+vi.mock('@inertiajs/react', async () => {
+    const React = await import('react');
+
+    function useHttp<Data extends Record<string, string>>(initial: Data) {
+        const [data, setDataState] = React.useState(initial);
+        const [processing, setProcessing] = React.useState(false);
+
+        return {
+            data,
+            errors: {} as Partial<Record<keyof Data, string>>,
+            processing,
+            setData: (key: keyof Data, value: string) =>
+                setDataState((current) => ({ ...current, [key]: value })),
+            reset: () => setDataState(initial),
+            clearErrors: () => {},
+            post: async (url: string) => {
+                setProcessing(true);
+                try {
+                    return await httpPostMock(url, data);
+                } finally {
+                    setProcessing(false);
+                }
+            },
+        };
+    }
+
+    return {
+        useHttp,
+        usePage: () => ({ props: pageProps }),
+        router: {
+            get: (...args: unknown[]) => getMock(...args),
+            post: (...args: unknown[]) => postMock(...args),
+            delete: vi.fn(),
+            visit: vi.fn(),
+            on: () => () => {},
+        },
+        Head: ({ children }: { children?: ReactNode }) => <>{children}</>,
+        Link: ({
+            href,
+            children,
+            prefetch: _prefetch,
+            ...props
+        }: {
+            href: string | { url: string };
+            children: ReactNode;
+            prefetch?: boolean;
+            [key: string]: unknown;
+        }) => (
+            <a href={typeof href === 'string' ? href : href.url} {...props}>
+                {children}
+            </a>
+        ),
+    };
+});
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -112,17 +163,14 @@ async function unmountAll() {
 
 afterEach(async () => {
     getMock.mockClear();
+    postMock.mockClear();
+    httpPostMock.mockReset();
     await unmountAll();
 });
 
 describe('AdminFaqsIndex', () => {
     it('renders a captioned table whose first column links to the editor', async () => {
-        pageProps = makeProps({
-            create: true,
-            update: true,
-            delete: true,
-            import: true,
-        });
+        pageProps = makeProps(abilities());
         const container = await render();
 
         expect(container.querySelector('table caption')?.textContent).toBe(
@@ -135,12 +183,7 @@ describe('AdminFaqsIndex', () => {
     });
 
     it('offers the create action and row menus only with the abilities', async () => {
-        pageProps = makeProps({
-            create: true,
-            update: true,
-            delete: true,
-            import: true,
-        });
+        pageProps = makeProps(abilities());
         let container = await render();
 
         const createLink = Array.from(container.querySelectorAll('a')).find(
@@ -155,24 +198,21 @@ describe('AdminFaqsIndex', () => {
 
         await unmountAll();
 
-        pageProps = makeProps({
-            create: false,
-            update: false,
-            delete: false,
-            import: false,
-        });
+        pageProps = makeProps(
+            abilities({
+                create: false,
+                update: false,
+                delete: false,
+                import: false,
+            }),
+        );
         container = await render();
 
         expect(container.textContent).not.toContain('admin.faqs.create');
     });
 
     it('clears the filters to the server defaults', async () => {
-        pageProps = makeProps({
-            create: true,
-            update: true,
-            delete: true,
-            import: true,
-        });
+        pageProps = makeProps(abilities());
         pageProps.filters = {
             ...pageProps.filters,
             published: 'yes',
@@ -195,4 +235,108 @@ describe('AdminFaqsIndex', () => {
             page: 1,
         });
     });
+
+    it('hides the AI generator without the ability', async () => {
+        pageProps = makeProps(abilities({ suggestFaqs: false }));
+        const container = await render();
+
+        expect(container.textContent).not.toContain(
+            'admin.faqs.generator.open',
+        );
+        expect(document.body.textContent).not.toContain(
+            'admin.faqs.generator.title',
+        );
+    });
+
+    it('saves nothing until confirmed and then only the ticked proposals', async () => {
+        pageProps = makeProps(abilities({ suggestFaqs: true }));
+        httpPostMock.mockResolvedValue({
+            items: [
+                { question: 'When do you bake?', answer: 'Before sunrise.' },
+                { question: 'Do you deliver?', answer: 'Yes, in the city.' },
+                { question: 'Is it vegan?', answer: 'The sourdough is.' },
+            ],
+        });
+        await render();
+
+        await click(buttonByText('admin.faqs.generator.open'));
+        const textarea = document.querySelector<HTMLTextAreaElement>(
+            'textarea[name="text"]',
+        )!;
+        await act(async () => {
+            Object.getOwnPropertyDescriptor(
+                window.HTMLTextAreaElement.prototype,
+                'value',
+            )!.set!.call(textarea, 'Our bakery bakes before sunrise.');
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        await submitDialog();
+
+        expect(httpPostMock).toHaveBeenCalledWith('/admin/assistant/faqs', {
+            locale: 'pl',
+            text: 'Our bakery bakes before sunrise.',
+        });
+        const checkboxes = document.querySelectorAll<HTMLButtonElement>(
+            'button[role="checkbox"]',
+        );
+        expect(checkboxes).toHaveLength(3);
+        expect(document.body.textContent).toContain('Before sunrise.');
+        expect(postMock).not.toHaveBeenCalled();
+
+        // Saving with nothing ticked only explains what to do.
+        await submitDialog();
+        expect(postMock).not.toHaveBeenCalled();
+        expect(document.querySelector('[role="alert"]')?.textContent).toBe(
+            'admin.faqs.generator.noneSelected',
+        );
+
+        await click(checkboxes[0]);
+        await click(checkboxes[2]);
+        await submitDialog();
+
+        expect(postMock).toHaveBeenCalledTimes(1);
+        expect(postMock.mock.calls[0][0]).toBe('/admin/faqs/many');
+        expect(postMock.mock.calls[0][1]).toEqual({
+            locale: 'pl',
+            items: [
+                { question: 'When do you bake?', answer: 'Before sunrise.' },
+                { question: 'Is it vegan?', answer: 'The sourdough is.' },
+            ],
+        });
+    });
+
+    it('asks for a source text before calling the assistant', async () => {
+        pageProps = makeProps(abilities({ suggestFaqs: true }));
+        await render();
+
+        await click(buttonByText('admin.faqs.generator.open'));
+        await submitDialog();
+
+        expect(httpPostMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).toContain(
+            'admin.faqs.generator.missingText',
+        );
+    });
 });
+
+function buttonByText(text: string): HTMLButtonElement {
+    return Array.from(document.querySelectorAll('button')).find(
+        (button) => button.textContent === text,
+    )!;
+}
+
+async function click(element: HTMLElement) {
+    await act(async () => {
+        element.click();
+    });
+}
+
+async function submitDialog() {
+    await act(async () => {
+        document
+            .querySelector('[role="dialog"] form')!
+            .dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true }),
+            );
+    });
+}

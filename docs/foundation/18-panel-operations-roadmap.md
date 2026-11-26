@@ -1,4 +1,4 @@
-# 17 — Roadmapa operacji panelu (inspiracja: Backpack for Laravel)
+# 18 — Roadmapa operacji panelu (inspiracja: Backpack for Laravel)
 
 Status: **propozycja do akceptacji** (2026-11-26). Po akceptacji to jedyna lista zakresu dla tej fali; zmiany zakresu wpisujemy tutaj, zanim powstanie kod.
 

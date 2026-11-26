@@ -47,7 +47,7 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 
 ## Faza B — Reorder
 
-- [ ] **4. `refactor/panel-reorder-records`** — wydzielenie wspólnej logiki z `ReorderMenuItems` i `ReorderHomeSections` (zakres grupy, transakcja, blokada, walidacja kompletności listy ID) do jednej Action/serwisu. Bez zmiany zachowania.
+- [x] **4. `refactor/panel-reorder-records`** — wydzielenie wspólnej logiki z `ReorderMenuItems` i `ReorderHomeSections` (zakres grupy, transakcja, blokada, walidacja kompletności listy ID) do jednej Action/serwisu. Bez zmiany zachowania.
   - AC: istniejące testy menu i sekcji przechodzą bez modyfikacji asercji.
 - [ ] **5. `feat/panel-faq-reorder`** — `OrderableList` dla FAQ w zakresie locale zamiast ręcznego pola „Kolejność”. **HIGH-RISK (migracja danych)**
   - Normalizacja `position` (dziś nullable) migracją danych; pole liczby usunięte z formularza; nowe rekordy na końcu; import CSV nadal honoruje `position`.
@@ -88,4 +88,4 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 | --- | --- | --- |
 | R1 | Czy editor może klonować i eksportować, czy tylko admin? | 1, 16 |
 | R2 | Async relacje domyślnie w generatorze czy za flagą? | 8, 11 |
-| R3 | Czy FAQ zachowuje edytowalną liczbę pozycji jako fallback (import)? | 5 |
+| R3 | Czy FAQ zachowuje edytowalną liczbę pozycji jako fallback (import)? Rozstrzygnięte 2026-11-26: pole liczby pozycji zostaje w formularzu FAQ jako fallback (m.in. dla importu CSV). | 5 |

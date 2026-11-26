@@ -44,7 +44,7 @@ test('admins and editors copy a faq as a new unpublished faq placed last', funct
         ->and($entry->actor_id)->toBe($user->id)
         ->and($entry->subject_type)->toBe($copy->getMorphClass())
         ->and($entry->subject_id)->toBe($copy->id)
-        ->and($entry->changes)->toBe(['duplicated_from' => ['old' => null, 'new' => $source->id]]);
+        ->and($entry->changes)->toEqual(['duplicated_from' => ['old' => null, 'new' => $source->id]]);
 })->with(['admin', 'editor']);
 
 test('a copy of the only faq without a position gets the first position', function () {

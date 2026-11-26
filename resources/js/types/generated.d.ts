@@ -306,6 +306,17 @@ declare namespace App {
                     createdAt: string | null;
                     updatedAt: string | null;
                 };
+                export type FaqOrderData = {
+                    items: App.Data.Admin.Faqs.FaqOrderItemData[];
+                    canReorder: boolean;
+                    locales: App.Data.Content.ContentLocalesData;
+                };
+                export type FaqOrderItemData = {
+                    id: number;
+                    question: string;
+                    locale: string | null;
+                    published: boolean;
+                };
             }
             namespace HomeSections {
                 export type HomeContactFormOptionData = {
@@ -1320,6 +1331,7 @@ declare namespace App {
             | 'redirect.updated'
             | 'redirect.deleted'
             | 'faq.duplicated'
+            | 'faq.reordered'
             | 'assistant.suggested'
             | 'ai_settings.updated';
         export type ConsentCategory = 'analytics' | 'marketing';

@@ -227,6 +227,12 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::post('/faqs/many', [FaqController::class, 'storeMany'])
             ->name('faqs.store-many')
             ->can('create', Faq::class);
+        Route::get('/faqs/order', [FaqController::class, 'order'])
+            ->name('faqs.order')
+            ->can('viewAny', Faq::class);
+        Route::put('/faqs/order', [FaqController::class, 'reorder'])
+            ->name('faqs.reorder')
+            ->can('reorder', Faq::class);
         Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
             ->name('faqs.edit')
             ->can('view', 'faq');

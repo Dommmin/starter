@@ -189,7 +189,7 @@ test('saving creates exactly the selected entries, unpublished in the chosen lan
         ->and($faqs->pluck('answer')->all())->toBe(['Before sunrise.', 'Yes, in the city.'])
         ->and($faqs->pluck('locale')->unique()->all())->toBe(['pl'])
         ->and($faqs->pluck('published')->unique()->all())->toBe([false])
-        ->and($faqs->pluck('position')->unique()->all())->toBe([null]);
+        ->and($faqs->pluck('position')->all())->toBe([1, 2]);
 });
 
 test('viewers may not save entries', function () {

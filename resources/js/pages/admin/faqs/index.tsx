@@ -13,7 +13,14 @@ import {
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
-import { create, destroy, duplicate, edit, index } from '@/routes/admin/faqs';
+import {
+    create,
+    destroy,
+    duplicate,
+    edit,
+    index,
+    order,
+} from '@/routes/admin/faqs';
 import { show as importShow } from '@/routes/admin/import';
 import { FaqGeneratorDialog } from './faq-generator-dialog';
 
@@ -60,6 +67,9 @@ export default function AdminFaqsIndex() {
                     actions: (
                         <Inline gap="tight">
                             <SavedViewsMenu list="admin.faqs.index" />
+                            <Button variant="outline" href={order()}>
+                                {t('admin.faqs.order')}
+                            </Button>
                             {can.import && (
                                 <Button
                                     variant="outline"

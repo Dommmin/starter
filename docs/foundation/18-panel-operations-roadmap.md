@@ -49,8 +49,8 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 
 - [x] **4. `refactor/panel-reorder-records`** — wydzielenie wspólnej logiki z `ReorderMenuItems` i `ReorderHomeSections` (zakres grupy, transakcja, blokada, walidacja kompletności listy ID) do jednej Action/serwisu. Bez zmiany zachowania.
   - AC: istniejące testy menu i sekcji przechodzą bez modyfikacji asercji.
-- [ ] **5. `feat/panel-faq-reorder`** — `OrderableList` dla FAQ w zakresie locale zamiast ręcznego pola „Kolejność”. **HIGH-RISK (migracja danych)**
-  - Normalizacja `position` (dziś nullable) migracją danych; pole liczby usunięte z formularza; nowe rekordy na końcu; import CSV nadal honoruje `position`.
+- [x] **5. `feat/panel-faq-reorder`** — `OrderableList` dla FAQ: wspólna kolejność dla wszystkich języków (decyzja 2026-11-26), pole liczby zostaje jako fallback (R3). **HIGH-RISK (migracja danych)**
+  - Normalizacja `position` (dziś nullable) migracją danych do jednego ciągu w obecnej kolejności publicznej; nowe rekordy na końcu; import CSV nadal honoruje `position`.
   - AC: kolejność publiczna = kolejność w panelu; równoległa zmiana daje konflikt, nie cichą utratę.
 - [ ] **6. `feat/generator-reorder-operation`** — `--operations=reorder` (kolumna `position` z indeksem, opcjonalny zakres `--reorder-scope=field`).
   - AC: smoke z reorder; lista domyślnie sortowana po pozycji.

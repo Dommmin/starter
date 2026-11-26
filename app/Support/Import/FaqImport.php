@@ -2,6 +2,7 @@
 
 namespace App\Support\Import;
 
+use App\Actions\Faqs\CreateFaq;
 use App\Contracts\Import\ImportDefinition;
 use App\Http\Requests\Admin\Faqs\StoreFaqRequest;
 use App\Models\Faq;
@@ -9,6 +10,8 @@ use App\Models\Faq;
 /**
  * FAQ import: `question,answer,locale,position,published`. An empty locale
  * shows the faq in every language; `published` accepts 1/0, yes/no, tak/nie.
+ * A given `position` is kept; an empty one places the faq at the end of the
+ * shared order of all languages.
  */
 final class FaqImport implements ImportDefinition
 {
@@ -58,6 +61,7 @@ final class FaqImport implements ImportDefinition
 
     public function store(array $row): void
     {
-        Faq::query()->create($row);
+        /** @var array{question: string, answer: string, locale?: string|null, position?: int|null, published: bool} $row */
+        app(CreateFaq::class)->handle($row);
     }
 }

@@ -570,6 +570,17 @@ return [
         'conflict' => 'Dieser Eintrag wurde nach dem Öffnen von jemand anderem geändert. Laden Sie ihn neu und übernehmen Sie Ihre Änderungen erneut.',
         'createdMany' => 'Als unveröffentlicht gespeicherte Fragen: :count.',
         'duplicated' => 'Unveröffentlichte Kopie der Frage erstellt.',
+        'order' => 'Reihenfolge ändern',
+        'orderTitle' => 'Reihenfolge der Fragen',
+        'orderDescription' => 'Eine Reihenfolge für alle Sprachen. Die Seite jeder Sprache zeigt ihre Fragen und die Fragen für alle Sprachen in dieser Reihenfolge.',
+        'orderLabel' => 'Reihenfolge der FAQ-Fragen',
+        'orderEmptyTitle' => 'Keine Fragen',
+        'orderEmptyDescription' => 'Fügen Sie eine Frage hinzu, um die Reihenfolge festzulegen.',
+        'orderReadOnly' => 'Sie können die Reihenfolge nur ansehen.',
+        'orderPublished' => 'Veröffentlicht',
+        'orderHidden' => 'Unveröffentlicht',
+        'orderConflict' => 'Die Liste der Fragen hat sich inzwischen geändert. Laden Sie die Seite neu und legen Sie die Reihenfolge erneut fest.',
+        'reordered' => 'Reihenfolge der Fragen gespeichert.',
         'generator' => [
             'open' => 'Mit KI erstellen',
             'title' => 'FAQ mit KI erstellen',
@@ -789,6 +800,7 @@ return [
             ],
             'faq' => [
                 'duplicated' => 'FAQ-Frage dupliziert',
+                'reordered' => 'Reihenfolge der FAQ-Fragen geändert',
             ],
             'home_section' => [
                 'updated' => 'Startseitenabschnitt geändert',

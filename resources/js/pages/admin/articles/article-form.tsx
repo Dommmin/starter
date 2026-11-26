@@ -29,6 +29,7 @@ import { multiSelectLabels } from '@/lib/multi-select-labels';
 import { slugify } from '@/lib/slug';
 import {
     destroy as articlesDestroy,
+    duplicate as articlesDuplicate,
     edit as articlesEdit,
     index as articlesIndex,
     store as articlesStore,
@@ -166,6 +167,7 @@ export function ArticleForm({ editor }: ArticleFormProps) {
     const [isConflictOpen, setIsConflictOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const errors = form.errors as Partial<Record<string, string>>;
     const errorKeys = Object.keys(errors).filter((key) => errors[key]);
@@ -329,6 +331,25 @@ export function ArticleForm({ editor }: ArticleFormProps) {
         router.visit(articlesEdit.url(articleId), { preserveState: false });
     }
 
+    /** Copies the saved article; unsaved edits are not part of the copy. */
+    function duplicateRecord() {
+        if (articleId === null) {
+            return;
+        }
+
+        if (
+            form.isDirty &&
+            !window.confirm(t('admin.articles.unsavedChanges'))
+        ) {
+            return;
+        }
+
+        setIsDuplicating(true);
+        router.post(articlesDuplicate.url(articleId), undefined, {
+            onFinish: () => setIsDuplicating(false),
+        });
+    }
+
     function confirmDelete() {
         if (articleId === null) {
             return;
@@ -481,6 +502,15 @@ export function ArticleForm({ editor }: ArticleFormProps) {
                                     {t('admin.articles.preview', {
                                         language: activeLanguage,
                                     })}
+                                </Button>
+                            )}
+                            {can.duplicate && (
+                                <Button
+                                    variant="outline"
+                                    isPending={isDuplicating}
+                                    onClick={duplicateRecord}
+                                >
+                                    {t('admin.articles.duplicate')}
                                 </Button>
                             )}
                             {can.delete && (

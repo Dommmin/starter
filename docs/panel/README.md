@@ -50,7 +50,7 @@ Są trzy stałe role. Rolę nadaje administrator w module [Użytkownicy](#użytk
 | Strony, artykuły — tworzenie, edycja, publikacja | ✓ | ✓ | podgląd |
 | Strony, artykuły — usuwanie, kosz | ✓ | — | — |
 | Tagi, FAQ — tworzenie i edycja | ✓ | ✓ | podgląd |
-| FAQ — duplikowanie | ✓ | ✓ | — |
+| Strony, artykuły, FAQ — duplikowanie | ✓ | ✓ | — |
 | Tagi, FAQ — usuwanie, import CSV | ✓ | — | — |
 | Media — przesyłanie, tekst alternatywny | ✓ | ✓ | podgląd |
 | Media — usuwanie | ✓ | — | — |
@@ -105,6 +105,8 @@ Strony treści serwisu (np. „O nas”, „Usługi”, polityka prywatności) p
 4. Ustaw **Status**: *Szkic* (niewidoczny publicznie) albo *Opublikowana*.
 5. **Zapisz zmiany**. Przy edycji **Podgląd: <język>** otwiera ostatnio zapisaną wersję w nowej karcie, także szkic (podgląd nie trafia do wyszukiwarek).
 
+**Duplikuj stronę** (przycisk w edycji albo **Duplikuj** w menu akcji wiersza) tworzy kopię ze wszystkimi wersjami językowymi i od razu otwiera jej edycję. Każda wersja dostaje wolny slug z dopiskiem `-copy-N` w swoim języku (np. `o-nas-copy-1`), status *Szkic* i brak daty publikacji, więc kopia jest niewidoczna publicznie, dopóki jej nie opublikujesz. Przekierowania starych slugów oryginału nie są kopiowane. Oryginał zostaje bez zmian, dziennik audytu zapisuje, z której strony powstała kopia, a niezapisane zmiany w formularzu nie trafiają do kopii.
+
 Zmiana sluga opublikowanej strony tworzy automatyczne przekierowanie 301 ze starego adresu. Administrator usuwa stronę przyciskiem **Usuń stronę** — trafia ona do [kosza](#kosz). Edycja jest chroniona przed nadpisaniem: jeśli ktoś zapisał stronę w międzyczasie, panel pokaże konflikt zamiast nadpisać jego zmiany.
 
 ![Lista stron](img/04-strony.jpg)
@@ -121,6 +123,8 @@ Blog / aktualności pod `/articles`. Formularz jak przy stronach, z dodatkami:
 5. **Zapisz zmiany**, sprawdź **Podgląd**.
 
 Lista ma filtr statusu (opublikowane / zaplanowane / szkice) i języka treści.
+
+**Duplikuj artykuł** działa jak przy stronach: kopia ze wszystkimi wersjami językowymi jako szkic bez daty publikacji, ze slugami `-copy-N` w każdym języku, bez przekierowań oryginału. Okładka i tagi są zachowane.
 
 ![Lista artykułów](img/06-artykuly.jpg)
 ![Edycja artykułu](img/07-artykul-edycja.jpg)

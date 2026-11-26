@@ -339,6 +339,7 @@ return [
         'saving' => 'Wird gespeichert…',
         'cancel' => 'Abbrechen',
         'delete' => 'Seite löschen',
+        'duplicate' => 'Seite duplizieren',
         'preview' => 'Vorschau: :language',
         'previewHint' => 'Die Vorschau zeigt die zuletzt gespeicherte Version.',
         'previewUnsaved' => 'Sie haben ungespeicherte Änderungen. Speichern Sie sie, um sie in der Vorschau zu sehen.',
@@ -364,6 +365,7 @@ return [
         'rowActionsLabel' => 'Aktionen für :title',
         'actionEdit' => 'Bearbeiten',
         'actionDelete' => 'Löschen',
+        'actionDuplicate' => 'Duplizieren',
         'untitled' => 'Seite ohne Titel',
         'missingTranslation' => 'Keine Übersetzung in dieser Sprache',
         'emptyTitle' => 'Noch keine Seiten',
@@ -406,6 +408,7 @@ return [
         'created' => 'Seite erstellt.',
         'updated' => 'Seite gespeichert.',
         'deleted' => 'Seite in den Papierkorb verschoben.',
+        'duplicated' => 'Kopie der Seite als Entwurf erstellt. Sie ist für Besucher erst nach der Veröffentlichung sichtbar.',
         'conflict' => 'Diese Seite wurde nach dem Öffnen von jemand anderem geändert. Laden Sie sie neu und übernehmen Sie Ihre Änderungen erneut.',
         'validation' => [
             'bodyInvalid' => 'Der Inhalt enthält nicht unterstützte Elemente.',
@@ -425,6 +428,7 @@ return [
         'saving' => 'Wird gespeichert…',
         'cancel' => 'Abbrechen',
         'delete' => 'Artikel löschen',
+        'duplicate' => 'Artikel duplizieren',
         'preview' => 'Vorschau: :language',
         'previewHint' => 'Die Vorschau zeigt die zuletzt gespeicherte Version.',
         'previewUnsaved' => 'Sie haben ungespeicherte Änderungen. Speichern Sie sie, um sie in der Vorschau zu sehen.',
@@ -449,6 +453,7 @@ return [
         'rowActionsLabel' => 'Aktionen für :title',
         'actionEdit' => 'Bearbeiten',
         'actionDelete' => 'Löschen',
+        'actionDuplicate' => 'Duplizieren',
         'untitled' => 'Artikel ohne Titel',
         'missingTranslation' => 'Keine Übersetzung in dieser Sprache',
         'emptyTitle' => 'Noch keine Artikel',
@@ -509,6 +514,7 @@ return [
         'created' => 'Artikel erstellt.',
         'updated' => 'Artikel gespeichert.',
         'deleted' => 'Artikel in den Papierkorb verschoben.',
+        'duplicated' => 'Kopie des Artikels als Entwurf erstellt. Er ist für Besucher erst nach der Veröffentlichung sichtbar.',
         'conflict' => 'Dieser Artikel wurde nach dem Öffnen von jemand anderem geändert. Laden Sie ihn neu und übernehmen Sie Ihre Änderungen erneut.',
     ],
 
@@ -724,6 +730,7 @@ return [
                 'deleted' => 'Seite gelöscht',
                 'restored' => 'Seite aus dem Papierkorb wiederhergestellt',
                 'purged' => 'Seite endgültig aus dem Papierkorb entfernt',
+                'duplicated' => 'Seite dupliziert',
             ],
             'article' => [
                 'created' => 'Artikel erstellt',
@@ -733,6 +740,7 @@ return [
                 'deleted' => 'Artikel gelöscht',
                 'restored' => 'Artikel aus dem Papierkorb wiederhergestellt',
                 'purged' => 'Artikel endgültig aus dem Papierkorb entfernt',
+                'duplicated' => 'Artikel dupliziert',
             ],
             'user' => [
                 'role_changed' => 'Benutzerrolle geändert',

@@ -24,5 +24,6 @@ class PageAbilitiesData extends Data
         public bool $suggestSeo = false,
         public bool $suggestTranslation = false,
         public bool $rewriteText = false,
+        public bool $duplicate = false,
     ) {}
 }

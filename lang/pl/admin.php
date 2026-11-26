@@ -339,6 +339,7 @@ return [
         'saving' => 'Zapisywanie…',
         'cancel' => 'Anuluj',
         'delete' => 'Usuń stronę',
+        'duplicate' => 'Duplikuj stronę',
         'preview' => 'Podgląd: :language',
         'previewHint' => 'Podgląd pokazuje ostatnio zapisaną wersję.',
         'previewUnsaved' => 'Masz niezapisane zmiany. Zapisz je, aby zobaczyć je w podglądzie.',
@@ -364,6 +365,7 @@ return [
         'rowActionsLabel' => 'Akcje dla :title',
         'actionEdit' => 'Edytuj',
         'actionDelete' => 'Usuń',
+        'actionDuplicate' => 'Duplikuj',
         'untitled' => 'Strona bez tytułu',
         'missingTranslation' => 'Brak tłumaczenia w tym języku',
         'emptyTitle' => 'Nie ma jeszcze stron',
@@ -406,6 +408,7 @@ return [
         'created' => 'Strona została utworzona.',
         'updated' => 'Strona została zapisana.',
         'deleted' => 'Strona trafiła do kosza.',
+        'duplicated' => 'Utworzono kopię strony jako szkic. Nie jest widoczna dla odwiedzających do czasu publikacji.',
         'conflict' => 'Ktoś inny zmienił tę stronę po jej otwarciu. Wczytaj ją ponownie i wprowadź zmiany jeszcze raz.',
         'validation' => [
             'bodyInvalid' => 'Treść zawiera nieobsługiwane elementy.',
@@ -425,6 +428,7 @@ return [
         'saving' => 'Zapisywanie…',
         'cancel' => 'Anuluj',
         'delete' => 'Usuń artykuł',
+        'duplicate' => 'Duplikuj artykuł',
         'preview' => 'Podgląd: :language',
         'previewHint' => 'Podgląd pokazuje ostatnio zapisaną wersję.',
         'previewUnsaved' => 'Masz niezapisane zmiany. Zapisz je, aby zobaczyć je w podglądzie.',
@@ -449,6 +453,7 @@ return [
         'rowActionsLabel' => 'Akcje dla :title',
         'actionEdit' => 'Edytuj',
         'actionDelete' => 'Usuń',
+        'actionDuplicate' => 'Duplikuj',
         'untitled' => 'Artykuł bez tytułu',
         'missingTranslation' => 'Brak tłumaczenia w tym języku',
         'emptyTitle' => 'Brak artykułów',
@@ -509,6 +514,7 @@ return [
         'created' => 'Utworzono artykuł.',
         'updated' => 'Zapisano artykuł.',
         'deleted' => 'Artykuł trafił do kosza.',
+        'duplicated' => 'Utworzono kopię artykułu jako szkic. Nie jest widoczna dla odwiedzających do czasu publikacji.',
         'conflict' => 'Ktoś inny zmienił ten artykuł po jego otwarciu. Wczytaj go ponownie i wprowadź zmiany jeszcze raz.',
     ],
 
@@ -724,6 +730,7 @@ return [
                 'deleted' => 'Usunięto stronę',
                 'restored' => 'Przywrócono stronę z kosza',
                 'purged' => 'Usunięto stronę z kosza na stałe',
+                'duplicated' => 'Utworzono kopię strony',
             ],
             'article' => [
                 'created' => 'Utworzono artykuł',
@@ -733,6 +740,7 @@ return [
                 'deleted' => 'Usunięto artykuł',
                 'restored' => 'Przywrócono artykuł z kosza',
                 'purged' => 'Usunięto artykuł z kosza na stałe',
+                'duplicated' => 'Utworzono kopię artykułu',
             ],
             'user' => [
                 'role_changed' => 'Zmieniono rolę użytkownika',

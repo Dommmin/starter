@@ -35,7 +35,7 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 
 ## Faza A — Clone (wzorzec operacji)
 
-- [ ] **1. `feat/panel-faq-clone`** — Clone na FAQ, napisany jawnie. **HIGH-RISK (policy)**
+- [x] **1. `feat/panel-faq-clone`** — Clone na FAQ, napisany jawnie. **HIGH-RISK (policy)**
   - Action `Faqs/DuplicateFaq` (`replicate()`, `published=false`, pozycja na końcu), trasa `POST admin/faqs/{faq}/duplicate`, ability `duplicate` w `FaqPolicy` (admin + editor), akcja wiersza w `ResourceTable` i przycisk w edycji, redirect do edycji kopii, toast, wpis audytu.
   - AC: kopia ma nowe ID, jest nieopublikowana, oryginał bez zmian; podgląd (viewer) dostaje 403; audit zawiera źródło kopii.
 - [ ] **2. `feat/generator-clone-operation`** — flaga `--operations=clone` w `app:make-resource`.

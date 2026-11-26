@@ -10,6 +10,7 @@ declare namespace App {
                     suggestSeo: boolean;
                     suggestTranslation: boolean;
                     rewriteText: boolean;
+                    duplicate: boolean;
                 };
                 export type ArticleEditorData = {
                     article: App.Data.Admin.Articles.ArticleFormData;
@@ -559,6 +560,7 @@ declare namespace App {
                     suggestSeo: boolean;
                     suggestTranslation: boolean;
                     rewriteText: boolean;
+                    duplicate: boolean;
                 };
                 export type PageEditorData = {
                     page: App.Data.Admin.Pages.PageFormData;
@@ -1279,6 +1281,7 @@ declare namespace App {
             | 'page.deleted'
             | 'page.restored'
             | 'page.purged'
+            | 'page.duplicated'
             | 'article.created'
             | 'article.updated'
             | 'article.published'
@@ -1286,6 +1289,7 @@ declare namespace App {
             | 'article.deleted'
             | 'article.restored'
             | 'article.purged'
+            | 'article.duplicated'
             | 'user.created'
             | 'user.updated'
             | 'user.role_changed'

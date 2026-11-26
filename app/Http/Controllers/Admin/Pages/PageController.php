@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Pages;
 use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Content\CreatePage;
 use App\Actions\Content\DeletePage;
+use App\Actions\Content\DuplicatePage;
 use App\Actions\Content\UpdatePage;
 use App\Data\Admin\Pages\PageAbilitiesData;
 use App\Data\Admin\Pages\PageEditorData;
@@ -135,6 +136,22 @@ class PageController extends Controller
     }
 
     /**
+     * Copy the page with its translations as a new draft page and open the
+     * copy's editor.
+     */
+    public function duplicate(Request $request, Page $page, DuplicatePage $duplicatePage): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $copy = $duplicatePage->handle($page, $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.duplicated')]);
+
+        return to_route('admin.pages.edit', $copy);
+    }
+
+    /**
      * Permanently delete the page with all translations (administrators only).
      */
     public function destroy(Request $request, Page $page, DeletePage $deletePage): RedirectResponse
@@ -168,6 +185,9 @@ class PageController extends Controller
                 && ($user?->can('create', Page::class) ?? false),
             rewriteText: AssistantFeature::TextRewrite->isAvailable()
                 && ($user?->can('create', Page::class) ?? false),
+            duplicate: $page !== null
+                ? ($user?->can('duplicate', $page) ?? false)
+                : ($user?->can('create', Page::class) ?? false),
         );
     }
 }

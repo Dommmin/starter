@@ -7,7 +7,8 @@ use App\Models\User;
 
 /**
  * Articles are written and published by admins and editors; a viewer
- * lists, opens (read-only) and previews them. Only administrators may
+ * lists, opens (read-only) and previews them. Copying (as a new draft)
+ * follows the same rule as creating. Only administrators may
  * move an article to the trash, restore it or empty the trash.
  */
 class ArticlePolicy
@@ -41,6 +42,14 @@ class ArticlePolicy
      * Determine whether the user can edit the article and its translations.
      */
     public function update(User $user, Article $article): bool
+    {
+        return $user->canEditContent();
+    }
+
+    /**
+     * Determine whether the user can copy the article as a new draft article.
+     */
+    public function duplicate(User $user, Article $article): bool
     {
         return $user->canEditContent();
     }

@@ -133,6 +133,7 @@ describe('AdminPagesIndex', () => {
             suggestSeo: false,
             suggestTranslation: false,
             rewriteText: false,
+            duplicate: true,
         });
         const container = await render();
 
@@ -156,6 +157,7 @@ describe('AdminPagesIndex', () => {
             suggestSeo: false,
             suggestTranslation: false,
             rewriteText: false,
+            duplicate: true,
         });
         let container = await render();
 
@@ -182,6 +184,7 @@ describe('AdminPagesIndex', () => {
             suggestSeo: false,
             suggestTranslation: false,
             rewriteText: false,
+            duplicate: false,
         });
         container = await render();
 
@@ -197,6 +200,7 @@ describe('AdminPagesIndex', () => {
             suggestSeo: false,
             suggestTranslation: false,
             rewriteText: false,
+            duplicate: true,
         });
         pageProps.filters = {
             ...pageProps.filters,

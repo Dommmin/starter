@@ -6,6 +6,7 @@ import {
     Button,
     ConfirmDialog,
     ConflictDialog,
+{{ inlineImport }}
     PageHeader,
     ResourceForm,
     Stack,
@@ -16,6 +17,7 @@ import { useTranslation } from '@/i18n';
 {{ multiSelectImport }}
 import {
     destroy,
+{{ duplicateImport }}
     edit,
     index,
     store,
@@ -59,6 +61,7 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
     const [isConflictOpen, setIsConflictOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+{{ duplicateState }}
 
 {{ pickerSetup }}
     const errors = form.errors as Partial<Record<string, string>>;
@@ -121,6 +124,7 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
         setIsConflictOpen(false);
         router.visit(edit.url(recordId), { preserveState: false });
     }
+{{ duplicateFunction }}
 
     function confirmDelete() {
         if (recordId === null) {
@@ -143,14 +147,7 @@ export function {{ Model }}Form({ editor }: {{ Model }}FormProps) {
                 }
                 description={t('admin.{{ camelPlural }}.description')}
                 actions={
-                    recordId !== null && can.delete ? (
-                        <Button
-                            variant="destructive"
-                            onClick={() => setIsDeleteOpen(true)}
-                        >
-                            {t('admin.{{ camelPlural }}.delete')}
-                        </Button>
-                    ) : undefined
+{{ headerActions }}
                 }
             />
 

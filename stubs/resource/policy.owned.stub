@@ -43,5 +43,6 @@ class {{ Model }}Policy
     {
         return $user->canEditContent() && $user->id === ${{ variable }}->user_id;
     }
+{{ duplicateMethod }}
 {{ exportMethod }}
 }

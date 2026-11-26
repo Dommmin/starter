@@ -339,6 +339,7 @@ return [
         'saving' => 'Saving…',
         'cancel' => 'Cancel',
         'delete' => 'Delete page',
+        'duplicate' => 'Duplicate page',
         'preview' => 'Preview: :language',
         'previewHint' => 'The preview shows the last saved version.',
         'previewUnsaved' => 'You have unsaved changes. Save them to see them in the preview.',
@@ -364,6 +365,7 @@ return [
         'rowActionsLabel' => 'Actions for :title',
         'actionEdit' => 'Edit',
         'actionDelete' => 'Delete',
+        'actionDuplicate' => 'Duplicate',
         'untitled' => 'Untitled page',
         'missingTranslation' => 'No translation in this language',
         'emptyTitle' => 'No pages yet',
@@ -406,6 +408,7 @@ return [
         'created' => 'Page created.',
         'updated' => 'Page saved.',
         'deleted' => 'Page moved to the trash.',
+        'duplicated' => 'Draft copy of the page created. It is not visible to visitors until you publish it.',
         'conflict' => 'This page was changed by someone else after you opened it. Reload it and apply your changes again.',
         'validation' => [
             'bodyInvalid' => 'The content contains unsupported elements.',
@@ -425,6 +428,7 @@ return [
         'saving' => 'Saving…',
         'cancel' => 'Cancel',
         'delete' => 'Delete article',
+        'duplicate' => 'Duplicate article',
         'preview' => 'Preview: :language',
         'previewHint' => 'The preview shows the last saved version.',
         'previewUnsaved' => 'You have unsaved changes. Save them to see them in the preview.',
@@ -449,6 +453,7 @@ return [
         'rowActionsLabel' => 'Actions for :title',
         'actionEdit' => 'Edit',
         'actionDelete' => 'Delete',
+        'actionDuplicate' => 'Duplicate',
         'untitled' => 'Untitled article',
         'missingTranslation' => 'No translation in this language',
         'emptyTitle' => 'No articles yet',
@@ -509,6 +514,7 @@ return [
         'created' => 'Article created.',
         'updated' => 'Article saved.',
         'deleted' => 'Article moved to the trash.',
+        'duplicated' => 'Draft copy of the article created. It is not visible to visitors until you publish it.',
         'conflict' => 'This article was changed by someone else after you opened it. Reload it and apply your changes again.',
     ],
 
@@ -724,6 +730,7 @@ return [
                 'deleted' => 'Page deleted',
                 'restored' => 'Page restored from the trash',
                 'purged' => 'Page removed from the trash for good',
+                'duplicated' => 'Page duplicated',
             ],
             'article' => [
                 'created' => 'Article created',
@@ -733,6 +740,7 @@ return [
                 'deleted' => 'Article deleted',
                 'restored' => 'Article restored from the trash',
                 'purged' => 'Article removed from the trash for good',
+                'duplicated' => 'Article duplicated',
             ],
             'user' => [
                 'role_changed' => 'User role changed',
@@ -750,6 +758,7 @@ return [
             'resource' => [
                 'exported' => 'Records exported to CSV',
                 'imported' => 'Records imported from CSV',
+                'duplicated' => 'Record duplicated',
             ],
             'site_settings' => [
                 'updated' => 'Site settings updated',

@@ -268,6 +268,7 @@ declare namespace App {
                     delete: boolean;
                     import: boolean;
                     suggestFaqs: boolean;
+                    duplicate: boolean;
                 };
                 export type FaqEditorData = {
                     faq: App.Data.Admin.Faqs.FaqFormData;
@@ -1313,6 +1314,7 @@ declare namespace App {
             | 'redirect.created'
             | 'redirect.updated'
             | 'redirect.deleted'
+            | 'faq.duplicated'
             | 'assistant.suggested'
             | 'ai_settings.updated';
         export type ConsentCategory = 'analytics' | 'marketing';

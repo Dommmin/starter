@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import {
@@ -13,7 +13,7 @@ import {
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
-import { create, destroy, edit, index } from '@/routes/admin/faqs';
+import { create, destroy, duplicate, edit, index } from '@/routes/admin/faqs';
 import { show as importShow } from '@/routes/admin/import';
 import { FaqGeneratorDialog } from './faq-generator-dialog';
 
@@ -179,6 +179,17 @@ export default function AdminFaqsIndex() {
                             icon: Pencil,
                             onSelect: () => router.visit(edit.url(row.id)),
                         },
+                        ...(can.duplicate
+                            ? [
+                                  {
+                                      id: 'duplicate',
+                                      label: t('admin.faqs.actionDuplicate'),
+                                      icon: Copy,
+                                      onSelect: () =>
+                                          router.post(duplicate.url(row.id)),
+                                  },
+                              ]
+                            : []),
                         ...(can.delete
                             ? [
                                   {

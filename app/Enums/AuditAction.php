@@ -49,6 +49,7 @@ enum AuditAction: string
     case RedirectCreated = 'redirect.created';
     case RedirectUpdated = 'redirect.updated';
     case RedirectDeleted = 'redirect.deleted';
+    case FaqDuplicated = 'faq.duplicated';
     case AssistantSuggested = 'assistant.suggested';
     case AiSettingsUpdated = 'ai_settings.updated';
 

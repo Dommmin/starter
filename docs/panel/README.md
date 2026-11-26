@@ -50,6 +50,7 @@ Są trzy stałe role. Rolę nadaje administrator w module [Użytkownicy](#użytk
 | Strony, artykuły — tworzenie, edycja, publikacja | ✓ | ✓ | podgląd |
 | Strony, artykuły — usuwanie, kosz | ✓ | — | — |
 | Tagi, FAQ — tworzenie i edycja | ✓ | ✓ | podgląd |
+| FAQ — duplikowanie | ✓ | ✓ | — |
 | Tagi, FAQ — usuwanie, import CSV | ✓ | — | — |
 | Media — przesyłanie, tekst alternatywny | ✓ | ✓ | podgląd |
 | Media — usuwanie | ✓ | — | — |
@@ -140,7 +141,8 @@ Pytania i odpowiedzi wyświetlane w sekcji FAQ strony głównej.
 
 1. **FAQ → Dodaj pytanie**: pytanie, odpowiedź, język (albo wszystkie), kolejność i przełącznik „Opublikowane”.
 2. Filtr „Opublikowane” na liście pokazuje tylko widoczne pytania.
-3. Administrator usuwa pytania i importuje je z CSV.
+3. **Duplikuj** (menu akcji wiersza albo przycisk w edycji) tworzy kopię pytania: nieopublikowaną, na końcu kolejności, i od razu otwiera jej edycję. Oryginał zostaje bez zmian, a dziennik audytu zapisuje, z którego pytania powstała kopia. Niezapisane zmiany w formularzu nie trafiają do kopii.
+4. Administrator usuwa pytania i importuje je z CSV.
 
 ![FAQ](img/09-faq.jpg)
 

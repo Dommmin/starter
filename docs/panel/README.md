@@ -50,6 +50,7 @@ Są trzy stałe role. Rolę nadaje administrator w module [Użytkownicy](#użytk
 | Strony, artykuły — tworzenie, edycja, publikacja | ✓ | ✓ | podgląd |
 | Strony, artykuły — usuwanie, kosz | ✓ | — | — |
 | Tagi, FAQ — tworzenie i edycja | ✓ | ✓ | podgląd |
+| FAQ — kolejność | ✓ | ✓ | podgląd |
 | Strony, artykuły, FAQ — duplikowanie | ✓ | ✓ | — |
 | Tagi, FAQ — usuwanie, import CSV | ✓ | — | — |
 | Media — przesyłanie, tekst alternatywny | ✓ | ✓ | podgląd |
@@ -143,10 +144,11 @@ Kategorie artykułów, po których odwiedzający filtrują listę artykułów.
 
 Pytania i odpowiedzi wyświetlane w sekcji FAQ strony głównej.
 
-1. **FAQ → Dodaj pytanie**: pytanie, odpowiedź, język (albo wszystkie), kolejność i przełącznik „Opublikowane”.
+1. **FAQ → Dodaj pytanie**: pytanie, odpowiedź, język (albo wszystkie), kolejność i przełącznik „Opublikowane”. Puste pole „Kolejność” stawia pytanie na końcu listy (także pytania z generatora AI i z importu CSV bez pozycji).
 2. Filtr „Opublikowane” na liście pokazuje tylko widoczne pytania.
 3. **Duplikuj** (menu akcji wiersza albo przycisk w edycji) tworzy kopię pytania: nieopublikowaną, na końcu kolejności, i od razu otwiera jej edycję. Oryginał zostaje bez zmian, a dziennik audytu zapisuje, z którego pytania powstała kopia. Niezapisane zmiany w formularzu nie trafiają do kopii.
-4. Administrator usuwa pytania i importuje je z CSV.
+4. **Zmień kolejność** otwiera listę wszystkich pytań w jednej kolejności dla wszystkich języków; przy każdym pytaniu widać jego język (albo „Wszystkie języki”) i stan publikacji. Przesuwaj pytania strzałkami w górę i w dół; zmiana zapisuje się od razu. Strona każdego języka pokazuje jego pytania i pytania dla wszystkich języków w tej kolejności. Jeśli ktoś w międzyczasie dodał lub usunął pytanie, zobaczysz komunikat o konflikcie — wczytaj stronę ponownie. Podgląd widzi kolejność bez możliwości zmiany. Ręczne pole „Kolejność” w formularzu nadal działa.
+5. Administrator usuwa pytania i importuje je z CSV.
 
 ![FAQ](img/09-faq.jpg)
 

@@ -69,3 +69,25 @@ it('generates an AI reply draft for a contact message', function (): void {
 
     ContactReplyAgent::assertPrompted(fn ($prompt) => str_contains((string) $prompt->prompt, 'Offer a 15-minute call.'));
 });
+
+it('returns 404 and sends nothing to the AI provider while reply drafts are unavailable', function (string $switch): void {
+    config()->set('assistant.enabled', true);
+    config()->set('assistant.features.reply_draft', true);
+    config()->set('ai.default', 'openai');
+    config()->set('ai.providers.openai.key', 'test-key');
+    config()->set($switch, false);
+
+    ContactReplyAgent::fake();
+
+    $editor = User::factory()->editor()->create();
+    $message = ContactMessage::factory()->create();
+
+    $this->actingAs($editor)
+        ->postJson(route('admin.assistant.contact-reply'), ['contact_message_id' => $message->id])
+        ->assertNotFound();
+
+    ContactReplyAgent::assertNeverPrompted();
+})->with([
+    'assistant disabled' => 'assistant.enabled',
+    'feature disabled' => 'assistant.features.reply_draft',
+]);

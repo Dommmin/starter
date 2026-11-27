@@ -32,6 +32,7 @@ return [
         'translation' => (bool) env('AI_FEATURE_TRANSLATION', true),
         'text_rewrite' => (bool) env('AI_FEATURE_TEXT_REWRITE', true),
         'faq_generator' => (bool) env('AI_FEATURE_FAQ_GENERATOR', true),
+        'reply_draft' => (bool) env('AI_FEATURE_REPLY_DRAFT', true),
         'message_classification' => (bool) env('AI_FEATURE_MESSAGE_CLASSIFICATION', false),
     ],
 

@@ -121,6 +121,8 @@ declare namespace App {
                 export type ContactMessageAbilitiesData = {
                     retry: boolean;
                     delete: boolean;
+                    update: boolean;
+                    suggestReply: boolean;
                 };
                 export type ContactMessageDetailData = {
                     id: number;
@@ -137,6 +139,8 @@ declare namespace App {
                     webhookAttempts: number;
                     formTitle: string | null;
                     extraFields: App.Data.Admin.Contact.ContactMessageExtraFieldData[];
+                    leadStatus: App.Enums.LeadStatus;
+                    internalNotes: string | null;
                 };
                 export type ContactMessageExtraFieldData = {
                     label: string;
@@ -169,6 +173,7 @@ declare namespace App {
                     attempts: number;
                     category: App.Enums.ContactMessageCategory | null;
                     createdAt: string | null;
+                    leadStatus: App.Enums.LeadStatus;
                 };
                 export type ContactMessageShowData = {
                     contactMessage: App.Data.Admin.Contact.ContactMessageDetailData;
@@ -1269,7 +1274,8 @@ declare namespace App {
             | 'translation'
             | 'text_rewrite'
             | 'message_classification'
-            | 'faq_generator';
+            | 'faq_generator'
+            | 'reply_draft';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'
@@ -1375,6 +1381,7 @@ declare namespace App {
             | 'search_console'
             | 'analytics'
             | 'legal_pages';
+        export type LeadStatus = 'new' | 'in_progress' | 'replied' | 'archived';
         export type MaintenanceDuration =
             | 'unknown'
             | '15'

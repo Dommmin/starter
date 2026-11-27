@@ -7,6 +7,8 @@ use Laravel\Fortify\Features;
 
 abstract class TestCase extends BaseTestCase
 {
+    use GuardsTestDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();

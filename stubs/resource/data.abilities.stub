@@ -15,5 +15,6 @@ class {{ Model }}AbilitiesData extends Data
         public bool $create,
         public bool $delete,
 {{ exportAbility }}
+{{ duplicateAbility }}
     ) {}
 }

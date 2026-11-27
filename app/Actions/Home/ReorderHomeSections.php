@@ -6,7 +6,8 @@ use App\Actions\Audit\RecordAuditEvent;
 use App\Enums\AuditAction;
 use App\Models\HomeSection;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Services\Ordering\ReorderRecords;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -19,6 +20,7 @@ use Illuminate\Validation\ValidationException;
 class ReorderHomeSections
 {
     public function __construct(
+        private readonly ReorderRecords $reorder,
         private readonly RecordAuditEvent $audit,
     ) {}
 
@@ -29,38 +31,29 @@ class ReorderHomeSections
      */
     public function handle(string $locale, array $ids, User $actor): void
     {
-        DB::transaction(function () use ($locale, $ids, $actor): void {
-            $sections = HomeSection::query()
-                ->where('locale', $locale)
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
+        $this->reorder->handle(
+            HomeSection::class,
+            ['locale' => $locale],
+            $ids,
+            __('admin.homeSections.orderConflict'),
+            function (Collection $sections) use ($ids, $actor): void {
+                foreach ($ids as $index => $id) {
+                    /** @var HomeSection $section */
+                    $section = $sections->get($id);
+                    $position = $index + 1;
 
-            $current = $sections->keys()->map(intval(...))->sort()->values()->all();
-            $requested = collect($ids)->sort()->values()->all();
+                    if ($section->position === $position) {
+                        continue;
+                    }
 
-            if ($current !== $requested) {
-                throw ValidationException::withMessages([
-                    'conflict' => __('admin.homeSections.orderConflict'),
-                ]);
-            }
+                    $old = $section->position;
+                    $section->forceFill(['position' => $position])->save();
 
-            foreach ($ids as $index => $id) {
-                /** @var HomeSection $section */
-                $section = $sections->get($id);
-                $position = $index + 1;
-
-                if ($section->position === $position) {
-                    continue;
+                    $this->audit->handle(AuditAction::HomeSectionsReordered, $section, $actor, [
+                        'position' => RecordAuditEvent::change($old, $position),
+                    ]);
                 }
-
-                $old = $section->position;
-                $section->forceFill(['position' => $position])->save();
-
-                $this->audit->handle(AuditAction::HomeSectionsReordered, $section, $actor, [
-                    'position' => RecordAuditEvent::change($old, $position),
-                ]);
-            }
-        });
+            },
+        );
     }
 }

@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Actions\{{ Plural }};
+
+use App\Actions\Audit\RecordAuditEvent;
+use App\Enums\AuditAction;
+use App\Models\{{ Model }};
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+{{ imports }}
+
+/**
+ * {{ summary }}
+ */
+class Duplicate{{ Model }}
+{
+    public function __construct(private readonly RecordAuditEvent $audit) {}
+
+    public function handle({{ Model }} $source, User $actor): {{ Model }}
+    {
+        return DB::transaction(function () use ($source, $actor): {{ Model }} {
+            $copy = $source->replicate({{ replicateExcept }});
+{{ copyAssignments }}
+            $copy->save();
+{{ copyRelations }}
+
+            $this->audit->handle(AuditAction::ResourceDuplicated, $copy, $actor, [
+                'duplicated_from' => RecordAuditEvent::change(null, $source->id),
+            ]);
+
+            return $copy;
+        });
+    }
+{{ slugMethod }}
+}

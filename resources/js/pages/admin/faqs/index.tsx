@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import {
@@ -13,7 +13,14 @@ import {
 import { useTranslation } from '@/i18n';
 import { tableSortLabels } from '@/lib/table-sort-labels';
 import { index as adminIndex } from '@/routes/admin';
-import { create, destroy, edit, index } from '@/routes/admin/faqs';
+import {
+    create,
+    destroy,
+    duplicate,
+    edit,
+    index,
+    order,
+} from '@/routes/admin/faqs';
 import { show as importShow } from '@/routes/admin/import';
 import { FaqGeneratorDialog } from './faq-generator-dialog';
 
@@ -29,6 +36,7 @@ export default function AdminFaqsIndex() {
     const { t, formatDate } = useTranslation();
     const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
 
     const rowTitle = (row: Row) =>
@@ -59,6 +67,9 @@ export default function AdminFaqsIndex() {
                     actions: (
                         <Inline gap="tight">
                             <SavedViewsMenu list="admin.faqs.index" />
+                            <Button variant="outline" href={order()}>
+                                {t('admin.faqs.order')}
+                            </Button>
                             {can.import && (
                                 <Button
                                     variant="outline"
@@ -179,6 +190,27 @@ export default function AdminFaqsIndex() {
                             icon: Pencil,
                             onSelect: () => router.visit(edit.url(row.id)),
                         },
+                        ...(can.duplicate
+                            ? [
+                                  {
+                                      id: 'duplicate',
+                                      label: t('admin.faqs.actionDuplicate'),
+                                      icon: Copy,
+                                      disabled: isDuplicating,
+                                      onSelect: () => {
+                                          setIsDuplicating(true);
+                                          router.post(
+                                              duplicate.url(row.id),
+                                              undefined,
+                                              {
+                                                  onFinish: () =>
+                                                      setIsDuplicating(false),
+                                              },
+                                          );
+                                      },
+                                  },
+                              ]
+                            : []),
                         ...(can.delete
                             ? [
                                   {

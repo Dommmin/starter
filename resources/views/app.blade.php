@@ -25,6 +25,25 @@
                         document.documentElement.classList.add('dark');
                     }
                 }
+
+                {{-- Accessibility preferences before the first paint; keep in sync with use-accessibility-preferences.tsx --}}
+                try {
+                    const a11y = JSON.parse(localStorage.getItem('a11y-preferences') || '{}') || {};
+                    const root = document.documentElement;
+
+                    if (a11y.textSize === 'large' || a11y.textSize === 'larger') {
+                        root.dataset.textSize = a11y.textSize;
+                    }
+                    if (a11y.highContrast === true) {
+                        root.dataset.contrast = 'more';
+                    }
+                    if (a11y.reduceMotion === true) {
+                        root.dataset.motion = 'reduce';
+                    }
+                    if (a11y.underlineLinks === true) {
+                        root.dataset.links = 'underline';
+                    }
+                } catch (error) {}
             })();
         </script>
 

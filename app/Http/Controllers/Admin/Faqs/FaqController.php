@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Faqs;
 
 use App\Actions\Faqs\CreateFaq;
+use App\Actions\Faqs\DuplicateFaq;
+use App\Actions\Faqs\ReorderFaqs;
 use App\Actions\Faqs\UpdateFaq;
 use App\Data\Admin\Faqs\FaqAbilitiesData;
 use App\Data\Admin\Faqs\FaqEditorData;
@@ -10,15 +12,19 @@ use App\Data\Admin\Faqs\FaqFormData;
 use App\Data\Admin\Faqs\FaqIndexData;
 use App\Data\Admin\Faqs\FaqListFiltersData;
 use App\Data\Admin\Faqs\FaqListItemData;
+use App\Data\Admin\Faqs\FaqOrderData;
+use App\Data\Admin\Faqs\FaqOrderItemData;
 use App\Data\Content\ContentLocalesData;
 use App\Data\Listing\ListPaginationData;
 use App\Enums\AssistantFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Faqs\ListFaqsRequest;
+use App\Http\Requests\Admin\Faqs\ReorderFaqsRequest;
 use App\Http\Requests\Admin\Faqs\StoreFaqRequest;
 use App\Http\Requests\Admin\Faqs\StoreManyFaqsRequest;
 use App\Http\Requests\Admin\Faqs\UpdateFaqRequest;
 use App\Models\Faq;
+use App\Models\User;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -130,6 +136,53 @@ class FaqController extends Controller
     }
 
     /**
+     * Copy the faq as a new, unpublished faq and open the copy's editor.
+     */
+    public function duplicate(Request $request, Faq $faq, DuplicateFaq $duplicateFaq): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $copy = $duplicateFaq->handle($faq, $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.faqs.duplicated')]);
+
+        return to_route('admin.faqs.edit', $copy);
+    }
+
+    /**
+     * Show every faq in the shared order of all languages (the order of each
+     * public locale list), unpaginated, for moving up and down.
+     */
+    public function order(Request $request): Response
+    {
+        $items = [];
+        foreach (Faq::query()->orderByRaw('position is null')->orderBy('position')->orderBy('id')->get() as $faq) {
+            $items[] = FaqOrderItemData::fromModel($faq);
+        }
+
+        return Inertia::render('admin/faqs/order', new FaqOrderData(
+            items: $items,
+            canReorder: $request->user()?->can('reorder', Faq::class) ?? false,
+            locales: ContentLocalesData::fromConfig($this->localization),
+        ));
+    }
+
+    /**
+     * Store a complete new shared order of all faqs; a stale list yields a
+     * `conflict` error and nothing is stored.
+     */
+    public function reorder(ReorderFaqsRequest $request, ReorderFaqs $reorderFaqs): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $reorderFaqs->handle($user, $request->ids());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.faqs.reordered')]);
+
+        return to_route('admin.faqs.order');
+    }
+
+    /**
      * Permanently delete the faq (administrators only).
      */
     public function destroy(Faq $faq): RedirectResponse
@@ -154,6 +207,9 @@ class FaqController extends Controller
                 ? ($user?->can('delete', $faq) ?? false)
                 : ($user?->isAdmin() ?? false),
             import: $user?->can('import', Faq::class) ?? false,
+            duplicate: $faq !== null
+                ? ($user?->can('duplicate', $faq) ?? false)
+                : ($user?->can('create', Faq::class) ?? false),
             suggestFaqs: AssistantFeature::FaqGenerator->isAvailable()
                 && ($user?->can('create', Faq::class) ?? false),
         );

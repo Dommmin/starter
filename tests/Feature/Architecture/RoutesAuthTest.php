@@ -29,6 +29,7 @@ $routesAuthPublic = [
     'GET health/ready' => 'readiness dla monitoringu i deployu, bez danych',
     'GET sitemap.xml' => 'SEO',
     'GET robots.txt' => 'SEO',
+    'GET llms.txt' => 'SEO (AI/LLM index)',
     'GET /' => 'strona główna',
     'GET articles' => 'publiczna lista artykułów',
     'GET articles/{slug}' => 'publiczny artykuł',

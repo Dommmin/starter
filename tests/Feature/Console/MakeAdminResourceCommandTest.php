@@ -812,3 +812,118 @@ test('the reserved names cover the starter models and the navigation modules', f
     expect(fn () => ResourceBlueprint::parse($name, 'name:string'))
         ->toThrow(InvalidArgumentException::class, "Resource name [{$name}] is reserved.");
 })->with(['Menu', 'MenuItem', 'Navigation', 'HomeSection', 'SiteSetting', 'Article', 'AuditLog', 'ContactMessage', 'Faq']);
+
+test('an unknown operation is rejected before planning', function () {
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [...$this->productArguments, '--operations' => 'clone,reorder'])
+        ->expectsOutputToContain('Operation [reorder] is not supported; available: clone.')
+        ->assertExitCode(2);
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+});
+
+test('a dry run with the clone operation lists the copy action and its test and writes nothing', function () {
+    $before = sandboxSnapshot($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [...$this->productArguments, '--operations' => 'clone', '--dry-run' => true])
+        ->expectsOutputToContain('create app/Actions/Products/DuplicateProduct.php')
+        ->expectsOutputToContain('create tests/Feature/Admin/ProductDuplicateTest.php')
+        ->expectsOutputToContain('update routes/admin.php')
+        ->assertSuccessful();
+
+    expect(sandboxSnapshot($this->files, $this->sandbox))->toBe($before);
+});
+
+test('without the clone operation no copy code is generated', function () {
+    $this->artisan('app:make-resource', $this->productArguments)->assertSuccessful();
+
+    expect($this->files->exists("{$this->sandbox}/app/Actions/Products/DuplicateProduct.php"))->toBeFalse()
+        ->and($this->files->get("{$this->sandbox}/routes/admin.php"))->not->toContain('products.duplicate')
+        ->and($this->files->get("{$this->sandbox}/app/Policies/ProductPolicy.php"))->not->toContain('duplicate')
+        ->and($this->files->get("{$this->sandbox}/resources/js/pages/admin/products/index.tsx"))->not->toContain('duplicate');
+});
+
+test('the clone operation copies many-to-many links but not hasMany records and is offered to admins and editors', function () {
+    copyModelIntoSandbox($this->files, $this->sandbox, 'Faq');
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required,faqs:belongsToMany(Faq.question),variants:hasMany(Variant.name)',
+        '--operations' => 'clone',
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+
+    foreach ($this->files->allFiles($this->sandbox) as $file) {
+        expect($file->getContents())->not->toContain('{{ ', "{$file->getRelativePathname()} has an unreplaced placeholder");
+
+        if ($file->getExtension() === 'php') {
+            expect(fn () => token_get_all($file->getContents(), TOKEN_PARSE))->not->toThrow(ParseError::class);
+        }
+    }
+
+    expect($read('app/Actions/Products/DuplicateProduct.php'))
+        ->toContain('$copy = $source->replicate();')
+        ->toContain('$copy->faqs()->sync($source->faqs()->allRelatedIds());')
+        ->toContain('AuditAction::ResourceDuplicated')
+        ->not->toContain('variants');
+
+    expect($read('app/Policies/ProductPolicy.php'))
+        ->toContain("public function duplicate(User \$user, Product \$product): bool\n    {\n        return \$user->canEditContent();");
+
+    expect($read('routes/admin.php'))
+        ->toContain("Route::post('/products/{product}/duplicate', [ProductController::class, 'duplicate'])")
+        ->toContain("->can('duplicate', 'product');");
+
+    expect($read('app/Http/Controllers/Admin/Products/ProductController.php'))
+        ->toContain('public function duplicate(Request $request, Product $product, DuplicateProduct $duplicateProduct): RedirectResponse')
+        ->toContain("duplicate: \$product !== null\n                ? (\$user?->can('duplicate', \$product) ?? false)");
+
+    expect($read('app/Data/Admin/Products/ProductAbilitiesData.php'))->toContain('public bool $duplicate,')
+        ->and($read('resources/js/pages/admin/products/index.tsx'))->toContain('disabled: isDuplicating,')
+        ->toContain('router.post(duplicate.url(row.id), undefined, { onFinish: () => setIsDuplicating(false) });')
+        ->and($read('resources/js/pages/admin/products/form.tsx'))->toContain('router.post(duplicate.url(recordId), undefined, {');
+
+    foreach (ResourceGenerator::LOCALES as $locale) {
+        $catalog = require "{$this->sandbox}/lang/{$locale}/admin.php";
+        expect($catalog['products'])->toHaveKeys(['actionDuplicate', 'duplicate', 'duplicated']);
+    }
+
+    expect($read('tests/Feature/Admin/ProductDuplicateTest.php'))
+        ->toContain("test('a viewer cannot copy a product and nothing is stored'")
+        ->toContain('->and(AuditLog::query()->count())->toBe(0);')
+        ->toContain('$source->faqs()->attach($faqIds);');
+});
+
+test('a public clone is an unpublished copy with a free copy slug and an owned clone stays with its owner', function () {
+    copyPublicTargetsIntoSandbox($this->files, $this->sandbox);
+
+    $this->artisan('app:make-resource', [
+        'name' => 'Product',
+        '--fields' => 'name:string:required',
+        '--public' => true,
+        '--owned' => true,
+        '--operations' => 'clone',
+        '--no-format' => true,
+    ])->assertSuccessful();
+
+    $read = fn (string $path): string => $this->files->get("{$this->sandbox}/{$path}");
+
+    expect($read('app/Actions/Products/DuplicateProduct.php'))
+        ->toContain("\$copy = \$source->replicate(['slug', 'published', 'user_id']);")
+        ->toContain('$copy->slug = $this->copySlug($source->slug);')
+        ->toContain('$copy->published = false;')
+        ->toContain('$copy->user()->associate($actor);')
+        ->toContain('private function copySlug(string $slug): string');
+
+    expect($read('app/Policies/ProductPolicy.php'))
+        ->toContain("public function duplicate(User \$user, Product \$product): bool\n    {\n        return \$user->canEditContent() && \$user->id === \$product->user_id;");
+
+    expect($read('tests/Feature/Admin/ProductDuplicateTest.php'))
+        ->toContain("test('every copy takes the next free copy slug, also when a copy is copied'")
+        ->toContain("test('another user cannot copy a product, administrators included'");
+
+    expect(require "{$this->sandbox}/lang/en/admin.php")->toHaveKey('products.duplicated', 'Unpublished copy of the product created.');
+});

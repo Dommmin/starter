@@ -1,0 +1,13 @@
+test('every copy takes the next free copy slug, also when a copy is copied', function () {
+    $user = User::factory()->editor()->create();
+    $source = {{ Model }}::factory(){{ ownedBy }}->create(['slug' => 'source-record']);
+
+    $this->actingAs($user)->post(route('admin.{{ kebabPlural }}.duplicate', $source))->assertRedirect();
+    $this->actingAs($user)->post(route('admin.{{ kebabPlural }}.duplicate', $source))->assertRedirect();
+
+    $firstCopy = {{ Model }}::query()->where('slug', 'source-record-copy-1')->firstOrFail();
+    $this->actingAs($user)->post(route('admin.{{ kebabPlural }}.duplicate', $firstCopy))->assertRedirect();
+
+    expect({{ Model }}::query()->orderBy('id')->pluck('slug')->all())
+        ->toBe(['source-record', 'source-record-copy-1', 'source-record-copy-2', 'source-record-copy-3']);
+});

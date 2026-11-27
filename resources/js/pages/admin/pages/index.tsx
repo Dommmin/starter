@@ -37,6 +37,7 @@ export default function AdminPagesIndex() {
         : locales.default;
     const [pageToDelete, setPageToDelete] = useState<PageRow | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const localeName = (code: string) =>
         locales.available.find((locale) => locale.code === code)?.native ??
@@ -209,16 +210,24 @@ export default function AdminPagesIndex() {
                             icon: Pencil,
                             onSelect: () => router.visit(pagesEdit.url(row.id)),
                         },
-                        ...(can.create
+                        ...(can.duplicate
                             ? [
                                   {
                                       id: 'duplicate',
                                       label: t('admin.pages.actionDuplicate'),
                                       icon: Copy,
-                                      onSelect: () =>
+                                      disabled: isDuplicating,
+                                      onSelect: () => {
+                                          setIsDuplicating(true);
                                           router.post(
                                               pagesDuplicate.url(row.id),
-                                          ),
+                                              undefined,
+                                              {
+                                                  onFinish: () =>
+                                                      setIsDuplicating(false),
+                                              },
+                                          );
+                                      },
                                   },
                               ]
                             : []),

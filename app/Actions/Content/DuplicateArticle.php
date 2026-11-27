@@ -6,54 +6,44 @@ use App\Actions\Audit\RecordAuditEvent;
 use App\Enums\AuditAction;
 use App\Enums\PublicationStatus;
 use App\Models\Article;
-use App\Models\ArticleTranslation;
-use App\Models\Tag;
 use App\Models\User;
-use App\Services\Content\ArticleSlugRedirects;
+use App\Services\Content\CopySlugs;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
- * Clone an existing article with its cover, tags and translations as drafts
- * with unique `{slug}-copy` slugs, recording an `article.created` audit entry.
+ * Copy an article with its cover, tags and every translation as a new draft
+ * article: each translation gets a free `-copy-N` slug in its locale, the
+ * draft status and no publication date, so the copy stays invisible to
+ * visitors until it is published. Slug redirects of the source are not
+ * copied and existing redirects are left untouched. The source is not
+ * modified; the audit entry `article.duplicated` names it.
  */
 class DuplicateArticle
 {
     public function __construct(
-        private readonly ArticleSlugRedirects $redirects,
+        private readonly CopySlugs $copySlugs,
         private readonly RecordAuditEvent $audit,
     ) {}
 
-    public function handle(User $actor, Article $source): Article
+    public function handle(Article $source, User $actor): Article
     {
-        return DB::transaction(function () use ($actor, $source): Article {
-            $source->loadMissing(['translations', 'tags']);
-
-            $article = Article::query()->create([
+        return DB::transaction(function () use ($source, $actor): Article {
+            $copy = Article::query()->create([
                 'cover_media_id' => $source->cover_media_id,
                 'created_by' => $actor->id,
                 'updated_by' => $actor->id,
             ]);
 
-            $tagIds = array_values($source->tags->pluck('id')->map(fn (mixed $id): int => (int) $id)->all());
-            if ($tagIds !== []) {
-                $article->tags()->sync($tagIds);
-            }
+            $copy->tags()->sync($source->tags()->allRelatedIds());
 
             $changes = ['duplicated_from' => RecordAuditEvent::change(null, $source->id)];
-            if ($tagIds !== []) {
-                $changes['tags'] = RecordAuditEvent::change(null, Tag::slugsOf($tagIds));
-            }
 
-            foreach ($source->translations as $translation) {
-                $slug = $this->uniqueSlug($translation->locale, $translation->slug);
-                $title = Str::limit($translation->title.' (Copy)', 160, '');
+            foreach ($source->translations()->orderBy('id')->get() as $translation) {
+                $slug = $this->copySlugs->next('article_translations', 'article_slug_redirects', $translation->locale, $translation->slug);
 
-                $this->redirects->claim($translation->locale, $slug);
-
-                $article->translations()->create([
+                $copy->translations()->create([
                     'locale' => $translation->locale,
-                    'title' => $title,
+                    'title' => $translation->title,
                     'slug' => $slug,
                     'excerpt' => $translation->excerpt,
                     'meta_description' => $translation->meta_description,
@@ -62,28 +52,12 @@ class DuplicateArticle
                     'published_at' => null,
                 ]);
 
-                $changes["{$translation->locale}.title"] = RecordAuditEvent::change(null, $title);
                 $changes["{$translation->locale}.slug"] = RecordAuditEvent::change(null, $slug);
-                $changes["{$translation->locale}.status"] = RecordAuditEvent::change(null, PublicationStatus::Draft->value);
             }
 
-            $this->audit->handle(AuditAction::ArticleCreated, $article, $actor, $changes);
+            $this->audit->handle(AuditAction::ArticleDuplicated, $copy, $actor, $changes);
 
-            return $article;
+            return $copy;
         });
-    }
-
-    private function uniqueSlug(string $locale, string $baseSlug): string
-    {
-        $candidate = Str::limit($baseSlug, 150, '').'-copy';
-        $counter = 2;
-
-        while (ArticleTranslation::query()->where('locale', $locale)->where('slug', $candidate)->exists()) {
-            $suffix = "-copy-{$counter}";
-            $candidate = Str::limit($baseSlug, 160 - strlen($suffix), '').$suffix;
-            $counter++;
-        }
-
-        return $candidate;
     }
 }

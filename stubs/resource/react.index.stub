@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { {{ rowActionIcons }} } from 'lucide-react';
 import { useState } from 'react';
 import {
 {{ primitives }}
@@ -11,6 +11,7 @@ import {
     create,
     destroy,
     destroyMany,
+{{ duplicateImport }}
     edit,
 {{ exportImport }}
     index,
@@ -27,6 +28,7 @@ export default function Admin{{ Plural }}Index() {
     const { t, formatDate } = useTranslation();
     const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+{{ duplicateState }}
 {{ labelMaps }}
     const rowTitle = (row: Row) =>
         {{ rowTitle }};
@@ -148,6 +150,7 @@ export default function Admin{{ Plural }}Index() {
                             icon: Pencil,
                             onSelect: () => router.visit(edit.url(row.id)),
                         },
+{{ duplicateRowAction }}
                         ...(can.delete
                             ? [
                                   {

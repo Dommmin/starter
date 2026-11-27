@@ -147,6 +147,22 @@ class ArticleController extends Controller
     }
 
     /**
+     * Copy the article with its cover, tags and translations as a new draft
+     * article and open the copy's editor.
+     */
+    public function duplicate(Request $request, Article $article, DuplicateArticle $duplicateArticle): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $copy = $duplicateArticle->handle($article, $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.duplicated')]);
+
+        return to_route('admin.articles.edit', $copy);
+    }
+
+    /**
      * Permanently delete the article with all translations (administrators only).
      */
     public function destroy(Request $request, Article $article, DeleteArticle $deleteArticle): RedirectResponse
@@ -159,21 +175,6 @@ class ArticleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.deleted')]);
 
         return to_route('admin.articles.index');
-    }
-
-    /**
-     * Duplicate the article and all of its translations as drafts.
-     */
-    public function duplicate(Request $request, Article $article, DuplicateArticle $duplicateArticle): RedirectResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        $copy = $duplicateArticle->handle($user, $article);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.duplicated')]);
-
-        return to_route('admin.articles.edit', $copy);
     }
 
     /**
@@ -208,6 +209,9 @@ class ArticleController extends Controller
                 && ($user?->can('create', Article::class) ?? false),
             rewriteText: AssistantFeature::TextRewrite->isAvailable()
                 && ($user?->can('create', Article::class) ?? false),
+            duplicate: $article !== null
+                ? ($user?->can('duplicate', $article) ?? false)
+                : ($user?->can('create', Article::class) ?? false),
         );
     }
 }

@@ -151,6 +151,7 @@ function makeEditor(
             suggestSeo: false,
             suggestTranslation: false,
             rewriteText: false,
+            duplicate: false,
             ...can,
         },
         previewUrls: {},

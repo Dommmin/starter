@@ -28,6 +28,7 @@ import { fieldAssists } from '@/lib/field-assists';
 import { slugify } from '@/lib/slug';
 import {
     destroy as pagesDestroy,
+    duplicate as pagesDuplicate,
     edit as pagesEdit,
     index as pagesIndex,
     store as pagesStore,
@@ -145,6 +146,7 @@ export function PageForm({ editor }: PageFormProps) {
     const [isConflictOpen, setIsConflictOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const errors = form.errors as Partial<Record<string, string>>;
     const errorKeys = Object.keys(errors).filter((key) => errors[key]);
@@ -286,6 +288,22 @@ export function PageForm({ editor }: PageFormProps) {
 
         setIsConflictOpen(false);
         router.visit(pagesEdit.url(pageId), { preserveState: false });
+    }
+
+    /** Copies the saved page; unsaved edits are not part of the copy. */
+    function duplicateRecord() {
+        if (pageId === null) {
+            return;
+        }
+
+        if (form.isDirty && !window.confirm(t('admin.pages.unsavedChanges'))) {
+            return;
+        }
+
+        setIsDuplicating(true);
+        router.post(pagesDuplicate.url(pageId), undefined, {
+            onFinish: () => setIsDuplicating(false),
+        });
     }
 
     function confirmDelete() {
@@ -430,6 +448,15 @@ export function PageForm({ editor }: PageFormProps) {
                                     {t('admin.pages.preview', {
                                         language: activeLanguage,
                                     })}
+                                </Button>
+                            )}
+                            {can.duplicate && (
+                                <Button
+                                    variant="outline"
+                                    isPending={isDuplicating}
+                                    onClick={duplicateRecord}
+                                >
+                                    {t('admin.pages.duplicate')}
                                 </Button>
                             )}
                             {can.delete && (

@@ -136,6 +136,22 @@ class PageController extends Controller
     }
 
     /**
+     * Copy the page with its translations as a new draft page and open the
+     * copy's editor.
+     */
+    public function duplicate(Request $request, Page $page, DuplicatePage $duplicatePage): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $copy = $duplicatePage->handle($page, $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.duplicated')]);
+
+        return to_route('admin.pages.edit', $copy);
+    }
+
+    /**
      * Permanently delete the page with all translations (administrators only).
      */
     public function destroy(Request $request, Page $page, DeletePage $deletePage): RedirectResponse
@@ -148,21 +164,6 @@ class PageController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.deleted')]);
 
         return to_route('admin.pages.index');
-    }
-
-    /**
-     * Duplicate the page and all of its translations as drafts.
-     */
-    public function duplicate(Request $request, Page $page, DuplicatePage $duplicatePage): RedirectResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        $copy = $duplicatePage->handle($user, $page);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.duplicated')]);
-
-        return to_route('admin.pages.edit', $copy);
     }
 
     private function abilities(Request $request, ?Page $page): PageAbilitiesData
@@ -184,6 +185,9 @@ class PageController extends Controller
                 && ($user?->can('create', Page::class) ?? false),
             rewriteText: AssistantFeature::TextRewrite->isAvailable()
                 && ($user?->can('create', Page::class) ?? false),
+            duplicate: $page !== null
+                ? ($user?->can('duplicate', $page) ?? false)
+                : ($user?->can('create', Page::class) ?? false),
         );
     }
 }

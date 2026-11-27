@@ -137,7 +137,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('delete', 'page');
         Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
             ->name('pages.duplicate')
-            ->can('create', Page::class);
+            ->can('duplicate', 'page');
 
         Route::get('/articles', [ArticleController::class, 'index'])
             ->name('articles.index')
@@ -163,7 +163,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->can('delete', 'article');
         Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])
             ->name('articles.duplicate')
-            ->can('create', Article::class);
+            ->can('duplicate', 'article');
 
         Route::get('/saved-views', [SavedListViewController::class, 'index'])
             ->name('saved-views.index');
@@ -227,6 +227,12 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::post('/faqs/many', [FaqController::class, 'storeMany'])
             ->name('faqs.store-many')
             ->can('create', Faq::class);
+        Route::get('/faqs/order', [FaqController::class, 'order'])
+            ->name('faqs.order')
+            ->can('viewAny', Faq::class);
+        Route::put('/faqs/order', [FaqController::class, 'reorder'])
+            ->name('faqs.reorder')
+            ->can('reorder', Faq::class);
         Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
             ->name('faqs.edit')
             ->can('view', 'faq');
@@ -236,6 +242,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
             ->name('faqs.destroy')
             ->can('delete', 'faq');
+        Route::post('/faqs/{faq}/duplicate', [FaqController::class, 'duplicate'])
+            ->name('faqs.duplicate')
+            ->can('duplicate', 'faq');
 
         Route::get('/media', [MediaAssetController::class, 'index'])
             ->name('media.index')

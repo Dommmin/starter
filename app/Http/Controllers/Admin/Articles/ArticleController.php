@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Articles;
 use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Content\CreateArticle;
 use App\Actions\Content\DeleteArticle;
+use App\Actions\Content\DuplicateArticle;
 use App\Actions\Content\UpdateArticle;
 use App\Data\Admin\Articles\ArticleAbilitiesData;
 use App\Data\Admin\Articles\ArticleEditorData;
@@ -158,6 +159,21 @@ class ArticleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.deleted')]);
 
         return to_route('admin.articles.index');
+    }
+
+    /**
+     * Duplicate the article and all of its translations as drafts.
+     */
+    public function duplicate(Request $request, Article $article, DuplicateArticle $duplicateArticle): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $copy = $duplicateArticle->handle($user, $article);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.articles.duplicated')]);
+
+        return to_route('admin.articles.edit', $copy);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Pages;
 use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Content\CreatePage;
 use App\Actions\Content\DeletePage;
+use App\Actions\Content\DuplicatePage;
 use App\Actions\Content\UpdatePage;
 use App\Data\Admin\Pages\PageAbilitiesData;
 use App\Data\Admin\Pages\PageEditorData;
@@ -147,6 +148,21 @@ class PageController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.deleted')]);
 
         return to_route('admin.pages.index');
+    }
+
+    /**
+     * Duplicate the page and all of its translations as drafts.
+     */
+    public function duplicate(Request $request, Page $page, DuplicatePage $duplicatePage): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $copy = $duplicatePage->handle($user, $page);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.duplicated')]);
+
+        return to_route('admin.pages.edit', $copy);
     }
 
     private function abilities(Request $request, ?Page $page): PageAbilitiesData

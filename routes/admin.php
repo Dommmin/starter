@@ -135,6 +135,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/pages/{page}', [PageController::class, 'destroy'])
             ->name('pages.destroy')
             ->can('delete', 'page');
+        Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
+            ->name('pages.duplicate')
+            ->can('create', Page::class);
 
         Route::get('/articles', [ArticleController::class, 'index'])
             ->name('articles.index')
@@ -158,6 +161,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])
             ->name('articles.destroy')
             ->can('delete', 'article');
+        Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])
+            ->name('articles.duplicate')
+            ->can('create', Article::class);
 
         Route::get('/saved-views', [SavedListViewController::class, 'index'])
             ->name('saved-views.index');

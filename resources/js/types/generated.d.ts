@@ -587,6 +587,7 @@ declare namespace App {
                         string,
                         App.Data.Admin.Pages.PageTranslationFormData
                     >;
+                    layoutMode: string;
                 };
                 export type PageIndexData = {
                     items: App.Data.Admin.Pages.PageListItemData[];
@@ -610,6 +611,20 @@ declare namespace App {
                     locale: string;
                     locales: string[];
                     updatedAt: string | null;
+                };
+                export type PageSectionEditorData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    editor: App.Data.Admin.HomeSections.HomeSectionEditorData;
+                };
+                export type PageSectionsIndexData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    locale: string;
+                    locales: App.Data.Content.ContentLocalesData;
+                    items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
+                    availableTypes: string[];
+                    canUpdate: boolean;
                 };
                 export type PageTranslationFormData = {
                     title: string;
@@ -932,6 +947,9 @@ declare namespace App {
                 publishedAt: string | null;
                 alternates: Record<string, string>;
                 preview: App.Data.Content.ContentPreviewData | null;
+                layoutMode: string;
+                sections: App.Data.Home.HomeSectionData[] | null;
+                contactForm: App.Data.Contact.ContactFormData | null;
             };
             export type PublicTagData = {
                 slug: string;

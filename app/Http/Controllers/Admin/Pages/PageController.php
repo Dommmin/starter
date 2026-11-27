@@ -89,7 +89,7 @@ class PageController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $page = $createPage->handle($user, $request->translations());
+        $page = $createPage->handle($user, $request->translations(), $request->layoutMode());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.created')]);
 
@@ -128,6 +128,7 @@ class PageController extends Controller
             $request->translations(),
             $this->localization->getPublicLocales(),
             $request->expectedUpdatedAt(),
+            $request->layoutMode(),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.pages.updated')]);

@@ -51,6 +51,9 @@ const ICONS: App.Enums.HomeIcon[] = [
 
 export type SectionFormProps = {
     editor: EditorProps;
+    updateAction?: { url: string; method: 'put' };
+    editUrl?: string;
+    cancelHref?: string | { url: string };
 };
 
 /**
@@ -58,7 +61,12 @@ export type SectionFormProps = {
  * `ResourceForm` (repeaters for features and testimonials), optimistic-lock
  * conflict handling and an unsaved-changes guard.
  */
-export function SectionForm({ editor }: SectionFormProps) {
+export function SectionForm({
+    editor,
+    updateAction,
+    editUrl,
+    cancelHref,
+}: SectionFormProps) {
     const { section, linkTargets, pages } = editor;
     const { t } = useTranslation();
     const form = useForm<SectionFormValues>(toFormValues(section));
@@ -100,7 +108,7 @@ export function SectionForm({ editor }: SectionFormProps) {
             content: toContent(section.type, data),
         }));
 
-        form.submit(update(section.id), {
+        form.submit(updateAction ?? update(section.id), {
             preserveScroll: true,
             onSuccess: () => form.setDefaults(),
             onError: (received: Partial<Record<string, string>>) => {
@@ -113,7 +121,9 @@ export function SectionForm({ editor }: SectionFormProps) {
 
     function reloadLatest() {
         setIsConflictOpen(false);
-        router.visit(edit.url(section.id), { preserveState: false });
+        router.visit(editUrl ?? edit.url(section.id), {
+            preserveState: false,
+        });
     }
 
     const text = (name: 'eyebrow' | 'title', required = false): Field => ({
@@ -777,7 +787,9 @@ export function SectionForm({ editor }: SectionFormProps) {
                 onSubmit={submit}
                 readOnly={!editor.can.update}
                 isPending={form.processing}
-                cancelHref={index({ query: { locale: section.locale } })}
+                cancelHref={
+                    cancelHref ?? index({ query: { locale: section.locale } })
+                }
                 labels={{
                     submit: form.processing
                         ? t('admin.homeSections.saving')

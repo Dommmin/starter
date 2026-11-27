@@ -87,6 +87,7 @@ function consentData(
             domain: 'example.com',
             scriptUrl: 'https://plausible.io/js/script.js',
         },
+        integrations: null,
         ...overrides,
     };
 }

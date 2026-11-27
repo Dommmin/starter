@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\Import\ImportController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
+use App\Http\Controllers\Admin\Redirects\NotFoundLogController;
 use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
 use App\Http\Controllers\Admin\Search\AdminSearchController;
@@ -342,6 +343,13 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
 
         Route::get('/redirects', [RedirectController::class, 'index'])
             ->name('redirects.index')
+            ->can('viewAny', Redirect::class);
+        Route::get('/redirects/not-found', [NotFoundLogController::class, 'index'])
+            ->name('redirects.not-found.index')
+            ->can('viewAny', Redirect::class);
+        Route::delete('/redirects/not-found/{notFoundLog}', [NotFoundLogController::class, 'destroy'])
+            ->whereNumber('notFoundLog')
+            ->name('redirects.not-found.destroy')
             ->can('viewAny', Redirect::class);
         Route::delete('/redirects', [RedirectController::class, 'destroyMany'])
             ->name('redirects.destroy-many')

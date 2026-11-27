@@ -607,6 +607,17 @@ declare namespace App {
                 };
             }
             namespace Redirects {
+                export type NotFoundLogIndexData = {
+                    items: App.Data.Admin.Redirects.NotFoundLogItemData[];
+                    canCreateRedirect: boolean;
+                };
+                export type NotFoundLogItemData = {
+                    id: number;
+                    path: string;
+                    hits: number;
+                    lastReferer: string | null;
+                    lastSeenAt: string | null;
+                };
                 export type RedirectAbilitiesData = {
                     create: boolean;
                     delete: boolean;
@@ -733,6 +744,11 @@ declare namespace App {
                     announcementLinkUrl: string | null;
                     announcementStartsOn: string | null;
                     announcementEndsOn: string | null;
+                    ga4Id: string | null;
+                    gtmId: string | null;
+                    metaPixelId: string | null;
+                    chatProvider: string | null;
+                    chatWidgetId: string | null;
                 };
                 export type SocialNetworkOptionData = {
                     network: App.Enums.SocialNetwork;
@@ -827,6 +843,14 @@ declare namespace App {
                 granted: App.Enums.ConsentCategory[] | null;
                 policyUrl: string | null;
                 plausible: App.Data.Consent.PlausibleData | null;
+                integrations: App.Data.Consent.MarketingIntegrationsData | null;
+            };
+            export type MarketingIntegrationsData = {
+                ga4Id: string | null;
+                gtmId: string | null;
+                metaPixelId: string | null;
+                chatProvider: string | null;
+                chatWidgetId: string | null;
             };
             export type PlausibleData = {
                 domain: string;

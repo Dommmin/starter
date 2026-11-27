@@ -23,8 +23,8 @@ return [
     'lifetime_days' => 365,
 
     'categories' => [
-        'analytics' => ['plausible'],
-        'marketing' => [],
+        'analytics' => ['plausible', 'ga4', 'gtm'],
+        'marketing' => ['meta_pixel'],
     ],
 
     /*

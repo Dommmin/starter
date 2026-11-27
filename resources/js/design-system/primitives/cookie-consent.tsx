@@ -13,6 +13,29 @@ const CookieSettingsDialog = lazy(() =>
 );
 
 const PLAUSIBLE_SCRIPT_ID = 'plausible-analytics';
+const GA4_SCRIPT_ID = 'ga4-analytics';
+const GTM_SCRIPT_ID = 'gtm-analytics';
+const META_PIXEL_SCRIPT_ID = 'meta-pixel-script';
+const CHAT_WIDGET_SCRIPT_ID = 'live-chat-widget';
+
+declare global {
+    interface Window {
+        dataLayer?: unknown[];
+        gtag?: (...args: unknown[]) => void;
+        fbq?: ((...args: unknown[]) => void) & {
+            callMethod?: (...args: unknown[]) => void;
+            queue?: unknown[];
+            loaded?: boolean;
+            version?: string;
+            push?: (...args: unknown[]) => void;
+        };
+        _fbq?: unknown;
+        $crisp?: unknown[];
+        CRISP_WEBSITE_ID?: string;
+        Tawk_API?: Record<string, unknown>;
+        Tawk_LoadStart?: Date;
+    }
+}
 
 /**
  * Store the choice in the format `CookieConsent` (PHP) reads: version,
@@ -47,6 +70,99 @@ function loadPlausible(plausible: App.Data.Consent.PlausibleData): void {
     document.head.append(script);
 }
 
+function loadGa4(measurementId: string): void {
+    if (document.getElementById(GA4_SCRIPT_ID)) {
+        return;
+    }
+
+    window.dataLayer = window.dataLayer ?? [];
+    window.gtag = function gtag(...args: unknown[]) {
+        window.dataLayer?.push(args);
+    };
+    window.gtag('js', new Date());
+    window.gtag('config', measurementId);
+
+    const script = document.createElement('script');
+    script.id = GA4_SCRIPT_ID;
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+    document.head.append(script);
+}
+
+function loadGtm(containerId: string): void {
+    if (document.getElementById(GTM_SCRIPT_ID)) {
+        return;
+    }
+
+    window.dataLayer = window.dataLayer ?? [];
+    window.dataLayer.push({
+        'gtm.start': Date.now(),
+        event: 'gtm.js',
+    });
+
+    const script = document.createElement('script');
+    script.id = GTM_SCRIPT_ID;
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(containerId)}`;
+    document.head.append(script);
+}
+
+function loadMetaPixel(pixelId: string): void {
+    if (document.getElementById(META_PIXEL_SCRIPT_ID)) {
+        return;
+    }
+
+    const fbq = function (...args: unknown[]) {
+        if (fbq.callMethod) {
+            fbq.callMethod(...args);
+        } else {
+            fbq.queue?.push(args);
+        }
+    } as NonNullable<Window['fbq']>;
+    fbq.queue = [];
+    fbq.loaded = true;
+    fbq.version = '2.0';
+    fbq.push = fbq;
+    window.fbq = fbq;
+    window._fbq = fbq;
+
+    fbq('init', pixelId);
+    fbq('track', 'PageView');
+
+    const script = document.createElement('script');
+    script.id = META_PIXEL_SCRIPT_ID;
+    script.async = true;
+    script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.append(script);
+}
+
+function loadChatWidget(provider: string, widgetId: string): void {
+    if (document.getElementById(CHAT_WIDGET_SCRIPT_ID)) {
+        return;
+    }
+
+    if (provider === 'crisp') {
+        window.$crisp = window.$crisp ?? [];
+        window.CRISP_WEBSITE_ID = widgetId;
+        const script = document.createElement('script');
+        script.id = CHAT_WIDGET_SCRIPT_ID;
+        script.async = true;
+        script.src = 'https://client.crisp.chat/l.js';
+        document.head.append(script);
+        return;
+    }
+
+    if (provider === 'tawk') {
+        window.Tawk_API = window.Tawk_API ?? {};
+        window.Tawk_LoadStart = new Date();
+        const script = document.createElement('script');
+        script.id = CHAT_WIDGET_SCRIPT_ID;
+        script.async = true;
+        script.src = `https://embed.tawk.to/${widgetId}`;
+        document.head.append(script);
+    }
+}
+
 export type CookieConsentState = {
     /** False when the site offers no optional category: no banner, no settings. */
     isActive: boolean;
@@ -72,12 +188,32 @@ export function useCookieConsent(
     );
     const [settingsOpen, setSettingsOpen] = useState(false);
     const plausible = consent?.plausible ?? null;
+    const integrations = consent?.integrations ?? null;
 
     useEffect(() => {
-        if (plausible && granted?.includes('analytics')) {
-            loadPlausible(plausible);
+        if (granted?.includes('analytics')) {
+            if (plausible) {
+                loadPlausible(plausible);
+            }
+            if (integrations?.ga4Id) {
+                loadGa4(integrations.ga4Id);
+            }
+            if (integrations?.gtmId) {
+                loadGtm(integrations.gtmId);
+            }
         }
-    }, [plausible, granted]);
+
+        if (granted?.includes('marketing') && integrations?.metaPixelId) {
+            loadMetaPixel(integrations.metaPixelId);
+        }
+
+        if (integrations?.chatProvider && integrations?.chatWidgetId) {
+            loadChatWidget(
+                integrations.chatProvider,
+                integrations.chatWidgetId,
+            );
+        }
+    }, [plausible, integrations, granted]);
 
     const save = useCallback(
         (next: ConsentCategory[]) => {

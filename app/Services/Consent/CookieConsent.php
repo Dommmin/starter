@@ -39,6 +39,7 @@ class CookieConsent
             granted: $this->granted($request->cookie(self::COOKIE), $categories),
             policyUrl: $this->policyUrl($locale),
             plausible: $this->plausible(),
+            integrations: $this->settings->marketingIntegrations(),
         );
     }
 
@@ -97,8 +98,13 @@ class CookieConsent
 
     private function isConfigured(mixed $service): bool
     {
+        $integrations = $this->settings->marketingIntegrations();
+
         return match ($service) {
             'plausible' => $this->plausible() !== null,
+            'ga4' => $integrations?->ga4Id !== null,
+            'gtm' => $integrations?->gtmId !== null,
+            'meta_pixel' => $integrations?->metaPixelId !== null,
             default => false,
         };
     }

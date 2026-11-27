@@ -26,5 +26,6 @@ class ConsentData extends Data
         public ?array $granted,
         public ?string $policyUrl,
         public ?PlausibleData $plausible,
+        public ?MarketingIntegrationsData $integrations = null,
     ) {}
 }

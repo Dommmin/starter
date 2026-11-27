@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import {
@@ -18,6 +18,7 @@ import { index as adminIndex } from '@/routes/admin';
 import {
     create as articlesCreate,
     destroy as articlesDestroy,
+    duplicate as articlesDuplicate,
     edit as articlesEdit,
     index as articlesIndex,
 } from '@/routes/admin/articles';
@@ -38,6 +39,7 @@ export default function AdminArticlesIndex() {
         null,
     );
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const localeName = (code: string) =>
         locales.available.find((locale) => locale.code === code)?.native ??
@@ -223,6 +225,29 @@ export default function AdminArticlesIndex() {
                             onSelect: () =>
                                 router.visit(articlesEdit.url(row.id)),
                         },
+                        ...(can.duplicate
+                            ? [
+                                  {
+                                      id: 'duplicate',
+                                      label: t(
+                                          'admin.articles.actionDuplicate',
+                                      ),
+                                      icon: Copy,
+                                      disabled: isDuplicating,
+                                      onSelect: () => {
+                                          setIsDuplicating(true);
+                                          router.post(
+                                              articlesDuplicate.url(row.id),
+                                              undefined,
+                                              {
+                                                  onFinish: () =>
+                                                      setIsDuplicating(false),
+                                              },
+                                          );
+                                      },
+                                  },
+                              ]
+                            : []),
                         ...(can.delete
                             ? [
                                   {

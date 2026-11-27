@@ -14,6 +14,7 @@ enum AuditAction: string
     case PageDeleted = 'page.deleted';
     case PageRestored = 'page.restored';
     case PagePurged = 'page.purged';
+    case PageDuplicated = 'page.duplicated';
     case ArticleCreated = 'article.created';
     case ArticleUpdated = 'article.updated';
     case ArticlePublished = 'article.published';
@@ -21,6 +22,7 @@ enum AuditAction: string
     case ArticleDeleted = 'article.deleted';
     case ArticleRestored = 'article.restored';
     case ArticlePurged = 'article.purged';
+    case ArticleDuplicated = 'article.duplicated';
     case UserCreated = 'user.created';
     case UserUpdated = 'user.updated';
     case UserRoleChanged = 'user.role_changed';
@@ -32,6 +34,7 @@ enum AuditAction: string
     case MediaDeleted = 'media.deleted';
     case ResourceExported = 'resource.exported';
     case ResourceImported = 'resource.imported';
+    case ResourceDuplicated = 'resource.duplicated';
     case SiteSettingsUpdated = 'site_settings.updated';
     case NavigationItemCreated = 'navigation.item_created';
     case NavigationItemUpdated = 'navigation.item_updated';
@@ -49,6 +52,8 @@ enum AuditAction: string
     case RedirectCreated = 'redirect.created';
     case RedirectUpdated = 'redirect.updated';
     case RedirectDeleted = 'redirect.deleted';
+    case FaqDuplicated = 'faq.duplicated';
+    case FaqsReordered = 'faq.reordered';
     case AssistantSuggested = 'assistant.suggested';
     case AiSettingsUpdated = 'ai_settings.updated';
 

@@ -7,7 +7,8 @@ use App\Enums\AuditAction;
 use App\Enums\MenuLocation;
 use App\Models\MenuItem;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Services\Ordering\ReorderRecords;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -19,7 +20,10 @@ use Illuminate\Validation\ValidationException;
  */
 class ReorderMenuItems
 {
-    public function __construct(private readonly RecordAuditEvent $audit) {}
+    public function __construct(
+        private readonly ReorderRecords $reorder,
+        private readonly RecordAuditEvent $audit,
+    ) {}
 
     /**
      * @param  list<int>  $ids  New order of the sibling ids.
@@ -28,50 +32,34 @@ class ReorderMenuItems
      */
     public function handle(User $actor, MenuLocation $location, string $locale, ?int $parentId, array $ids): void
     {
-        DB::transaction(function () use ($actor, $location, $locale, $parentId, $ids): void {
-            $siblings = MenuItem::query()
-                ->where('location', $location->value)
-                ->where('locale', $locale)
-                ->where('parent_id', $parentId)
-                ->orderBy('position')
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
+        $this->reorder->handle(
+            MenuItem::class,
+            ['location' => $location->value, 'locale' => $locale, 'parent_id' => $parentId],
+            $ids,
+            __('admin.navigation.reorderConflict'),
+            function (Collection $siblings, array $current) use ($actor, $parentId, $ids): void {
+                if ($current === $ids) {
+                    return;
+                }
 
-            $current = $siblings->keys()->map(intval(...))->all();
-            $expected = $current;
-            $submitted = $ids;
-            sort($expected);
-            sort($submitted);
+                foreach ($ids as $index => $id) {
+                    /** @var MenuItem $item */
+                    $item = $siblings->get($id);
+                    $item->forceFill([
+                        'position' => $index + 1,
+                        'updated_by' => $actor->id,
+                    ])->save();
+                }
 
-            if ($siblings->isEmpty() || $expected !== $submitted) {
-                throw ValidationException::withMessages([
-                    'conflict' => __('admin.navigation.reorderConflict'),
+                $subject = $parentId !== null
+                    ? MenuItem::query()->findOrFail($parentId)
+                    : $siblings->get($ids[0]);
+
+                /** @var MenuItem $subject */
+                $this->audit->handle(AuditAction::NavigationReordered, $subject, $actor, [
+                    'order' => RecordAuditEvent::change($current, $ids),
                 ]);
-            }
-
-            if ($current === $ids) {
-                return;
-            }
-
-            foreach ($ids as $index => $id) {
-                /** @var MenuItem $item */
-                $item = $siblings->get($id);
-                $item->forceFill([
-                    'position' => $index + 1,
-                    'updated_by' => $actor->id,
-                ])->save();
-            }
-
-            $subject = $parentId !== null
-                ? MenuItem::query()->findOrFail($parentId)
-                : $siblings->get($ids[0]);
-
-            /** @var MenuItem $subject */
-            $this->audit->handle(AuditAction::NavigationReordered, $subject, $actor, [
-                'order' => RecordAuditEvent::change($current, $ids),
-            ]);
-        });
+            },
+        );
     }
 }

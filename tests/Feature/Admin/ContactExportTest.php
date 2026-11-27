@@ -12,7 +12,7 @@ beforeEach(function () {
 test('an administrator downloads the filtered list as CSV with formulas neutralised and an audit entry', function () {
     $admin = User::factory()->admin()->create();
     ContactMessage::factory()->create(['name' => 'Ada', 'email' => 'ada@example.test', 'message' => '=HYPERLINK("http://evil.test")']);
-    ContactMessage::factory()->failed()->create(['name' => 'Bob']);
+    ContactMessage::factory()->failed()->create(['name' => 'Bob', 'email' => 'bob@example.test', 'message' => 'Hello there']);
 
     $response = $this->actingAs($admin)
         ->get(route('admin.contact.export', ['search' => 'Ada']))

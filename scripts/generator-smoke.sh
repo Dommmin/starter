@@ -2,8 +2,8 @@
 # Smoke test of the admin CRUD generator (`app:make-resource`).
 #
 # Acceptance criterion: a module generated with every field type, badge tones,
-# list filters and the CSV export passes the project checks without manual
-# fixes. The script copies the repository into a temporary directory (no
+# list filters, the CSV export and the clone operation passes the project
+# checks without manual fixes. The script copies the repository into a temporary directory (no
 # .env, local database, Git metadata or build output; vendor and node_modules
 # are linked, not reinstalled), generates the module there and runs Pint,
 # PHPStan, the module's Pest tests (SQLite :memory: migrations), the i18n gate,
@@ -44,7 +44,7 @@ generate() {
     created=$(printf '%s\n' "$output" | sed -n 's/^  create //p')
     GENERATED_PHP="$GENERATED_PHP $(printf '%s\n' "$created" | grep '\.php$' | grep -v '^tests/' | tr '\n' ' ')"
     GENERATED_UI="$GENERATED_UI $(printf '%s\n' "$created" | grep '\.tsx$' | tr '\n' ' ')"
-    GENERATED_TESTS="$GENERATED_TESTS tests/Feature/Admin/${model}CrudTest.php $(printf '%s\n' "$created" | grep '^tests/Feature/Content/' | tr '\n' ' ')"
+    GENERATED_TESTS="$GENERATED_TESTS $(printf '%s\n' "$created" | grep -E '^tests/Feature/(Admin|Content)/' | tr '\n' ' ')"
 }
 
 step "Copy the repository to $WORK"
@@ -91,14 +91,15 @@ composer dump-autoload --no-interaction --quiet
 php artisan key:generate --force --no-interaction >/dev/null
 
 # Every field type, badge tones, a required and an optional relation, an
-# optional many-to-many relation, image, rich text, filters (enum first) and
-# the CSV export.
+# optional many-to-many relation, image, rich text, filters (enum first), the
+# CSV export and the clone operation (many-to-many links copied).
 generate SmokeItem \
     --fields='title:string:required,summary:text,rank:integer,price:decimal,active:boolean,published_on:date,status:enum(draft|published:success|archived:danger),faq:belongsTo(Faq.question):required,backup_faq:belongsTo(Faq.question),related_faqs:belongsToMany(Faq.question),cover:image,body:richtext' \
     --searchable=title,summary \
     --sortable=title,rank,created_at \
     --filters=status,faq,active,published_on \
-    --export
+    --export \
+    --operations=clone
 # An optional relation as the first filter, a boolean filter, a required
 # many-to-many relation and rich text without images or enums; export
 # without search.
@@ -110,28 +111,34 @@ generate SmokeNote \
 generate SmokeTag \
     --fields='name:string:required,weight:integer:required,starts_on:date' \
     --sortable=name,weight
-# An owned resource (owner-only policy, scoped list) with search, an enum
-# filter, a many-to-many relation and the export.
+# An owned, public resource (owner-only policy, scoped list) with search, an
+# enum filter, a many-to-many relation, the export and the clone operation
+# (owner-only copy, unpublished with a -copy-N slug).
 generate SmokeTask \
     --fields='title:string:required,state:enum(open|done:success),faqs:belongsToMany(Faq.question),due_on:date' \
     --searchable=title \
     --filters=state,due_on \
     --export \
     --owned \
-    --public
-# hasMany: the parent first, then the related resource pointing back to it.
+    --public \
+    --operations=clone
+# hasMany: the parent first (cloned without its hasMany records), then the
+# related resource pointing back to it.
 generate SmokeShelf \
-    --fields='name:string:required,entries:hasMany(SmokeEntry.title)'
+    --fields='name:string:required,entries:hasMany(SmokeEntry.title)' \
+    --operations=clone
 generate SmokeEntry \
     --fields='title:string:required,smoke_shelf:belongsTo(SmokeShelf.name):required' \
     --filters=smoke_shelf
 # A public resource: slug, published flag, SSR list and detail pages with
-# summary and rich text body, public routes, catalog texts and sitemap source.
+# summary and rich text body, public routes, catalog texts, sitemap source and
+# the clone operation (unpublished copy with a -copy-N slug).
 generate SmokePost \
     --fields='headline:string:required,teaser:text,content:richtext' \
     --searchable=headline \
     --filters=published \
-    --public
+    --public \
+    --operations=clone
 
 step "Pint (generated files, routes, catalogs and the sitemap provider)"
 # shellcheck disable=SC2086
@@ -162,4 +169,4 @@ step "UI contract (generated pages)"
 # shellcheck disable=SC2086
 node scripts/check-ui-contract.mjs --files $GENERATED_UI
 
-step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag, SmokeTask, SmokeShelf, SmokeEntry and SmokePost generated and verified without manual fixes"
+step "Generator smoke passed: SmokeItem, SmokeNote, SmokeTag, SmokeTask, SmokeShelf, SmokeEntry and SmokePost generated and verified without manual fixes (clone on SmokeItem, SmokeTask, SmokeShelf and SmokePost)"

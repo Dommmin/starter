@@ -5,12 +5,20 @@ import {
     Button,
     ConfirmDialog,
     ConflictDialog,
+    Inline,
     PageHeader,
     ResourceForm,
     Stack,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
-import { destroy, edit, index, store, update } from '@/routes/admin/faqs';
+import {
+    destroy,
+    duplicate,
+    edit,
+    index,
+    store,
+    update,
+} from '@/routes/admin/faqs';
 
 type EditorProps = App.Data.Admin.Faqs.FaqEditorData;
 type RecordData = App.Data.Admin.Faqs.FaqFormData;
@@ -64,6 +72,7 @@ export function FaqForm({ editor }: FaqFormProps) {
     const [isConflictOpen, setIsConflictOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const errors = form.errors as Partial<Record<string, string>>;
     /** Errors that no field renders inline (e.g. `updated_at`). */
@@ -128,6 +137,22 @@ export function FaqForm({ editor }: FaqFormProps) {
         router.visit(edit.url(recordId), { preserveState: false });
     }
 
+    /** Copies the saved record; unsaved edits are not part of the copy. */
+    function duplicateRecord() {
+        if (recordId === null) {
+            return;
+        }
+
+        if (form.isDirty && !window.confirm(t('admin.faqs.unsavedChanges'))) {
+            return;
+        }
+
+        setIsDuplicating(true);
+        router.post(duplicate.url(recordId), undefined, {
+            onFinish: () => setIsDuplicating(false),
+        });
+    }
+
     function confirmDelete() {
         if (recordId === null) {
             return;
@@ -149,13 +174,26 @@ export function FaqForm({ editor }: FaqFormProps) {
                 }
                 description={t('admin.faqs.description')}
                 actions={
-                    recordId !== null && can.delete ? (
-                        <Button
-                            variant="destructive"
-                            onClick={() => setIsDeleteOpen(true)}
-                        >
-                            {t('admin.faqs.delete')}
-                        </Button>
+                    recordId !== null && (can.duplicate || can.delete) ? (
+                        <Inline gap="tight">
+                            {can.duplicate && (
+                                <Button
+                                    variant="outline"
+                                    isPending={isDuplicating}
+                                    onClick={duplicateRecord}
+                                >
+                                    {t('admin.faqs.duplicate')}
+                                </Button>
+                            )}
+                            {can.delete && (
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setIsDeleteOpen(true)}
+                                >
+                                    {t('admin.faqs.delete')}
+                                </Button>
+                            )}
+                        </Inline>
                     ) : undefined
                 }
             />

@@ -6,8 +6,8 @@ use App\Models\Faq;
 use App\Models\User;
 
 /**
- * Faqs are managed by admins and editors; a viewer lists and opens them
- * read-only. Only administrators may delete them.
+ * Faqs are managed (duplicated, reordered) by admins and editors; a viewer lists
+ * and opens them read-only. Only administrators may delete them.
  */
 class FaqPolicy
 {
@@ -40,6 +40,23 @@ class FaqPolicy
      * Determine whether the user can edit the faq.
      */
     public function update(User $user, Faq $faq): bool
+    {
+        return $user->canEditContent();
+    }
+
+    /**
+     * Determine whether the user can copy the faq as a new, unpublished faq.
+     */
+    public function duplicate(User $user, Faq $faq): bool
+    {
+        return $user->canEditContent();
+    }
+
+    /**
+     * Determine whether the user can change the shared order of all faqs
+     * (the same rule as `update`).
+     */
+    public function reorder(User $user): bool
     {
         return $user->canEditContent();
     }

@@ -1,0 +1,10 @@
+test('another user cannot copy a {{ singularLower }}, administrators included', function (string $role) {
+    $source = {{ Model }}::factory()->for(User::factory()->editor())->create();
+
+    $this->actingAs(User::factory()->{$role}()->create())
+        ->post(route('admin.{{ kebabPlural }}.duplicate', $source))
+        ->assertForbidden();
+
+    expect({{ Model }}::query()->count())->toBe(1)
+        ->and(AuditLog::query()->count())->toBe(0);
+})->with(['admin', 'editor']);

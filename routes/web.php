@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Content\SharedPreviewController;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,12 @@ if (app()->environment('local')) {
 if (config('demo.enabled')) {
     require __DIR__.'/demo.php';
 }
+
+// Secret, expiring preview links shared with people without an account.
+Route::get('/shared-preview/{token}', SharedPreviewController::class)
+    ->where('token', '[A-Za-z0-9]{48}')
+    ->middleware('throttle:30,1')
+    ->name('content.shared-preview');
 
 // Content catch-all routes must stay last: default locale without prefix,
 // extra public locales under /{locale}.

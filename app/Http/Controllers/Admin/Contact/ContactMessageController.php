@@ -13,11 +13,13 @@ use App\Data\Admin\Contact\ContactMessageListFiltersData;
 use App\Data\Admin\Contact\ContactMessageListItemData;
 use App\Data\Admin\Contact\ContactMessageShowData;
 use App\Data\Listing\ListPaginationData;
+use App\Enums\AssistantFeature;
 use App\Enums\AuditAction;
 use App\Enums\ContactMessageStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Contact\DestroyContactMessagesRequest;
 use App\Http\Requests\Admin\Contact\ListContactMessagesRequest;
+use App\Http\Requests\Admin\Contact\UpdateContactMessageWorkflowRequest;
 use App\Models\ContactMessage;
 use App\Models\User;
 use App\Repositories\Contact\ContactMessageRepository;
@@ -160,8 +162,26 @@ class ContactMessageController extends Controller
                 retry: $contactMessage->status === ContactMessageStatus::Failed
                     && ($user?->can('retry', $contactMessage) ?? false),
                 delete: $user?->can('delete', $contactMessage) ?? false,
+                update: $user?->can('update', $contactMessage) ?? false,
+                suggestReply: AssistantFeature::ReplyDraft->isAvailable()
+                    && ($user?->can('view', $contactMessage) ?? false),
             ),
         ));
+    }
+
+    /**
+     * Update lead workflow status and internal notes.
+     */
+    public function update(UpdateContactMessageWorkflowRequest $request, ContactMessage $contactMessage): RedirectResponse
+    {
+        $contactMessage->update([
+            'lead_status' => $request->leadStatus(),
+            'internal_notes' => $request->internalNotes(),
+        ]);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('admin.contact.workflowUpdated')]);
+
+        return to_route('admin.contact.show', $contactMessage);
     }
 
     /**

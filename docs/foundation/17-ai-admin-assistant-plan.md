@@ -28,6 +28,7 @@ Potem `make restart`. Klucz API to sekret: nigdy w Git, logach ani zgłoszeniach
 | `AI_FEATURE_TEXT_REWRITE` | `true` | „Popraw tekst” |
 | `AI_FEATURE_FAQ_GENERATOR` | `true` | generator FAQ |
 | `AI_FEATURE_MESSAGE_CLASSIFICATION` | `false` | klasyfikacja wiadomości kontaktowych (PII) |
+| `AI_FEATURE_REPLY_DRAFT` | `false` | szkic odpowiedzi na wiadomość: wysyła imię i treść nadawcy (PII) |
 | `AI_MONTHLY_TOKEN_BUDGET` | `2000000` | wspólny miesięczny limit tokenów, `0` wyłącza asystenta |
 | `AI_RATE_LIMIT_PER_MINUTE` | `20` | prośby na użytkownika na minutę |
 | `AI_MESSAGE_CLASSIFICATION_DAILY_LIMIT` | `200` | klasyfikacje na dobę, `0` zatrzymuje |

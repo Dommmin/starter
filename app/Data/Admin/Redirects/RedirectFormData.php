@@ -23,12 +23,12 @@ class RedirectFormData extends Data
         public bool $isActive,
     ) {}
 
-    public static function blank(): self
+    public static function blank(?string $sourcePath = null): self
     {
         return new self(
             id: null,
             updatedAt: null,
-            sourcePath: null,
+            sourcePath: $sourcePath,
             target: null,
             statusCode: RedirectStatus::Permanent,
             isActive: true,

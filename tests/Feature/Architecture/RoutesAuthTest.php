@@ -29,11 +29,13 @@ $routesAuthPublic = [
     'GET health/ready' => 'readiness dla monitoringu i deployu, bez danych',
     'GET sitemap.xml' => 'SEO',
     'GET robots.txt' => 'SEO',
+    'GET llms.txt' => 'SEO (AI/LLM index)',
     'GET /' => 'strona główna',
     'GET articles' => 'publiczna lista artykułów',
     'GET articles/{slug}' => 'publiczny artykuł',
     'POST contact-messages' => 'publiczny formularz kontaktowy (throttle, honeypot)',
     'GET {slug}' => 'publiczna strona CMS',
+    'GET shared-preview/{token}' => 'podgląd szkicu dla klienta: tajny, wygasający i odwoływalny token (throttle, noindex)',
     'PATCH settings/locale' => 'preferencja języka panelu w sesji, także przed logowaniem',
 ];
 

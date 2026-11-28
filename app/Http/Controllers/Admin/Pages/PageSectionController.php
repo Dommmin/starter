@@ -71,7 +71,7 @@ class PageSectionController extends Controller
             locale: $locale,
             locales: ContentLocalesData::fromConfig($this->localization),
             items: $items,
-            availableTypes: array_map(static fn (HomeSectionType $type): string => $type->value, HomeSectionType::cases()),
+            availableTypes: array_map(static fn (HomeSectionType $type): string => $type->value, HomeSectionType::available()),
             canUpdate: $request->user()?->can('update', $page) ?? false,
             blocks: array_values(ContentBlock::query()
                 ->where('locale', $locale)
@@ -94,7 +94,7 @@ class PageSectionController extends Controller
     {
         $validated = $request->validate([
             'locale' => ['required', 'string', Rule::in($this->localization->getPublicLocales())],
-            'type' => ['required', 'string', Rule::enum(HomeSectionType::class)],
+            'type' => ['required', 'string', Rule::enum(HomeSectionType::class)->only(HomeSectionType::available())],
         ]);
 
         /** @var string $locale */

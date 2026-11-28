@@ -73,7 +73,10 @@ class BuildHomeSections
      */
     public function buildFromCollection(Collection $sections, string $locale, ?User $viewer = null): array
     {
-        $items = $sections->all();
+        $items = array_values(array_filter(
+            $sections->all(),
+            static fn (HomeSection|PageSection $section): bool => $section->type->isAvailable(),
+        ));
         $publishedPages = $this->pages->publishedInLocale($locale, $this->linkedPageIds($items));
         $images = $this->media->usableImagesByIds($this->imageIds($items));
 

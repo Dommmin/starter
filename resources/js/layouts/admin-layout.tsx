@@ -62,7 +62,8 @@ export default function AdminLayout({
 }) {
     const { t } = useTranslation();
     const commandSearch = useAdminSearch();
-    const { auth, site, designSystemUrl, demo } = usePage().props;
+    const { auth, site, designSystemUrl, demo, disabledModules } =
+        usePage().props;
     const { currentUrl, isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 
     const section = (
@@ -114,12 +115,16 @@ export default function AdminLayout({
                     mediaIndex(),
                     Images,
                 ),
-                section(
-                    'faqs',
-                    t('admin.faqs.navLabel'),
-                    faqsIndex(),
-                    CircleHelp,
-                ),
+                ...(disabledModules?.includes('faq')
+                    ? []
+                    : [
+                          section(
+                              'faqs',
+                              t('admin.faqs.navLabel'),
+                              faqsIndex(),
+                              CircleHelp,
+                          ),
+                      ]),
                 section(
                     'navigation',
                     t('admin.navigation.navLabel'),

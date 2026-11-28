@@ -1521,6 +1521,7 @@ declare namespace App {
             | 'external'
             | 'group';
         export type MenuLocation = 'header' | 'footer';
+        export type Module = 'faq';
         export type PublicationStatus = 'draft' | 'published';
         export type RedirectStatus = 301 | 302;
         export type SocialNetwork =

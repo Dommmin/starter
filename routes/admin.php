@@ -74,7 +74,7 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->middleware('throttle:assistant');
         Route::post('/assistant/faqs', FaqSuggestionController::class)
             ->name('assistant.faqs')
-            ->middleware('throttle:assistant');
+            ->middleware(['module:faq', 'throttle:assistant']);
         Route::post('/assistant/contact-reply', ContactReplySuggestionController::class)
             ->name('assistant.contact-reply')
             ->middleware('throttle:assistant');
@@ -300,36 +300,38 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->name('tags.destroy')
             ->can('delete', 'tag');
 
-        Route::get('/faqs', [FaqController::class, 'index'])
-            ->name('faqs.index')
-            ->can('viewAny', Faq::class);
-        Route::get('/faqs/create', [FaqController::class, 'create'])
-            ->name('faqs.create')
-            ->can('create', Faq::class);
-        Route::post('/faqs', [FaqController::class, 'store'])
-            ->name('faqs.store')
-            ->can('create', Faq::class);
-        Route::post('/faqs/many', [FaqController::class, 'storeMany'])
-            ->name('faqs.store-many')
-            ->can('create', Faq::class);
-        Route::get('/faqs/order', [FaqController::class, 'order'])
-            ->name('faqs.order')
-            ->can('viewAny', Faq::class);
-        Route::put('/faqs/order', [FaqController::class, 'reorder'])
-            ->name('faqs.reorder')
-            ->can('reorder', Faq::class);
-        Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
-            ->name('faqs.edit')
-            ->can('view', 'faq');
-        Route::put('/faqs/{faq}', [FaqController::class, 'update'])
-            ->name('faqs.update')
-            ->can('update', 'faq');
-        Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
-            ->name('faqs.destroy')
-            ->can('delete', 'faq');
-        Route::post('/faqs/{faq}/duplicate', [FaqController::class, 'duplicate'])
-            ->name('faqs.duplicate')
-            ->can('duplicate', 'faq');
+        Route::middleware('module:faq')->group(function () {
+            Route::get('/faqs', [FaqController::class, 'index'])
+                ->name('faqs.index')
+                ->can('viewAny', Faq::class);
+            Route::get('/faqs/create', [FaqController::class, 'create'])
+                ->name('faqs.create')
+                ->can('create', Faq::class);
+            Route::post('/faqs', [FaqController::class, 'store'])
+                ->name('faqs.store')
+                ->can('create', Faq::class);
+            Route::post('/faqs/many', [FaqController::class, 'storeMany'])
+                ->name('faqs.store-many')
+                ->can('create', Faq::class);
+            Route::get('/faqs/order', [FaqController::class, 'order'])
+                ->name('faqs.order')
+                ->can('viewAny', Faq::class);
+            Route::put('/faqs/order', [FaqController::class, 'reorder'])
+                ->name('faqs.reorder')
+                ->can('reorder', Faq::class);
+            Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
+                ->name('faqs.edit')
+                ->can('view', 'faq');
+            Route::put('/faqs/{faq}', [FaqController::class, 'update'])
+                ->name('faqs.update')
+                ->can('update', 'faq');
+            Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
+                ->name('faqs.destroy')
+                ->can('delete', 'faq');
+            Route::post('/faqs/{faq}/duplicate', [FaqController::class, 'duplicate'])
+                ->name('faqs.duplicate')
+                ->can('duplicate', 'faq');
+        });
 
         Route::get('/media', [MediaAssetController::class, 'index'])
             ->name('media.index')

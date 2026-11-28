@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Module;
 use App\Models\Faq;
 use App\Models\User;
 
@@ -11,6 +12,14 @@ use App\Models\User;
  */
 class FaqPolicy
 {
+    /**
+     * Nobody may do anything with a disabled module, so no screen offers it.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        return Module::Faq->isEnabled() ? null : false;
+    }
+
     /**
      * Determine whether the user can list faqs in the panel.
      */

@@ -26,6 +26,8 @@ declare module '@inertiajs/core' {
             designSystemUrl?: string;
             /** Public area with a configured provider: show the sign-up form. */
             newsletter?: boolean;
+            /** Admin area only, when config/modules.php turns something off. */
+            disabledModules?: string[];
             /** Present (true) only on the public demo. */
             demo?: boolean;
             [key: string]: unknown;

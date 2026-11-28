@@ -6,6 +6,7 @@ use App\Data\Consent\ConsentData;
 use App\Data\Navigation\NavigationData;
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
+use App\Enums\Module;
 use App\Models\AuditLog;
 use App\Models\ContactMessage;
 use App\Models\Page;
@@ -97,6 +98,7 @@ class HandleInertiaRequests extends Middleware
             ...$this->cookieConsent($request, $i18n['area'], $i18n['locale']),
             ...$this->designSystemShowcase($i18n['area']),
             ...($i18n['area'] === 'public' && NewsletterSignup::isEnabled() ? ['newsletter' => true] : []),
+            ...($i18n['area'] === 'admin' && Module::disabled() !== [] ? ['disabledModules' => Module::disabled()] : []),
             ...(config('demo.enabled') ? ['demo' => true] : []),
         ];
     }

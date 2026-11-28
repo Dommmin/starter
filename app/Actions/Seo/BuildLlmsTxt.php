@@ -2,6 +2,7 @@
 
 namespace App\Actions\Seo;
 
+use App\Enums\Module;
 use App\Models\Faq;
 use App\Repositories\Content\ArticleRepository;
 use App\Repositories\Content\PageRepository;
@@ -78,6 +79,7 @@ class BuildLlmsTxt
         }
 
         $faqs = Faq::query()
+            ->when(! Module::Faq->isEnabled(), fn ($query) => $query->whereRaw('1 = 0'))
             ->where('published', true)
             ->orderBy('position')
             ->limit(25)

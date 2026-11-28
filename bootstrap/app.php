@@ -3,6 +3,7 @@
 use App\Actions\Redirects\RecordNotFoundHit;
 use App\Data\Errors\ErrorPageData;
 use App\Http\Middleware\BlockChangesInDemo;
+use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventIndexingOfPrivateAreas;
@@ -63,6 +64,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'password.confirm' => RequirePasswordConfirmation::class,
+            'module' => EnsureModuleEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

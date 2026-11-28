@@ -35,6 +35,7 @@ $routesAuthPublic = [
     'GET articles/{slug}' => 'publiczny artykuł',
     'POST contact-messages' => 'publiczny formularz kontaktowy (throttle, honeypot)',
     'GET {slug}' => 'publiczna strona CMS',
+    'POST newsletter-subscriptions' => 'zapis na newsletter (throttle, honeypot, bez danych w aplikacji)',
     'GET shared-preview/{token}' => 'podgląd szkicu dla klienta: tajny, wygasający i odwoływalny token (throttle, noindex)',
     'PATCH settings/locale' => 'preferencja języka panelu w sesji, także przed logowaniem',
 ];
@@ -55,6 +56,7 @@ $routesAuthPublicOptional = static function (): array {
         'GET {locale}/articles' => 'lista artykułów w dodatkowym języku',
         'GET {locale}/articles/{slug}' => 'artykuł w dodatkowym języku',
         'POST {locale}/contact-messages' => 'formularz kontaktowy w dodatkowym języku',
+        'POST {locale}/newsletter-subscriptions' => 'zapis na newsletter w dodatkowym języku',
         'GET {locale}/{slug}' => 'strona CMS w dodatkowym języku',
         'GET {locale}/login' => 'logowanie w dodatkowym języku',
         'POST {locale}/login' => 'logowanie w dodatkowym języku',

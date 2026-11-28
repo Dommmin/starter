@@ -35,6 +35,15 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => ':label submenu',
     ],
+    'newsletter' => [
+        'title' => 'Newsletter',
+        'email' => 'E-mail address',
+        'consent' => 'I want to receive the newsletter and know I can unsubscribe at any time.',
+        'privacy' => 'Privacy policy',
+        'submit' => 'Subscribe',
+        'done' => 'Thank you. Check your inbox for a confirmation request.',
+    ],
+
     'announcement' => [
         'label' => 'Announcement',
     ],

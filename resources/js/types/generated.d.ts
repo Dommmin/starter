@@ -568,6 +568,12 @@ declare namespace App {
                 };
             }
             namespace Pages {
+                export type ContentBlockData = {
+                    id: number;
+                    name: string;
+                    type: string;
+                    uses: number;
+                };
                 export type PageAbilitiesData = {
                     create: boolean;
                     update: boolean;
@@ -621,6 +627,7 @@ declare namespace App {
                     pageId: number;
                     pageTitle: string | null;
                     editor: App.Data.Admin.HomeSections.HomeSectionEditorData;
+                    sharedUses: number | null;
                 };
                 export type PageSectionsIndexData = {
                     pageId: number;
@@ -630,6 +637,8 @@ declare namespace App {
                     items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
                     availableTypes: string[];
                     canUpdate: boolean;
+                    blocks: App.Data.Admin.Pages.ContentBlockData[];
+                    sharedSectionIds: number[];
                 };
                 export type PageTranslationFormData = {
                     title: string;
@@ -1401,7 +1410,10 @@ declare namespace App {
             | 'faq.duplicated'
             | 'faq.reordered'
             | 'assistant.suggested'
-            | 'ai_settings.updated';
+            | 'ai_settings.updated'
+            | 'content_block.created'
+            | 'content_block.updated'
+            | 'content_block.deleted';
         export type ConsentCategory = 'analytics' | 'marketing';
         export type ContactFieldType =
             | 'text'

@@ -54,7 +54,7 @@ class DuplicatePage
             }
 
             foreach ($source->sections()->orderBy('id')->get() as $section) {
-                $copy->sections()->create($section->only(['locale', 'type', 'position', 'enabled', 'content']));
+                $copy->sections()->create($section->only(['content_block_id', 'locale', 'type', 'position', 'enabled', 'content']));
             }
 
             $this->audit->handle(AuditAction::PageDuplicated, $copy, $actor, $changes);

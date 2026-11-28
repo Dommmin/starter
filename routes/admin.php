@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
 use App\Http\Controllers\Admin\Import\ImportController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
+use App\Http\Controllers\Admin\Pages\ContentBlockController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\Pages\PageSectionController;
 use App\Http\Controllers\Admin\Redirects\NotFoundLogController;
@@ -180,6 +181,21 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/pages/{page}/preview-links/{previewLink}', [ContentPreviewLinkController::class, 'destroyForPage'])
             ->whereNumber('previewLink')
             ->name('pages.preview-links.destroy')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/sections/{pageSection}/share', [ContentBlockController::class, 'share'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.share')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/sections/{pageSection}/detach', [ContentBlockController::class, 'detach'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.detach')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/blocks', [ContentBlockController::class, 'insert'])
+            ->name('pages.blocks.insert')
+            ->can('update', 'page');
+        Route::delete('/pages/{page}/blocks/{contentBlock}', [ContentBlockController::class, 'destroy'])
+            ->whereNumber('contentBlock')
+            ->name('pages.blocks.destroy')
             ->can('update', 'page');
         Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
             ->name('pages.duplicate')

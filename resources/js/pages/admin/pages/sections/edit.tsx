@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { Stack } from '@/design-system/primitives';
+import { Alert, Stack } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
 import { index as adminIndex } from '@/routes/admin';
 import { index as pagesIndex } from '@/routes/admin/pages';
@@ -9,7 +9,7 @@ import { SectionForm } from '../../home-sections/section-form';
 type Props = App.Data.Admin.Pages.PageSectionEditorData;
 
 export default function AdminPageSectionsEdit() {
-    const { pageId, editor } = usePage<Props>().props;
+    const { pageId, editor, sharedUses } = usePage<Props>().props;
     const { t } = useTranslation();
 
     return (
@@ -22,6 +22,14 @@ export default function AdminPageSectionsEdit() {
                 })}
             />
             <Stack gap="relaxed">
+                {sharedUses !== null && (
+                    <Alert
+                        title={t('admin.pages.blocks.sharedTitle')}
+                        description={t('admin.pages.blocks.sharedDescription', {
+                            count: sharedUses,
+                        })}
+                    />
+                )}
                 <SectionForm
                     key={editor.section.id}
                     editor={editor}

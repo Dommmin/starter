@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Pages;
 
+use App\Actions\Content\ContentBlocks;
 use App\Actions\Home\EnsureHomeSections;
 use App\Data\Admin\HomeSections\HomeContactFormOptionData;
 use App\Data\Admin\HomeSections\HomePageOptionData;
@@ -9,6 +10,7 @@ use App\Data\Admin\HomeSections\HomeSectionAbilitiesData;
 use App\Data\Admin\HomeSections\HomeSectionEditorData;
 use App\Data\Admin\HomeSections\HomeSectionFormData;
 use App\Data\Admin\HomeSections\HomeSectionListItemData;
+use App\Data\Admin\Pages\ContentBlockData;
 use App\Data\Admin\Pages\PageSectionEditorData;
 use App\Data\Admin\Pages\PageSectionsIndexData;
 use App\Data\Content\ContentLocaleData;
@@ -17,8 +19,10 @@ use App\Enums\HomeSectionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HomeSections\HomeSectionContentRules;
 use App\Models\ContactForm;
+use App\Models\ContentBlock;
 use App\Models\Page;
 use App\Models\PageSection;
+use App\Models\User;
 use App\Repositories\Contact\ContactFormRepository;
 use App\Repositories\Content\PageRepository;
 use App\Services\Content\ContentSnapshots;
@@ -43,6 +47,7 @@ class PageSectionController extends Controller
         private readonly HomeLinkResolver $links,
         private readonly LocalizationConfig $localization,
         private readonly ContentSnapshots $snapshots,
+        private readonly ContentBlocks $blocks,
     ) {}
 
     public function index(Request $request, Page $page): Response
@@ -68,6 +73,20 @@ class PageSectionController extends Controller
             items: $items,
             availableTypes: array_map(static fn (HomeSectionType $type): string => $type->value, HomeSectionType::cases()),
             canUpdate: $request->user()?->can('update', $page) ?? false,
+            blocks: array_values(ContentBlock::query()
+                ->where('locale', $locale)
+                ->withCount('sections')
+                ->orderBy('name')
+                ->orderBy('id')
+                ->get()
+                ->map(ContentBlockData::fromModel(...))
+                ->all()),
+            sharedSectionIds: array_values($page->sections()
+                ->where('locale', $locale)
+                ->whereNotNull('content_block_id')
+                ->pluck('id')
+                ->map(static fn (mixed $id): int => (int) $id)
+                ->all()),
         ));
     }
 
@@ -136,6 +155,9 @@ class PageSectionController extends Controller
             pageId: $page->id,
             pageTitle: $page->translation($pageSection->locale)->title ?? $page->translation($this->localization->getPublicDefault())->title ?? null,
             editor: $editor,
+            sharedUses: $pageSection->content_block_id === null
+                ? null
+                : PageSection::query()->where('content_block_id', $pageSection->content_block_id)->count(),
         ));
     }
 
@@ -153,9 +175,10 @@ class PageSectionController extends Controller
         $content = $pageSection->type->contentClass()::from($contentInput);
         $expectedUpdatedAt = (string) $validated['updated_at'];
 
-        $authorId = $request->user()?->id;
+        /** @var User $actor */
+        $actor = $request->user();
 
-        DB::transaction(function () use ($page, $pageSection, $content, $expectedUpdatedAt, $authorId): void {
+        DB::transaction(function () use ($page, $pageSection, $content, $expectedUpdatedAt, $actor): void {
             $locked = PageSection::query()->whereKey($pageSection->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->updated_at?->getTimestamp() !== Carbon::parse($expectedUpdatedAt)->getTimestamp()) {
@@ -164,7 +187,14 @@ class PageSectionController extends Controller
                 ]);
             }
 
-            $this->snapshots->record($page, $authorId);
+            if ($locked->content_block_id !== null) {
+                // Records a revision of every page that uses the block.
+                $this->blocks->update($locked->content_block_id, $content, $actor);
+
+                return;
+            }
+
+            $this->snapshots->record($page, $actor->id);
 
             $locked->forceFill([
                 'content' => $content,

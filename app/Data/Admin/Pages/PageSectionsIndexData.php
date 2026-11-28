@@ -13,6 +13,8 @@ class PageSectionsIndexData extends Data
     /**
      * @param  list<HomeSectionListItemData>  $items
      * @param  list<string>  $availableTypes
+     * @param  list<ContentBlockData>  $blocks  Shared blocks of the language.
+     * @param  list<int>  $sharedSectionIds  Listed sections that follow a block.
      */
     public function __construct(
         public int $pageId,
@@ -22,5 +24,7 @@ class PageSectionsIndexData extends Data
         public array $items,
         public array $availableTypes,
         public bool $canUpdate,
+        public array $blocks = [],
+        public array $sharedSectionIds = [],
     ) {}
 }

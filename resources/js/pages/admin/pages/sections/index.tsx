@@ -6,7 +6,9 @@ import {
     EyeOff,
     Pencil,
     Plus,
+    Share2,
     Trash2,
+    Unlink,
 } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -24,13 +26,16 @@ import {
     Tabs,
 } from '@/design-system/primitives';
 import { useTranslation } from '@/i18n';
+import { SharedBlockList } from './shared-block-list';
 import { index as adminIndex } from '@/routes/admin';
 import { edit as pagesEdit, index as pagesIndex } from '@/routes/admin/pages';
 import {
     destroy,
+    detach,
     edit,
     index,
     reorder,
+    share,
     store,
     visibility,
 } from '@/routes/admin/pages/sections';
@@ -47,10 +52,29 @@ export default function AdminPageSectionsIndex() {
         items,
         availableTypes,
         canUpdate,
+        blocks,
+        sharedSectionIds,
     } = usePage<IndexProps>().props;
     const { t } = useTranslation();
     const [newType, setNewType] = useState<string>(availableTypes[0] ?? 'hero');
     const [isCreating, setIsCreating] = useState(false);
+
+    function shareSection(row: Row) {
+        const name = row.title ?? t(`admin.homeSections.types.${row.type}`);
+        router.post(
+            share.url({ page: pageId, pageSection: row.id }),
+            { name: name.slice(0, 120) },
+            { preserveScroll: true },
+        );
+    }
+
+    function detachSection(row: Row) {
+        router.post(
+            detach.url({ page: pageId, pageSection: row.id }),
+            {},
+            { preserveScroll: true },
+        );
+    }
 
     function changeLocale(nextLocale: string) {
         router.get(
@@ -158,6 +182,16 @@ export default function AdminPageSectionsIndex() {
                     </Card>
                 )}
 
+                {blocks.length > 0 && (
+                    <Card>
+                        <SharedBlockList
+                            pageId={pageId}
+                            blocks={blocks}
+                            canUpdate={canUpdate}
+                        />
+                    </Card>
+                )}
+
                 <DataTable<Row>
                     caption={t('admin.pages.sections.tableCaption')}
                     rows={items}
@@ -191,7 +225,16 @@ export default function AdminPageSectionsIndex() {
                             key: 'title',
                             priority: 'secondary',
                             header: t('admin.pages.sections.columnHeading'),
-                            render: (row) => row.title ?? '—',
+                            render: (row) => (
+                                <Inline gap="tight">
+                                    {row.title ?? '—'}
+                                    {sharedSectionIds.includes(row.id) && (
+                                        <Badge tone="neutral">
+                                            {t('admin.pages.blocks.badge')}
+                                        </Badge>
+                                    )}
+                                </Inline>
+                            ),
                         },
                         {
                             key: 'enabled',
@@ -296,6 +339,31 @@ export default function AdminPageSectionsIndex() {
                                                                 },
                                                             ]
                                                           : []),
+                                                      sharedSectionIds.includes(
+                                                          row.id,
+                                                      )
+                                                          ? {
+                                                                id: 'detach',
+                                                                label: t(
+                                                                    'admin.pages.blocks.detach',
+                                                                ),
+                                                                icon: Unlink,
+                                                                onSelect: () =>
+                                                                    detachSection(
+                                                                        row,
+                                                                    ),
+                                                            }
+                                                          : {
+                                                                id: 'share',
+                                                                label: t(
+                                                                    'admin.pages.blocks.share',
+                                                                ),
+                                                                icon: Share2,
+                                                                onSelect: () =>
+                                                                    shareSection(
+                                                                        row,
+                                                                    ),
+                                                            },
                                                       {
                                                           id: 'delete',
                                                           label: t(

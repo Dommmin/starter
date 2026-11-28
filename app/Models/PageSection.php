@@ -16,6 +16,7 @@ use Spatie\LaravelData\Data;
  *
  * @property int $id
  * @property int $page_id
+ * @property int|null $content_block_id Shared block the content follows.
  * @property string $locale
  * @property HomeSectionType $type
  * @property int $position
@@ -25,7 +26,7 @@ use Spatie\LaravelData\Data;
  * @property CarbonImmutable|null $updated_at
  * @property-read Page $page
  */
-#[Fillable(['page_id', 'locale', 'type', 'position', 'enabled', 'content'])]
+#[Fillable(['page_id', 'content_block_id', 'locale', 'type', 'position', 'enabled', 'content'])]
 class PageSection extends Model
 {
     /**

@@ -6,11 +6,13 @@ use App\Actions\Audit\RecordAuditEvent;
 use App\Enums\AuditAction;
 use App\Enums\HomeSectionType;
 use App\Models\Article;
+use App\Models\ContentBlock;
 use App\Models\ContentRevision;
 use App\Models\Page;
 use App\Models\User;
 use App\Services\Content\ContentSnapshots;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelData\Data;
 
 /**
  * Bring back the texts of an earlier revision: titles, descriptions, bodies
@@ -80,19 +82,33 @@ class RestoreContentRevision
 
         $page->sections()->delete();
 
-        /** @var list<array{locale: string, type: string, position: int, enabled: bool, content: array<string, mixed>}> $sections */
+        /** @var list<array{content_block_id?: int|null, locale: string, type: string, position: int, enabled: bool, content: array<string, mixed>}> $sections */
         $sections = $snapshot['sections'] ?? [];
 
         foreach ($sections as $section) {
             $type = HomeSectionType::from($section['type']);
 
+            $content = $type->contentClass()::from($section['content']);
+
             $page->sections()->create([
+                'content_block_id' => $this->linkableBlock($section['content_block_id'] ?? null, $content),
                 'locale' => $section['locale'],
                 'type' => $type,
                 'position' => $section['position'],
                 'enabled' => $section['enabled'],
-                'content' => $type->contentClass()::from($section['content']),
+                'content' => $content,
             ]);
         }
+    }
+
+    /**
+     * A restored section follows its block again only while their content is
+     * equal; otherwise the next block edit would overwrite the restored text.
+     */
+    private function linkableBlock(?int $blockId, Data $content): ?int
+    {
+        $block = $blockId === null ? null : ContentBlock::query()->find($blockId);
+
+        return $block !== null && $block->content->toArray() == $content->toArray() ? $block->id : null;
     }
 }

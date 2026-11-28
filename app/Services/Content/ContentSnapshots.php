@@ -85,6 +85,7 @@ class ContentSnapshots
             'layout_mode' => (string) Page::query()->whereKey($record->id)->value('layout_mode'),
             'sections' => $record->sections()->orderBy('locale')->orderBy('position')->orderBy('id')->get()
                 ->map(static fn (PageSection $section): array => [
+                    'content_block_id' => $section->content_block_id,
                     'locale' => $section->locale,
                     'type' => $section->type->value,
                     'position' => $section->position,

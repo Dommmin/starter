@@ -397,6 +397,23 @@ return [
             'rich_text' => 'Rich-Text-Editor',
             'sections' => 'Seitenabschnitte (Builder)',
         ],
+        'blocks' => [
+            'badge' => 'Gemeinsamer Block',
+            'share' => 'Als gemeinsamen Block speichern',
+            'detach' => 'Vom Block lösen',
+            'title' => 'Gemeinsame Blöcke',
+            'insert' => 'Zu dieser Seite hinzufügen',
+            'remove' => 'Block löschen',
+            'uses' => 'Abschnitte mit diesem Block: :count',
+            'sharedTitle' => 'Dies ist ein gemeinsamer Block',
+            'sharedDescription' => 'Beim Speichern ändern sich alle Abschnitte, die ihn verwenden (:count). Um nur diese Seite zu ändern, lösen Sie den Abschnitt zuerst.',
+            'shared' => 'Der Abschnitt ist jetzt ein gemeinsamer Block.',
+            'inserted' => 'Der Block wurde hinzugefügt.',
+            'detached' => 'Der Abschnitt wurde vom Block gelöst.',
+            'deleted' => 'Der Block wurde gelöscht.',
+            'inUse' => 'Der Block wird verwendet. Entfernen oder lösen Sie zuerst die Abschnitte.',
+        ],
+
         'sections' => [
             'manage' => 'Abschnitte verwalten',
             'title' => 'Seitenabschnitte: :title',
@@ -839,6 +856,11 @@ return [
                 'duplicated' => 'FAQ-Frage dupliziert',
                 'reordered' => 'Reihenfolge der FAQ-Fragen geändert',
             ],
+            'content_block' => [
+                'created' => 'Gemeinsamen Block erstellt',
+                'updated' => 'Gemeinsamen Block geändert',
+                'deleted' => 'Gemeinsamen Block gelöscht',
+            ],
             'home_section' => [
                 'updated' => 'Startseitenabschnitt geändert',
                 'toggled' => 'Startseitenabschnitt ein- oder ausgeblendet',
@@ -853,6 +875,7 @@ return [
             'mediaasset' => 'Datei',
             'sitesetting' => 'Website-Einstellungen',
             'menuitem' => 'Menüeintrag',
+            'contentblock' => 'Gemeinsamer Block',
             'homesection' => 'Startseitenabschnitt',
             'tag' => 'Tag',
             'redirect' => 'Weiterleitung',

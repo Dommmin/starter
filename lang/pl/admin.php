@@ -397,6 +397,23 @@ return [
             'rich_text' => 'Edytor tekstu (Rich Text)',
             'sections' => 'Sekcje strony (Page Builder)',
         ],
+        'blocks' => [
+            'badge' => 'Blok wspólny',
+            'share' => 'Zapisz jako blok wspólny',
+            'detach' => 'Odłącz od bloku',
+            'title' => 'Bloki wspólne',
+            'insert' => 'Wstaw na tę stronę',
+            'remove' => 'Usuń blok',
+            'uses' => 'Sekcje korzystające z bloku: :count',
+            'sharedTitle' => 'To jest blok wspólny',
+            'sharedDescription' => 'Zapis zmieni wszystkie sekcje, które z niego korzystają (:count). Aby zmienić tylko tę stronę, najpierw odłącz sekcję.',
+            'shared' => 'Sekcja jest teraz blokiem wspólnym.',
+            'inserted' => 'Wstawiono blok.',
+            'detached' => 'Sekcja została odłączona od bloku.',
+            'deleted' => 'Usunięto blok.',
+            'inUse' => 'Blok jest używany. Najpierw usuń lub odłącz sekcje, które z niego korzystają.',
+        ],
+
         'sections' => [
             'manage' => 'Zarządzaj sekcjami',
             'title' => 'Sekcje strony: :title',
@@ -839,6 +856,11 @@ return [
                 'duplicated' => 'Utworzono kopię pytania FAQ',
                 'reordered' => 'Zmieniono kolejność pytań FAQ',
             ],
+            'content_block' => [
+                'created' => 'Utworzono blok wspólny',
+                'updated' => 'Zmieniono blok wspólny',
+                'deleted' => 'Usunięto blok wspólny',
+            ],
             'home_section' => [
                 'updated' => 'Zmieniono sekcję strony głównej',
                 'toggled' => 'Pokazano lub ukryto sekcję strony głównej',
@@ -853,6 +875,7 @@ return [
             'mediaasset' => 'Plik',
             'sitesetting' => 'Ustawienia strony',
             'menuitem' => 'Pozycja menu',
+            'contentblock' => 'Blok wspólny',
             'homesection' => 'Sekcja strony głównej',
             'tag' => 'Tag',
             'redirect' => 'Przekierowanie',

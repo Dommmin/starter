@@ -397,6 +397,23 @@ return [
             'rich_text' => 'Rich Text Editor',
             'sections' => 'Page Sections (Builder)',
         ],
+        'blocks' => [
+            'badge' => 'Shared block',
+            'share' => 'Save as shared block',
+            'detach' => 'Detach from block',
+            'title' => 'Shared blocks',
+            'insert' => 'Add to this page',
+            'remove' => 'Delete block',
+            'uses' => 'Sections using the block: :count',
+            'sharedTitle' => 'This is a shared block',
+            'sharedDescription' => 'Saving changes every section that uses it (:count). To change this page only, detach the section first.',
+            'shared' => 'The section is now a shared block.',
+            'inserted' => 'The block was added.',
+            'detached' => 'The section was detached from the block.',
+            'deleted' => 'The block was deleted.',
+            'inUse' => 'The block is in use. Remove or detach the sections that use it first.',
+        ],
+
         'sections' => [
             'manage' => 'Manage sections',
             'title' => 'Page sections: :title',
@@ -839,6 +856,11 @@ return [
                 'duplicated' => 'FAQ question duplicated',
                 'reordered' => 'FAQ questions reordered',
             ],
+            'content_block' => [
+                'created' => 'Created a shared block',
+                'updated' => 'Updated a shared block',
+                'deleted' => 'Deleted a shared block',
+            ],
             'home_section' => [
                 'updated' => 'Home page section updated',
                 'toggled' => 'Home page section shown or hidden',
@@ -853,6 +875,7 @@ return [
             'mediaasset' => 'File',
             'sitesetting' => 'Site settings',
             'menuitem' => 'Menu item',
+            'contentblock' => 'Shared block',
             'homesection' => 'Home page section',
             'tag' => 'Tag',
             'redirect' => 'Redirect',

@@ -60,6 +60,9 @@ enum AuditAction: string
     case FaqsReordered = 'faq.reordered';
     case AssistantSuggested = 'assistant.suggested';
     case AiSettingsUpdated = 'ai_settings.updated';
+    case ContentBlockCreated = 'content_block.created';
+    case ContentBlockUpdated = 'content_block.updated';
+    case ContentBlockDeleted = 'content_block.deleted';
 
     /**
      * @return list<string>

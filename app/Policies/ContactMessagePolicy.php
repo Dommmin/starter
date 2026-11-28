@@ -29,6 +29,14 @@ class ContactMessagePolicy
     }
 
     /**
+     * Determine whether the user can update lead status or internal notes.
+     */
+    public function update(User $user, ContactMessage $contactMessage): bool
+    {
+        return $user->canEditContent();
+    }
+
+    /**
      * Determine whether the user can queue another delivery attempt.
      */
     public function retry(User $user, ContactMessage $contactMessage): bool

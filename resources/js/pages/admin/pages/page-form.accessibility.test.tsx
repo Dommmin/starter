@@ -137,6 +137,7 @@ function makeEditor(
         page: {
             id: null,
             updatedAt: null,
+            layoutMode: 'rich_text',
             translations: { en: blankTranslation(), de: blankTranslation() },
             ...page,
         },

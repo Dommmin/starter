@@ -587,6 +587,7 @@ declare namespace App {
                         string,
                         App.Data.Admin.Pages.PageTranslationFormData
                     >;
+                    layoutMode: string;
                 };
                 export type PageIndexData = {
                     items: App.Data.Admin.Pages.PageListItemData[];
@@ -611,6 +612,20 @@ declare namespace App {
                     locales: string[];
                     updatedAt: string | null;
                 };
+                export type PageSectionEditorData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    editor: App.Data.Admin.HomeSections.HomeSectionEditorData;
+                };
+                export type PageSectionsIndexData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    locale: string;
+                    locales: App.Data.Content.ContentLocalesData;
+                    items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
+                    availableTypes: string[];
+                    canUpdate: boolean;
+                };
                 export type PageTranslationFormData = {
                     title: string;
                     slug: string;
@@ -621,6 +636,17 @@ declare namespace App {
                 };
             }
             namespace Redirects {
+                export type NotFoundLogIndexData = {
+                    items: App.Data.Admin.Redirects.NotFoundLogItemData[];
+                    canCreateRedirect: boolean;
+                };
+                export type NotFoundLogItemData = {
+                    id: number;
+                    path: string;
+                    hits: number;
+                    lastReferer: string | null;
+                    lastSeenAt: string | null;
+                };
                 export type RedirectAbilitiesData = {
                     create: boolean;
                     delete: boolean;
@@ -747,6 +773,11 @@ declare namespace App {
                     announcementLinkUrl: string | null;
                     announcementStartsOn: string | null;
                     announcementEndsOn: string | null;
+                    ga4Id: string | null;
+                    gtmId: string | null;
+                    metaPixelId: string | null;
+                    chatProvider: string | null;
+                    chatWidgetId: string | null;
                 };
                 export type SocialNetworkOptionData = {
                     network: App.Enums.SocialNetwork;
@@ -841,6 +872,14 @@ declare namespace App {
                 granted: App.Enums.ConsentCategory[] | null;
                 policyUrl: string | null;
                 plausible: App.Data.Consent.PlausibleData | null;
+                integrations: App.Data.Consent.MarketingIntegrationsData | null;
+            };
+            export type MarketingIntegrationsData = {
+                ga4Id: string | null;
+                gtmId: string | null;
+                metaPixelId: string | null;
+                chatProvider: string | null;
+                chatWidgetId: string | null;
             };
             export type PlausibleData = {
                 domain: string;
@@ -932,6 +971,9 @@ declare namespace App {
                 publishedAt: string | null;
                 alternates: Record<string, string>;
                 preview: App.Data.Content.ContentPreviewData | null;
+                layoutMode: string;
+                sections: App.Data.Home.HomeSectionData[] | null;
+                contactForm: App.Data.Contact.ContactFormData | null;
             };
             export type PublicTagData = {
                 slug: string;

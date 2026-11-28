@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Redirects\RecordNotFoundHit;
 use App\Data\Errors\ErrorPageData;
 use App\Http\Middleware\BlockChangesInDemo;
 use App\Http\Middleware\HandleAppearance;
@@ -80,6 +81,10 @@ return Application::configure(basePath: dirname(__DIR__))
          */
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
             $status = $response->getStatusCode();
+
+            if ($status === 404 && ! $request->is('api/*') && ! $request->expectsJson()) {
+                defer(fn () => app(RecordNotFoundHit::class)->handle($request));
+            }
 
             if (
                 ! in_array($status, [403, 404, 500, 503], true)

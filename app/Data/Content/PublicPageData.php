@@ -2,6 +2,8 @@
 
 namespace App\Data\Content;
 
+use App\Data\Contact\ContactFormData;
+use App\Data\Home\HomeSectionData;
 use App\Models\PageTranslation;
 use App\Services\Content\RichTextRenderer;
 use Spatie\LaravelData\Data;
@@ -17,6 +19,7 @@ class PublicPageData extends Data
 {
     /**
      * @param  array<string, string>  $alternates  Locale (and `x-default`) => canonical URL of each published translation.
+     * @param  list<HomeSectionData>|null  $sections
      */
     public function __construct(
         public string $title,
@@ -26,16 +29,23 @@ class PublicPageData extends Data
         public ?string $publishedAt,
         public array $alternates,
         public ?ContentPreviewData $preview = null,
+        public string $layoutMode = 'rich_text',
+        public ?array $sections = null,
+        public ?ContactFormData $contactForm = null,
     ) {}
 
     /**
      * @param  array<string, string>  $alternates
+     * @param  list<HomeSectionData>|null  $sections
      */
     public static function fromTranslation(
         PageTranslation $translation,
         string $bodyHtml,
         array $alternates,
         ?ContentPreviewData $preview = null,
+        string $layoutMode = 'rich_text',
+        ?array $sections = null,
+        ?ContactFormData $contactForm = null,
     ): self {
         return new self(
             title: $translation->title,
@@ -45,6 +55,9 @@ class PublicPageData extends Data
             publishedAt: $translation->published_at?->toIso8601String(),
             alternates: $alternates,
             preview: $preview,
+            layoutMode: $layoutMode,
+            sections: $sections,
+            contactForm: $contactForm,
         );
     }
 }

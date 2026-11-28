@@ -17,6 +17,7 @@ use App\Services\Consent\CookieConsent;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
 use App\Services\Navigation\PublicNavigation;
+use App\Services\Newsletter\NewsletterSignup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -95,6 +96,7 @@ class HandleInertiaRequests extends Middleware
             ...$this->publicNavigation($i18n['area'], $i18n['locale']),
             ...$this->cookieConsent($request, $i18n['area'], $i18n['locale']),
             ...$this->designSystemShowcase($i18n['area']),
+            ...($i18n['area'] === 'public' && NewsletterSignup::isEnabled() ? ['newsletter' => true] : []),
             ...(config('demo.enabled') ? ['demo' => true] : []),
         ];
     }

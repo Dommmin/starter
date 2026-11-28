@@ -11,6 +11,7 @@ use App\Models\ArticleTranslation;
 use App\Models\Tag;
 use App\Models\User;
 use App\Services\Content\ArticleSlugRedirects;
+use App\Services\Content\ContentSnapshots;
 use App\Services\Content\RichTextRenderer;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -43,6 +44,7 @@ class UpdateArticle
         private readonly RichTextRenderer $richText,
         private readonly ArticleSlugRedirects $redirects,
         private readonly RecordAuditEvent $audit,
+        private readonly ContentSnapshots $snapshots,
     ) {}
 
     /**
@@ -70,6 +72,8 @@ class UpdateArticle
                     'conflict' => __('admin.articles.conflict'),
                 ]);
             }
+
+            $this->snapshots->record($locked, $actor->id);
 
             $existing = $locked->translations()->get()->keyBy('locale');
 

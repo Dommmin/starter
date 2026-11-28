@@ -15,6 +15,8 @@ enum AuditAction: string
     case PageRestored = 'page.restored';
     case PagePurged = 'page.purged';
     case PageDuplicated = 'page.duplicated';
+    case PageRevisionRestored = 'page.revision_restored';
+    case PagePreviewShared = 'page.preview_shared';
     case ArticleCreated = 'article.created';
     case ArticleUpdated = 'article.updated';
     case ArticlePublished = 'article.published';
@@ -23,6 +25,8 @@ enum AuditAction: string
     case ArticleRestored = 'article.restored';
     case ArticlePurged = 'article.purged';
     case ArticleDuplicated = 'article.duplicated';
+    case ArticleRevisionRestored = 'article.revision_restored';
+    case ArticlePreviewShared = 'article.preview_shared';
     case UserCreated = 'user.created';
     case UserUpdated = 'user.updated';
     case UserRoleChanged = 'user.role_changed';
@@ -56,6 +60,9 @@ enum AuditAction: string
     case FaqsReordered = 'faq.reordered';
     case AssistantSuggested = 'assistant.suggested';
     case AiSettingsUpdated = 'ai_settings.updated';
+    case ContentBlockCreated = 'content_block.created';
+    case ContentBlockUpdated = 'content_block.updated';
+    case ContentBlockDeleted = 'content_block.deleted';
 
     /**
      * @return list<string>

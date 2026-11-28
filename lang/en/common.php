@@ -35,6 +35,23 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => ':label submenu',
     ],
+    'newsletter' => [
+        'title' => 'Newsletter',
+        'email' => 'E-mail address',
+        'consent' => 'I want to receive the newsletter and know I can unsubscribe at any time.',
+        'privacy' => 'Privacy policy',
+        'submit' => 'Subscribe',
+        'done' => 'Thank you. Check your inbox for a confirmation request.',
+    ],
+
+    'booking' => [
+        'title' => 'Book an appointment',
+        'notice' => 'The calendar comes from :provider. Once loaded, the provider receives your connection data and may set cookies.',
+        'load' => 'Load the calendar',
+        'openDirectly' => 'Open the calendar on :provider',
+        'frameTitle' => 'Booking calendar',
+    ],
+
     'announcement' => [
         'label' => 'Announcement',
     ],

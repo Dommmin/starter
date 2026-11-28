@@ -7,6 +7,7 @@ import { CookieConsent, useCookieConsent } from './cookie-consent';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
 import { groupOpeningHours } from './opening-hours';
 import type { NavItem } from './nav-item';
+import { NewsletterSignup } from './newsletter-signup';
 import { PublicHeader } from './public-header';
 import { useSiteBrand } from './site-brand';
 import { ThemeSwitcher } from './theme-switcher';
@@ -67,7 +68,13 @@ export function PublicChrome({
     children,
 }: PublicChromeProps) {
     const { t } = useTranslation();
-    const { auth, navigation, consent, site: sharedSite } = usePage().props;
+    const {
+        auth,
+        navigation,
+        consent,
+        i18n,
+        site: sharedSite,
+    } = usePage().props;
     const site = sharedSite as App.Data.Settings.SiteSettingsData | undefined;
     const cookieConsent = useCookieConsent(consent);
 
@@ -137,6 +144,15 @@ export function PublicChrome({
             <main id="main-content" className="flex-1">
                 {children}
             </main>
+
+            <NewsletterSignup
+                privacyUrl={consent?.policyUrl}
+                localePrefix={
+                    i18n && i18n.locale !== i18n.defaultLocale
+                        ? i18n.locale
+                        : null
+                }
+            />
 
             <Footer
                 copyright={copyright}

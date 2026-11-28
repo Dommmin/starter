@@ -974,6 +974,12 @@ return [
         'purged' => 'Usunięto na stałe.',
     ],
 
+    'contentExport' => [
+        'title' => 'Eksport treści',
+        'description' => 'Strony, artykuły, tagi, FAQ, bloki, menu, przekierowania i opisy mediów w pliku JSON. To nie jest kopia zapasowa: nie zawiera plików, ustawień ani kont, a panel go nie importuje.',
+        'download' => 'Pobierz plik JSON',
+    ],
+
     'quality' => [
         'title' => 'Jakość treści',
         'navLabel' => 'Jakość treści',

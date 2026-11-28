@@ -974,6 +974,12 @@ return [
         'purged' => 'Endgültig gelöscht.',
     ],
 
+    'contentExport' => [
+        'title' => 'Inhaltsexport',
+        'description' => 'Seiten, Artikel, Tags, FAQ, Blöcke, Menüs, Weiterleitungen und Medienbeschreibungen als JSON-Datei. Das ist keine Sicherung: ohne Dateien, Einstellungen und Konten, und das Panel kann sie nicht importieren.',
+        'download' => 'JSON-Datei herunterladen',
+    ],
+
     'quality' => [
         'title' => 'Inhaltsqualität',
         'navLabel' => 'Inhaltsqualität',

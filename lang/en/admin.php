@@ -974,6 +974,12 @@ return [
         'purged' => 'Deleted for good.',
     ],
 
+    'contentExport' => [
+        'title' => 'Content export',
+        'description' => 'Pages, articles, tags, FAQ, blocks, menus, redirects and media descriptions as a JSON file. This is not a backup: it has no files, settings or accounts, and the panel cannot import it.',
+        'download' => 'Download JSON file',
+    ],
+
     'quality' => [
         'title' => 'Content quality',
         'navLabel' => 'Content quality',

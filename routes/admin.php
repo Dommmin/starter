@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ContactForms\ContactFormController;
 use App\Http\Controllers\Admin\Content\ContentPreviewController;
 use App\Http\Controllers\Admin\Content\ContentPreviewLinkController;
 use App\Http\Controllers\Admin\Content\ContentRevisionController;
+use App\Http\Controllers\Admin\ContentExportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
@@ -80,6 +81,10 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')
             ->can('view', SiteSetting::class);
+        Route::get('/system/export', ContentExportController::class)
+            ->name('system.export')
+            ->can('update', SiteSetting::class)
+            ->middleware(['password.confirm', 'throttle:5,1']);
         Route::put('/system/publication', [SitePublicationController::class, 'update'])
             ->name('system.publication.update')
             ->can('update', SiteSetting::class);

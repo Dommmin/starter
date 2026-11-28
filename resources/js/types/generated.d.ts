@@ -693,6 +693,14 @@ declare namespace App {
                     updatedAt: string | null;
                 };
             }
+            namespace Revisions {
+                export type RevisionListItemData = {
+                    id: number;
+                    createdAt: string;
+                    authorName: string | null;
+                    titles: string[];
+                };
+            }
             namespace SavedViews {
                 export type SavedListViewData = {
                     id: number;
@@ -1341,6 +1349,7 @@ declare namespace App {
             | 'page.restored'
             | 'page.purged'
             | 'page.duplicated'
+            | 'page.revision_restored'
             | 'article.created'
             | 'article.updated'
             | 'article.published'
@@ -1349,6 +1358,7 @@ declare namespace App {
             | 'article.restored'
             | 'article.purged'
             | 'article.duplicated'
+            | 'article.revision_restored'
             | 'user.created'
             | 'user.updated'
             | 'user.role_changed'

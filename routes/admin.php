@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\ContactForms\ContactFormController;
 use App\Http\Controllers\Admin\Content\ContentPreviewController;
+use App\Http\Controllers\Admin\Content\ContentRevisionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
@@ -167,6 +168,10 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->whereNumber('pageSection')
             ->name('pages.sections.destroy')
             ->can('update', 'page');
+        Route::post('/pages/{page}/revisions/{revision}/restore', [ContentRevisionController::class, 'page'])
+            ->whereNumber('revision')
+            ->name('pages.revisions.restore')
+            ->can('update', 'page');
         Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
             ->name('pages.duplicate')
             ->can('duplicate', 'page');
@@ -193,6 +198,10 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])
             ->name('articles.destroy')
             ->can('delete', 'article');
+        Route::post('/articles/{article}/revisions/{revision}/restore', [ContentRevisionController::class, 'article'])
+            ->whereNumber('revision')
+            ->name('articles.revisions.restore')
+            ->can('update', 'article');
         Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])
             ->name('articles.duplicate')
             ->can('duplicate', 'article');

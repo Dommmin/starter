@@ -775,6 +775,7 @@ return [
                 'restored' => 'Przywrócono stronę z kosza',
                 'purged' => 'Usunięto stronę z kosza na stałe',
                 'duplicated' => 'Utworzono kopię strony',
+                'revision_restored' => 'Przywrócono wersję strony',
             ],
             'article' => [
                 'created' => 'Utworzono artykuł',
@@ -785,6 +786,7 @@ return [
                 'restored' => 'Przywrócono artykuł z kosza',
                 'purged' => 'Usunięto artykuł z kosza na stałe',
                 'duplicated' => 'Utworzono kopię artykułu',
+                'revision_restored' => 'Przywrócono wersję artykułu',
             ],
             'user' => [
                 'role_changed' => 'Zmieniono rolę użytkownika',
@@ -945,6 +947,18 @@ return [
         'cancel' => 'Anuluj',
         'restored' => 'Przywrócono z kosza.',
         'purged' => 'Usunięto na stałe.',
+    ],
+
+    'revisions' => [
+        'title' => 'Wcześniejsze wersje',
+        'empty' => 'Nie ma jeszcze wcześniejszych wersji. Pojawią się po następnej zmianie.',
+        'entry' => 'Stan przed zmianą: :author',
+        'restore' => 'Przywróć',
+        'confirmTitle' => 'Przywrócić tę wersję?',
+        'confirmDescription' => 'Wrócą tytuły, opisy i treść (na stronach także układ i sekcje). Adresy i status publikacji się nie zmienią. Niezapisane zmiany w formularzu przepadną. Obecną treść można potem przywrócić z tej listy.',
+        'confirm' => 'Przywróć wersję',
+        'restored' => 'Przywrócono wcześniejszą wersję.',
+        'limit' => 'Przechowujemy :limit ostatnich wersji.',
     ],
 
     'history' => [

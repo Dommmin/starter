@@ -9,6 +9,7 @@ use App\Enums\PublicationStatus;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\User;
+use App\Services\Content\ContentSnapshots;
 use App\Services\Content\PageSlugRedirects;
 use App\Services\Content\RichTextRenderer;
 use Illuminate\Support\Carbon;
@@ -39,6 +40,7 @@ class UpdatePage
         private readonly RichTextRenderer $richText,
         private readonly PageSlugRedirects $redirects,
         private readonly RecordAuditEvent $audit,
+        private readonly ContentSnapshots $snapshots,
     ) {}
 
     /**
@@ -58,6 +60,8 @@ class UpdatePage
                     'conflict' => __('admin.pages.conflict'),
                 ]);
             }
+
+            $this->snapshots->record($locked, $actor->id);
 
             $existing = $locked->translations()->get()->keyBy('locale');
 

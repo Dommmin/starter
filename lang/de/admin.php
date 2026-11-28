@@ -775,6 +775,7 @@ return [
                 'restored' => 'Seite aus dem Papierkorb wiederhergestellt',
                 'purged' => 'Seite endgültig aus dem Papierkorb entfernt',
                 'duplicated' => 'Seite dupliziert',
+                'revision_restored' => 'Seitenversion wiederhergestellt',
             ],
             'article' => [
                 'created' => 'Artikel erstellt',
@@ -785,6 +786,7 @@ return [
                 'restored' => 'Artikel aus dem Papierkorb wiederhergestellt',
                 'purged' => 'Artikel endgültig aus dem Papierkorb entfernt',
                 'duplicated' => 'Artikel dupliziert',
+                'revision_restored' => 'Artikelversion wiederhergestellt',
             ],
             'user' => [
                 'role_changed' => 'Benutzerrolle geändert',
@@ -945,6 +947,18 @@ return [
         'cancel' => 'Abbrechen',
         'restored' => 'Aus dem Papierkorb wiederhergestellt.',
         'purged' => 'Endgültig gelöscht.',
+    ],
+
+    'revisions' => [
+        'title' => 'Frühere Versionen',
+        'empty' => 'Noch keine früheren Versionen. Sie erscheinen nach der nächsten Änderung.',
+        'entry' => 'Inhalt vor der Änderung durch :author',
+        'restore' => 'Wiederherstellen',
+        'confirmTitle' => 'Diese Version wiederherstellen?',
+        'confirmDescription' => 'Titel, Beschreibungen und Inhalt kehren zurück (bei Seiten auch Layout und Abschnitte). Adressen und Veröffentlichungsstatus bleiben. Nicht gespeicherte Änderungen im Formular gehen verloren. Der aktuelle Inhalt lässt sich über diese Liste zurückholen.',
+        'confirm' => 'Version wiederherstellen',
+        'restored' => 'Die frühere Version wurde wiederhergestellt.',
+        'limit' => 'Die :limit neuesten Versionen werden aufbewahrt.',
     ],
 
     'history' => [

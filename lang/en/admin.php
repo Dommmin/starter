@@ -775,6 +775,7 @@ return [
                 'restored' => 'Page restored from the trash',
                 'purged' => 'Page removed from the trash for good',
                 'duplicated' => 'Page duplicated',
+                'revision_restored' => 'Restored a page version',
             ],
             'article' => [
                 'created' => 'Article created',
@@ -785,6 +786,7 @@ return [
                 'restored' => 'Article restored from the trash',
                 'purged' => 'Article removed from the trash for good',
                 'duplicated' => 'Article duplicated',
+                'revision_restored' => 'Restored an article version',
             ],
             'user' => [
                 'role_changed' => 'User role changed',
@@ -945,6 +947,18 @@ return [
         'cancel' => 'Cancel',
         'restored' => 'Restored from the trash.',
         'purged' => 'Deleted for good.',
+    ],
+
+    'revisions' => [
+        'title' => 'Earlier versions',
+        'empty' => 'No earlier versions yet. They appear after the next change.',
+        'entry' => 'Content before the change by :author',
+        'restore' => 'Restore',
+        'confirmTitle' => 'Restore this version?',
+        'confirmDescription' => 'Titles, descriptions and body come back (on pages also the layout and sections). Addresses and publication status stay. Unsaved changes in the form are lost. You can bring the current content back from this list.',
+        'confirm' => 'Restore version',
+        'restored' => 'The earlier version was restored.',
+        'limit' => 'The :limit newest versions are kept.',
     ],
 
     'history' => [

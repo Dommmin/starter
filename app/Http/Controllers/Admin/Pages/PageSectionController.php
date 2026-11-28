@@ -21,6 +21,7 @@ use App\Models\Page;
 use App\Models\PageSection;
 use App\Repositories\Contact\ContactFormRepository;
 use App\Repositories\Content\PageRepository;
+use App\Services\Content\ContentSnapshots;
 use App\Services\Home\HomeLinkResolver;
 use App\Services\Localization\LocalizationConfig;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +42,7 @@ class PageSectionController extends Controller
         private readonly PageRepository $pages,
         private readonly HomeLinkResolver $links,
         private readonly LocalizationConfig $localization,
+        private readonly ContentSnapshots $snapshots,
     ) {}
 
     public function index(Request $request, Page $page): Response
@@ -81,6 +83,8 @@ class PageSectionController extends Controller
         $type = HomeSectionType::from((string) $validated['type']);
 
         $nextPosition = ((int) $page->sections()->where('locale', $locale)->max('position')) + 1;
+
+        $this->snapshots->record($page, $request->user()?->id);
 
         $section = $page->sections()->create([
             'locale' => $locale,
@@ -149,7 +153,9 @@ class PageSectionController extends Controller
         $content = $pageSection->type->contentClass()::from($contentInput);
         $expectedUpdatedAt = (string) $validated['updated_at'];
 
-        DB::transaction(function () use ($pageSection, $content, $expectedUpdatedAt): void {
+        $authorId = $request->user()?->id;
+
+        DB::transaction(function () use ($page, $pageSection, $content, $expectedUpdatedAt, $authorId): void {
             $locked = PageSection::query()->whereKey($pageSection->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->updated_at?->getTimestamp() !== Carbon::parse($expectedUpdatedAt)->getTimestamp()) {
@@ -157,6 +163,8 @@ class PageSectionController extends Controller
                     'conflict' => __('admin.homeSections.conflict'),
                 ]);
             }
+
+            $this->snapshots->record($page, $authorId);
 
             $locked->forceFill([
                 'content' => $content,
@@ -175,6 +183,8 @@ class PageSectionController extends Controller
         $validated = $request->validate([
             'enabled' => ['required', 'boolean'],
         ]);
+
+        $this->snapshots->record($page, $request->user()?->id);
 
         $pageSection->update(['enabled' => (bool) $validated['enabled']]);
 
@@ -198,7 +208,11 @@ class PageSectionController extends Controller
         $order = array_values(array_map('intval', $validated['order']));
         $locale = (string) $validated['locale'];
 
-        DB::transaction(function () use ($page, $locale, $order): void {
+        $authorId = $request->user()?->id;
+
+        DB::transaction(function () use ($page, $locale, $order, $authorId): void {
+            $this->snapshots->record($page, $authorId);
+
             foreach ($order as $position => $sectionId) {
                 $page->sections()
                     ->where('id', $sectionId)
@@ -210,9 +224,11 @@ class PageSectionController extends Controller
         return back();
     }
 
-    public function destroy(Page $page, PageSection $pageSection): RedirectResponse
+    public function destroy(Request $request, Page $page, PageSection $pageSection): RedirectResponse
     {
         abort_if($pageSection->page_id !== $page->id, 404);
+
+        $this->snapshots->record($page, $request->user()?->id);
 
         $pageSection->delete();
 

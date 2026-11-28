@@ -20,6 +20,8 @@ return [
 
     /*
     | Per-feature switches, keyed by App\Enums\AssistantFeature values.
+    | `reply_draft` and `message_classification` send personal data and are
+    | off unless enabled.
     | `message_classification` sends the subject and body of contact messages
     | (personal data, sender details redacted) to the AI provider, so it is
     | off unless explicitly enabled (owner approval 2026-11-05).
@@ -32,7 +34,9 @@ return [
         'translation' => (bool) env('AI_FEATURE_TRANSLATION', true),
         'text_rewrite' => (bool) env('AI_FEATURE_TEXT_REWRITE', true),
         'faq_generator' => (bool) env('AI_FEATURE_FAQ_GENERATOR', true),
-        'reply_draft' => (bool) env('AI_FEATURE_REPLY_DRAFT', true),
+        // Sends the sender name and message body (personal data) to the AI
+        // provider when an admin asks for a draft, so it is opt-in.
+        'reply_draft' => (bool) env('AI_FEATURE_REPLY_DRAFT', false),
         'message_classification' => (bool) env('AI_FEATURE_MESSAGE_CLASSIFICATION', false),
     ],
 

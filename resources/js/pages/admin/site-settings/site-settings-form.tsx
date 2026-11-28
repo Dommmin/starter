@@ -46,6 +46,7 @@ const ACCENTS: App.Enums.AccentColor[] = [
 const TYPOGRAPHY_PRESETS: App.Enums.TypographyPreset[] = ['default', 'classic'];
 const THEMES: App.Enums.ThemePreference[] = ['system', 'light', 'dark'];
 const ANNOUNCEMENT_TONES: App.Enums.AnnouncementTone[] = ['info', 'warning'];
+const ANNOUNCEMENT_DISPLAYS: App.Enums.AnnouncementDisplay[] = ['bar', 'popup'];
 
 /** Request keys of the settings shared by every language. */
 const SHARED_FIELDS = [
@@ -67,7 +68,13 @@ const SHARED_FIELDS = [
     'map_url',
     'google_site_verification',
     'plausible_domain',
+    'ga4_id',
+    'gtm_id',
+    'meta_pixel_id',
+    'chat_provider',
+    'chat_widget_id',
     'announcement_tone',
+    'announcement_display',
     'announcement_link_url',
     'announcement_starts_on',
     'announcement_ends_on',
@@ -197,6 +204,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         map_url: settings.mapUrl ?? '',
         google_site_verification: settings.googleSiteVerification ?? '',
         plausible_domain: settings.plausibleDomain ?? '',
+        ga4_id: settings.ga4Id ?? '',
+        gtm_id: settings.gtmId ?? '',
+        meta_pixel_id: settings.metaPixelId ?? '',
+        chat_provider: settings.chatProvider ?? '',
+        chat_widget_id: settings.chatWidgetId ?? '',
         opening_hours: { ...settings.openingHours },
         contact_recipients: settings.contactRecipients.map((email) => ({
             email,
@@ -204,6 +216,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         contact_auto_reply: settings.contactAutoReply,
         announcement_enabled: settings.announcementEnabled,
         announcement_tone: settings.announcementTone,
+        announcement_display: settings.announcementDisplay,
         announcement_link_url: settings.announcementLinkUrl ?? '',
         announcement_starts_on: settings.announcementStartsOn ?? '',
         announcement_ends_on: settings.announcementEndsOn ?? '',
@@ -386,6 +399,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             plausible_domain: nullable(data.plausible_domain),
             announcement_enabled: data.announcement_enabled,
             announcement_tone: data.announcement_tone,
+            announcement_display: data.announcement_display,
             announcement_link_url: nullable(data.announcement_link_url),
             announcement_starts_on: nullable(data.announcement_starts_on),
             announcement_ends_on: nullable(data.announcement_ends_on),
@@ -688,6 +702,59 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                         ),
                         placeholder: 'example.com',
                     },
+                    {
+                        type: 'text',
+                        name: 'ga4_id',
+                        label: t('admin.siteSettings.fields.ga4Id'),
+                        hint: t('admin.siteSettings.fields.ga4IdHelp'),
+                        placeholder: 'G-XXXXXXXXXX',
+                    },
+                    {
+                        type: 'text',
+                        name: 'gtm_id',
+                        label: t('admin.siteSettings.fields.gtmId'),
+                        hint: t('admin.siteSettings.fields.gtmIdHelp'),
+                        placeholder: 'GTM-XXXXXXX',
+                    },
+                    {
+                        type: 'text',
+                        name: 'meta_pixel_id',
+                        label: t('admin.siteSettings.fields.metaPixelId'),
+                        hint: t('admin.siteSettings.fields.metaPixelIdHelp'),
+                        placeholder: '123456789012345',
+                    },
+                    {
+                        type: 'select',
+                        name: 'chat_provider',
+                        label: t('admin.siteSettings.fields.chatProvider'),
+                        hint: t('admin.siteSettings.fields.chatProviderHelp'),
+                        options: [
+                            {
+                                value: '',
+                                label: t(
+                                    'admin.siteSettings.fields.chatProviderNone',
+                                ),
+                            },
+                            {
+                                value: 'crisp',
+                                label: t(
+                                    'admin.siteSettings.fields.chatProviderCrisp',
+                                ),
+                            },
+                            {
+                                value: 'tawk',
+                                label: t(
+                                    'admin.siteSettings.fields.chatProviderTawk',
+                                ),
+                            },
+                        ],
+                    },
+                    {
+                        type: 'text',
+                        name: 'chat_widget_id',
+                        label: t('admin.siteSettings.fields.chatWidgetId'),
+                        hint: t('admin.siteSettings.fields.chatWidgetIdHelp'),
+                    },
                 ],
             },
             {
@@ -757,6 +824,23 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                             value: tone,
                             label: t(
                                 `admin.siteSettings.announcementTones.${tone}`,
+                            ),
+                        })),
+                    },
+                    {
+                        type: 'select',
+                        name: 'announcement_display',
+                        label: t(
+                            'admin.siteSettings.fields.announcementDisplay',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementDisplayHelp',
+                        ),
+                        required: true,
+                        options: ANNOUNCEMENT_DISPLAYS.map((display) => ({
+                            value: display,
+                            label: t(
+                                `admin.siteSettings.announcementDisplays.${display}`,
                             ),
                         })),
                     },

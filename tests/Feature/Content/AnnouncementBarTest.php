@@ -37,6 +37,7 @@ test('public pages share the announcement in the visitor language', function (st
         ->assertInertia(fn (Assert $inertia) => $inertia->where('site.announcement', [
             'message' => $message,
             'tone' => 'warning',
+            'display' => 'bar',
             'linkUrl' => '/contact',
             'linkLabel' => $label,
         ]));

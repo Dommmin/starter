@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Pages;
 use App\Data\Content\PageTranslationInputData;
 use App\Models\Page;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePageRequest extends FormRequest
 {
@@ -37,8 +38,16 @@ class UpdatePageRequest extends FormRequest
 
         return [
             'updated_at' => ['required', 'string', 'date'],
+            'layout_mode' => ['nullable', 'string', Rule::in(['rich_text', 'sections'])],
             ...$this->translationRules()->rules($this, $page->id),
         ];
+    }
+
+    public function layoutMode(): ?string
+    {
+        $mode = $this->validated('layout_mode');
+
+        return is_string($mode) ? $mode : null;
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Enums\ContactFieldType;
 use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
 use App\Enums\ContactWebhookStatus;
+use App\Enums\LeadStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\ContactMessageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $message
  * @property string $locale
  * @property ContactMessageStatus $status
+ * @property LeadStatus $lead_status
+ * @property string|null $internal_notes
  * @property int $attempts
  * @property string|null $last_error
  * @property CarbonImmutable|null $sent_at
@@ -38,7 +41,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
-#[Fillable(['name', 'email', 'message', 'locale', 'status', 'attempts', 'last_error', 'sent_at', 'webhook_status', 'contact_form_id', 'fields'])]
+#[Fillable(['name', 'email', 'message', 'locale', 'status', 'lead_status', 'internal_notes', 'attempts', 'last_error', 'sent_at', 'webhook_status', 'contact_form_id', 'fields'])]
 class ContactMessage extends Model
 {
     /** @use HasFactory<ContactMessageFactory> */
@@ -49,6 +52,7 @@ class ContactMessage extends Model
      */
     protected $attributes = [
         'status' => 'pending',
+        'lead_status' => 'new',
         'attempts' => 0,
         'webhook_attempts' => 0,
     ];
@@ -62,6 +66,7 @@ class ContactMessage extends Model
     {
         return [
             'status' => ContactMessageStatus::class,
+            'lead_status' => LeadStatus::class,
             'attempts' => 'integer',
             'sent_at' => 'datetime',
             'webhook_status' => ContactWebhookStatus::class,

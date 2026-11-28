@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Admin\SearchAdminRecords;
 use App\Contracts\Search\AdminSearchSource;
+use App\Enums\Module;
 use App\Repositories\Content\ArticleRepository;
 use App\Repositories\Content\FaqRepository;
 use App\Repositories\Content\PageRepository;
@@ -34,7 +35,11 @@ class AdminSearchServiceProvider extends ServiceProvider
         ], AdminSearchSource::class);
 
         $this->app->bind(SearchAdminRecords::class, fn (Application $app): SearchAdminRecords => new SearchAdminRecords(
-            $app->tagged(AdminSearchSource::class),
+            // Filtered on every resolve, because the config can differ per deployment.
+            array_values(array_filter(
+                iterator_to_array($app->tagged(AdminSearchSource::class)),
+                static fn (AdminSearchSource $source): bool => ! $source instanceof FaqRepository || Module::Faq->isEnabled(),
+            )),
         ));
     }
 }

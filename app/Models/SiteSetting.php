@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\JsonArray;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -47,12 +48,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property list<array{day: string, opens: string|null, closes: string|null}>|null $opening_hours One row per Weekday; both times null = closed.
  * @property string|null $google_site_verification
  * @property string|null $plausible_domain Null: `PLAUSIBLE_DOMAIN` applies.
+ * @property string|null $ga4_id
+ * @property string|null $gtm_id
+ * @property string|null $meta_pixel_id
+ * @property string|null $chat_provider
+ * @property string|null $chat_widget_id
  * @property bool $coming_soon
  * @property bool $noindex
  * @property bool $maintenance
  * @property CarbonImmutable|null $maintenance_until Planned end of the works; null = not given.
  * @property bool $announcement_enabled
  * @property AnnouncementTone $announcement_tone
+ * @property AnnouncementDisplay $announcement_display
  * @property string|null $announcement_link_url Relative path or http(s) URL.
  * @property CarbonImmutable|null $announcement_starts_at Null = shown right away.
  * @property CarbonImmutable|null $announcement_ends_at Last moment shown; null = no end.
@@ -106,12 +113,18 @@ class SiteSetting extends Model
             'opening_hours' => JsonArray::class,
             'google_site_verification' => 'string',
             'plausible_domain' => 'string',
+            'ga4_id' => 'string',
+            'gtm_id' => 'string',
+            'meta_pixel_id' => 'string',
+            'chat_provider' => 'string',
+            'chat_widget_id' => 'string',
             'coming_soon' => 'boolean',
             'noindex' => 'boolean',
             'maintenance' => 'boolean',
             'maintenance_until' => 'datetime',
             'announcement_enabled' => 'boolean',
             'announcement_tone' => AnnouncementTone::class,
+            'announcement_display' => AnnouncementDisplay::class,
             'announcement_link_url' => 'string',
             'announcement_starts_at' => 'datetime',
             'announcement_ends_at' => 'datetime',

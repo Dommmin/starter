@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Repositories\Settings\SiteSettingsRepository;
+use App\Services\Booking\BookingProvider;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -59,6 +60,13 @@ class SetContentSecurityPolicy
             'form-action' => ["'self'"],
         ];
 
+        // Without frame-src the default ('self') applies; the booking
+        // calendar is the only extra frame.
+        $booking = BookingProvider::origin();
+        if ($booking !== null) {
+            $directives['frame-src'] = ["'self'", $booking];
+        }
+
         $reportUri = config('csp.report_uri');
         if (is_string($reportUri) && $reportUri !== '') {
             $directives['report-uri'] = [$reportUri];
@@ -90,18 +98,37 @@ class SetContentSecurityPolicy
      */
     protected function plausibleOrigins(): array
     {
+        $origins = [];
         $scriptUrl = $this->settings->plausible()?->scriptUrl;
 
-        if ($scriptUrl === null) {
-            return [];
+        if ($scriptUrl !== null) {
+            $host = parse_url($scriptUrl, PHP_URL_HOST);
+            $port = parse_url($scriptUrl, PHP_URL_PORT);
+
+            if (is_string($host) && $host !== '') {
+                $origins[] = 'https://'.$host.(is_int($port) ? ':'.$port : '');
+            }
         }
 
-        $host = parse_url($scriptUrl, PHP_URL_HOST);
-        $port = parse_url($scriptUrl, PHP_URL_PORT);
+        $integrations = $this->settings->marketingIntegrations();
+        if ($integrations !== null) {
+            if ($integrations->ga4Id !== null || $integrations->gtmId !== null) {
+                $origins[] = 'https://www.googletagmanager.com';
+                $origins[] = 'https://www.google-analytics.com';
+            }
+            if ($integrations->metaPixelId !== null) {
+                $origins[] = 'https://connect.facebook.net';
+                $origins[] = 'https://www.facebook.com';
+            }
+            if ($integrations->chatProvider === 'crisp' && $integrations->chatWidgetId !== null) {
+                $origins[] = 'https://client.crisp.chat';
+            }
+            if ($integrations->chatProvider === 'tawk' && $integrations->chatWidgetId !== null) {
+                $origins[] = 'https://embed.tawk.to';
+            }
+        }
 
-        return is_string($host) && $host !== ''
-            ? ['https://'.$host.(is_int($port) ? ':'.$port : '')]
-            : [];
+        return array_values(array_unique($origins));
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Actions\Import\ImportCsv;
 use App\Contracts\Import\ImportDefinition;
 use App\Data\Admin\Import\ImportPreviewData;
 use App\Data\Admin\Import\ImportScreenData;
+use App\Enums\Module;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Import\CommitImportRequest;
 use App\Http\Requests\Admin\Import\PreviewImportRequest;
@@ -51,7 +52,7 @@ class ImportController extends Controller
     private function definition(string $module): ImportDefinition
     {
         $definition = ImportDefinitions::find($module);
-        abort_if($definition === null, 404);
+        abort_if($definition === null || ($definition->key() === 'faqs' && ! Module::Faq->isEnabled()), 404);
         Gate::authorize('import', $definition->model());
 
         return $definition;

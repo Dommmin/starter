@@ -33,6 +33,22 @@ enum HomeSectionType: string
     case Pricing = 'pricing';
 
     /**
+     * False when the module that provides the content is turned off.
+     */
+    public function isAvailable(): bool
+    {
+        return $this !== self::Faq || Module::Faq->isEnabled();
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function available(): array
+    {
+        return array_values(array_filter(self::cases(), static fn (self $type): bool => $type->isAvailable()));
+    }
+
+    /**
      * Stable anchor id of the rendered section (navigation contract).
      */
     public function anchor(): HomeSectionAnchor

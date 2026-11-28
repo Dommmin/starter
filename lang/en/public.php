@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'newsletter' => [
+        'success' => 'Thank you. Check your inbox.',
+        'unavailable' => 'The sign-up did not work right now. Please try again later.',
+    ],
+
     'landing' => [
         'badge' => 'Design studio',
         'heroTitle' => 'Websites and apps that work for your business',

@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'newsletter' => [
+        'success' => 'Dziękujemy. Sprawdź skrzynkę.',
+        'unavailable' => 'Nie udało się teraz zapisać. Spróbuj ponownie później.',
+    ],
+
     'landing' => [
         'badge' => 'Studio projektowe',
         'heroTitle' => 'Strony i aplikacje, które pracują dla Twojej firmy',

@@ -6,6 +6,7 @@ use App\Data\Consent\ConsentData;
 use App\Data\Navigation\NavigationData;
 use App\Data\Seo\SeoDefaultsData;
 use App\Data\Seo\SeoOrganizationData;
+use App\Enums\Module;
 use App\Models\AuditLog;
 use App\Models\ContactMessage;
 use App\Models\Page;
@@ -17,6 +18,7 @@ use App\Services\Consent\CookieConsent;
 use App\Services\Localization\LocalizationManager;
 use App\Services\Localization\LocalizedUrlGenerator;
 use App\Services\Navigation\PublicNavigation;
+use App\Services\Newsletter\NewsletterSignup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -95,6 +97,8 @@ class HandleInertiaRequests extends Middleware
             ...$this->publicNavigation($i18n['area'], $i18n['locale']),
             ...$this->cookieConsent($request, $i18n['area'], $i18n['locale']),
             ...$this->designSystemShowcase($i18n['area']),
+            ...($i18n['area'] === 'public' && NewsletterSignup::isEnabled() ? ['newsletter' => true] : []),
+            ...($i18n['area'] === 'admin' && Module::disabled() !== [] ? ['disabledModules' => Module::disabled()] : []),
             ...(config('demo.enabled') ? ['demo' => true] : []),
         ];
     }

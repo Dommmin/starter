@@ -4,6 +4,7 @@ namespace App\Data\Admin\Settings;
 
 use App\Data\Settings\OpeningHoursDayData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
@@ -62,9 +63,15 @@ class SiteSettingsFormData extends Data
         public bool $contactAutoReply,
         public bool $announcementEnabled,
         public AnnouncementTone $announcementTone,
+        public AnnouncementDisplay $announcementDisplay,
         public ?string $announcementLinkUrl,
         public ?string $announcementStartsOn,
         public ?string $announcementEndsOn,
+        public ?string $ga4Id = null,
+        public ?string $gtmId = null,
+        public ?string $metaPixelId = null,
+        public ?string $chatProvider = null,
+        public ?string $chatWidgetId = null,
     ) {}
 
     /**
@@ -108,6 +115,7 @@ class SiteSettingsFormData extends Data
             contactAutoReply: false,
             announcementEnabled: false,
             announcementTone: AnnouncementTone::Info,
+            announcementDisplay: AnnouncementDisplay::Bar,
             announcementLinkUrl: null,
             announcementStartsOn: null,
             announcementEndsOn: null,
@@ -160,9 +168,15 @@ class SiteSettingsFormData extends Data
             contactAutoReply: $settings->contact_auto_reply,
             announcementEnabled: $settings->announcement_enabled,
             announcementTone: $settings->announcement_tone,
+            announcementDisplay: $settings->announcement_display,
             announcementLinkUrl: $settings->announcement_link_url,
             announcementStartsOn: $settings->announcement_starts_at?->toDateString(),
             announcementEndsOn: $settings->announcement_ends_at?->toDateString(),
+            ga4Id: $settings->ga4_id,
+            gtmId: $settings->gtm_id,
+            metaPixelId: $settings->meta_pixel_id,
+            chatProvider: $settings->chat_provider,
+            chatWidgetId: $settings->chat_widget_id,
         );
     }
 

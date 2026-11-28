@@ -24,6 +24,10 @@ declare module '@inertiajs/core' {
             consent?: App.Data.Consent.ConsentData;
             /** Admin area in the local environment only (design-system showcase). */
             designSystemUrl?: string;
+            /** Public area with a configured provider: show the sign-up form. */
+            newsletter?: boolean;
+            /** Admin area only, when config/modules.php turns something off. */
+            disabledModules?: string[];
             /** Present (true) only on the public demo. */
             demo?: boolean;
             [key: string]: unknown;

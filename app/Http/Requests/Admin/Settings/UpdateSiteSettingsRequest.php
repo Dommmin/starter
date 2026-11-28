@@ -6,6 +6,7 @@ use App\Data\Settings\OpeningHoursDayData;
 use App\Data\Settings\SiteSettingsInputData;
 use App\Data\Settings\SiteSettingTranslationInputData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\MediaStatus;
 use App\Enums\SocialNetwork;
@@ -108,12 +109,18 @@ class UpdateSiteSettingsRequest extends FormRequest
             'map_url' => ['nullable', 'string', 'max:500', $singleLine, 'starts_with:https://', 'url:https'],
             'google_site_verification' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9_\-]+$/'],
             'plausible_domain' => ['nullable', 'string', 'max:253', 'regex:'.self::HOSTNAME],
+            'ga4_id' => ['nullable', 'string', 'max:32', 'regex:/^G-[A-Z0-9]+$/i'],
+            'gtm_id' => ['nullable', 'string', 'max:32', 'regex:/^GTM-[A-Z0-9]+$/i'],
+            'meta_pixel_id' => ['nullable', 'string', 'max:32', 'regex:/^[0-9]{5,25}$/'],
+            'chat_provider' => ['nullable', 'string', Rule::in(['crisp', 'tawk'])],
+            'chat_widget_id' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9_\-\/]+$/'],
             'opening_hours' => ['nullable', 'array:'.implode(',', array_column(Weekday::cases(), 'value'))],
             'contact_recipients' => ['nullable', 'array', 'list', 'max:'.self::MAX_RECIPIENTS],
             'contact_recipients.*' => ['required', 'string', 'max:254', $singleLine, 'email:rfc,strict', 'distinct:ignore_case'],
             'contact_auto_reply' => ['required', 'boolean'],
             'announcement_enabled' => ['required', 'boolean'],
             'announcement_tone' => ['required', Rule::enum(AnnouncementTone::class)],
+            'announcement_display' => ['sometimes', 'required', Rule::enum(AnnouncementDisplay::class)],
             'announcement_link_url' => ['nullable', 'string', 'max:2048', $singleLine, 'regex:'.self::ANNOUNCEMENT_LINK],
             'announcement_starts_on' => ['nullable', 'date_format:Y-m-d'],
             'announcement_ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:announcement_starts_on'],
@@ -234,6 +241,11 @@ class UpdateSiteSettingsRequest extends FormRequest
             openingHours: self::openingHours($validated['opening_hours'] ?? null),
             googleSiteVerification: self::text($validated['google_site_verification'] ?? null),
             plausibleDomain: self::hostname($validated['plausible_domain'] ?? null),
+            ga4Id: self::text($validated['ga4_id'] ?? null),
+            gtmId: self::text($validated['gtm_id'] ?? null),
+            metaPixelId: self::text($validated['meta_pixel_id'] ?? null),
+            chatProvider: self::text($validated['chat_provider'] ?? null),
+            chatWidgetId: self::text($validated['chat_widget_id'] ?? null),
             contactRecipients: array_values(array_map(
                 fn (mixed $email): string => trim((string) $email),
                 (array) ($validated['contact_recipients'] ?? []),
@@ -241,6 +253,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             contactAutoReply: (bool) $validated['contact_auto_reply'],
             announcementEnabled: (bool) $validated['announcement_enabled'],
             announcementTone: AnnouncementTone::from((string) $validated['announcement_tone']),
+            announcementDisplay: AnnouncementDisplay::tryFrom((string) ($validated['announcement_display'] ?? '')) ?? AnnouncementDisplay::Bar,
             announcementLinkUrl: self::text($validated['announcement_link_url'] ?? null),
             announcementStartsAt: isset($validated['announcement_starts_on'])
                 ? CarbonImmutable::createFromFormat('!Y-m-d', (string) $validated['announcement_starts_on'])?->startOfDay()

@@ -1,5 +1,7 @@
 import { ContentPreviewBar } from '@/components/content/content-preview-bar';
+import { HomeSections } from '@/components/home/home-sections';
 import {
+    BackToTop,
     Heading,
     PublicChrome,
     RichTextContent,
@@ -18,6 +20,9 @@ export default function PageShow({
     publishedAt,
     alternates,
     preview,
+    layoutMode,
+    sections,
+    contactForm,
 }: App.Data.Content.PublicPageData) {
     const { t, formatDate } = useTranslation();
     const canonical = alternates[locale];
@@ -47,25 +52,38 @@ export default function PageShow({
 
             <PublicChrome>
                 {preview && <ContentPreviewBar preview={preview} />}
-                <Section spacing="default" container="reading">
-                    <Stack gap="default">
-                        <Stack gap="tight">
-                            <Heading level={1} variant="page">
-                                {title}
-                            </Heading>
-                            {publishedAt ? (
-                                <Text variant="caption" tone="muted">
-                                    {t('page.publishedOn', {
-                                        date: formatDate(publishedAt, {
-                                            dateStyle: 'long',
-                                        }),
-                                    })}
-                                </Text>
-                            ) : null}
+                {layoutMode === 'sections' && sections !== null ? (
+                    <>
+                        <HomeSections
+                            sections={sections}
+                            contactForm={
+                                contactForm ?? { token: '', form: null }
+                            }
+                            fallbackTitle={title}
+                        />
+                        <BackToTop />
+                    </>
+                ) : (
+                    <Section spacing="default" container="reading">
+                        <Stack gap="default">
+                            <Stack gap="tight">
+                                <Heading level={1} variant="page">
+                                    {title}
+                                </Heading>
+                                {publishedAt ? (
+                                    <Text variant="caption" tone="muted">
+                                        {t('page.publishedOn', {
+                                            date: formatDate(publishedAt, {
+                                                dateStyle: 'long',
+                                            }),
+                                        })}
+                                    </Text>
+                                ) : null}
+                            </Stack>
+                            <RichTextContent html={bodyHtml} />
                         </Stack>
-                        <RichTextContent html={bodyHtml} />
-                    </Stack>
-                </Section>
+                    </Section>
+                )}
             </PublicChrome>
         </>
     );

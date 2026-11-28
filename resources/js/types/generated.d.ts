@@ -122,6 +122,8 @@ declare namespace App {
                 export type ContactMessageAbilitiesData = {
                     retry: boolean;
                     delete: boolean;
+                    update: boolean;
+                    suggestReply: boolean;
                 };
                 export type ContactMessageDetailData = {
                     id: number;
@@ -138,6 +140,8 @@ declare namespace App {
                     webhookAttempts: number;
                     formTitle: string | null;
                     extraFields: App.Data.Admin.Contact.ContactMessageExtraFieldData[];
+                    leadStatus: App.Enums.LeadStatus;
+                    internalNotes: string | null;
                 };
                 export type ContactMessageExtraFieldData = {
                     label: string;
@@ -170,6 +174,7 @@ declare namespace App {
                     attempts: number;
                     category: App.Enums.ContactMessageCategory | null;
                     createdAt: string | null;
+                    leadStatus: App.Enums.LeadStatus;
                 };
                 export type ContactMessageShowData = {
                     contactMessage: App.Data.Admin.Contact.ContactMessageDetailData;
@@ -587,6 +592,7 @@ declare namespace App {
                         string,
                         App.Data.Admin.Pages.PageTranslationFormData
                     >;
+                    layoutMode: string;
                 };
                 export type PageIndexData = {
                     items: App.Data.Admin.Pages.PageListItemData[];
@@ -611,6 +617,20 @@ declare namespace App {
                     locales: string[];
                     updatedAt: string | null;
                 };
+                export type PageSectionEditorData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    editor: App.Data.Admin.HomeSections.HomeSectionEditorData;
+                };
+                export type PageSectionsIndexData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    locale: string;
+                    locales: App.Data.Content.ContentLocalesData;
+                    items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
+                    availableTypes: string[];
+                    canUpdate: boolean;
+                };
                 export type PageTranslationFormData = {
                     title: string;
                     slug: string;
@@ -621,6 +641,17 @@ declare namespace App {
                 };
             }
             namespace Redirects {
+                export type NotFoundLogIndexData = {
+                    items: App.Data.Admin.Redirects.NotFoundLogItemData[];
+                    canCreateRedirect: boolean;
+                };
+                export type NotFoundLogItemData = {
+                    id: number;
+                    path: string;
+                    hits: number;
+                    lastReferer: string | null;
+                    lastSeenAt: string | null;
+                };
                 export type RedirectAbilitiesData = {
                     create: boolean;
                     delete: boolean;
@@ -660,6 +691,14 @@ declare namespace App {
                     lastHitAt: string | null;
                     createdAt: string | null;
                     updatedAt: string | null;
+                };
+            }
+            namespace Revisions {
+                export type RevisionListItemData = {
+                    id: number;
+                    createdAt: string;
+                    authorName: string | null;
+                    titles: string[];
                 };
             }
             namespace SavedViews {
@@ -747,6 +786,11 @@ declare namespace App {
                     announcementLinkUrl: string | null;
                     announcementStartsOn: string | null;
                     announcementEndsOn: string | null;
+                    ga4Id: string | null;
+                    gtmId: string | null;
+                    metaPixelId: string | null;
+                    chatProvider: string | null;
+                    chatWidgetId: string | null;
                 };
                 export type SocialNetworkOptionData = {
                     network: App.Enums.SocialNetwork;
@@ -841,6 +885,14 @@ declare namespace App {
                 granted: App.Enums.ConsentCategory[] | null;
                 policyUrl: string | null;
                 plausible: App.Data.Consent.PlausibleData | null;
+                integrations: App.Data.Consent.MarketingIntegrationsData | null;
+            };
+            export type MarketingIntegrationsData = {
+                ga4Id: string | null;
+                gtmId: string | null;
+                metaPixelId: string | null;
+                chatProvider: string | null;
+                chatWidgetId: string | null;
             };
             export type PlausibleData = {
                 domain: string;
@@ -932,6 +984,9 @@ declare namespace App {
                 publishedAt: string | null;
                 alternates: Record<string, string>;
                 preview: App.Data.Content.ContentPreviewData | null;
+                layoutMode: string;
+                sections: App.Data.Home.HomeSectionData[] | null;
+                contactForm: App.Data.Contact.ContactFormData | null;
             };
             export type PublicTagData = {
                 slug: string;
@@ -1283,7 +1338,8 @@ declare namespace App {
             | 'translation'
             | 'text_rewrite'
             | 'message_classification'
-            | 'faq_generator';
+            | 'faq_generator'
+            | 'reply_draft';
         export type AuditAction =
             | 'page.created'
             | 'page.updated'
@@ -1293,6 +1349,7 @@ declare namespace App {
             | 'page.restored'
             | 'page.purged'
             | 'page.duplicated'
+            | 'page.revision_restored'
             | 'article.created'
             | 'article.updated'
             | 'article.published'
@@ -1301,6 +1358,7 @@ declare namespace App {
             | 'article.restored'
             | 'article.purged'
             | 'article.duplicated'
+            | 'article.revision_restored'
             | 'user.created'
             | 'user.updated'
             | 'user.role_changed'
@@ -1394,6 +1452,7 @@ declare namespace App {
             | 'search_console'
             | 'analytics'
             | 'legal_pages';
+        export type LeadStatus = 'new' | 'in_progress' | 'replied' | 'archived';
         export type MaintenanceDuration =
             | 'unknown'
             | '15'

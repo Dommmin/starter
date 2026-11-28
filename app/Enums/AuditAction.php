@@ -15,6 +15,7 @@ enum AuditAction: string
     case PageRestored = 'page.restored';
     case PagePurged = 'page.purged';
     case PageDuplicated = 'page.duplicated';
+    case PageRevisionRestored = 'page.revision_restored';
     case ArticleCreated = 'article.created';
     case ArticleUpdated = 'article.updated';
     case ArticlePublished = 'article.published';
@@ -23,6 +24,7 @@ enum AuditAction: string
     case ArticleRestored = 'article.restored';
     case ArticlePurged = 'article.purged';
     case ArticleDuplicated = 'article.duplicated';
+    case ArticleRevisionRestored = 'article.revision_restored';
     case UserCreated = 'user.created';
     case UserUpdated = 'user.updated';
     case UserRoleChanged = 'user.role_changed';

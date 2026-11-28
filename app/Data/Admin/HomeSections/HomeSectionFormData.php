@@ -14,6 +14,7 @@ use App\Data\Home\TeamContentData;
 use App\Data\Home\TestimonialsContentData;
 use App\Enums\HomeSectionType;
 use App\Models\HomeSection;
+use App\Models\PageSection;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -61,7 +62,7 @@ class HomeSectionFormData extends Data
         public Data $content,
     ) {}
 
-    public static function fromModel(HomeSection $section): self
+    public static function fromModel(HomeSection|PageSection $section): self
     {
         return new self(
             id: $section->id,

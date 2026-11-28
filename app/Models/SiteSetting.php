@@ -47,6 +47,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property list<array{day: string, opens: string|null, closes: string|null}>|null $opening_hours One row per Weekday; both times null = closed.
  * @property string|null $google_site_verification
  * @property string|null $plausible_domain Null: `PLAUSIBLE_DOMAIN` applies.
+ * @property string|null $ga4_id
+ * @property string|null $gtm_id
+ * @property string|null $meta_pixel_id
+ * @property string|null $chat_provider
+ * @property string|null $chat_widget_id
  * @property bool $coming_soon
  * @property bool $noindex
  * @property bool $maintenance
@@ -106,6 +111,11 @@ class SiteSetting extends Model
             'opening_hours' => JsonArray::class,
             'google_site_verification' => 'string',
             'plausible_domain' => 'string',
+            'ga4_id' => 'string',
+            'gtm_id' => 'string',
+            'meta_pixel_id' => 'string',
+            'chat_provider' => 'string',
+            'chat_widget_id' => 'string',
             'coming_soon' => 'boolean',
             'noindex' => 'boolean',
             'maintenance' => 'boolean',

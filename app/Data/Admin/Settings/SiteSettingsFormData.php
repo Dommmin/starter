@@ -65,6 +65,11 @@ class SiteSettingsFormData extends Data
         public ?string $announcementLinkUrl,
         public ?string $announcementStartsOn,
         public ?string $announcementEndsOn,
+        public ?string $ga4Id = null,
+        public ?string $gtmId = null,
+        public ?string $metaPixelId = null,
+        public ?string $chatProvider = null,
+        public ?string $chatWidgetId = null,
     ) {}
 
     /**
@@ -163,6 +168,11 @@ class SiteSettingsFormData extends Data
             announcementLinkUrl: $settings->announcement_link_url,
             announcementStartsOn: $settings->announcement_starts_at?->toDateString(),
             announcementEndsOn: $settings->announcement_ends_at?->toDateString(),
+            ga4Id: $settings->ga4_id,
+            gtmId: $settings->gtm_id,
+            metaPixelId: $settings->meta_pixel_id,
+            chatProvider: $settings->chat_provider,
+            chatWidgetId: $settings->chat_widget_id,
         );
     }
 

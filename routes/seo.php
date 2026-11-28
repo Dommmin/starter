@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Seo\LlmsTxtController;
 use App\Http\Controllers\Seo\RobotsController;
 use App\Http\Controllers\Seo\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -16,3 +17,7 @@ Route::get('/sitemap.xml', SitemapController::class)
 Route::get('/robots.txt', RobotsController::class)
     ->withoutMiddleware('web')
     ->name('robots');
+
+Route::get('/llms.txt', LlmsTxtController::class)
+    ->withoutMiddleware('web')
+    ->name('llms');

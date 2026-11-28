@@ -4,6 +4,7 @@ namespace App\Data\Admin\Contact;
 
 use App\Enums\ContactMessageCategory;
 use App\Enums\ContactMessageStatus;
+use App\Enums\LeadStatus;
 use App\Models\ContactMessage;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -24,6 +25,7 @@ class ContactMessageListItemData extends Data
         /** AI category; null until classified. */
         public ?ContactMessageCategory $category,
         public ?string $createdAt,
+        public LeadStatus $leadStatus = LeadStatus::New,
     ) {}
 
     public static function fromModel(ContactMessage $contactMessage): self
@@ -37,6 +39,7 @@ class ContactMessageListItemData extends Data
             attempts: $contactMessage->attempts,
             category: $contactMessage->category,
             createdAt: $contactMessage->created_at?->toIso8601String(),
+            leadStatus: $contactMessage->lead_status ?? LeadStatus::New,
         );
     }
 }

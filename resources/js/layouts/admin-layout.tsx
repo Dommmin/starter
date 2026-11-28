@@ -6,6 +6,7 @@ import {
     Palette,
     FileText,
     History,
+    ListChecks,
     Images,
     LayoutGrid,
     LayoutTemplate,
@@ -40,6 +41,7 @@ import { index as homeSectionsIndex } from '@/routes/admin/home-sections';
 import { index as mediaIndex } from '@/routes/admin/media';
 import { index as navigationIndex } from '@/routes/admin/navigation';
 import { index as pagesIndex } from '@/routes/admin/pages';
+import { index as qualityIndex } from '@/routes/admin/quality';
 import { index as redirectsIndex } from '@/routes/admin/redirects';
 import { edit as siteSettingsEdit } from '@/routes/admin/site-settings';
 import { index as systemIndex } from '@/routes/admin/system';
@@ -141,6 +143,12 @@ export default function AdminLayout({
                       ]
                     : []),
                 // app:make-resource: new navigation items
+                section(
+                    'quality',
+                    t('admin.quality.navLabel'),
+                    qualityIndex(),
+                    ListChecks,
+                ),
             ],
         },
         {

@@ -4,6 +4,7 @@ namespace App\Data\Admin\Contact;
 
 use App\Enums\ContactMessageStatus;
 use App\Enums\ContactWebhookStatus;
+use App\Enums\LeadStatus;
 use App\Models\ContactMessage;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -32,6 +33,8 @@ class ContactMessageDetailData extends Data
         public int $webhookAttempts = 0,
         public ?string $formTitle = null,
         public array $extraFields = [],
+        public LeadStatus $leadStatus = LeadStatus::New,
+        public ?string $internalNotes = null,
     ) {}
 
     /**
@@ -57,6 +60,8 @@ class ContactMessageDetailData extends Data
                 fn (array $row): ContactMessageExtraFieldData => new ContactMessageExtraFieldData($row['label'], $row['value']),
                 $contactMessage->extraFieldRows($locale, $fallback),
             ),
+            leadStatus: $contactMessage->lead_status ?? LeadStatus::New,
+            internalNotes: $contactMessage->internal_notes,
         );
     }
 }

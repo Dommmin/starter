@@ -1406,6 +1406,8 @@ return [
             'autoReplyHelp' => 'Wysyła tekst z sekcji „Teksty” w języku nadawcy. Odpowiedź nigdy nie powtarza treści wysłanej wiadomości.',
             'autoReplyText' => 'Treść automatycznej odpowiedzi',
             'autoReplyTextHelp' => 'Wysyłana nadawcy, gdy automatyczna odpowiedź jest włączona. Do 1000 znaków; pusta = język zapasowy.',
+            'announcementDisplay' => 'Sposób wyświetlania',
+            'announcementDisplayHelp' => 'Popup pojawia się raz dla każdej treści, po odpowiedzi na baner cookie.',
             'announcementEnabled' => 'Pokazuj pasek ogłoszeń',
             'announcementEnabledHelp' => 'Widoczny tylko, gdy jest włączony, i w terminie poniżej; wymaga treści w języku zapasowym.',
             'announcementTone' => 'Ton',
@@ -1467,6 +1469,10 @@ return [
                 'name' => 'Natura',
                 'description' => 'Zielony akcent i nowoczesne nagłówki. Dla gabinetów, gastronomii i lokalnych firm.',
             ],
+        ],
+        'announcementDisplays' => [
+            'bar' => 'Pasek nad nagłówkiem',
+            'popup' => 'Popup',
         ],
         'announcementTones' => [
             'info' => 'Informacja',

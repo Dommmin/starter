@@ -2,6 +2,7 @@
 
 use App\Actions\Settings\UpdateSiteSettings;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\AuditAction;
 use App\Enums\ThemePreference;
@@ -11,6 +12,7 @@ use App\Models\MediaAsset;
 use App\Models\SiteSetting;
 use App\Models\SiteSettingTranslation;
 use App\Models\User;
+use App\Repositories\Settings\SiteSettingsRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -415,4 +417,13 @@ test('an invalid brand name from the console is rejected', function () {
         ->toThrow(ValidationException::class);
 
     expect(SiteSetting::query()->exists())->toBeFalse();
+});
+
+test('the announcement can be shown as a popup', function () {
+    SiteSetting::factory()->create(['announcement_enabled' => true, 'announcement_display' => 'popup']);
+    SiteSetting::query()->firstOrFail()->translations()->updateOrCreate(['locale' => 'en'], ['announcement_text' => 'News']);
+
+    $announcement = app(SiteSettingsRepository::class)->announcement('en');
+
+    expect($announcement?->display)->toBe(AnnouncementDisplay::Popup);
 });

@@ -1404,6 +1404,8 @@ return [
             'autoReplyHelp' => 'Sendet den Text aus dem Abschnitt „Texte“ in der Sprache des Absenders. Die Antwort wiederholt nie die gesendete Nachricht.',
             'autoReplyText' => 'Text der automatischen Antwort',
             'autoReplyTextHelp' => 'Wird gesendet, wenn die automatische Antwort aktiv ist. Bis zu 1000 Zeichen; leer = Ersatzsprache.',
+            'announcementDisplay' => 'Darstellung',
+            'announcementDisplayHelp' => 'Das Popup erscheint einmal je Text, nach der Antwort auf den Cookie-Banner.',
             'announcementEnabled' => 'Ankündigungsleiste anzeigen',
             'announcementEnabledHelp' => 'Nur sichtbar, solange sie aktiv ist und im unten gewählten Zeitraum; sie braucht einen Text in der Ersatzsprache.',
             'announcementTone' => 'Ton',
@@ -1465,6 +1467,10 @@ return [
                 'name' => 'Natur',
                 'description' => 'Grüner Akzent und moderne Überschriften. Für Praxen, Gastronomie und lokale Betriebe.',
             ],
+        ],
+        'announcementDisplays' => [
+            'bar' => 'Leiste über der Kopfzeile',
+            'popup' => 'Popup',
         ],
         'announcementTones' => [
             'info' => 'Information',

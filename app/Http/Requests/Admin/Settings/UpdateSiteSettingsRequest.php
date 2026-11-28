@@ -6,6 +6,7 @@ use App\Data\Settings\OpeningHoursDayData;
 use App\Data\Settings\SiteSettingsInputData;
 use App\Data\Settings\SiteSettingTranslationInputData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\MediaStatus;
 use App\Enums\SocialNetwork;
@@ -119,6 +120,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             'contact_auto_reply' => ['required', 'boolean'],
             'announcement_enabled' => ['required', 'boolean'],
             'announcement_tone' => ['required', Rule::enum(AnnouncementTone::class)],
+            'announcement_display' => ['sometimes', 'required', Rule::enum(AnnouncementDisplay::class)],
             'announcement_link_url' => ['nullable', 'string', 'max:2048', $singleLine, 'regex:'.self::ANNOUNCEMENT_LINK],
             'announcement_starts_on' => ['nullable', 'date_format:Y-m-d'],
             'announcement_ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:announcement_starts_on'],
@@ -251,6 +253,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             contactAutoReply: (bool) $validated['contact_auto_reply'],
             announcementEnabled: (bool) $validated['announcement_enabled'],
             announcementTone: AnnouncementTone::from((string) $validated['announcement_tone']),
+            announcementDisplay: AnnouncementDisplay::tryFrom((string) ($validated['announcement_display'] ?? '')) ?? AnnouncementDisplay::Bar,
             announcementLinkUrl: self::text($validated['announcement_link_url'] ?? null),
             announcementStartsAt: isset($validated['announcement_starts_on'])
                 ? CarbonImmutable::createFromFormat('!Y-m-d', (string) $validated['announcement_starts_on'])?->startOfDay()

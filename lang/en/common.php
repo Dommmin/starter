@@ -53,6 +53,7 @@ return [
     ],
 
     'announcement' => [
+        'close' => 'Close',
         'label' => 'Announcement',
     ],
     'cookies' => [

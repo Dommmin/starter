@@ -1404,6 +1404,8 @@ return [
             'autoReplyHelp' => 'Sends the text from the “Texts” section in the sender’s language. The reply never repeats the submitted message.',
             'autoReplyText' => 'Automatic reply text',
             'autoReplyTextHelp' => 'Sent to the sender when the automatic reply is on. Up to 1000 characters; the fallback language is used when empty.',
+            'announcementDisplay' => 'Display',
+            'announcementDisplayHelp' => 'The popup appears once for each text, after the cookie banner is answered.',
             'announcementEnabled' => 'Show the announcement bar',
             'announcementEnabledHelp' => 'Shown only while switched on and between the dates below; it needs a text in the fallback language.',
             'announcementTone' => 'Tone',
@@ -1465,6 +1467,10 @@ return [
                 'name' => 'Nature',
                 'description' => 'Green accent and modern headings. For clinics, restaurants and local businesses.',
             ],
+        ],
+        'announcementDisplays' => [
+            'bar' => 'Bar above the header',
+            'popup' => 'Popup',
         ],
         'announcementTones' => [
             'info' => 'Information',

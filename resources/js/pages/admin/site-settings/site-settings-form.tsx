@@ -46,6 +46,7 @@ const ACCENTS: App.Enums.AccentColor[] = [
 const TYPOGRAPHY_PRESETS: App.Enums.TypographyPreset[] = ['default', 'classic'];
 const THEMES: App.Enums.ThemePreference[] = ['system', 'light', 'dark'];
 const ANNOUNCEMENT_TONES: App.Enums.AnnouncementTone[] = ['info', 'warning'];
+const ANNOUNCEMENT_DISPLAYS: App.Enums.AnnouncementDisplay[] = ['bar', 'popup'];
 
 /** Request keys of the settings shared by every language. */
 const SHARED_FIELDS = [
@@ -73,6 +74,7 @@ const SHARED_FIELDS = [
     'chat_provider',
     'chat_widget_id',
     'announcement_tone',
+    'announcement_display',
     'announcement_link_url',
     'announcement_starts_on',
     'announcement_ends_on',
@@ -214,6 +216,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         contact_auto_reply: settings.contactAutoReply,
         announcement_enabled: settings.announcementEnabled,
         announcement_tone: settings.announcementTone,
+        announcement_display: settings.announcementDisplay,
         announcement_link_url: settings.announcementLinkUrl ?? '',
         announcement_starts_on: settings.announcementStartsOn ?? '',
         announcement_ends_on: settings.announcementEndsOn ?? '',
@@ -396,6 +399,7 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
             plausible_domain: nullable(data.plausible_domain),
             announcement_enabled: data.announcement_enabled,
             announcement_tone: data.announcement_tone,
+            announcement_display: data.announcement_display,
             announcement_link_url: nullable(data.announcement_link_url),
             announcement_starts_on: nullable(data.announcement_starts_on),
             announcement_ends_on: nullable(data.announcement_ends_on),
@@ -820,6 +824,23 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                             value: tone,
                             label: t(
                                 `admin.siteSettings.announcementTones.${tone}`,
+                            ),
+                        })),
+                    },
+                    {
+                        type: 'select',
+                        name: 'announcement_display',
+                        label: t(
+                            'admin.siteSettings.fields.announcementDisplay',
+                        ),
+                        hint: t(
+                            'admin.siteSettings.fields.announcementDisplayHelp',
+                        ),
+                        required: true,
+                        options: ANNOUNCEMENT_DISPLAYS.map((display) => ({
+                            value: display,
+                            label: t(
+                                `admin.siteSettings.announcementDisplays.${display}`,
                             ),
                         })),
                     },

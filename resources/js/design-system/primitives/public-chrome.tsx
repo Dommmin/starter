@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import { AnnouncementBar } from './announcement-bar';
+import { AnnouncementPopup } from './announcement-popup';
 import type { BrandLogoImage } from './brand-logo';
 import { CookieConsent, useCookieConsent } from './cookie-consent';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
@@ -115,7 +116,25 @@ export function PublicChrome({
 
     return (
         <div className="flex min-h-svh flex-col">
-            {announcement && (
+            {announcement?.display === 'popup' && (
+                <AnnouncementPopup
+                    message={announcement.message}
+                    title={t('announcement.label')}
+                    closeLabel={t('announcement.close')}
+                    paused={
+                        cookieConsent.isActive && cookieConsent.granted === null
+                    }
+                    link={
+                        announcement.linkUrl && announcement.linkLabel
+                            ? {
+                                  href: announcement.linkUrl,
+                                  label: announcement.linkLabel,
+                              }
+                            : undefined
+                    }
+                />
+            )}
+            {announcement && announcement.display !== 'popup' && (
                 <AnnouncementBar
                     message={announcement.message}
                     tone={announcement.tone}

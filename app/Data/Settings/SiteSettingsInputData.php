@@ -3,6 +3,7 @@
 namespace App\Data\Settings;
 
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -57,6 +58,7 @@ class SiteSettingsInputData extends Data
         public bool $contactAutoReply = false,
         public bool $announcementEnabled = false,
         public AnnouncementTone $announcementTone = AnnouncementTone::Info,
+        public AnnouncementDisplay $announcementDisplay = AnnouncementDisplay::Bar,
         public ?string $announcementLinkUrl = null,
         public ?CarbonImmutable $announcementStartsAt = null,
         public ?CarbonImmutable $announcementEndsAt = null,

@@ -814,6 +814,7 @@ declare namespace App {
                     contactAutoReply: boolean;
                     announcementEnabled: boolean;
                     announcementTone: App.Enums.AnnouncementTone;
+                    announcementDisplay: App.Enums.AnnouncementDisplay;
                     announcementLinkUrl: string | null;
                     announcementStartsOn: string | null;
                     announcementEndsOn: string | null;
@@ -1334,6 +1335,7 @@ declare namespace App {
                 tone: App.Enums.AnnouncementTone;
                 linkUrl: string | null;
                 linkLabel: string | null;
+                display: App.Enums.AnnouncementDisplay;
             };
             export type SiteContactData = {
                 email: string | null;
@@ -1368,6 +1370,7 @@ declare namespace App {
             | 'rose'
             | 'green';
         export type AiProvider = 'anthropic' | 'openai' | 'gemini';
+        export type AnnouncementDisplay = 'bar' | 'popup';
         export type AnnouncementTone = 'info' | 'warning';
         export type AssistantFeature =
             | 'seo_meta'

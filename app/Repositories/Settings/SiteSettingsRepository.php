@@ -12,6 +12,7 @@ use App\Data\Settings\SiteContactData;
 use App\Data\Settings\SiteSettingsData;
 use App\Data\Settings\SiteSocialLinkData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
@@ -74,7 +75,7 @@ use Throwable;
  *     noindex: bool,
  *     maintenance: bool,
  *     maintenance_until: string|null,
- *     announcement: array{enabled: bool, tone: string, link_url: string|null, starts_at: string|null, ends_at: string|null},
+ *     announcement: array{enabled: bool, tone: string, display?: string, link_url: string|null, starts_at: string|null, ends_at: string|null},
  * }
  */
 class SiteSettingsRepository
@@ -366,6 +367,8 @@ class SiteSettingsRepository
                 tone: AnnouncementTone::tryFrom($bar['tone']) ?? AnnouncementTone::Info,
                 linkUrl: $hasLink ? $bar['link_url'] : null,
                 linkLabel: $hasLink ? $label : null,
+                // A snapshot cached before this field has no `display`.
+                display: AnnouncementDisplay::tryFrom((string) ($bar['display'] ?? '')) ?? AnnouncementDisplay::Bar,
             );
         }
 
@@ -526,6 +529,7 @@ class SiteSettingsRepository
             'announcement' => [
                 'enabled' => $settings->announcement_enabled,
                 'tone' => $settings->announcement_tone->value,
+                'display' => $settings->announcement_display->value,
                 'link_url' => $settings->announcement_link_url,
                 'starts_at' => $settings->announcement_starts_at?->toIso8601String(),
                 'ends_at' => $settings->announcement_ends_at?->toIso8601String(),
@@ -574,7 +578,7 @@ class SiteSettingsRepository
             'noindex' => false,
             'maintenance' => false,
             'maintenance_until' => null,
-            'announcement' => ['enabled' => false, 'tone' => AnnouncementTone::Info->value, 'link_url' => null, 'starts_at' => null, 'ends_at' => null],
+            'announcement' => ['enabled' => false, 'tone' => AnnouncementTone::Info->value, 'display' => AnnouncementDisplay::Bar->value, 'link_url' => null, 'starts_at' => null, 'ends_at' => null],
         ];
     }
 

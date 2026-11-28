@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\JsonArray;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\ThemePreference;
 use App\Enums\TypographyPreset;
@@ -58,6 +59,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $maintenance_until Planned end of the works; null = not given.
  * @property bool $announcement_enabled
  * @property AnnouncementTone $announcement_tone
+ * @property AnnouncementDisplay $announcement_display
  * @property string|null $announcement_link_url Relative path or http(s) URL.
  * @property CarbonImmutable|null $announcement_starts_at Null = shown right away.
  * @property CarbonImmutable|null $announcement_ends_at Last moment shown; null = no end.
@@ -122,6 +124,7 @@ class SiteSetting extends Model
             'maintenance_until' => 'datetime',
             'announcement_enabled' => 'boolean',
             'announcement_tone' => AnnouncementTone::class,
+            'announcement_display' => AnnouncementDisplay::class,
             'announcement_link_url' => 'string',
             'announcement_starts_at' => 'datetime',
             'announcement_ends_at' => 'datetime',

@@ -16,6 +16,7 @@ enum AssistantFeature: string
     case TextRewrite = 'text_rewrite';
     case MessageClassification = 'message_classification';
     case FaqGenerator = 'faq_generator';
+    case ReplyDraft = 'reply_draft';
 
     /**
      * Whether the feature may be used: the assistant and the feature are

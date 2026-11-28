@@ -14,5 +14,7 @@ class ContactMessageAbilitiesData extends Data
     public function __construct(
         public bool $retry,
         public bool $delete,
+        public bool $update = false,
+        public bool $suggestReply = false,
     ) {}
 }

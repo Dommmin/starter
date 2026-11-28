@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Articles\ArticleController;
+use App\Http\Controllers\Admin\Assistant\ContactReplySuggestionController;
 use App\Http\Controllers\Admin\Assistant\FaqSuggestionController;
 use App\Http\Controllers\Admin\Assistant\MediaAltTextSuggestionController;
 use App\Http\Controllers\Admin\Assistant\SeoMetaSuggestionController;
@@ -68,6 +69,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->middleware('throttle:assistant');
         Route::post('/assistant/faqs', FaqSuggestionController::class)
             ->name('assistant.faqs')
+            ->middleware('throttle:assistant');
+        Route::post('/assistant/contact-reply', ContactReplySuggestionController::class)
+            ->name('assistant.contact-reply')
             ->middleware('throttle:assistant');
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')
@@ -330,6 +334,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/contact/{contactMessage}', [ContactMessageController::class, 'show'])
             ->name('contact.show')
             ->can('view', 'contactMessage');
+        Route::patch('/contact/{contactMessage}', [ContactMessageController::class, 'update'])
+            ->name('contact.update')
+            ->can('update', 'contactMessage');
         Route::post('/contact/{contactMessage}/retry', [ContactMessageController::class, 'retry'])
             ->name('contact.retry')
             ->can('retry', 'contactMessage');

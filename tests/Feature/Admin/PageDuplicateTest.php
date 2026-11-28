@@ -1,6 +1,8 @@
 <?php
 
+use App\Actions\Home\EnsureHomeSections;
 use App\Enums\AuditAction;
+use App\Enums\HomeSectionType;
 use App\Enums\PublicationStatus;
 use App\Models\AuditLog;
 use App\Models\Page;
@@ -166,3 +168,28 @@ test('the page editor offers copying only to roles that may copy', function (str
     'editor' => ['editor', true],
     'viewer' => ['viewer', false],
 ]);
+
+it('copies the layout mode and every section of a page built from sections', function () {
+    $admin = User::factory()->admin()->create();
+    $page = Page::factory()->create(['layout_mode' => 'sections']);
+    PageTranslation::factory()->for($page)->create(['locale' => 'pl', 'slug' => 'oferta']);
+    $page->sections()->create([
+        'locale' => 'pl',
+        'type' => HomeSectionType::Cta,
+        'position' => 3,
+        'enabled' => false,
+        'content' => EnsureHomeSections::placeholder(HomeSectionType::Cta, 'pl'),
+    ]);
+
+    $this->actingAs($admin)->post(route('admin.pages.duplicate', $page))->assertRedirect();
+
+    $copy = Page::query()->whereKeyNot($page->id)->sole();
+    $section = $copy->sections()->sole();
+
+    expect($copy->layout_mode)->toBe('sections')
+        ->and($section->type)->toBe(HomeSectionType::Cta)
+        ->and($section->locale)->toBe('pl')
+        ->and($section->position)->toBe(3)
+        ->and($section->enabled)->toBeFalse()
+        ->and($section->content->toArray())->toBe($page->sections()->sole()->content->toArray());
+});

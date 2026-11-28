@@ -5,8 +5,10 @@ namespace App\Actions\Content;
 use App\Actions\Audit\RecordAuditEvent;
 use App\Enums\TrashedContentType;
 use App\Models\Article;
+use App\Models\ContentPreviewLink;
 use App\Models\Page;
 use App\Models\User;
+use App\Services\Content\ContentSnapshots;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -16,7 +18,10 @@ use Illuminate\Support\Facades\DB;
  */
 class ManageTrashedContent
 {
-    public function __construct(private readonly RecordAuditEvent $audit) {}
+    public function __construct(
+        private readonly RecordAuditEvent $audit,
+        private readonly ContentSnapshots $snapshots,
+    ) {}
 
     /**
      * Requires the `translations` relation loaded without the live-parent scope.
@@ -37,6 +42,12 @@ class ManageTrashedContent
     {
         DB::transaction(function () use ($record, $actor): void {
             $this->audit->handle(TrashedContentType::of($record)->purgedAction(), $record, $actor, $this->titles($record, restoring: false));
+
+            $this->snapshots->forget($record);
+            ContentPreviewLink::query()
+                ->where('subject_type', $record->getMorphClass())
+                ->where('subject_id', $record->id)
+                ->delete();
 
             $record->forceDelete();
         });

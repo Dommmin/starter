@@ -19,12 +19,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int|null $created_by
  * @property int|null $updated_by
+ * @property string $layout_mode
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at In the trash since.
  * @property-read Collection<int, PageTranslation> $translations
+ * @property-read Collection<int, PageSection> $sections
  */
-#[Fillable(['created_by', 'updated_by'])]
+#[Fillable(['created_by', 'updated_by', 'layout_mode'])]
 class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
@@ -38,6 +40,14 @@ class Page extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(PageTranslation::class);
+    }
+
+    /**
+     * @return HasMany<PageSection, $this>
+     */
+    public function sections(): HasMany
+    {
+        return $this->hasMany(PageSection::class);
     }
 
     /**

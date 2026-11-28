@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'newsletter' => [
+        'success' => 'Vielen Dank. Prüfen Sie Ihr Postfach.',
+        'unavailable' => 'Die Anmeldung hat gerade nicht geklappt. Bitte versuchen Sie es später erneut.',
+    ],
+
     'landing' => [
         'badge' => 'Designstudio',
         'heroTitle' => 'Websites und Apps, die für Ihr Unternehmen arbeiten',

@@ -21,6 +21,7 @@ class PageFormData extends Data
         public ?int $id,
         public ?string $updatedAt,
         public array $translations,
+        public string $layoutMode = 'rich_text',
     ) {}
 
     /**
@@ -34,7 +35,7 @@ class PageFormData extends Data
             $translations[$locale] = PageTranslationFormData::blank();
         }
 
-        return new self(id: null, updatedAt: null, translations: $translations);
+        return new self(id: null, updatedAt: null, translations: $translations, layoutMode: 'rich_text');
     }
 
     /**
@@ -58,6 +59,7 @@ class PageFormData extends Data
             id: $page->id,
             updatedAt: $page->updated_at?->toIso8601String(),
             translations: $translations,
+            layoutMode: $page->layout_mode ?: 'rich_text',
         );
     }
 }

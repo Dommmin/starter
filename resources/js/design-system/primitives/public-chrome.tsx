@@ -2,11 +2,13 @@ import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import { AnnouncementBar } from './announcement-bar';
+import { AnnouncementPopup } from './announcement-popup';
 import type { BrandLogoImage } from './brand-logo';
 import { CookieConsent, useCookieConsent } from './cookie-consent';
 import { Footer, type FooterContact, type FooterSocialLink } from './footer';
 import { groupOpeningHours } from './opening-hours';
 import type { NavItem } from './nav-item';
+import { NewsletterSignup } from './newsletter-signup';
 import { PublicHeader } from './public-header';
 import { useSiteBrand } from './site-brand';
 import { ThemeSwitcher } from './theme-switcher';
@@ -67,7 +69,13 @@ export function PublicChrome({
     children,
 }: PublicChromeProps) {
     const { t } = useTranslation();
-    const { auth, navigation, consent, site: sharedSite } = usePage().props;
+    const {
+        auth,
+        navigation,
+        consent,
+        i18n,
+        site: sharedSite,
+    } = usePage().props;
     const site = sharedSite as App.Data.Settings.SiteSettingsData | undefined;
     const cookieConsent = useCookieConsent(consent);
 
@@ -108,7 +116,25 @@ export function PublicChrome({
 
     return (
         <div className="flex min-h-svh flex-col">
-            {announcement && (
+            {announcement?.display === 'popup' && (
+                <AnnouncementPopup
+                    message={announcement.message}
+                    title={t('announcement.label')}
+                    closeLabel={t('announcement.close')}
+                    paused={
+                        cookieConsent.isActive && cookieConsent.granted === null
+                    }
+                    link={
+                        announcement.linkUrl && announcement.linkLabel
+                            ? {
+                                  href: announcement.linkUrl,
+                                  label: announcement.linkLabel,
+                              }
+                            : undefined
+                    }
+                />
+            )}
+            {announcement && announcement.display !== 'popup' && (
                 <AnnouncementBar
                     message={announcement.message}
                     tone={announcement.tone}
@@ -137,6 +163,15 @@ export function PublicChrome({
             <main id="main-content" className="flex-1">
                 {children}
             </main>
+
+            <NewsletterSignup
+                privacyUrl={consent?.policyUrl}
+                localePrefix={
+                    i18n && i18n.locale !== i18n.defaultLocale
+                        ? i18n.locale
+                        : null
+                }
+            />
 
             <Footer
                 copyright={copyright}

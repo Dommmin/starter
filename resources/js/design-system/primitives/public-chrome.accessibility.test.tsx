@@ -402,6 +402,7 @@ describe('BrandLogo', () => {
                 announcement: {
                     message: 'Closed 24–26.12',
                     tone: 'warning',
+                    display: 'bar',
                     linkUrl: '/contact',
                     linkLabel: 'Opening hours',
                 },
@@ -434,6 +435,7 @@ describe('BrandLogo', () => {
                 announcement: {
                     message: 'New price list',
                     tone: 'info',
+                    display: 'bar',
                     linkUrl: 'https://example.com/prices',
                     linkLabel: 'Prices',
                 },

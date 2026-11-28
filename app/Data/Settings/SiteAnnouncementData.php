@@ -2,6 +2,7 @@
 
 namespace App\Data\Settings;
 
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -20,5 +21,6 @@ class SiteAnnouncementData extends Data
         public AnnouncementTone $tone,
         public ?string $linkUrl,
         public ?string $linkLabel,
+        public AnnouncementDisplay $display = AnnouncementDisplay::Bar,
     ) {}
 }

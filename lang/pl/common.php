@@ -35,7 +35,25 @@ return [
         'menuTitle' => 'Menu',
         'submenu' => 'Podmenu: :label',
     ],
+    'newsletter' => [
+        'title' => 'Newsletter',
+        'email' => 'Adres e-mail',
+        'consent' => 'Chcę otrzymywać newsletter i wiem, że mogę zrezygnować w każdej chwili.',
+        'privacy' => 'Polityka prywatności',
+        'submit' => 'Zapisz mnie',
+        'done' => 'Dziękujemy. Sprawdź skrzynkę, jeśli czeka tam prośba o potwierdzenie.',
+    ],
+
+    'booking' => [
+        'title' => 'Umów termin',
+        'notice' => 'Kalendarz dostarcza :provider. Po załadowaniu dostawca otrzyma Twoje dane połączenia i może zapisać pliki cookie.',
+        'load' => 'Załaduj kalendarz',
+        'openDirectly' => 'Otwórz kalendarz na :provider',
+        'frameTitle' => 'Kalendarz rezerwacji',
+    ],
+
     'announcement' => [
+        'close' => 'Zamknij',
         'label' => 'Ogłoszenie',
     ],
     'cookies' => [

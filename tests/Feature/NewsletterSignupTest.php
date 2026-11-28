@@ -61,5 +61,7 @@ test('without an API key the form is hidden and the address is closed', function
     $this->get(route('home'))->assertInertia(fn (Assert $assert) => $assert->missing('newsletter'));
     $this->post(route('newsletter.store'), signupPayload())->assertNotFound();
 
-    Http::assertNothingSent();
+    // Not assertNothingSent(): with an SSR bundle built, rendering the home page
+    // calls the SSR server through the same HTTP client.
+    Http::assertNotSent(fn (Request $request): bool => $request->url() === config('newsletter.mailerlite.url'));
 });

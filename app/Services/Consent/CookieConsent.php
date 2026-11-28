@@ -105,6 +105,7 @@ class CookieConsent
             'ga4' => $integrations?->ga4Id !== null,
             'gtm' => $integrations?->gtmId !== null,
             'meta_pixel' => $integrations?->metaPixelId !== null,
+            'chat' => $integrations?->chatProvider !== null && $integrations->chatWidgetId !== null,
             default => false,
         };
     }

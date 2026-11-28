@@ -134,3 +134,38 @@ test('404 logger records meaningful paths, ignores asset noise, and admin can vi
 
     expect(NotFoundLog::query()->count())->toBe(0);
 });
+
+test('a configured chat widget alone makes the site ask for marketing consent', function () {
+    SiteSetting::factory()->create([
+        'id' => SiteSetting::SINGLETON_ID,
+        'chat_provider' => 'crisp',
+        'chat_widget_id' => 'crisp-site-1',
+    ]);
+    Cache::forget(SiteSettingsRepository::CACHE_KEY);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('consent.categories', ['marketing']));
+});
+
+test('404 logger stores the referer without query string or fragment', function () {
+    app(RecordNotFoundHit::class)->handle(Request::create('/old-offer', 'GET', server: [
+        'HTTP_REFERER' => 'https://example.com/search?email=ada@example.com#token',
+    ]));
+
+    expect(NotFoundLog::query()->sole()->last_referer)->toBe('https://example.com/search');
+});
+
+test('404 logger stops adding new paths at the limit but still counts known ones', function () {
+    NotFoundLog::query()->insert(array_map(
+        fn (int $i): array => ['path' => "/missing-{$i}", 'hits' => 1, 'last_seen_at' => now()],
+        range(1, RecordNotFoundHit::MAX_PATHS),
+    ));
+
+    $recorder = app(RecordNotFoundHit::class);
+    $recorder->handle(Request::create('/one-too-many', 'GET'));
+    $recorder->handle(Request::create('/missing-1', 'GET'));
+
+    expect(NotFoundLog::query()->count())->toBe(RecordNotFoundHit::MAX_PATHS)
+        ->and(NotFoundLog::query()->where('path', '/missing-1')->value('hits'))->toBe(2);
+});

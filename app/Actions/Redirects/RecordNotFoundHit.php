@@ -14,6 +14,9 @@ use Throwable;
  */
 class RecordNotFoundHit
 {
+    /** Anyone can request random URLs, so the table must not grow without end. */
+    public const int MAX_PATHS = 1000;
+
     private const array NOISE_EXTENSIONS = [
         '.php', '.env', '.git', '.sql', '.bak', '.zip', '.tar', '.gz',
         '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.css', '.js', '.map', '.woff', '.woff2',
@@ -36,7 +39,8 @@ class RecordNotFoundHit
 
         $normalized = Str::limit($path, 255, '');
         $referer = $request->headers->get('referer');
-        $lastReferer = is_string($referer) && $referer !== '' ? Str::limit($referer, 500, '') : null;
+        // Query strings and fragments can carry personal data or tokens.
+        $lastReferer = is_string($referer) && $referer !== '' ? Str::limit(Str::before(Str::before($referer, '?'), '#'), 500, '') : null;
         $now = now();
 
         try {
@@ -50,6 +54,10 @@ class RecordNotFoundHit
                         'last_seen_at' => $now,
                     ]);
 
+                    return;
+                }
+
+                if (NotFoundLog::query()->count() >= self::MAX_PATHS) {
                     return;
                 }
 

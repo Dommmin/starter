@@ -24,7 +24,7 @@ return [
 
     'categories' => [
         'analytics' => ['plausible', 'ga4', 'gtm'],
-        'marketing' => ['meta_pixel'],
+        'marketing' => ['meta_pixel', 'chat'],
     ],
 
     /*

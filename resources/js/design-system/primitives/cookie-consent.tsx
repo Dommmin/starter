@@ -76,8 +76,10 @@ function loadGa4(measurementId: string): void {
     }
 
     window.dataLayer = window.dataLayer ?? [];
-    window.gtag = function gtag(...args: unknown[]) {
-        window.dataLayer?.push(args);
+    window.gtag = function gtag() {
+        // gtag.js runs only `arguments` objects; a plain array is ignored.
+        // eslint-disable-next-line prefer-rest-params
+        window.dataLayer?.push(arguments);
     };
     window.gtag('js', new Date());
     window.gtag('config', measurementId);
@@ -203,15 +205,17 @@ export function useCookieConsent(
             }
         }
 
-        if (granted?.includes('marketing') && integrations?.metaPixelId) {
-            loadMetaPixel(integrations.metaPixelId);
-        }
-
-        if (integrations?.chatProvider && integrations?.chatWidgetId) {
-            loadChatWidget(
-                integrations.chatProvider,
-                integrations.chatWidgetId,
-            );
+        if (granted?.includes('marketing')) {
+            if (integrations?.metaPixelId) {
+                loadMetaPixel(integrations.metaPixelId);
+            }
+            // Chat vendors set their own cookies, so the widget needs consent.
+            if (integrations?.chatProvider && integrations.chatWidgetId) {
+                loadChatWidget(
+                    integrations.chatProvider,
+                    integrations.chatWidgetId,
+                );
+            }
         }
     }, [plausible, integrations, granted]);
 

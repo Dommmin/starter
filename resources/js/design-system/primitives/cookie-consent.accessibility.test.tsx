@@ -187,6 +187,9 @@ afterEach(async () => {
     });
     document.body.replaceChildren();
     document.getElementById('plausible-analytics')?.remove();
+    document.getElementById('ga4-analytics')?.remove();
+    document.getElementById('live-chat-widget')?.remove();
+    delete window.dataLayer;
     vi.restoreAllMocks();
 });
 
@@ -314,5 +317,49 @@ describe('CookieConsent', () => {
                 (element) => element.textContent,
             ),
         ).toEqual([]);
+    });
+});
+
+describe('CookieConsent integrations', () => {
+    const integrations = {
+        ga4Id: 'G-TEST123',
+        gtmId: null,
+        metaPixelId: null,
+        chatProvider: 'crisp',
+        chatWidgetId: 'crisp-site-1',
+    };
+
+    function integrationConsent(granted: ('analytics' | 'marketing')[]) {
+        return consentData({
+            categories: ['analytics', 'marketing'],
+            granted,
+            plausible: null,
+            integrations,
+        });
+    }
+
+    it('loads the chat widget only with marketing consent', async () => {
+        await render(<Harness consent={integrationConsent(['analytics'])} />);
+
+        expect(document.getElementById('live-chat-widget')).toBeNull();
+    });
+
+    it('loads the chat widget once marketing is allowed', async () => {
+        await render(<Harness consent={integrationConsent(['marketing'])} />);
+
+        expect(document.getElementById('live-chat-widget')).not.toBeNull();
+        expect(document.getElementById('ga4-analytics')).toBeNull();
+    });
+
+    it('queues gtag commands as arguments objects, the only form gtag.js runs', async () => {
+        await render(<Harness consent={integrationConsent(['analytics'])} />);
+
+        const commands = window.dataLayer ?? [];
+        expect(commands.length).toBeGreaterThan(0);
+        for (const command of commands) {
+            expect(Object.prototype.toString.call(command)).toBe(
+                '[object Arguments]',
+            );
+        }
     });
 });

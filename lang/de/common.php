@@ -44,6 +44,14 @@ return [
         'done' => 'Vielen Dank. Prüfen Sie Ihr Postfach auf eine Bestätigungsbitte.',
     ],
 
+    'booking' => [
+        'title' => 'Termin buchen',
+        'notice' => 'Der Kalender stammt von :provider. Nach dem Laden erhält der Anbieter Ihre Verbindungsdaten und kann Cookies setzen.',
+        'load' => 'Kalender laden',
+        'openDirectly' => 'Kalender auf :provider öffnen',
+        'frameTitle' => 'Buchungskalender',
+    ],
+
     'announcement' => [
         'label' => 'Ankündigung',
     ],

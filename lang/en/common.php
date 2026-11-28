@@ -44,6 +44,14 @@ return [
         'done' => 'Thank you. Check your inbox for a confirmation request.',
     ],
 
+    'booking' => [
+        'title' => 'Book an appointment',
+        'notice' => 'The calendar comes from :provider. Once loaded, the provider receives your connection data and may set cookies.',
+        'load' => 'Load the calendar',
+        'openDirectly' => 'Open the calendar on :provider',
+        'frameTitle' => 'Booking calendar',
+    ],
+
     'announcement' => [
         'label' => 'Announcement',
     ],

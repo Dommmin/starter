@@ -907,6 +907,12 @@ declare namespace App {
                 };
             }
         }
+        namespace Booking {
+            export type BookingPageData = {
+                bookingUrl: string;
+                providerHost: string;
+            };
+        }
         namespace Consent {
             export type ConsentData = {
                 version: number;

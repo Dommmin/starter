@@ -44,6 +44,14 @@ return [
         'done' => 'Dziękujemy. Sprawdź skrzynkę, jeśli czeka tam prośba o potwierdzenie.',
     ],
 
+    'booking' => [
+        'title' => 'Umów termin',
+        'notice' => 'Kalendarz dostarcza :provider. Po załadowaniu dostawca otrzyma Twoje dane połączenia i może zapisać pliki cookie.',
+        'load' => 'Załaduj kalendarz',
+        'openDirectly' => 'Otwórz kalendarz na :provider',
+        'frameTitle' => 'Kalendarz rezerwacji',
+    ],
+
     'announcement' => [
         'label' => 'Ogłoszenie',
     ],

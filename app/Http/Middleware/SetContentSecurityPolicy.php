@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Repositories\Settings\SiteSettingsRepository;
+use App\Services\Booking\BookingProvider;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -58,6 +59,13 @@ class SetContentSecurityPolicy
             'frame-ancestors' => ["'none'"],
             'form-action' => ["'self'"],
         ];
+
+        // Without frame-src the default ('self') applies; the booking
+        // calendar is the only extra frame.
+        $booking = BookingProvider::origin();
+        if ($booking !== null) {
+            $directives['frame-src'] = ["'self'", $booking];
+        }
 
         $reportUri = config('csp.report_uri');
         if (is_string($reportUri) && $reportUri !== '') {

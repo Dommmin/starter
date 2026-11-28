@@ -18,6 +18,7 @@
         Route::put('/{{ kebabPlural }}/{{{ variable }}}', [{{ Model }}Controller::class, 'update'])
             ->name('{{ kebabPlural }}.update')
             ->can('update', '{{ variable }}');
+{{ duplicateRoute }}
         Route::delete('/{{ kebabPlural }}/{{{ variable }}}', [{{ Model }}Controller::class, 'destroy'])
             ->name('{{ kebabPlural }}.destroy')
             ->can('delete', '{{ variable }}');

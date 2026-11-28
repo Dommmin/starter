@@ -35,22 +35,22 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 
 ## Faza A — Clone (wzorzec operacji)
 
-- [ ] **1. `feat/panel-faq-clone`** — Clone na FAQ, napisany jawnie. **HIGH-RISK (policy)**
+- [x] **1. `feat/panel-faq-clone`** — Clone na FAQ, napisany jawnie. **HIGH-RISK (policy)**
   - Action `Faqs/DuplicateFaq` (`replicate()`, `published=false`, pozycja na końcu), trasa `POST admin/faqs/{faq}/duplicate`, ability `duplicate` w `FaqPolicy` (admin + editor), akcja wiersza w `ResourceTable` i przycisk w edycji, redirect do edycji kopii, toast, wpis audytu.
   - AC: kopia ma nowe ID, jest nieopublikowana, oryginał bez zmian; podgląd (viewer) dostaje 403; audit zawiera źródło kopii.
-- [ ] **2. `feat/generator-clone-operation`** — flaga `--operations=clone` w `app:make-resource`.
+- [x] **2. `feat/generator-clone-operation`** — flaga `--operations=clone` w `app:make-resource`.
   - Parsowanie i walidacja listy operacji w `ResourceBlueprint` (nieznana operacja = błąd), stuby: action, trasa, ability w policy, akcja UI, i18n, test feature. Relacje M:N kopiowane, `hasMany` nie; slug (przy `--public`) z sufiksem `-copy-N`, rekord jako szkic.
   - AC: smoke generuje moduł z clone bez ręcznych poprawek; `--dry-run` pokazuje nowe pliki.
-- [ ] **3. `feat/panel-content-clone`** — Clone stron i artykułów. **HIGH-RISK (policy)**
+- [x] **3. `feat/panel-content-clone`** — Clone stron i artykułów. **HIGH-RISK (policy)**
   - Kopia tłumaczeń z unikalnymi slugami per locale, status szkic, bez `published_at` i bez kopiowania przekierowań slugów; artykuł: tagi i okładka zachowane.
   - AC: brak kolizji slugów w żadnym locale; kopia niewidoczna publicznie do publikacji.
 
 ## Faza B — Reorder
 
-- [ ] **4. `refactor/panel-reorder-records`** — wydzielenie wspólnej logiki z `ReorderMenuItems` i `ReorderHomeSections` (zakres grupy, transakcja, blokada, walidacja kompletności listy ID) do jednej Action/serwisu. Bez zmiany zachowania.
+- [x] **4. `refactor/panel-reorder-records`** — wydzielenie wspólnej logiki z `ReorderMenuItems` i `ReorderHomeSections` (zakres grupy, transakcja, blokada, walidacja kompletności listy ID) do jednej Action/serwisu. Bez zmiany zachowania.
   - AC: istniejące testy menu i sekcji przechodzą bez modyfikacji asercji.
-- [ ] **5. `feat/panel-faq-reorder`** — `OrderableList` dla FAQ w zakresie locale zamiast ręcznego pola „Kolejność”. **HIGH-RISK (migracja danych)**
-  - Normalizacja `position` (dziś nullable) migracją danych; pole liczby usunięte z formularza; nowe rekordy na końcu; import CSV nadal honoruje `position`.
+- [x] **5. `feat/panel-faq-reorder`** — `OrderableList` dla FAQ: wspólna kolejność dla wszystkich języków (decyzja 2026-11-26), pole liczby zostaje jako fallback (R3). **HIGH-RISK (migracja danych)**
+  - Normalizacja `position` (dziś nullable) migracją danych do jednego ciągu w obecnej kolejności publicznej; nowe rekordy na końcu; import CSV nadal honoruje `position`.
   - AC: kolejność publiczna = kolejność w panelu; równoległa zmiana daje konflikt, nie cichą utratę.
 - [ ] **6. `feat/generator-reorder-operation`** — `--operations=reorder` (kolumna `position` z indeksem, opcjonalny zakres `--reorder-scope=field`).
   - AC: smoke z reorder; lista domyślnie sortowana po pozycji.
@@ -88,4 +88,4 @@ Poza zakresem: runtime CrudPanel, Bootstrap/Basset, widgety Backpacka, Permissio
 | --- | --- | --- |
 | R1 | Czy editor może klonować i eksportować, czy tylko admin? | 1, 16 |
 | R2 | Async relacje domyślnie w generatorze czy za flagą? | 8, 11 |
-| R3 | Czy FAQ zachowuje edytowalną liczbę pozycji jako fallback (import)? | 5 |
+| R3 | Czy FAQ zachowuje edytowalną liczbę pozycji jako fallback (import)? Rozstrzygnięte 2026-11-26: pole liczby pozycji zostaje w formularzu FAQ jako fallback (m.in. dla importu CSV). | 5 |

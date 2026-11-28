@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\Import\ImportController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\PageController;
+use App\Http\Controllers\Admin\Pages\PageSectionController;
 use App\Http\Controllers\Admin\Redirects\NotFoundLogController;
 use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
@@ -137,6 +138,35 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->name('pages.destroy')
             ->can('delete', 'page');
 
+        Route::get('/pages/{page}/sections', [PageSectionController::class, 'index'])
+            ->name('pages.sections.index')
+            ->can('view', 'page');
+        Route::post('/pages/{page}/sections', [PageSectionController::class, 'store'])
+            ->name('pages.sections.store')
+            ->can('update', 'page');
+        Route::put('/pages/{page}/sections/order', [PageSectionController::class, 'reorder'])
+            ->name('pages.sections.reorder')
+            ->can('update', 'page');
+        Route::get('/pages/{page}/sections/{pageSection}/edit', [PageSectionController::class, 'edit'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.edit')
+            ->can('view', 'page');
+        Route::put('/pages/{page}/sections/{pageSection}', [PageSectionController::class, 'update'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.update')
+            ->can('update', 'page');
+        Route::patch('/pages/{page}/sections/{pageSection}/visibility', [PageSectionController::class, 'visibility'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.visibility')
+            ->can('update', 'page');
+        Route::delete('/pages/{page}/sections/{pageSection}', [PageSectionController::class, 'destroy'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.destroy')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
+            ->name('pages.duplicate')
+            ->can('duplicate', 'page');
+
         Route::get('/articles', [ArticleController::class, 'index'])
             ->name('articles.index')
             ->can('viewAny', Article::class);
@@ -159,6 +189,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])
             ->name('articles.destroy')
             ->can('delete', 'article');
+        Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])
+            ->name('articles.duplicate')
+            ->can('duplicate', 'article');
 
         Route::get('/saved-views', [SavedListViewController::class, 'index'])
             ->name('saved-views.index');
@@ -222,6 +255,12 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::post('/faqs/many', [FaqController::class, 'storeMany'])
             ->name('faqs.store-many')
             ->can('create', Faq::class);
+        Route::get('/faqs/order', [FaqController::class, 'order'])
+            ->name('faqs.order')
+            ->can('viewAny', Faq::class);
+        Route::put('/faqs/order', [FaqController::class, 'reorder'])
+            ->name('faqs.reorder')
+            ->can('reorder', Faq::class);
         Route::get('/faqs/{faq}/edit', [FaqController::class, 'edit'])
             ->name('faqs.edit')
             ->can('view', 'faq');
@@ -231,6 +270,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
             ->name('faqs.destroy')
             ->can('delete', 'faq');
+        Route::post('/faqs/{faq}/duplicate', [FaqController::class, 'duplicate'])
+            ->name('faqs.duplicate')
+            ->can('duplicate', 'faq');
 
         Route::get('/media', [MediaAssetController::class, 'index'])
             ->name('media.index')

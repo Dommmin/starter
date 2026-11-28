@@ -7,7 +7,8 @@ use App\Models\User;
 
 /**
  * Content pages are edited and published by admins and editors; a viewer
- * lists, opens (read-only) and previews them. Only administrators may
+ * lists, opens (read-only) and previews them. Copying (as a new draft)
+ * follows the same rule as creating. Only administrators may
  * move a page to the trash, restore it or empty the trash.
  */
 class PagePolicy
@@ -41,6 +42,14 @@ class PagePolicy
      * Determine whether the user can edit the page and its translations.
      */
     public function update(User $user, Page $page): bool
+    {
+        return $user->canEditContent();
+    }
+
+    /**
+     * Determine whether the user can copy the page as a new draft page.
+     */
+    public function duplicate(User $user, Page $page): bool
     {
         return $user->canEditContent();
     }

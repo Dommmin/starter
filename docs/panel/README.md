@@ -50,6 +50,8 @@ Są trzy stałe role. Rolę nadaje administrator w module [Użytkownicy](#użytk
 | Strony, artykuły — tworzenie, edycja, publikacja | ✓ | ✓ | podgląd |
 | Strony, artykuły — usuwanie, kosz | ✓ | — | — |
 | Tagi, FAQ — tworzenie i edycja | ✓ | ✓ | podgląd |
+| FAQ — kolejność | ✓ | ✓ | podgląd |
+| Strony, artykuły, FAQ — duplikowanie | ✓ | ✓ | — |
 | Tagi, FAQ — usuwanie, import CSV | ✓ | — | — |
 | Media — przesyłanie, tekst alternatywny | ✓ | ✓ | podgląd |
 | Media — usuwanie | ✓ | — | — |
@@ -104,6 +106,8 @@ Strony treści serwisu (np. „O nas”, „Usługi”, polityka prywatności) p
 4. Ustaw **Status**: *Szkic* (niewidoczny publicznie) albo *Opublikowana*.
 5. **Zapisz zmiany**. Przy edycji **Podgląd: <język>** otwiera ostatnio zapisaną wersję w nowej karcie, także szkic (podgląd nie trafia do wyszukiwarek).
 
+**Duplikuj stronę** (przycisk w edycji albo **Duplikuj** w menu akcji wiersza) tworzy kopię ze wszystkimi wersjami językowymi i od razu otwiera jej edycję. Każda wersja dostaje wolny slug z dopiskiem `-copy-N` w swoim języku (np. `o-nas-copy-1`), status *Szkic* i brak daty publikacji, więc kopia jest niewidoczna publicznie, dopóki jej nie opublikujesz. Przekierowania starych slugów oryginału nie są kopiowane. Oryginał zostaje bez zmian, dziennik audytu zapisuje, z której strony powstała kopia, a niezapisane zmiany w formularzu nie trafiają do kopii.
+
 Zmiana sluga opublikowanej strony tworzy automatyczne przekierowanie 301 ze starego adresu. Administrator usuwa stronę przyciskiem **Usuń stronę** — trafia ona do [kosza](#kosz). Edycja jest chroniona przed nadpisaniem: jeśli ktoś zapisał stronę w międzyczasie, panel pokaże konflikt zamiast nadpisać jego zmiany.
 
 ![Lista stron](img/04-strony.jpg)
@@ -120,6 +124,8 @@ Blog / aktualności pod `/articles`. Formularz jak przy stronach, z dodatkami:
 5. **Zapisz zmiany**, sprawdź **Podgląd**.
 
 Lista ma filtr statusu (opublikowane / zaplanowane / szkice) i języka treści.
+
+**Duplikuj artykuł** działa jak przy stronach: kopia ze wszystkimi wersjami językowymi jako szkic bez daty publikacji, ze slugami `-copy-N` w każdym języku, bez przekierowań oryginału. Okładka i tagi są zachowane.
 
 ![Lista artykułów](img/06-artykuly.jpg)
 ![Edycja artykułu](img/07-artykul-edycja.jpg)
@@ -138,9 +144,11 @@ Kategorie artykułów, po których odwiedzający filtrują listę artykułów.
 
 Pytania i odpowiedzi wyświetlane w sekcji FAQ strony głównej.
 
-1. **FAQ → Dodaj pytanie**: pytanie, odpowiedź, język (albo wszystkie), kolejność i przełącznik „Opublikowane”.
+1. **FAQ → Dodaj pytanie**: pytanie, odpowiedź, język (albo wszystkie), kolejność i przełącznik „Opublikowane”. Puste pole „Kolejność” stawia pytanie na końcu listy (także pytania z generatora AI i z importu CSV bez pozycji).
 2. Filtr „Opublikowane” na liście pokazuje tylko widoczne pytania.
-3. Administrator usuwa pytania i importuje je z CSV.
+3. **Duplikuj** (menu akcji wiersza albo przycisk w edycji) tworzy kopię pytania: nieopublikowaną, na końcu kolejności, i od razu otwiera jej edycję. Oryginał zostaje bez zmian, a dziennik audytu zapisuje, z którego pytania powstała kopia. Niezapisane zmiany w formularzu nie trafiają do kopii.
+4. **Zmień kolejność** otwiera listę wszystkich pytań w jednej kolejności dla wszystkich języków; przy każdym pytaniu widać jego język (albo „Wszystkie języki”) i stan publikacji. Przesuwaj pytania strzałkami w górę i w dół; zmiana zapisuje się od razu. Strona każdego języka pokazuje jego pytania i pytania dla wszystkich języków w tej kolejności. Jeśli ktoś w międzyczasie dodał lub usunął pytanie, zobaczysz komunikat o konflikcie — wczytaj stronę ponownie. Podgląd widzi kolejność bez możliwości zmiany. Ręczne pole „Kolejność” w formularzu nadal działa.
+5. Administrator usuwa pytania i importuje je z CSV.
 
 ![FAQ](img/09-faq.jpg)
 

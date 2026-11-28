@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { SavedViewsMenu } from '@/components/admin/saved-views-menu';
 import {
@@ -18,6 +18,7 @@ import { index as adminIndex } from '@/routes/admin';
 import {
     create as pagesCreate,
     destroy as pagesDestroy,
+    duplicate as pagesDuplicate,
     edit as pagesEdit,
     index as pagesIndex,
 } from '@/routes/admin/pages';
@@ -36,6 +37,7 @@ export default function AdminPagesIndex() {
         : locales.default;
     const [pageToDelete, setPageToDelete] = useState<PageRow | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const localeName = (code: string) =>
         locales.available.find((locale) => locale.code === code)?.native ??
@@ -208,6 +210,27 @@ export default function AdminPagesIndex() {
                             icon: Pencil,
                             onSelect: () => router.visit(pagesEdit.url(row.id)),
                         },
+                        ...(can.duplicate
+                            ? [
+                                  {
+                                      id: 'duplicate',
+                                      label: t('admin.pages.actionDuplicate'),
+                                      icon: Copy,
+                                      disabled: isDuplicating,
+                                      onSelect: () => {
+                                          setIsDuplicating(true);
+                                          router.post(
+                                              pagesDuplicate.url(row.id),
+                                              undefined,
+                                              {
+                                                  onFinish: () =>
+                                                      setIsDuplicating(false),
+                                              },
+                                          );
+                                      },
+                                  },
+                              ]
+                            : []),
                         ...(can.delete
                             ? [
                                   {

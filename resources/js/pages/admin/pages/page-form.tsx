@@ -9,6 +9,7 @@ import {
     ConflictDialog,
     PageHeader,
     ResourceForm,
+    SelectField,
     Stack,
     Tabs,
     Text,
@@ -28,11 +29,13 @@ import { fieldAssists } from '@/lib/field-assists';
 import { slugify } from '@/lib/slug';
 import {
     destroy as pagesDestroy,
+    duplicate as pagesDuplicate,
     edit as pagesEdit,
     index as pagesIndex,
     store as pagesStore,
     update as pagesUpdate,
 } from '@/routes/admin/pages';
+import { index as pageSectionsIndex } from '@/routes/admin/pages/sections';
 
 type EditorData = App.Data.Admin.Pages.PageEditorData;
 type TranslationFormData = App.Data.Admin.Pages.PageTranslationFormData;
@@ -54,6 +57,7 @@ type TranslationValues = {
 type TranslationState = Omit<TranslationValues, 'body'> & { body: string };
 
 type PageFormState = {
+    layout_mode: 'rich_text' | 'sections';
     translations: Record<string, TranslationState>;
 };
 
@@ -120,6 +124,7 @@ export function PageForm({ editor }: PageFormProps) {
     const { t } = useTranslation();
 
     const form = useForm<PageFormState>({
+        layout_mode: page.layoutMode === 'sections' ? 'sections' : 'rich_text',
         translations: Object.fromEntries(
             locales.available.map((locale) => [
                 locale.code,
@@ -145,6 +150,7 @@ export function PageForm({ editor }: PageFormProps) {
     const [isConflictOpen, setIsConflictOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const errors = form.errors as Partial<Record<string, string>>;
     const errorKeys = Object.keys(errors).filter((key) => errors[key]);
@@ -286,6 +292,22 @@ export function PageForm({ editor }: PageFormProps) {
 
         setIsConflictOpen(false);
         router.visit(pagesEdit.url(pageId), { preserveState: false });
+    }
+
+    /** Copies the saved page; unsaved edits are not part of the copy. */
+    function duplicateRecord() {
+        if (pageId === null) {
+            return;
+        }
+
+        if (form.isDirty && !window.confirm(t('admin.pages.unsavedChanges'))) {
+            return;
+        }
+
+        setIsDuplicating(true);
+        router.post(pagesDuplicate.url(pageId), undefined, {
+            onFinish: () => setIsDuplicating(false),
+        });
     }
 
     function confirmDelete() {
@@ -432,6 +454,23 @@ export function PageForm({ editor }: PageFormProps) {
                                     })}
                                 </Button>
                             )}
+                            {form.data.layout_mode === 'sections' && (
+                                <Button
+                                    variant="outline"
+                                    href={pageSectionsIndex(pageId)}
+                                >
+                                    {t('admin.pages.sections.manage')}
+                                </Button>
+                            )}
+                            {can.duplicate && (
+                                <Button
+                                    variant="outline"
+                                    isPending={isDuplicating}
+                                    onClick={duplicateRecord}
+                                >
+                                    {t('admin.pages.duplicate')}
+                                </Button>
+                            )}
                             {can.delete && (
                                 <Button
                                     variant="destructive"
@@ -471,6 +510,30 @@ export function PageForm({ editor }: PageFormProps) {
                     })}
                 />
             )}
+
+            <SelectField
+                name="layout_mode"
+                label={t('admin.pages.fields.layoutMode')}
+                description={t('admin.pages.fields.layoutModeHelp')}
+                value={form.data.layout_mode}
+                disabled={!can.update}
+                onChange={(value: string) =>
+                    form.setData(
+                        'layout_mode',
+                        value === 'sections' ? 'sections' : 'rich_text',
+                    )
+                }
+                options={[
+                    {
+                        value: 'rich_text',
+                        label: t('admin.pages.layoutModes.rich_text'),
+                    },
+                    {
+                        value: 'sections',
+                        label: t('admin.pages.layoutModes.sections'),
+                    },
+                ]}
+            />
 
             <Tabs
                 ariaLabel={t('admin.pages.fields.locale')}

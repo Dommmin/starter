@@ -94,6 +94,7 @@ class {{ Model }}Controller extends Controller
 
         return to_route('admin.{{ kebabPlural }}.edit', ${{ variable }});
     }
+{{ duplicateMethod }}
 
     /**
      * Permanently delete the {{ singularLower }} (administrators only).
@@ -150,6 +151,7 @@ class {{ Model }}Controller extends Controller
                 ? ($user?->can('delete', ${{ variable }}) ?? false)
                 : ({{ listDeleteAbility }}),
 {{ exportAbility }}
+{{ duplicateAbility }}
         );
     }
 {{ optionMethods }}

@@ -10,6 +10,7 @@ declare namespace App {
                     suggestSeo: boolean;
                     suggestTranslation: boolean;
                     rewriteText: boolean;
+                    duplicate: boolean;
                 };
                 export type ArticleEditorData = {
                     article: App.Data.Admin.Articles.ArticleFormData;
@@ -268,6 +269,7 @@ declare namespace App {
                     delete: boolean;
                     import: boolean;
                     suggestFaqs: boolean;
+                    duplicate: boolean;
                 };
                 export type FaqEditorData = {
                     faq: App.Data.Admin.Faqs.FaqFormData;
@@ -303,6 +305,17 @@ declare namespace App {
                     published: boolean;
                     createdAt: string | null;
                     updatedAt: string | null;
+                };
+                export type FaqOrderData = {
+                    items: App.Data.Admin.Faqs.FaqOrderItemData[];
+                    canReorder: boolean;
+                    locales: App.Data.Content.ContentLocalesData;
+                };
+                export type FaqOrderItemData = {
+                    id: number;
+                    question: string;
+                    locale: string | null;
+                    published: boolean;
                 };
             }
             namespace HomeSections {
@@ -558,6 +571,7 @@ declare namespace App {
                     suggestSeo: boolean;
                     suggestTranslation: boolean;
                     rewriteText: boolean;
+                    duplicate: boolean;
                 };
                 export type PageEditorData = {
                     page: App.Data.Admin.Pages.PageFormData;
@@ -573,6 +587,7 @@ declare namespace App {
                         string,
                         App.Data.Admin.Pages.PageTranslationFormData
                     >;
+                    layoutMode: string;
                 };
                 export type PageIndexData = {
                     items: App.Data.Admin.Pages.PageListItemData[];
@@ -596,6 +611,20 @@ declare namespace App {
                     locale: string;
                     locales: string[];
                     updatedAt: string | null;
+                };
+                export type PageSectionEditorData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    editor: App.Data.Admin.HomeSections.HomeSectionEditorData;
+                };
+                export type PageSectionsIndexData = {
+                    pageId: number;
+                    pageTitle: string | null;
+                    locale: string;
+                    locales: App.Data.Content.ContentLocalesData;
+                    items: App.Data.Admin.HomeSections.HomeSectionListItemData[];
+                    availableTypes: string[];
+                    canUpdate: boolean;
                 };
                 export type PageTranslationFormData = {
                     title: string;
@@ -942,6 +971,9 @@ declare namespace App {
                 publishedAt: string | null;
                 alternates: Record<string, string>;
                 preview: App.Data.Content.ContentPreviewData | null;
+                layoutMode: string;
+                sections: App.Data.Home.HomeSectionData[] | null;
+                contactForm: App.Data.Contact.ContactFormData | null;
             };
             export type PublicTagData = {
                 slug: string;
@@ -1302,6 +1334,7 @@ declare namespace App {
             | 'page.deleted'
             | 'page.restored'
             | 'page.purged'
+            | 'page.duplicated'
             | 'article.created'
             | 'article.updated'
             | 'article.published'
@@ -1309,6 +1342,7 @@ declare namespace App {
             | 'article.deleted'
             | 'article.restored'
             | 'article.purged'
+            | 'article.duplicated'
             | 'user.created'
             | 'user.updated'
             | 'user.role_changed'
@@ -1320,6 +1354,7 @@ declare namespace App {
             | 'media.deleted'
             | 'resource.exported'
             | 'resource.imported'
+            | 'resource.duplicated'
             | 'site_settings.updated'
             | 'navigation.item_created'
             | 'navigation.item_updated'
@@ -1337,6 +1372,8 @@ declare namespace App {
             | 'redirect.created'
             | 'redirect.updated'
             | 'redirect.deleted'
+            | 'faq.duplicated'
+            | 'faq.reordered'
             | 'assistant.suggested'
             | 'ai_settings.updated';
         export type ConsentCategory = 'analytics' | 'marketing';

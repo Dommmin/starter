@@ -5,6 +5,7 @@ namespace App\Data\Admin\HomeSections;
 use App\Enums\HomeSectionAnchor;
 use App\Enums\HomeSectionType;
 use App\Models\HomeSection;
+use App\Models\PageSection;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -25,7 +26,7 @@ class HomeSectionListItemData extends Data
         public ?string $updatedAt,
     ) {}
 
-    public static function fromModel(HomeSection $section): self
+    public static function fromModel(HomeSection|PageSection $section): self
     {
         $title = $section->content->toArray()['title'] ?? null;
 

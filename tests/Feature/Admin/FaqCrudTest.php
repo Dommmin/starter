@@ -47,7 +47,7 @@ test('the list exposes the typed list payload with defaults', function () {
                 'direction' => 'desc',
                 'published' => 'all',
             ])
-            ->where('can', ['create' => true, 'update' => true, 'delete' => false, 'import' => false, 'suggestFaqs' => false])
+            ->where('can', ['create' => true, 'update' => true, 'delete' => false, 'import' => false, 'suggestFaqs' => false, 'duplicate' => true])
             ->has('locales.available')
         );
 });
@@ -133,16 +133,17 @@ test('an editor creates a faq', function () {
         ->and($faq?->published)->toBeTrue();
 });
 
-test('blank optional number and date inputs are stored as null', function () {
+test('a blank position places the new faq at the end of the shared order', function () {
     // The request normalises blank inputs itself, independent of the global middleware.
     $this->withoutMiddleware(ConvertEmptyStringsToNull::class);
     $editor = User::factory()->editor()->create();
+    $existing = Faq::factory()->create(['locale' => 'de', 'position' => 4]);
 
     $this->actingAs($editor)->post(route('admin.faqs.store'), faqPayload(['position' => '']))
         ->assertSessionHasNoErrors();
 
-    $faq = Faq::query()->sole();
-    expect($faq->position)->toBeNull();
+    $faq = Faq::query()->whereKeyNot($existing->id)->sole();
+    expect($faq->position)->toBe(5);
 });
 
 test('store validates required fields and creates nothing', function () {

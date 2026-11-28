@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Update a faq with optimistic locking on `updated_at`.
+ * Update a faq with optimistic locking on `updated_at`. A cleared position
+ * moves the faq to the end of the shared order of all languages.
  */
 class UpdateFaq
 {
@@ -27,6 +28,10 @@ class UpdateFaq
                 throw ValidationException::withMessages([
                     'conflict' => __('admin.faqs.conflict'),
                 ]);
+            }
+
+            if (array_key_exists('position', $attributes) && $attributes['position'] === null) {
+                $attributes['position'] = CreateFaq::nextPosition();
             }
 
             $locked->fill($attributes)

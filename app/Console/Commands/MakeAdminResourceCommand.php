@@ -21,6 +21,7 @@ use RuntimeException;
     {--export : Add a CSV export of the filtered list (administrators only, audited)}
     {--owned : Records belong to their creator: user_id, owner-only policy (also for administrators) and a list scoped to the owner}
     {--public : Published records get a public list and detail page (SSR, SEO meta, sitemap); adds the slug and published fields}
+    {--operations= : Comma separated extra operations; clone: duplicate a record (admins and editors; many-to-many links copied, hasMany records not; with --public an unpublished copy with a -copy-N slug), audited}
     {--dry-run : List the files that would be created or changed without writing anything}
     {--no-format : Skip Pint and the frontend formatter on the generated files}', aliases: ['make:admin-resource'])]
 #[Description('Generate a plain admin CRUD resource (migration, model, factory, seeder, policy, controller, requests, Data, React pages, i18n, routes and tests)')]
@@ -41,6 +42,7 @@ class MakeAdminResourceCommand extends Command
                 (bool) $this->option('export'),
                 (bool) $this->option('owned'),
                 (bool) $this->option('public'),
+                $this->stringInput($this->option('operations')),
             );
         } catch (InvalidArgumentException $exception) {
             foreach (explode(PHP_EOL, $exception->getMessage()) as $message) {

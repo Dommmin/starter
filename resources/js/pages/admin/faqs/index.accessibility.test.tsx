@@ -60,6 +60,7 @@ function abilities(
         delete: true,
         import: true,
         suggestFaqs: false,
+        duplicate: true,
         ...overrides,
     };
 }
@@ -204,6 +205,7 @@ describe('AdminFaqsIndex', () => {
                 update: false,
                 delete: false,
                 import: false,
+                duplicate: false,
             }),
         );
         container = await render();

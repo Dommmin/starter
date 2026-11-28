@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Settings;
 
+use App\Data\Consent\MarketingIntegrationsData;
 use App\Data\Consent\PlausibleData;
 use App\Data\Media\MediaImageData;
 use App\Data\Settings\OpeningHoursDayData;
@@ -64,6 +65,11 @@ use Throwable;
  *     opening_hours: list<array{day: string, opens: string|null, closes: string|null}>|null,
  *     google_site_verification: string|null,
  *     plausible_domain: string|null,
+ *     ga4_id: string|null,
+ *     gtm_id: string|null,
+ *     meta_pixel_id: string|null,
+ *     chat_provider: string|null,
+ *     chat_widget_id: string|null,
  *     coming_soon: bool,
  *     noindex: bool,
  *     maintenance: bool,
@@ -73,7 +79,7 @@ use Throwable;
  */
 class SiteSettingsRepository
 {
-    public const string CACHE_KEY = 'site_settings:v6';
+    public const string CACHE_KEY = 'site_settings:v7';
 
     /**
      * Snapshot memoized for the current process (one cache read per request).
@@ -257,6 +263,28 @@ class SiteSettingsRepository
         return is_string($domain) && $domain !== '' && is_string($scriptUrl) && str_starts_with($scriptUrl, 'https://')
             ? new PlausibleData($domain, $scriptUrl)
             : null;
+    }
+
+    public function marketingIntegrations(): ?MarketingIntegrationsData
+    {
+        $snapshot = $this->snapshot();
+        $ga4Id = $snapshot['ga4_id'];
+        $gtmId = $snapshot['gtm_id'];
+        $metaPixelId = $snapshot['meta_pixel_id'];
+        $chatProvider = $snapshot['chat_provider'];
+        $chatWidgetId = $snapshot['chat_widget_id'];
+
+        if ($ga4Id === null && $gtmId === null && $metaPixelId === null && ($chatProvider === null || $chatWidgetId === null)) {
+            return null;
+        }
+
+        return new MarketingIntegrationsData(
+            ga4Id: $ga4Id,
+            gtmId: $gtmId,
+            metaPixelId: $metaPixelId,
+            chatProvider: $chatProvider,
+            chatWidgetId: $chatWidgetId,
+        );
     }
 
     /**
@@ -486,6 +514,11 @@ class SiteSettingsRepository
             'opening_hours' => $settings->opening_hours,
             'google_site_verification' => $settings->google_site_verification,
             'plausible_domain' => $settings->plausible_domain,
+            'ga4_id' => $settings->ga4_id,
+            'gtm_id' => $settings->gtm_id,
+            'meta_pixel_id' => $settings->meta_pixel_id,
+            'chat_provider' => $settings->chat_provider,
+            'chat_widget_id' => $settings->chat_widget_id,
             'coming_soon' => $settings->coming_soon,
             'noindex' => $settings->noindex,
             'maintenance' => $settings->maintenance,
@@ -532,6 +565,11 @@ class SiteSettingsRepository
             'opening_hours' => null,
             'google_site_verification' => null,
             'plausible_domain' => null,
+            'ga4_id' => null,
+            'gtm_id' => null,
+            'meta_pixel_id' => null,
+            'chat_provider' => null,
+            'chat_widget_id' => null,
             'coming_soon' => false,
             'noindex' => false,
             'maintenance' => false,

@@ -9,6 +9,7 @@ use App\Enums\PublicationStatus;
 use App\Models\Page;
 use App\Models\PageTranslation;
 use App\Models\User;
+use App\Services\Content\ContentSnapshots;
 use App\Services\Content\PageSlugRedirects;
 use App\Services\Content\RichTextRenderer;
 use Illuminate\Support\Carbon;
@@ -39,6 +40,7 @@ class UpdatePage
         private readonly RichTextRenderer $richText,
         private readonly PageSlugRedirects $redirects,
         private readonly RecordAuditEvent $audit,
+        private readonly ContentSnapshots $snapshots,
     ) {}
 
     /**
@@ -48,9 +50,9 @@ class UpdatePage
      *
      * @throws ValidationException When the page changed in the meantime (`conflict`).
      */
-    public function handle(Page $page, User $actor, array $translations, array $activeLocales, string $expectedUpdatedAt): Page
+    public function handle(Page $page, User $actor, array $translations, array $activeLocales, string $expectedUpdatedAt, ?string $layoutMode = null): Page
     {
-        return DB::transaction(function () use ($page, $actor, $translations, $activeLocales, $expectedUpdatedAt): Page {
+        return DB::transaction(function () use ($page, $actor, $translations, $activeLocales, $expectedUpdatedAt, $layoutMode): Page {
             $locked = Page::query()->whereKey($page->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->updated_at?->getTimestamp() !== Carbon::parse($expectedUpdatedAt)->getTimestamp()) {
@@ -58,6 +60,8 @@ class UpdatePage
                     'conflict' => __('admin.pages.conflict'),
                 ]);
             }
+
+            $this->snapshots->record($locked, $actor->id);
 
             $existing = $locked->translations()->get()->keyBy('locale');
 
@@ -157,6 +161,7 @@ class UpdatePage
             $locked->forceFill([
                 'updated_by' => $actor->id,
                 'updated_at' => $locked->freshTimestamp(),
+                ...($layoutMode !== null ? ['layout_mode' => $layoutMode] : []),
             ])->save();
 
             return $locked;

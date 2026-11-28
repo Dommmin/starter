@@ -30,6 +30,7 @@ use App\Data\Media\MediaImageData;
 use App\Enums\HomeLinkTarget;
 use App\Models\HomeSection;
 use App\Models\MediaAsset;
+use App\Models\PageSection;
 use App\Models\PageTranslation;
 use App\Models\User;
 use App\Repositories\Content\ArticleRepository;
@@ -63,12 +64,21 @@ class BuildHomeSections
      */
     public function handle(string $locale, ?User $viewer = null): array
     {
-        $sections = $this->sections->enabledFor($locale);
-        $publishedPages = $this->pages->publishedInLocale($locale, $this->linkedPageIds($sections->all()));
-        $images = $this->media->usableImagesByIds($this->imageIds($sections->all()));
+        return $this->buildFromCollection($this->sections->enabledFor($locale), $locale, $viewer);
+    }
+
+    /**
+     * @param  Collection<int, HomeSection>|Collection<int, PageSection>  $sections
+     * @return list<HomeSectionData>
+     */
+    public function buildFromCollection(Collection $sections, string $locale, ?User $viewer = null): array
+    {
+        $items = $sections->all();
+        $publishedPages = $this->pages->publishedInLocale($locale, $this->linkedPageIds($items));
+        $images = $this->media->usableImagesByIds($this->imageIds($items));
 
         $result = [];
-        foreach ($sections as $section) {
+        foreach ($items as $section) {
             $result[] = new HomeSectionData(
                 id: $section->id,
                 type: $section->type,
@@ -84,7 +94,7 @@ class BuildHomeSections
      * @param  array<int, PageTranslation>  $publishedPages
      * @param  Collection<int, MediaAsset>  $images
      */
-    private function content(HomeSection $section, string $locale, array $publishedPages, Collection $images, ?User $viewer): HomeHeroData|FeaturesContentData|HomeFaqData|TestimonialsContentData|HomeLatestArticlesData|ContactContentData|HomeCtaData|HomePortfolioData|HomeTeamData|HomePricingData
+    private function content(HomeSection|PageSection $section, string $locale, array $publishedPages, Collection $images, ?User $viewer): HomeHeroData|FeaturesContentData|HomeFaqData|TestimonialsContentData|HomeLatestArticlesData|ContactContentData|HomeCtaData|HomePortfolioData|HomeTeamData|HomePricingData
     {
         $content = $section->content;
 
@@ -206,7 +216,7 @@ class BuildHomeSections
     /**
      * Ids of the DAM images referenced by section content.
      *
-     * @param  array<int, HomeSection>  $sections
+     * @param  array<int, HomeSection|PageSection>  $sections
      * @return list<int>
      */
     private function imageIds(array $sections): array
@@ -242,7 +252,7 @@ class BuildHomeSections
     /**
      * Ids of the CMS pages referenced by hero, CTA and pricing actions.
      *
-     * @param  array<int, HomeSection>  $sections
+     * @param  array<int, HomeSection|PageSection>  $sections
      * @return list<int>
      */
     private function linkedPageIds(array $sections): array

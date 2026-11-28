@@ -9,6 +9,7 @@ import {
     ConflictDialog,
     PageHeader,
     ResourceForm,
+    SelectField,
     Stack,
     Tabs,
     Text,
@@ -34,6 +35,7 @@ import {
     store as pagesStore,
     update as pagesUpdate,
 } from '@/routes/admin/pages';
+import { index as pageSectionsIndex } from '@/routes/admin/pages/sections';
 
 type EditorData = App.Data.Admin.Pages.PageEditorData;
 type TranslationFormData = App.Data.Admin.Pages.PageTranslationFormData;
@@ -55,6 +57,7 @@ type TranslationValues = {
 type TranslationState = Omit<TranslationValues, 'body'> & { body: string };
 
 type PageFormState = {
+    layout_mode: 'rich_text' | 'sections';
     translations: Record<string, TranslationState>;
 };
 
@@ -121,6 +124,7 @@ export function PageForm({ editor }: PageFormProps) {
     const { t } = useTranslation();
 
     const form = useForm<PageFormState>({
+        layout_mode: page.layoutMode === 'sections' ? 'sections' : 'rich_text',
         translations: Object.fromEntries(
             locales.available.map((locale) => [
                 locale.code,
@@ -450,6 +454,14 @@ export function PageForm({ editor }: PageFormProps) {
                                     })}
                                 </Button>
                             )}
+                            {form.data.layout_mode === 'sections' && (
+                                <Button
+                                    variant="outline"
+                                    href={pageSectionsIndex(pageId)}
+                                >
+                                    {t('admin.pages.sections.manage')}
+                                </Button>
+                            )}
                             {can.duplicate && (
                                 <Button
                                     variant="outline"
@@ -498,6 +510,30 @@ export function PageForm({ editor }: PageFormProps) {
                     })}
                 />
             )}
+
+            <SelectField
+                name="layout_mode"
+                label={t('admin.pages.fields.layoutMode')}
+                description={t('admin.pages.fields.layoutModeHelp')}
+                value={form.data.layout_mode}
+                disabled={!can.update}
+                onChange={(value: string) =>
+                    form.setData(
+                        'layout_mode',
+                        value === 'sections' ? 'sections' : 'rich_text',
+                    )
+                }
+                options={[
+                    {
+                        value: 'rich_text',
+                        label: t('admin.pages.layoutModes.rich_text'),
+                    },
+                    {
+                        value: 'sections',
+                        label: t('admin.pages.layoutModes.sections'),
+                    },
+                ]}
+            />
 
             <Tabs
                 ariaLabel={t('admin.pages.fields.locale')}

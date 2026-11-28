@@ -59,7 +59,16 @@ class RedirectController extends Controller
      */
     public function create(Request $request): Response
     {
-        return Inertia::render('admin/redirects/create', $this->editor($request, RedirectFormData::blank(), null));
+        $sourcePath = $request->query('source_path');
+
+        return Inertia::render(
+            'admin/redirects/create',
+            $this->editor(
+                $request,
+                RedirectFormData::blank(is_string($sourcePath) && $sourcePath !== '' ? $sourcePath : null),
+                null,
+            ),
+        );
     }
 
     /**

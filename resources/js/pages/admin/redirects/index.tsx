@@ -20,6 +20,7 @@ import {
     edit,
     index,
 } from '@/routes/admin/redirects';
+import { index as notFoundIndex } from '@/routes/admin/redirects/not-found';
 
 type Row = App.Data.Admin.Redirects.RedirectListItemData;
 type IndexProps = App.Data.Admin.Redirects.RedirectIndexData;
@@ -72,24 +73,26 @@ export default function AdminRedirectsIndex() {
                 header={{
                     title: t('admin.redirects.title'),
                     description: t('admin.redirects.description'),
-                    actions:
-                        can.create || can.import ? (
-                            <Inline gap="tight">
-                                {can.import && (
-                                    <Button
-                                        variant="outline"
-                                        href={importShow('redirects')}
-                                    >
-                                        {t('admin.import.open')}
-                                    </Button>
-                                )}
-                                {can.create && (
-                                    <Button href={create()}>
-                                        {t('admin.redirects.create')}
-                                    </Button>
-                                )}
-                            </Inline>
-                        ) : undefined,
+                    actions: (
+                        <Inline gap="tight">
+                            <Button variant="outline" href={notFoundIndex()}>
+                                {t('admin.redirects.notFound.open')}
+                            </Button>
+                            {can.import && (
+                                <Button
+                                    variant="outline"
+                                    href={importShow('redirects')}
+                                >
+                                    {t('admin.import.open')}
+                                </Button>
+                            )}
+                            {can.create && (
+                                <Button href={create()}>
+                                    {t('admin.redirects.create')}
+                                </Button>
+                            )}
+                        </Inline>
+                    ),
                 }}
                 emptyAction={
                     can.create ? (

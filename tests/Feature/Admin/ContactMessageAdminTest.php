@@ -44,6 +44,7 @@ test('editors see the typed list without message bodies', function () {
                 'email' => $message->email,
                 'locale' => 'en',
                 'status' => 'pending',
+                'leadStatus' => 'new',
                 'attempts' => 0,
                 'category' => null,
                 'createdAt' => $message->created_at?->toIso8601String(),
@@ -120,7 +121,7 @@ test('editors can view a message but cannot retry or delete it', function () {
             ->where('contactMessage.id', $message->id)
             ->where('contactMessage.message', $message->message)
             ->where('contactMessage.status', 'failed')
-            ->where('can', ['retry' => false, 'delete' => false])
+            ->where('can', ['retry' => false, 'delete' => false, 'update' => true, 'suggestReply' => false])
         );
 
     $this->actingAs($editor)->post(route('admin.contact.retry', $message))->assertForbidden();
@@ -136,7 +137,7 @@ test('admins can retry a failed message', function () {
     $message = ContactMessage::factory()->failed()->create();
 
     $this->actingAs($admin)->get(route('admin.contact.show', $message))
-        ->assertInertia(fn (Assert $page) => $page->where('can', ['retry' => true, 'delete' => true]));
+        ->assertInertia(fn (Assert $page) => $page->where('can', ['retry' => true, 'delete' => true, 'update' => true, 'suggestReply' => false]));
 
     $this->actingAs($admin)->post(route('admin.contact.retry', $message))
         ->assertRedirect(route('admin.contact.show', $message))

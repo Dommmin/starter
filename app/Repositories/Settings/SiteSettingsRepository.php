@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Settings;
 
+use App\Data\Consent\MarketingIntegrationsData;
 use App\Data\Consent\PlausibleData;
 use App\Data\Media\MediaImageData;
 use App\Data\Settings\OpeningHoursDayData;
@@ -11,6 +12,7 @@ use App\Data\Settings\SiteContactData;
 use App\Data\Settings\SiteSettingsData;
 use App\Data\Settings\SiteSocialLinkData;
 use App\Enums\AccentColor;
+use App\Enums\AnnouncementDisplay;
 use App\Enums\AnnouncementTone;
 use App\Enums\SocialNetwork;
 use App\Enums\ThemePreference;
@@ -64,16 +66,21 @@ use Throwable;
  *     opening_hours: list<array{day: string, opens: string|null, closes: string|null}>|null,
  *     google_site_verification: string|null,
  *     plausible_domain: string|null,
+ *     ga4_id: string|null,
+ *     gtm_id: string|null,
+ *     meta_pixel_id: string|null,
+ *     chat_provider: string|null,
+ *     chat_widget_id: string|null,
  *     coming_soon: bool,
  *     noindex: bool,
  *     maintenance: bool,
  *     maintenance_until: string|null,
- *     announcement: array{enabled: bool, tone: string, link_url: string|null, starts_at: string|null, ends_at: string|null},
+ *     announcement: array{enabled: bool, tone: string, display?: string, link_url: string|null, starts_at: string|null, ends_at: string|null},
  * }
  */
 class SiteSettingsRepository
 {
-    public const string CACHE_KEY = 'site_settings:v6';
+    public const string CACHE_KEY = 'site_settings:v7';
 
     /**
      * Snapshot memoized for the current process (one cache read per request).
@@ -259,6 +266,28 @@ class SiteSettingsRepository
             : null;
     }
 
+    public function marketingIntegrations(): ?MarketingIntegrationsData
+    {
+        $snapshot = $this->snapshot();
+        $ga4Id = $snapshot['ga4_id'];
+        $gtmId = $snapshot['gtm_id'];
+        $metaPixelId = $snapshot['meta_pixel_id'];
+        $chatProvider = $snapshot['chat_provider'];
+        $chatWidgetId = $snapshot['chat_widget_id'];
+
+        if ($ga4Id === null && $gtmId === null && $metaPixelId === null && ($chatProvider === null || $chatWidgetId === null)) {
+            return null;
+        }
+
+        return new MarketingIntegrationsData(
+            ga4Id: $ga4Id,
+            gtmId: $gtmId,
+            metaPixelId: $metaPixelId,
+            chatProvider: $chatProvider,
+            chatWidgetId: $chatWidgetId,
+        );
+    }
+
     /**
      * Whether guests see the coming soon page instead of the public site.
      */
@@ -338,6 +367,8 @@ class SiteSettingsRepository
                 tone: AnnouncementTone::tryFrom($bar['tone']) ?? AnnouncementTone::Info,
                 linkUrl: $hasLink ? $bar['link_url'] : null,
                 linkLabel: $hasLink ? $label : null,
+                // A snapshot cached before this field has no `display`.
+                display: AnnouncementDisplay::tryFrom((string) ($bar['display'] ?? '')) ?? AnnouncementDisplay::Bar,
             );
         }
 
@@ -486,6 +517,11 @@ class SiteSettingsRepository
             'opening_hours' => $settings->opening_hours,
             'google_site_verification' => $settings->google_site_verification,
             'plausible_domain' => $settings->plausible_domain,
+            'ga4_id' => $settings->ga4_id,
+            'gtm_id' => $settings->gtm_id,
+            'meta_pixel_id' => $settings->meta_pixel_id,
+            'chat_provider' => $settings->chat_provider,
+            'chat_widget_id' => $settings->chat_widget_id,
             'coming_soon' => $settings->coming_soon,
             'noindex' => $settings->noindex,
             'maintenance' => $settings->maintenance,
@@ -493,6 +529,7 @@ class SiteSettingsRepository
             'announcement' => [
                 'enabled' => $settings->announcement_enabled,
                 'tone' => $settings->announcement_tone->value,
+                'display' => $settings->announcement_display->value,
                 'link_url' => $settings->announcement_link_url,
                 'starts_at' => $settings->announcement_starts_at?->toIso8601String(),
                 'ends_at' => $settings->announcement_ends_at?->toIso8601String(),
@@ -532,11 +569,16 @@ class SiteSettingsRepository
             'opening_hours' => null,
             'google_site_verification' => null,
             'plausible_domain' => null,
+            'ga4_id' => null,
+            'gtm_id' => null,
+            'meta_pixel_id' => null,
+            'chat_provider' => null,
+            'chat_widget_id' => null,
             'coming_soon' => false,
             'noindex' => false,
             'maintenance' => false,
             'maintenance_until' => null,
-            'announcement' => ['enabled' => false, 'tone' => AnnouncementTone::Info->value, 'link_url' => null, 'starts_at' => null, 'ends_at' => null],
+            'announcement' => ['enabled' => false, 'tone' => AnnouncementTone::Info->value, 'display' => AnnouncementDisplay::Bar->value, 'link_url' => null, 'starts_at' => null, 'ends_at' => null],
         ];
     }
 

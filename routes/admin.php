@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Articles\ArticleController;
+use App\Http\Controllers\Admin\Assistant\ContactReplySuggestionController;
 use App\Http\Controllers\Admin\Assistant\FaqSuggestionController;
 use App\Http\Controllers\Admin\Assistant\MediaAltTextSuggestionController;
 use App\Http\Controllers\Admin\Assistant\SeoMetaSuggestionController;
@@ -10,13 +11,20 @@ use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\ContactForms\ContactFormController;
 use App\Http\Controllers\Admin\Content\ContentPreviewController;
+use App\Http\Controllers\Admin\Content\ContentPreviewLinkController;
+use App\Http\Controllers\Admin\Content\ContentRevisionController;
+use App\Http\Controllers\Admin\ContentExportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
 use App\Http\Controllers\Admin\HomeSections\HomeSectionController;
 use App\Http\Controllers\Admin\Import\ImportController;
 use App\Http\Controllers\Admin\Media\MediaAssetController;
 use App\Http\Controllers\Admin\Navigation\MenuItemController;
+use App\Http\Controllers\Admin\Pages\ContentBlockController;
 use App\Http\Controllers\Admin\Pages\PageController;
+use App\Http\Controllers\Admin\Pages\PageSectionController;
+use App\Http\Controllers\Admin\Quality\ContentQualityController;
+use App\Http\Controllers\Admin\Redirects\NotFoundLogController;
 use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
 use App\Http\Controllers\Admin\Search\AdminSearchController;
@@ -67,9 +75,16 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::post('/assistant/faqs', FaqSuggestionController::class)
             ->name('assistant.faqs')
             ->middleware('throttle:assistant');
+        Route::post('/assistant/contact-reply', ContactReplySuggestionController::class)
+            ->name('assistant.contact-reply')
+            ->middleware('throttle:assistant');
         Route::get('/system', [SystemStatusController::class, 'index'])
             ->name('system.index')
             ->can('view', SiteSetting::class);
+        Route::get('/system/export', ContentExportController::class)
+            ->name('system.export')
+            ->can('update', SiteSetting::class)
+            ->middleware(['password.confirm', 'throttle:5,1']);
         Route::put('/system/publication', [SitePublicationController::class, 'update'])
             ->name('system.publication.update')
             ->can('update', SiteSetting::class);
@@ -113,6 +128,11 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->name('audit.index')
             ->can('viewAny', AuditLog::class);
 
+        Route::get('/quality', ContentQualityController::class)
+            ->name('quality.index')
+            ->can('viewAny', Page::class)
+            ->middleware('throttle:30,1');
+
         Route::get('/pages', [PageController::class, 'index'])
             ->name('pages.index')
             ->can('viewAny', Page::class);
@@ -135,6 +155,59 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/pages/{page}', [PageController::class, 'destroy'])
             ->name('pages.destroy')
             ->can('delete', 'page');
+
+        Route::get('/pages/{page}/sections', [PageSectionController::class, 'index'])
+            ->name('pages.sections.index')
+            ->can('view', 'page');
+        Route::post('/pages/{page}/sections', [PageSectionController::class, 'store'])
+            ->name('pages.sections.store')
+            ->can('update', 'page');
+        Route::put('/pages/{page}/sections/order', [PageSectionController::class, 'reorder'])
+            ->name('pages.sections.reorder')
+            ->can('update', 'page');
+        Route::get('/pages/{page}/sections/{pageSection}/edit', [PageSectionController::class, 'edit'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.edit')
+            ->can('view', 'page');
+        Route::put('/pages/{page}/sections/{pageSection}', [PageSectionController::class, 'update'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.update')
+            ->can('update', 'page');
+        Route::patch('/pages/{page}/sections/{pageSection}/visibility', [PageSectionController::class, 'visibility'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.visibility')
+            ->can('update', 'page');
+        Route::delete('/pages/{page}/sections/{pageSection}', [PageSectionController::class, 'destroy'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.destroy')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/revisions/{revision}/restore', [ContentRevisionController::class, 'page'])
+            ->whereNumber('revision')
+            ->name('pages.revisions.restore')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/preview-links', [ContentPreviewLinkController::class, 'storeForPage'])
+            ->name('pages.preview-links.store')
+            ->can('update', 'page')
+            ->middleware('throttle:20,1');
+        Route::delete('/pages/{page}/preview-links/{previewLink}', [ContentPreviewLinkController::class, 'destroyForPage'])
+            ->whereNumber('previewLink')
+            ->name('pages.preview-links.destroy')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/sections/{pageSection}/share', [ContentBlockController::class, 'share'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.share')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/sections/{pageSection}/detach', [ContentBlockController::class, 'detach'])
+            ->whereNumber('pageSection')
+            ->name('pages.sections.detach')
+            ->can('update', 'page');
+        Route::post('/pages/{page}/blocks', [ContentBlockController::class, 'insert'])
+            ->name('pages.blocks.insert')
+            ->can('update', 'page');
+        Route::delete('/pages/{page}/blocks/{contentBlock}', [ContentBlockController::class, 'destroy'])
+            ->whereNumber('contentBlock')
+            ->name('pages.blocks.destroy')
+            ->can('update', 'page');
         Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
             ->name('pages.duplicate')
             ->can('duplicate', 'page');
@@ -161,6 +234,18 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])
             ->name('articles.destroy')
             ->can('delete', 'article');
+        Route::post('/articles/{article}/revisions/{revision}/restore', [ContentRevisionController::class, 'article'])
+            ->whereNumber('revision')
+            ->name('articles.revisions.restore')
+            ->can('update', 'article');
+        Route::post('/articles/{article}/preview-links', [ContentPreviewLinkController::class, 'storeForArticle'])
+            ->name('articles.preview-links.store')
+            ->can('update', 'article')
+            ->middleware('throttle:20,1');
+        Route::delete('/articles/{article}/preview-links/{previewLink}', [ContentPreviewLinkController::class, 'destroyForArticle'])
+            ->whereNumber('previewLink')
+            ->name('articles.preview-links.destroy')
+            ->can('update', 'article');
         Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])
             ->name('articles.duplicate')
             ->can('duplicate', 'article');
@@ -302,6 +387,9 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/contact/{contactMessage}', [ContactMessageController::class, 'show'])
             ->name('contact.show')
             ->can('view', 'contactMessage');
+        Route::patch('/contact/{contactMessage}', [ContactMessageController::class, 'update'])
+            ->name('contact.update')
+            ->can('update', 'contactMessage');
         Route::post('/contact/{contactMessage}/retry', [ContactMessageController::class, 'retry'])
             ->name('contact.retry')
             ->can('retry', 'contactMessage');
@@ -357,6 +445,13 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
 
         Route::get('/redirects', [RedirectController::class, 'index'])
             ->name('redirects.index')
+            ->can('viewAny', Redirect::class);
+        Route::get('/redirects/not-found', [NotFoundLogController::class, 'index'])
+            ->name('redirects.not-found.index')
+            ->can('viewAny', Redirect::class);
+        Route::delete('/redirects/not-found/{notFoundLog}', [NotFoundLogController::class, 'destroy'])
+            ->whereNumber('notFoundLog')
+            ->name('redirects.not-found.destroy')
             ->can('viewAny', Redirect::class);
         Route::delete('/redirects', [RedirectController::class, 'destroyMany'])
             ->name('redirects.destroy-many')

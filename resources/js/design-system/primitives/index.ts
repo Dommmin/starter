@@ -11,6 +11,7 @@ export * from './avatar';
 export * from './back-to-top';
 export * from './badge';
 export * from './bar-chart';
+export * from './booking-embed';
 export * from './brand-logo';
 export * from './button';
 export * from './card';

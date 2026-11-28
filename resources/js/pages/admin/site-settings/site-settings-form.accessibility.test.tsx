@@ -149,10 +149,16 @@ function makeEditor(
             },
             googleSiteVerification: null,
             plausibleDomain: null,
+            ga4Id: null,
+            gtmId: null,
+            metaPixelId: null,
+            chatProvider: null,
+            chatWidgetId: null,
             contactRecipients: [],
             contactAutoReply: false,
             announcementEnabled: false,
             announcementTone: 'info',
+            announcementDisplay: 'bar',
             announcementLinkUrl: null,
             announcementStartsOn: null,
             announcementEndsOn: null,
@@ -335,6 +341,7 @@ describe('SiteSettingsForm', () => {
         editorProps = makeEditor({
             announcementEnabled: true,
             announcementTone: 'warning',
+            announcementDisplay: 'bar',
             announcementStartsOn: '2026-12-24',
         });
         const container = await render(<AdminSiteSettingsEdit />);
@@ -358,6 +365,7 @@ describe('SiteSettingsForm', () => {
         expect(submitMock.mock.lastCall![1]).toMatchObject({
             announcement_enabled: true,
             announcement_tone: 'warning',
+            announcement_display: 'bar',
             announcement_link_url: '/contact',
             announcement_starts_on: '2026-12-24',
             announcement_ends_on: null,

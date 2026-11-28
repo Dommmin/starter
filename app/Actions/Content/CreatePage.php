@@ -28,12 +28,13 @@ class CreatePage
     /**
      * @param  array<string, PageTranslationInputData>  $translations  Keyed by locale.
      */
-    public function handle(User $actor, array $translations): Page
+    public function handle(User $actor, array $translations, string $layoutMode = 'rich_text'): Page
     {
-        return DB::transaction(function () use ($actor, $translations): Page {
+        return DB::transaction(function () use ($actor, $translations, $layoutMode): Page {
             $page = Page::query()->create([
                 'created_by' => $actor->id,
                 'updated_by' => $actor->id,
+                'layout_mode' => $layoutMode,
             ]);
 
             $changes = [];

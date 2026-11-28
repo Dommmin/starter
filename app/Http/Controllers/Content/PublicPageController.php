@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers\Content;
 
+use App\Actions\Home\BuildHomeSections;
+use App\Data\Contact\ContactFormData;
 use App\Data\Content\PublicPageData;
+use App\Data\Home\ContactContentData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Contact\StoreContactMessageRequest;
+use App\Repositories\Contact\ContactFormRepository;
 use App\Repositories\Content\PageRepository;
 use App\Services\Content\RichTextRenderer;
 use App\Services\Localization\LocalizationConfig;
@@ -22,6 +27,8 @@ class PublicPageController extends Controller
         private readonly LocalizationConfig $config,
         private readonly LocalizationManager $localization,
         private readonly LocalizedUrlGenerator $urls,
+        private readonly BuildHomeSections $buildSections,
+        private readonly ContactFormRepository $contactForms,
     ) {}
 
     /**
@@ -64,10 +71,39 @@ class PublicPageController extends Controller
 
         Inertia::share('i18n.alternateUrls', $alternates);
 
+        $layoutMode = $translation->page->layout_mode ?: 'rich_text';
+        $sections = null;
+        $contactForm = null;
+
+        if ($layoutMode === 'sections') {
+            $pageSections = $translation->page->sections()
+                ->where('locale', $locale)
+                ->where('enabled', true)
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get();
+
+            $sections = $this->buildSections->buildFromCollection($pageSections, $locale, $request->user());
+            $contactFormKey = null;
+            foreach ($sections as $section) {
+                if ($section->content instanceof ContactContentData) {
+                    $contactFormKey = $section->content->formKey;
+                    break;
+                }
+            }
+            $contactForm = new ContactFormData(
+                token: StoreContactMessageRequest::issueFormToken(),
+                form: $this->contactForms->publicForm($contactFormKey, $locale),
+            );
+        }
+
         return Inertia::render('pages/show', PublicPageData::fromTranslation(
             $translation,
             $this->richText->toHtml($translation->body),
             $alternates,
+            layoutMode: $layoutMode,
+            sections: $sections,
+            contactForm: $contactForm,
         ));
     }
 }

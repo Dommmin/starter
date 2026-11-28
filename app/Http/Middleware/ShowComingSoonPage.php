@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ShowComingSoonPage
 {
     /** Route names that stay reachable for guests. */
-    private const array ALWAYS_AVAILABLE = ['robots', 'sitemap', 'health.ready', 'dev.login'];
+    private const array ALWAYS_AVAILABLE = ['robots', 'sitemap', 'health.ready', 'dev.login', 'content.shared-preview'];
 
     public function __construct(
         private readonly SiteSettingsRepository $siteSettings,

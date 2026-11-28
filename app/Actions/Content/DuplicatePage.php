@@ -11,7 +11,8 @@ use App\Services\Content\CopySlugs;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Copy a page with every translation as a new draft page: each translation
+ * Copy a page with its layout, sections and every translation as a new draft
+ * page: each translation
  * gets a free `-copy-N` slug in its locale, the draft status and no
  * publication date, so the copy stays invisible to visitors until it is
  * published. Slug redirects of the source are not copied and existing
@@ -31,6 +32,7 @@ class DuplicatePage
             $copy = Page::query()->create([
                 'created_by' => $actor->id,
                 'updated_by' => $actor->id,
+                'layout_mode' => $source->layout_mode,
             ]);
 
             $changes = ['duplicated_from' => RecordAuditEvent::change(null, $source->id)];
@@ -49,6 +51,10 @@ class DuplicatePage
                 ]);
 
                 $changes["{$translation->locale}.slug"] = RecordAuditEvent::change(null, $slug);
+            }
+
+            foreach ($source->sections()->orderBy('id')->get() as $section) {
+                $copy->sections()->create($section->only(['content_block_id', 'locale', 'type', 'position', 'enabled', 'content']));
             }
 
             $this->audit->handle(AuditAction::PageDuplicated, $copy, $actor, $changes);

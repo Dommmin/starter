@@ -21,6 +21,7 @@ import {
     Surface,
     Text,
 } from '@/design-system/primitives';
+import { exportMethod as exportContent } from '@/routes/admin/system';
 import { AiSettingsPanel } from '@/components/admin/ai-settings-panel';
 import { SiteLaunchPanel } from '@/components/admin/site-launch-panel';
 import { useTranslation } from '@/i18n';
@@ -108,6 +109,21 @@ export default function AdminSystem() {
                 </Stack>
 
                 <SiteLaunchPanel launch={launch} />
+
+                <Surface as="section" padding="default" border>
+                    <Stack gap="tight">
+                        <Heading level={2} variant="group">
+                            {t('admin.contentExport.title')}
+                        </Heading>
+                        <Text variant="caption" tone="muted">
+                            {t('admin.contentExport.description')}
+                        </Text>
+                        {/* A new tab keeps the panel while the file downloads. */}
+                        <Link href={exportContent.url()} external>
+                            {t('admin.contentExport.download')}
+                        </Link>
+                    </Stack>
+                </Surface>
 
                 <AiSettingsPanel ai={ai} />
 

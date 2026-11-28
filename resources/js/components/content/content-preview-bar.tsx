@@ -6,9 +6,8 @@ type ContentPreviewBarProps = {
 };
 
 /**
- * Banner of the signed admin preview of a page or article: whether the
- * shown (last saved) version is visible to visitors and the way back to its
- * editor. Rendered only when the server sends `preview`.
+ * Banner of a content preview: whether the shown (last saved) version is
+ * visible to visitors and, in the panel, the way back to its editor. Rendered only when the server sends `preview`.
  */
 export function ContentPreviewBar({ preview }: ContentPreviewBarProps) {
     const { t, formatDate } = useTranslation();
@@ -39,9 +38,11 @@ export function ContentPreviewBar({ preview }: ContentPreviewBarProps) {
                 description={
                     <>
                         {state} {t('preview.savedVersion')}{' '}
-                        <Link href={preview.editUrl} tone="primary">
-                            {t('preview.backToEdit')}
-                        </Link>
+                        {preview.editUrl && (
+                            <Link href={preview.editUrl} tone="primary">
+                                {t('preview.backToEdit')}
+                            </Link>
+                        )}
                     </>
                 }
             />

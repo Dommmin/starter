@@ -640,6 +640,14 @@ declare namespace App {
                     publishedAt: string | null;
                 };
             }
+            namespace PreviewLinks {
+                export type PreviewLinkListItemData = {
+                    id: number;
+                    locale: string;
+                    expiresAt: string;
+                    authorName: string | null;
+                };
+            }
             namespace Redirects {
                 export type NotFoundLogIndexData = {
                     items: App.Data.Admin.Redirects.NotFoundLogItemData[];
@@ -947,7 +955,7 @@ declare namespace App {
             export type ContentPreviewData = {
                 state: App.Enums.ContentPreviewState;
                 publishAt: string | null;
-                editUrl: string;
+                editUrl: string | null;
             };
             export type MaintenancePageData = {
                 contactEmail: string | null;
@@ -1350,6 +1358,7 @@ declare namespace App {
             | 'page.purged'
             | 'page.duplicated'
             | 'page.revision_restored'
+            | 'page.preview_shared'
             | 'article.created'
             | 'article.updated'
             | 'article.published'
@@ -1359,6 +1368,7 @@ declare namespace App {
             | 'article.purged'
             | 'article.duplicated'
             | 'article.revision_restored'
+            | 'article.preview_shared'
             | 'user.created'
             | 'user.updated'
             | 'user.role_changed'

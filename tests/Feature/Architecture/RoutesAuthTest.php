@@ -35,6 +35,7 @@ $routesAuthPublic = [
     'GET articles/{slug}' => 'publiczny artykuł',
     'POST contact-messages' => 'publiczny formularz kontaktowy (throttle, honeypot)',
     'GET {slug}' => 'publiczna strona CMS',
+    'GET shared-preview/{token}' => 'podgląd szkicu dla klienta: tajny, wygasający i odwoływalny token (throttle, noindex)',
     'PATCH settings/locale' => 'preferencja języka panelu w sesji, także przed logowaniem',
 ];
 

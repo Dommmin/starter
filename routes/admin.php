@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Audit\AuditLogController;
 use App\Http\Controllers\Admin\Contact\ContactMessageController;
 use App\Http\Controllers\Admin\ContactForms\ContactFormController;
 use App\Http\Controllers\Admin\Content\ContentPreviewController;
+use App\Http\Controllers\Admin\Content\ContentPreviewLinkController;
 use App\Http\Controllers\Admin\Content\ContentRevisionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Faqs\FaqController;
@@ -172,6 +173,14 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
             ->whereNumber('revision')
             ->name('pages.revisions.restore')
             ->can('update', 'page');
+        Route::post('/pages/{page}/preview-links', [ContentPreviewLinkController::class, 'storeForPage'])
+            ->name('pages.preview-links.store')
+            ->can('update', 'page')
+            ->middleware('throttle:20,1');
+        Route::delete('/pages/{page}/preview-links/{previewLink}', [ContentPreviewLinkController::class, 'destroyForPage'])
+            ->whereNumber('previewLink')
+            ->name('pages.preview-links.destroy')
+            ->can('update', 'page');
         Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])
             ->name('pages.duplicate')
             ->can('duplicate', 'page');
@@ -201,6 +210,14 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::post('/articles/{article}/revisions/{revision}/restore', [ContentRevisionController::class, 'article'])
             ->whereNumber('revision')
             ->name('articles.revisions.restore')
+            ->can('update', 'article');
+        Route::post('/articles/{article}/preview-links', [ContentPreviewLinkController::class, 'storeForArticle'])
+            ->name('articles.preview-links.store')
+            ->can('update', 'article')
+            ->middleware('throttle:20,1');
+        Route::delete('/articles/{article}/preview-links/{previewLink}', [ContentPreviewLinkController::class, 'destroyForArticle'])
+            ->whereNumber('previewLink')
+            ->name('articles.preview-links.destroy')
             ->can('update', 'article');
         Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])
             ->name('articles.duplicate')

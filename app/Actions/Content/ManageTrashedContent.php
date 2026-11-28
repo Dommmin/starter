@@ -5,6 +5,7 @@ namespace App\Actions\Content;
 use App\Actions\Audit\RecordAuditEvent;
 use App\Enums\TrashedContentType;
 use App\Models\Article;
+use App\Models\ContentPreviewLink;
 use App\Models\Page;
 use App\Models\User;
 use App\Services\Content\ContentSnapshots;
@@ -43,6 +44,10 @@ class ManageTrashedContent
             $this->audit->handle(TrashedContentType::of($record)->purgedAction(), $record, $actor, $this->titles($record, restoring: false));
 
             $this->snapshots->forget($record);
+            ContentPreviewLink::query()
+                ->where('subject_type', $record->getMorphClass())
+                ->where('subject_id', $record->id)
+                ->delete();
 
             $record->forceDelete();
         });

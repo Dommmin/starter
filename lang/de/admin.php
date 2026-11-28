@@ -776,6 +776,7 @@ return [
                 'purged' => 'Seite endgültig aus dem Papierkorb entfernt',
                 'duplicated' => 'Seite dupliziert',
                 'revision_restored' => 'Seitenversion wiederhergestellt',
+                'preview_shared' => 'Seitenvorschau geteilt',
             ],
             'article' => [
                 'created' => 'Artikel erstellt',
@@ -787,6 +788,7 @@ return [
                 'purged' => 'Artikel endgültig aus dem Papierkorb entfernt',
                 'duplicated' => 'Artikel dupliziert',
                 'revision_restored' => 'Artikelversion wiederhergestellt',
+                'preview_shared' => 'Artikelvorschau geteilt',
             ],
             'user' => [
                 'role_changed' => 'Benutzerrolle geändert',
@@ -947,6 +949,27 @@ return [
         'cancel' => 'Abbrechen',
         'restored' => 'Aus dem Papierkorb wiederhergestellt.',
         'purged' => 'Endgültig gelöscht.',
+    ],
+
+    'previewLinks' => [
+        'title' => 'Vorschaulink für Kunden',
+        'description' => 'Zeigt die zuletzt gespeicherte Version ohne Anmeldung. Jeder mit dem Link sieht den Inhalt, bis er abläuft oder widerrufen wird.',
+        'language' => 'Sprache',
+        'lifetime' => 'Gültigkeit',
+        'days' => 'Tage: :count',
+        'create' => 'Link erstellen',
+        'url' => 'Link zum Kopieren',
+        'copy' => 'Kopieren',
+        'copied' => 'Kopiert.',
+        'once' => 'Jetzt kopieren — die Adresse wird nicht erneut angezeigt.',
+        'active' => 'Aktive Links',
+        'entry' => 'Läuft ab: :date · erstellt von :author',
+        'revoke' => 'Widerrufen',
+        'empty' => 'Keine aktiven Links.',
+        'created' => 'Der Vorschaulink wurde erstellt.',
+        'revoked' => 'Der Vorschaulink wurde widerrufen.',
+        'tooMany' => 'Höchstens :limit Links können aktiv sein. Widerrufen Sie einen davon.',
+        'needSaved' => 'Speichern Sie zuerst eine Übersetzung.',
     ],
 
     'revisions' => [

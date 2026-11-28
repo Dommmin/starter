@@ -776,6 +776,7 @@ return [
                 'purged' => 'Page removed from the trash for good',
                 'duplicated' => 'Page duplicated',
                 'revision_restored' => 'Restored a page version',
+                'preview_shared' => 'Shared a page preview link',
             ],
             'article' => [
                 'created' => 'Article created',
@@ -787,6 +788,7 @@ return [
                 'purged' => 'Article removed from the trash for good',
                 'duplicated' => 'Article duplicated',
                 'revision_restored' => 'Restored an article version',
+                'preview_shared' => 'Shared an article preview link',
             ],
             'user' => [
                 'role_changed' => 'User role changed',
@@ -947,6 +949,27 @@ return [
         'cancel' => 'Cancel',
         'restored' => 'Restored from the trash.',
         'purged' => 'Deleted for good.',
+    ],
+
+    'previewLinks' => [
+        'title' => 'Preview link for a client',
+        'description' => 'Shows the last saved version without signing in. Anyone with the link sees the content until it expires or is revoked.',
+        'language' => 'Language',
+        'lifetime' => 'Lifetime',
+        'days' => 'Days: :count',
+        'create' => 'Create link',
+        'url' => 'Link to copy',
+        'copy' => 'Copy',
+        'copied' => 'Copied.',
+        'once' => 'Copy it now — the address cannot be shown again.',
+        'active' => 'Active links',
+        'entry' => 'Expires :date · created by :author',
+        'revoke' => 'Revoke',
+        'empty' => 'No active links.',
+        'created' => 'The preview link was created.',
+        'revoked' => 'The preview link was revoked.',
+        'tooMany' => 'At most :limit links can be active. Revoke one of them.',
+        'needSaved' => 'Save a translation first.',
     ],
 
     'revisions' => [

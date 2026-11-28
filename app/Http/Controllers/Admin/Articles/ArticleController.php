@@ -6,6 +6,7 @@ use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Content\CreateArticle;
 use App\Actions\Content\DeleteArticle;
 use App\Actions\Content\DuplicateArticle;
+use App\Actions\Content\ShareContentPreviewLinks;
 use App\Actions\Content\ShareContentRevisions;
 use App\Actions\Content\UpdateArticle;
 use App\Data\Admin\Articles\ArticleAbilitiesData;
@@ -107,10 +108,11 @@ class ArticleController extends Controller
     /**
      * Show the form for editing the article.
      */
-    public function edit(Request $request, Article $article, ShareRecordHistory $recordHistory, ShareContentRevisions $revisions): Response
+    public function edit(Request $request, Article $article, ShareRecordHistory $recordHistory, ShareContentRevisions $revisions, ShareContentPreviewLinks $shareLinks): Response
     {
         $recordHistory->handle($request->user(), $article);
         $revisions->handle($request->user(), $article);
+        $shareLinks->handle($request->user(), $article);
 
         $article = $this->articles->forEditor($article);
 

@@ -23,7 +23,7 @@ class RecordNotFoundHit
     ];
 
     private const array NOISE_PREFIXES = [
-        '/admin', '/api', '/_', '/wp-', '/wordpress', '/xmlrpc', '/.well-known', '/.env', '/.git',
+        '/admin', '/api', '/shared-preview', '/_', '/wp-', '/wordpress', '/xmlrpc', '/.well-known', '/.env', '/.git',
     ];
 
     public function handle(Request $request): void

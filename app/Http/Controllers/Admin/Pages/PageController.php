@@ -6,6 +6,7 @@ use App\Actions\Audit\ShareRecordHistory;
 use App\Actions\Content\CreatePage;
 use App\Actions\Content\DeletePage;
 use App\Actions\Content\DuplicatePage;
+use App\Actions\Content\ShareContentPreviewLinks;
 use App\Actions\Content\ShareContentRevisions;
 use App\Actions\Content\UpdatePage;
 use App\Data\Admin\Pages\PageAbilitiesData;
@@ -100,10 +101,11 @@ class PageController extends Controller
     /**
      * Show the form for editing the page.
      */
-    public function edit(Request $request, Page $page, ShareRecordHistory $recordHistory, ShareContentRevisions $revisions): Response
+    public function edit(Request $request, Page $page, ShareRecordHistory $recordHistory, ShareContentRevisions $revisions, ShareContentPreviewLinks $shareLinks): Response
     {
         $recordHistory->handle($request->user(), $page);
         $revisions->handle($request->user(), $page);
+        $shareLinks->handle($request->user(), $page);
 
         $page = $this->pages->forEditor($page);
 

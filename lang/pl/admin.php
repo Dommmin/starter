@@ -776,6 +776,7 @@ return [
                 'purged' => 'Usunięto stronę z kosza na stałe',
                 'duplicated' => 'Utworzono kopię strony',
                 'revision_restored' => 'Przywrócono wersję strony',
+                'preview_shared' => 'Utworzono link do podglądu strony',
             ],
             'article' => [
                 'created' => 'Utworzono artykuł',
@@ -787,6 +788,7 @@ return [
                 'purged' => 'Usunięto artykuł z kosza na stałe',
                 'duplicated' => 'Utworzono kopię artykułu',
                 'revision_restored' => 'Przywrócono wersję artykułu',
+                'preview_shared' => 'Utworzono link do podglądu artykułu',
             ],
             'user' => [
                 'role_changed' => 'Zmieniono rolę użytkownika',
@@ -947,6 +949,27 @@ return [
         'cancel' => 'Anuluj',
         'restored' => 'Przywrócono z kosza.',
         'purged' => 'Usunięto na stałe.',
+    ],
+
+    'previewLinks' => [
+        'title' => 'Link do podglądu dla klienta',
+        'description' => 'Pokazuje ostatnio zapisaną wersję bez logowania. Każdy, kto ma link, zobaczy treść do czasu wygaśnięcia lub odwołania.',
+        'language' => 'Język',
+        'lifetime' => 'Ważność',
+        'days' => 'Dni: :count',
+        'create' => 'Utwórz link',
+        'url' => 'Link do skopiowania',
+        'copy' => 'Kopiuj',
+        'copied' => 'Skopiowano.',
+        'once' => 'Skopiuj teraz — adresu nie da się wyświetlić ponownie.',
+        'active' => 'Aktywne linki',
+        'entry' => 'Wygasa :date · utworzył(a): :author',
+        'revoke' => 'Odwołaj',
+        'empty' => 'Brak aktywnych linków.',
+        'created' => 'Utworzono link do podglądu.',
+        'revoked' => 'Odwołano link do podglądu.',
+        'tooMany' => 'Można mieć najwyżej :limit aktywnych linków. Odwołaj któryś z nich.',
+        'needSaved' => 'Najpierw zapisz tłumaczenie.',
     ],
 
     'revisions' => [

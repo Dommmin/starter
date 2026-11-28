@@ -67,6 +67,11 @@ const SHARED_FIELDS = [
     'map_url',
     'google_site_verification',
     'plausible_domain',
+    'ga4_id',
+    'gtm_id',
+    'meta_pixel_id',
+    'chat_provider',
+    'chat_widget_id',
     'announcement_tone',
     'announcement_link_url',
     'announcement_starts_on',
@@ -197,6 +202,11 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
         map_url: settings.mapUrl ?? '',
         google_site_verification: settings.googleSiteVerification ?? '',
         plausible_domain: settings.plausibleDomain ?? '',
+        ga4_id: settings.ga4Id ?? '',
+        gtm_id: settings.gtmId ?? '',
+        meta_pixel_id: settings.metaPixelId ?? '',
+        chat_provider: settings.chatProvider ?? '',
+        chat_widget_id: settings.chatWidgetId ?? '',
         opening_hours: { ...settings.openingHours },
         contact_recipients: settings.contactRecipients.map((email) => ({
             email,
@@ -687,6 +697,59 @@ export function SiteSettingsForm({ editor }: SiteSettingsFormProps) {
                             'admin.siteSettings.fields.plausibleDomainHelp',
                         ),
                         placeholder: 'example.com',
+                    },
+                    {
+                        type: 'text',
+                        name: 'ga4_id',
+                        label: t('admin.siteSettings.fields.ga4Id'),
+                        hint: t('admin.siteSettings.fields.ga4IdHelp'),
+                        placeholder: 'G-XXXXXXXXXX',
+                    },
+                    {
+                        type: 'text',
+                        name: 'gtm_id',
+                        label: t('admin.siteSettings.fields.gtmId'),
+                        hint: t('admin.siteSettings.fields.gtmIdHelp'),
+                        placeholder: 'GTM-XXXXXXX',
+                    },
+                    {
+                        type: 'text',
+                        name: 'meta_pixel_id',
+                        label: t('admin.siteSettings.fields.metaPixelId'),
+                        hint: t('admin.siteSettings.fields.metaPixelIdHelp'),
+                        placeholder: '123456789012345',
+                    },
+                    {
+                        type: 'select',
+                        name: 'chat_provider',
+                        label: t('admin.siteSettings.fields.chatProvider'),
+                        hint: t('admin.siteSettings.fields.chatProviderHelp'),
+                        options: [
+                            {
+                                value: '',
+                                label: t(
+                                    'admin.siteSettings.fields.chatProviderNone',
+                                ),
+                            },
+                            {
+                                value: 'crisp',
+                                label: t(
+                                    'admin.siteSettings.fields.chatProviderCrisp',
+                                ),
+                            },
+                            {
+                                value: 'tawk',
+                                label: t(
+                                    'admin.siteSettings.fields.chatProviderTawk',
+                                ),
+                            },
+                        ],
+                    },
+                    {
+                        type: 'text',
+                        name: 'chat_widget_id',
+                        label: t('admin.siteSettings.fields.chatWidgetId'),
+                        hint: t('admin.siteSettings.fields.chatWidgetIdHelp'),
                     },
                 ],
             },

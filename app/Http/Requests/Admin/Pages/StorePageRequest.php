@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Pages;
 use App\Data\Content\PageTranslationInputData;
 use App\Models\Page;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePageRequest extends FormRequest
 {
@@ -29,7 +30,17 @@ class StorePageRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->translationRules()->rules($this);
+        return [
+            'layout_mode' => ['nullable', 'string', Rule::in(['rich_text', 'sections'])],
+            ...$this->translationRules()->rules($this),
+        ];
+    }
+
+    public function layoutMode(): string
+    {
+        $mode = $this->validated('layout_mode');
+
+        return is_string($mode) ? $mode : 'rich_text';
     }
 
     /**

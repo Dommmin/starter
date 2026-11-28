@@ -974,6 +974,25 @@ return [
         'purged' => 'Endgültig gelöscht.',
     ],
 
+    'quality' => [
+        'title' => 'Inhaltsqualität',
+        'navLabel' => 'Inhaltsqualität',
+        'description' => 'Probleme in veröffentlichten Inhalten und Bildern. Öffnen Sie einen Namen, um ihn im Editor zu beheben.',
+        'truncated' => ':shown von :total Problemen werden angezeigt.',
+        'emptyTitle' => 'Keine Probleme',
+        'emptyDescription' => 'Veröffentlichte Inhalte und Bilder haben die Prüfung bestanden.',
+        'columnRecord' => 'Datensatz',
+        'columnIssue' => 'Problem',
+        'columnDetail' => 'Details',
+        'types' => [
+            'broken_link' => 'Defekter Link',
+            'empty_content' => 'Kein Inhalt',
+            'missing_description' => 'Keine Beschreibung für Suchmaschinen',
+            'duplicate_title' => 'Doppelter Titel',
+            'missing_alt_text' => 'Bild ohne Alternativtext',
+        ],
+    ],
+
     'previewLinks' => [
         'title' => 'Vorschaulink für Kunden',
         'description' => 'Zeigt die zuletzt gespeicherte Version ohne Anmeldung. Jeder mit dem Link sieht den Inhalt, bis er abläuft oder widerrufen wird.',

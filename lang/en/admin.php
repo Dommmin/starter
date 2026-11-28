@@ -974,6 +974,25 @@ return [
         'purged' => 'Deleted for good.',
     ],
 
+    'quality' => [
+        'title' => 'Content quality',
+        'navLabel' => 'Content quality',
+        'description' => 'Problems in published content and images. Open a name to fix it in the editor.',
+        'truncated' => 'Showing :shown of :total issues.',
+        'emptyTitle' => 'No issues',
+        'emptyDescription' => 'Published content and images passed the checks.',
+        'columnRecord' => 'Record',
+        'columnIssue' => 'Issue',
+        'columnDetail' => 'Details',
+        'types' => [
+            'broken_link' => 'Broken link',
+            'empty_content' => 'No content',
+            'missing_description' => 'No search description',
+            'duplicate_title' => 'Repeated title',
+            'missing_alt_text' => 'Image without alt text',
+        ],
+    ],
+
     'previewLinks' => [
         'title' => 'Preview link for a client',
         'description' => 'Shows the last saved version without signing in. Anyone with the link sees the content until it expires or is revoked.',

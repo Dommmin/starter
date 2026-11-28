@@ -657,6 +657,20 @@ declare namespace App {
                     authorName: string | null;
                 };
             }
+            namespace Quality {
+                export type ContentIssueData = {
+                    id: string;
+                    type: App.Enums.ContentIssueType;
+                    label: string;
+                    locale: string | null;
+                    editUrl: string;
+                    detail: string | null;
+                };
+                export type ContentQualityData = {
+                    issues: App.Data.Admin.Quality.ContentIssueData[];
+                    total: number;
+                };
+            }
             namespace Redirects {
                 export type NotFoundLogIndexData = {
                     items: App.Data.Admin.Redirects.NotFoundLogItemData[];
@@ -1427,6 +1441,12 @@ declare namespace App {
             | 'other';
         export type ContactMessageStatus = 'pending' | 'sent' | 'failed';
         export type ContactWebhookStatus = 'pending' | 'delivered' | 'failed';
+        export type ContentIssueType =
+            | 'broken_link'
+            | 'empty_content'
+            | 'missing_description'
+            | 'duplicate_title'
+            | 'missing_alt_text';
         export type ContentPreviewState = 'draft' | 'scheduled' | 'published';
         export type HealthCheckStatus = 'ok' | 'fail' | 'skipped';
         export type HealthStatus = 'ok' | 'degraded' | 'fail';

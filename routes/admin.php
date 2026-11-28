@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\Navigation\MenuItemController;
 use App\Http\Controllers\Admin\Pages\ContentBlockController;
 use App\Http\Controllers\Admin\Pages\PageController;
 use App\Http\Controllers\Admin\Pages\PageSectionController;
+use App\Http\Controllers\Admin\Quality\ContentQualityController;
 use App\Http\Controllers\Admin\Redirects\NotFoundLogController;
 use App\Http\Controllers\Admin\Redirects\RedirectController;
 use App\Http\Controllers\Admin\SavedViews\SavedListViewController;
@@ -121,6 +122,11 @@ Route::middleware(['auth', 'verified', EnsureCanAccessAdminPanel::class])
         Route::get('/audit', [AuditLogController::class, 'index'])
             ->name('audit.index')
             ->can('viewAny', AuditLog::class);
+
+        Route::get('/quality', ContentQualityController::class)
+            ->name('quality.index')
+            ->can('viewAny', Page::class)
+            ->middleware('throttle:30,1');
 
         Route::get('/pages', [PageController::class, 'index'])
             ->name('pages.index')

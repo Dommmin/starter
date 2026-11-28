@@ -974,6 +974,25 @@ return [
         'purged' => 'Usunięto na stałe.',
     ],
 
+    'quality' => [
+        'title' => 'Jakość treści',
+        'navLabel' => 'Jakość treści',
+        'description' => 'Problemy w opublikowanych treściach i obrazach. Kliknij nazwę, aby poprawić je w edytorze.',
+        'truncated' => 'Pokazano :shown z :total problemów.',
+        'emptyTitle' => 'Brak problemów',
+        'emptyDescription' => 'Opublikowane treści i obrazy przeszły kontrolę.',
+        'columnRecord' => 'Rekord',
+        'columnIssue' => 'Problem',
+        'columnDetail' => 'Szczegóły',
+        'types' => [
+            'broken_link' => 'Niedziałający link',
+            'empty_content' => 'Brak treści',
+            'missing_description' => 'Brak opisu dla wyszukiwarek',
+            'duplicate_title' => 'Powtórzony tytuł',
+            'missing_alt_text' => 'Obraz bez tekstu alternatywnego',
+        ],
+    ],
+
     'previewLinks' => [
         'title' => 'Link do podglądu dla klienta',
         'description' => 'Pokazuje ostatnio zapisaną wersję bez logowania. Każdy, kto ma link, zobaczy treść do czasu wygaśnięcia lub odwołania.',
